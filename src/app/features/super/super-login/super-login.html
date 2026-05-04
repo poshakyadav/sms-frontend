@@ -1,0 +1,443 @@
+<!-- src/app/features/super/super-login/super-login.html -->
+<div class="auth-wrapper">
+  <div class="login-card" [attr.data-view]="view()">
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- VIEW: LOGIN                                                          -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    @if (view() === 'login') {
+    <div class="view-block" animate.enter="view-enter" animate.leave="view-leave">
+      <div class="card-header">
+        <div class="header-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="11" width="18" height="11" rx="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+        </div>
+        <h2>Super Admin</h2>
+        <p>Enter your credentials to access the control panel</p>
+      </div>
+
+      @if (!checkingSetup() && setupRequired()) {
+      <div class="setup-banner">
+        <span class="setup-banner-icon">⚙️</span>
+        <div class="setup-banner-body">
+          <strong>System not initialised</strong>
+          <span>No admin account exists yet.</span>
+        </div>
+        <button class="setup-banner-btn" (click)="goToSetup()">Set up →</button>
+      </div>
+      }
+
+      <form (ngSubmit)="login()" novalidate>
+        <div class="field-group">
+          <label for="email">Email Address</label>
+          <div class="input-wrap">
+            <svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path
+                d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+              />
+              <polyline points="22,6 12,13 2,6" />
+            </svg>
+            <input
+              id="email"
+              type="email"
+              placeholder="admin@company.com"
+              [ngModel]="email()"
+              (ngModelChange)="email.set($event)"
+              name="email"
+              autocomplete="email"
+              [disabled]="loading()"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="label-row">
+            <label for="password">Password</label>
+            <button type="button" class="link-btn" (click)="showForgotPassword()">
+              Forgot password?
+            </button>
+          </div>
+          <div class="input-wrap">
+            <svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            <input
+              id="password"
+              [type]="showPw() ? 'text' : 'password'"
+              placeholder="••••••••"
+              [ngModel]="password()"
+              (ngModelChange)="password.set($event)"
+              name="password"
+              autocomplete="current-password"
+              [disabled]="loading()"
+              required
+            />
+            <button type="button" class="vis-toggle" (click)="showPw.set(!showPw())" tabindex="-1">
+              @if (showPw()) {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path
+                  d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"
+                />
+                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                <line x1="1" y1="1" x2="23" y2="23" />
+              </svg>
+              } @else {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              }
+            </button>
+          </div>
+        </div>
+
+        @if (error()) {
+        <div class="error-msg" role="alert">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          {{ error() }}
+        </div>
+        }
+
+        <button type="submit" class="primary-btn" [disabled]="loading() || !email() || !password()">
+          @if (loading()) { <span class="spinner"></span> Signing in… } @else { Sign In }
+        </button>
+      </form>
+
+      <div class="card-footer">&copy; 2026 School Management System</div>
+    </div>
+    }
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- VIEW: FP — STEP 1 — EMAIL                                           -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    @if (view() === 'fp-email') {
+    <div class="view-block" animate.enter="view-enter" animate.leave="view-leave">
+      <button class="back-btn" (click)="backToLogin()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+        Back to login
+      </button>
+
+      <div class="card-header compact">
+        <div class="header-icon accent-orange">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+            <polyline points="22,6 12,13 2,6" />
+          </svg>
+        </div>
+        <h2>Reset Password</h2>
+        <p>Enter your admin email and we'll send a verification code.</p>
+      </div>
+
+      <form (ngSubmit)="requestOtp()" novalidate>
+        <div class="field-group">
+          <label for="fp-email">Email Address</label>
+          <div class="input-wrap">
+            <svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path
+                d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+              />
+              <polyline points="22,6 12,13 2,6" />
+            </svg>
+            <input
+              id="fp-email"
+              type="email"
+              placeholder="admin@company.com"
+              [ngModel]="fpEmail()"
+              (ngModelChange)="fpEmail.set($event)"
+              name="fpEmail"
+              autocomplete="email"
+              [disabled]="loading()"
+              required
+            />
+          </div>
+        </div>
+
+        @if (error()) {
+        <div class="error-msg" role="alert">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          {{ error() }}
+        </div>
+        }
+
+        <button type="submit" class="primary-btn" [disabled]="loading() || !fpEmail()">
+          @if (loading()) { <span class="spinner"></span> Sending code… } @else {
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="22" y1="2" x2="11" y2="13" />
+            <polygon points="22 2 15 22 11 13 2 9 22 2" />
+          </svg>
+          Send Verification Code }
+        </button>
+      </form>
+    </div>
+    }
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- VIEW: FP — STEP 2 — OTP                                             -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    @if (view() === 'fp-otp') {
+    <div class="view-block" animate.enter="view-enter" animate.leave="view-leave">
+      <button class="back-btn" (click)="view.set('fp-email'); error.set('')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+        Change email
+      </button>
+
+      <div class="card-header compact">
+        <div class="header-icon accent-violet">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            <polyline points="9 12 11 14 15 10" />
+          </svg>
+        </div>
+        <h2>Enter Code</h2>
+        <p>
+          We sent a 6-digit code to<br />
+          <strong class="email-highlight">{{ fpEmail() }}</strong>
+        </p>
+      </div>
+
+      <!-- 6-box OTP input -->
+      <div class="otp-grid" (paste)="onOtpPaste($event)">
+        @for (digit of otpDigits(); track $index; let i = $index) {
+        <input
+          #otpInput
+          type="text"
+          inputmode="numeric"
+          maxlength="1"
+          class="otp-box"
+          [class.filled]="digit !== ''"
+          [value]="digit"
+          [disabled]="loading()"
+          (input)="onOtpInput(i, $event)"
+          (keydown)="onOtpKeydown(i, $event)"
+          autocomplete="one-time-code"
+        />
+        }
+      </div>
+
+      @if (error()) {
+      <div class="error-msg" role="alert">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        {{ error() }}
+      </div>
+      } @if (loading()) {
+      <div class="verifying-row">
+        <span class="spinner sm"></span>
+        <span>Verifying…</span>
+      </div>
+      }
+
+      <!-- Resend -->
+      <div class="resend-row">
+        Didn't receive it? @if (resendCountdown() > 0) {
+        <span class="resend-timer">Resend in {{ resendCountdown() }}s</span>
+        } @else {
+        <button type="button" class="link-btn" (click)="resendOtp()" [disabled]="loading()">
+          Resend code
+        </button>
+        }
+      </div>
+    </div>
+    }
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- VIEW: FP — STEP 3 — NEW PASSWORD                                    -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    @if (view() === 'fp-reset') {
+    <div class="view-block" animate.enter="view-enter" animate.leave="view-leave">
+      <div class="card-header compact">
+        <div class="header-icon accent-green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="11" width="18" height="11" rx="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+        </div>
+        <h2>New Password</h2>
+        <p>Choose a strong password for your account.</p>
+      </div>
+
+      <form (ngSubmit)="submitReset()" novalidate>
+        <!-- New password -->
+        <div class="field-group">
+          <label for="new-pw">New Password</label>
+          <div class="input-wrap">
+            <svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            <input
+              id="new-pw"
+              [type]="showNewPw() ? 'text' : 'password'"
+              placeholder="••••••••••••"
+              [ngModel]="newPassword()"
+              (ngModelChange)="newPassword.set($event)"
+              name="newPassword"
+              autocomplete="new-password"
+              [disabled]="loading()"
+              required
+            />
+            <button
+              type="button"
+              class="vis-toggle"
+              (click)="showNewPw.set(!showNewPw())"
+              tabindex="-1"
+            >
+              @if (showNewPw()) {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path
+                  d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"
+                />
+                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                <line x1="1" y1="1" x2="23" y2="23" />
+              </svg>
+              } @else {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              }
+            </button>
+          </div>
+
+          @if (newPassword()) {
+          <div class="strength-row">
+            <div class="strength-bar">
+              @for (seg of [0,1,2,3,4]; track seg) {
+              <div
+                class="seg"
+                [style.background]="seg < passwordStrength().score ? passwordStrength().color : ''"
+              ></div>
+              }
+            </div>
+            <span class="strength-label" [style.color]="passwordStrength().color">
+              {{ passwordStrength().label }}
+            </span>
+          </div>
+          <ul class="req-list">
+            @for (r of passwordReqs(); track r.text) {
+            <li [class.met]="r.met">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                @if (r.met) {
+                <polyline points="20 6 9 17 4 12" />
+                } @else {
+                <circle cx="12" cy="12" r="6" />
+                }
+              </svg>
+              {{ r.text }}
+            </li>
+            }
+          </ul>
+          }
+        </div>
+
+        <!-- Confirm password -->
+        <div class="field-group">
+          <label for="confirm-pw">Confirm Password</label>
+          <div class="input-wrap" [class.mismatch]="!passwordsMatch() && confirmPassword()">
+            <svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            <input
+              id="confirm-pw"
+              [type]="showConfirmPw() ? 'text' : 'password'"
+              placeholder="••••••••••••"
+              [ngModel]="confirmPassword()"
+              (ngModelChange)="confirmPassword.set($event)"
+              name="confirmPassword"
+              autocomplete="new-password"
+              [disabled]="loading()"
+              required
+            />
+            <button
+              type="button"
+              class="vis-toggle"
+              (click)="showConfirmPw.set(!showConfirmPw())"
+              tabindex="-1"
+            >
+              @if (showConfirmPw()) {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path
+                  d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"
+                />
+                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                <line x1="1" y1="1" x2="23" y2="23" />
+              </svg>
+              } @else {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              }
+            </button>
+          </div>
+          @if (!passwordsMatch() && confirmPassword()) {
+          <p class="field-err">Passwords do not match</p>
+          }
+        </div>
+
+        @if (error()) {
+        <div class="error-msg" role="alert">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          {{ error() }}
+        </div>
+        }
+
+        <button type="submit" class="primary-btn" [disabled]="loading() || !resetFormValid()">
+          @if (loading()) { <span class="spinner"></span> Resetting… } @else {
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+          Reset Password }
+        </button>
+      </form>
+    </div>
+    }
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- VIEW: FP — DONE                                                     -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    @if (view() === 'fp-done') {
+    <div class="view-block success-view" animate.enter="view-enter" animate.leave="view-leave">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+          <polyline points="22 4 12 14.01 9 11.01" />
+        </svg>
+      </div>
+      <h2>Password Updated</h2>
+      <p>Your password has been reset successfully. All existing sessions have been signed out.</p>
+      <button class="primary-btn" (click)="goToLoginFromDone()">
+        Sign In with New Password
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
+      </button>
+    </div>
+    }
+  </div>
+  <!-- /login-card -->
+</div>

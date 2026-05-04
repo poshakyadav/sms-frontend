@@ -1,0 +1,294 @@
+<!-- student-parents-manager.html -->
+<div class="spm-container">
+  <!-- ══════════════════════════════════════════════════════════
+         HEADER
+         ══════════════════════════════════════════════════════════ -->
+  <div class="spm-header">
+    <div class="spm-header-left">
+      <div class="spm-header-icon">
+        <mat-icon>family_restroom</mat-icon>
+      </div>
+      <div>
+        <h3 class="spm-title">Parent / Guardian Links</h3>
+        <p class="spm-subtitle">
+          Manage parents and guardians linked to
+          <strong>{{ studentName }}</strong>
+        </p>
+      </div>
+    </div>
+    <div class="spm-badge">
+      {{ linkedParents().length }}
+      {{ linkedParents().length === 1 ? 'parent' : 'parents' }} linked
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+         LINKED PARENTS
+         ══════════════════════════════════════════════════════════ -->
+  <div class="spm-section">
+    <div class="spm-section-label">Linked Parents / Guardians</div>
+
+    @if (loadingParents()) {
+    <div class="spm-loading">
+      <mat-spinner diameter="28"></mat-spinner>
+      <span>Loading…</span>
+    </div>
+    } @else if (linkedParents().length === 0) {
+    <div class="spm-empty">
+      <mat-icon>person_off</mat-icon>
+      <p>No parents linked yet. Search below to assign one.</p>
+    </div>
+    } @else {
+    <div class="spm-linked-list">
+      @for (link of linkedParents(); track link.linkId) {
+      <div class="spm-linked-card" [class.is-primary]="link.isPrimary">
+        <!-- Avatar -->
+        <div class="spm-avatar" [style.background]="getAvatarColor(link.parentName)">
+          @if (link.parentAvatarUrl) {
+          <img [src]="link.parentAvatarUrl" [alt]="link.parentName" class="spm-avatar-img" />
+          } @else {
+          <span>{{ getInitials(link.parentName) }}</span>
+          }
+        </div>
+
+        <!-- Info -->
+        <div class="spm-linked-info">
+          <div class="spm-linked-name-row">
+            <span class="spm-linked-name">{{ link.parentName }}</span>
+            @if (link.isPrimary) {
+            <span class="spm-primary-badge"> <mat-icon>star</mat-icon>Primary </span>
+            }
+          </div>
+          <span class="spm-linked-relation">{{ link.relationship }}</span>
+          <div class="spm-linked-meta">
+            <mat-icon class="spm-meta-icon">email</mat-icon>
+            {{ link.parentEmail }}
+          </div>
+          @if (link.parentPhone) {
+          <div class="spm-linked-meta">
+            <mat-icon class="spm-meta-icon">phone</mat-icon>
+            {{ link.parentPhone }}
+          </div>
+          } @if (link.occupation) {
+          <div class="spm-linked-meta">
+            <mat-icon class="spm-meta-icon">work</mat-icon>
+            {{ link.occupation }}
+          </div>
+          }
+        </div>
+
+        <!-- Actions -->
+        <div class="spm-linked-actions">
+          @if (!link.isPrimary) {
+          <button
+            class="spm-action-btn spm-action-promote"
+            mat-icon-button
+            matTooltip="Set as primary contact"
+            (click)="togglePrimary(link)"
+          >
+            <mat-icon>star_outline</mat-icon>
+          </button>
+          }
+          <button
+            class="spm-action-btn spm-action-remove"
+            mat-icon-button
+            matTooltip="Remove from student"
+            [disabled]="removingId() === link.linkId"
+            (click)="removeParent(link)"
+          >
+            @if (removingId() === link.linkId) {
+            <mat-spinner diameter="16"></mat-spinner>
+            } @else {
+            <mat-icon>link_off</mat-icon>
+            }
+          </button>
+        </div>
+      </div>
+      }
+    </div>
+    }
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+         SEARCH & ASSIGN
+         ══════════════════════════════════════════════════════════ -->
+  <div class="spm-section">
+    <div class="spm-section-label">Assign a Parent / Guardian</div>
+    <p class="spm-section-hint">
+      Search by name, email, or phone. Only users with the
+      <strong>STUDENT_PARENT</strong> role appear here.
+    </p>
+
+    <div class="spm-search-wrap">
+      <mat-icon class="spm-search-icon">search</mat-icon>
+      <input
+        class="spm-search-input"
+        type="text"
+        placeholder="Search parent by name or email…"
+        [value]="searchQuery()"
+        (input)="onSearchInput($event)"
+        autocomplete="off"
+      />
+      @if (searching()) {
+      <mat-spinner diameter="18" class="spm-search-spinner"></mat-spinner>
+      } @else if (searchQuery()) {
+      <button class="spm-search-clear" (click)="clearSearch()">
+        <mat-icon>close</mat-icon>
+      </button>
+      }
+    </div>
+
+    <!-- Search Results -->
+    @if (searchResults().length > 0) {
+    <div class="spm-results">
+      @for (parent of searchResults(); track parent.userId) {
+      <div class="spm-result-card" [class.already-linked]="isAlreadyLinked(parent.userId)">
+        <!-- Avatar -->
+        <div class="spm-avatar spm-avatar-sm" [style.background]="getAvatarColor(parent.name)">
+          @if (parent.avatarUrl) {
+          <img [src]="parent.avatarUrl" [alt]="parent.name" class="spm-avatar-img" />
+          } @else {
+          <span>{{ getInitials(parent.name) }}</span>
+          }
+        </div>
+
+        <!-- Info -->
+        <div class="spm-result-info">
+          <div class="spm-result-name">
+            {{ parent.name }}
+            @if (isAlreadyLinked(parent.userId)) {
+            <span class="spm-linked-tag">Already linked</span>
+            }
+          </div>
+          <div class="spm-result-meta">{{ parent.email }}</div>
+          @if (parent.phone) {
+          <div class="spm-result-meta">{{ parent.phone }}</div>
+          } @if (parent.occupation) {
+          <div class="spm-result-meta">{{ parent.occupation }}</div>
+          }
+          <div class="spm-result-children-count">
+            <mat-icon style="font-size: 12px; width: 12px; height: 12px">people</mat-icon>
+            {{ parent.linkedStudentCount }}
+            {{ parent.linkedStudentCount === 1 ? 'child' : 'children' }} linked
+          </div>
+        </div>
+
+        <!-- Assign Button -->
+        <button
+          class="spm-assign-btn"
+          [disabled]="isAlreadyLinked(parent.userId)"
+          (click)="openAssignModal(parent)"
+        >
+          @if (isAlreadyLinked(parent.userId)) {
+          <mat-icon>check_circle</mat-icon>
+          Linked } @else {
+          <mat-icon>add_link</mat-icon>
+          Assign }
+        </button>
+      </div>
+      }
+    </div>
+    } @else if (searchQuery().trim().length >= 2 && !searching()) {
+    <div class="spm-no-results">
+      <mat-icon>person_search</mat-icon>
+      <span
+        >No parents found matching "<strong>{{ searchQuery() }}</strong
+        >"</span
+      >
+    </div>
+    }
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+       ASSIGN CONFIRMATION MODAL
+       ══════════════════════════════════════════════════════════════ -->
+@if (showAssignModal() && selectedParent()) {
+<div class="spm-modal-backdrop" (click)="closeAssignModal()">
+  <div class="spm-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="spm-modal-header">
+      <div class="spm-modal-avatar" [style.background]="getAvatarColor(selectedParent()!.name)">
+        {{ getInitials(selectedParent()!.name) }}
+      </div>
+      <div>
+        <h3>Assign {{ selectedParent()!.name }}</h3>
+        <p>Link as parent / guardian of {{ studentName }}</p>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div class="spm-modal-body">
+      <!-- Relationship dropdown -->
+      <div class="spm-field">
+        <label class="spm-field-label">Relationship *</label>
+        <div class="spm-select-wrap">
+          <select
+            class="spm-select"
+            [value]="assignRelationship()"
+            (change)="onRelationshipChange($event)"
+          >
+            @for (opt of relationshipOptions; track opt) {
+            <option [value]="opt">{{ opt }}</option>
+            }
+          </select>
+          <mat-icon class="spm-select-chevron">expand_more</mat-icon>
+        </div>
+      </div>
+
+      <!-- Primary toggle -->
+      <div class="spm-toggle-row">
+        <div class="spm-toggle-text">
+          <span class="spm-toggle-label">Set as Primary Contact</span>
+          <p class="spm-toggle-hint">
+            Primary contact is the first person notified for school communications.
+          </p>
+        </div>
+        <button
+          class="spm-toggle"
+          [class.active]="assignIsPrimary()"
+          (click)="toggleAssignIsPrimary()"
+          type="button"
+          [attr.aria-pressed]="assignIsPrimary()"
+          aria-label="Toggle primary contact"
+        >
+          <span class="spm-toggle-thumb"></span>
+        </button>
+      </div>
+
+      <!-- Parent info summary -->
+      <div class="spm-modal-info-grid">
+        <div class="spm-modal-info-item">
+          <mat-icon>email</mat-icon>
+          <span>{{ selectedParent()!.email }}</span>
+        </div>
+        @if (selectedParent()!.phone) {
+        <div class="spm-modal-info-item">
+          <mat-icon>phone</mat-icon>
+          <span>{{ selectedParent()!.phone }}</span>
+        </div>
+        } @if (selectedParent()!.occupation) {
+        <div class="spm-modal-info-item">
+          <mat-icon>work</mat-icon>
+          <span>{{ selectedParent()!.occupation }}</span>
+        </div>
+        }
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="spm-modal-footer">
+      <button class="spm-modal-cancel" (click)="closeAssignModal()" [disabled]="assigning()">
+        Cancel
+      </button>
+      <button class="spm-modal-confirm" (click)="confirmAssign()" [disabled]="assigning()">
+        @if (assigning()) {
+        <mat-spinner diameter="18"></mat-spinner>
+        Assigning… } @else {
+        <mat-icon>add_link</mat-icon>
+        Assign Parent }
+      </button>
+    </div>
+  </div>
+</div>
+}

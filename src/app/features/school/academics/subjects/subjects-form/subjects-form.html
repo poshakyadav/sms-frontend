@@ -1,0 +1,98 @@
+<div class="form-page">
+  <header>
+    <div>
+      <h1>{{ isEdit() ? 'Edit Subject' : 'New Subject' }}</h1>
+      <p class="subtitle">Define subject details for the school curriculum</p>
+    </div>
+    <button mat-stroked-button (click)="router.navigate(['/school/academics/subjects'])">
+      <mat-icon>arrow_back</mat-icon> Back
+    </button>
+  </header>
+
+  <div class="form-card">
+    @if (loading()) {
+    <div class="loading-overlay">
+      <mat-spinner diameter="44"></mat-spinner>
+      <p>Loading subject data…</p>
+    </div>
+    } @else {
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-layout">
+      <!-- Name -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Subject Name *</mat-label>
+        <input
+          matInput
+          formControlName="name"
+          placeholder="e.g. Mathematics, Physics, English Literature"
+        />
+        @if (form.get('name')?.errors?.['required'] && form.get('name')?.touched) {
+        <mat-error>Subject name is required</mat-error>
+        } @if (form.get('name')?.errors?.['minlength'] && form.get('name')?.touched) {
+        <mat-error>Minimum 2 characters</mat-error>
+        } @if (form.get('name')?.errors?.['maxlength'] && form.get('name')?.touched) {
+        <mat-error>Maximum 100 characters</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Code -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Subject Code (optional)</mat-label>
+        <input
+          matInput
+          formControlName="code"
+          placeholder="e.g. MATH101, PHY, ENG"
+          maxlength="10"
+        />
+        <mat-hint>Short identifier (3 – 10 characters)</mat-hint>
+
+        @if (form.get('code')?.errors?.['minChars'] && form.get('code')?.touched) {
+        <mat-error>
+          Subject code must be at least 3 characters ({{ form.get('code')?.errors?.['minChars'].actual }}
+          entered)
+        </mat-error>
+        } @if (form.get('code')?.errors?.['maxlength'] && form.get('code')?.touched) {
+        <mat-error>Maximum 10 characters</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Description -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Description (optional)</mat-label>
+        <textarea
+          matInput
+          formControlName="description"
+          rows="4"
+          placeholder="Briefly describe the subject, its scope or objectives…"
+        >
+        </textarea>
+        <mat-hint align="end"> {{ form.get('description')?.value?.length ?? 0 }} / 500 </mat-hint>
+        @if (form.get('description')?.errors?.['maxlength'] && form.get('description')?.touched) {
+        <mat-error>Maximum 500 characters</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="router.navigate(['/school/academics/subjects'])"
+        >
+          Cancel
+        </button>
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="form.invalid || submitting()"
+        >
+          @if (submitting()) {
+          <mat-spinner diameter="18" style="display: inline-block; margin-right: 8px"></mat-spinner>
+          }
+          {{ isEdit() ? 'Update Subject' : 'Create Subject' }}
+        </button>
+      </div>
+    </form>
+    }
+  </div>
+</div>

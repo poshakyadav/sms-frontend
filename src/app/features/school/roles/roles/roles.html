@@ -1,0 +1,305 @@
+<!-- roles.html -->
+<!-- UPDATED: Role cards show a category badge. A second filter row lets users
+     filter by category (Staff / Student / Parent). Stats strip shows counts
+     by category in addition to the existing total / system / custom counts. -->
+
+<div class="roles-page">
+  <!-- ── Page Header ─────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="header-left">
+      <div class="header-icon-wrap">
+        <mat-icon>manage_accounts</mat-icon>
+      </div>
+      <div>
+        <h1>Roles & Permissions</h1>
+        <p>Configure role-based access control for your school</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      @if (canManage()) {
+      <button mat-flat-button class="btn-create" (click)="openCreateDialog()">
+        <mat-icon>add</mat-icon>
+        Create Role
+      </button>
+      }
+      <button mat-icon-button class="btn-refresh" (click)="loadRoles()" matTooltip="Refresh roles">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Loading ────────────────────────────────────────────────────── -->
+  @if (loading()) {
+  <div class="state-container">
+    <div class="spinner-wrap">
+      <mat-spinner diameter="44"></mat-spinner>
+    </div>
+    <p class="state-label">Loading roles…</p>
+  </div>
+  }
+
+  <!-- ── Error ──────────────────────────────────────────────────────── -->
+  @else if (error()) {
+  <div class="state-container">
+    <div class="state-icon-wrap error">
+      <mat-icon>error_outline</mat-icon>
+    </div>
+    <h2 class="state-title">Failed to load roles</h2>
+    <p class="state-desc">{{ error() }}</p>
+    <button mat-flat-button class="btn-retry" (click)="loadRoles()">
+      <mat-icon>refresh</mat-icon> Try Again
+    </button>
+  </div>
+  }
+
+  <!-- ── Content ────────────────────────────────────────────────────── -->
+  @else {
+
+  <!-- Stats Strip -->
+  <div class="stats-strip">
+    <div class="stat-card stat-total">
+      <div class="stat-value">{{ totalRoles() }}</div>
+      <div class="stat-label">Total Roles</div>
+    </div>
+    <div class="stat-card stat-system">
+      <div class="stat-value">{{ systemRoles() }}</div>
+      <div class="stat-label">System Roles</div>
+    </div>
+    <div class="stat-card stat-custom">
+      <div class="stat-value">{{ customRoles() }}</div>
+      <div class="stat-label">Custom Roles</div>
+    </div>
+    <!-- Category stats -->
+    <div class="stat-card stat-staff">
+      <div class="stat-value">{{ staffRolesCount() }}</div>
+      <div class="stat-label">Staff</div>
+    </div>
+    <div class="stat-card stat-student">
+      <div class="stat-value">{{ studentRolesCount() }}</div>
+      <div class="stat-label">Student</div>
+    </div>
+    <div class="stat-card stat-parent">
+      <div class="stat-value">{{ parentRolesCount() }}</div>
+      <div class="stat-label">Parent</div>
+    </div>
+    <div class="stat-card stat-perms">
+      <div class="stat-value">{{ filteredRoles().length }}</div>
+      <div class="stat-label">Showing</div>
+    </div>
+  </div>
+
+  <!-- Filter + Search Bar -->
+  <div class="controls-bar">
+    <div class="search-wrap">
+      <mat-icon class="search-icon">search</mat-icon>
+      <input
+        class="search-input"
+        type="text"
+        [value]="searchQuery()"
+        (input)="searchQuery.set($any($event.target).value)"
+        placeholder="Search roles by name or description…"
+      />
+      @if (searchQuery()) {
+      <button class="search-clear" (click)="searchQuery.set('')" matTooltip="Clear">
+        <mat-icon>close</mat-icon>
+      </button>
+      }
+    </div>
+
+    <!-- Type filter -->
+    <div class="filter-tabs">
+      <button class="filter-tab" [class.active]="filterType() === 'all'" (click)="setFilter('all')">
+        All
+      </button>
+      <button
+        class="filter-tab"
+        [class.active]="filterType() === 'system'"
+        (click)="setFilter('system')"
+      >
+        System
+      </button>
+      <button
+        class="filter-tab"
+        [class.active]="filterType() === 'custom'"
+        (click)="setFilter('custom')"
+      >
+        Custom
+      </button>
+    </div>
+  </div>
+
+  <!-- Category filter row -->
+  <div class="category-filter-row">
+    <span class="cat-filter-label">Category:</span>
+    <div class="cat-filter-tabs">
+      <button
+        class="cat-filter-tab"
+        [class.active]="filterCategory() === 'all'"
+        (click)="setCategoryFilter('all')"
+      >
+        All
+      </button>
+      <button
+        class="cat-filter-tab cat-filter-tab--staff"
+        [class.active]="filterCategory() === 'staff'"
+        (click)="setCategoryFilter('staff')"
+      >
+        <mat-icon>manage_accounts</mat-icon>
+        Staff
+      </button>
+      <button
+        class="cat-filter-tab cat-filter-tab--student"
+        [class.active]="filterCategory() === 'student'"
+        (click)="setCategoryFilter('student')"
+      >
+        <mat-icon>school</mat-icon>
+        Student
+      </button>
+      <button
+        class="cat-filter-tab cat-filter-tab--parent"
+        [class.active]="filterCategory() === 'parent'"
+        (click)="setCategoryFilter('parent')"
+      >
+        <mat-icon>family_restroom</mat-icon>
+        Parent
+      </button>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  @if (filteredRoles().length === 0) {
+  <div class="state-container">
+    <div class="state-icon-wrap">
+      <mat-icon>shield</mat-icon>
+    </div>
+    <h2 class="state-title">
+      {{ searchQuery() ? 'No roles match your search' : 'No roles yet' }}
+    </h2>
+    <p class="state-desc">
+      {{
+        searchQuery()
+          ? 'Try a different search term or clear the filter.'
+          : 'Create your first custom role to manage staff permissions.'
+      }}
+    </p>
+    @if (!searchQuery() && canManage()) {
+    <button mat-flat-button class="btn-create" (click)="openCreateDialog()">
+      <mat-icon>add</mat-icon> Create First Role
+    </button>
+    }
+  </div>
+  }
+
+  <!-- Roles Grid -->
+  @else {
+  <div class="roles-grid">
+    @for (role of filteredRoles(); track trackById($index, role)) {
+    <div
+      class="role-card"
+      [class.role-card--system]="role.isSystem"
+      [class.role-card--custom]="!role.isSystem"
+    >
+      <!-- Card Header -->
+      <div class="rc-header">
+        <div class="rc-avatar" [class.rc-avatar--system]="role.isSystem">
+          <mat-icon>{{ role.isSystem ? 'verified_user' : 'person_pin' }}</mat-icon>
+        </div>
+        <div class="rc-info">
+          <div class="rc-name-row">
+            <span class="rc-name">{{ role.name }}</span>
+            <!-- System / Custom badge -->
+            <span
+              class="rc-badge"
+              [class.rc-badge--system]="role.isSystem"
+              [class.rc-badge--custom]="!role.isSystem"
+            >
+              {{ role.isSystem ? 'System' : 'Custom' }}
+            </span>
+            <!-- UPDATED: Category badge -->
+            <span
+              class="rc-cat-badge"
+              [class.rc-cat-badge--staff]="role.category === 'staff'"
+              [class.rc-cat-badge--student]="role.category === 'student'"
+              [class.rc-cat-badge--parent]="role.category === 'parent'"
+              [matTooltip]="
+                role.category === 'staff'
+                  ? 'Staff-category role — only staff permissions'
+                  : role.category === 'student'
+                  ? 'Student-category role — only student permissions'
+                  : 'Parent-category role — only parent permissions'
+              "
+            >
+              <mat-icon class="rc-cat-icon">{{ getCategoryIcon(role.category) }}</mat-icon>
+              {{ role.category | titlecase }}
+            </span>
+          </div>
+          <p class="rc-desc">{{ role.description }}</p>
+        </div>
+      </div>
+
+      <!-- Permissions Summary -->
+      <div class="rc-perms-section">
+        <div class="rc-perms-meta">
+          <mat-icon class="rc-perms-icon">lock</mat-icon>
+          <span class="rc-perms-count">
+            {{ role.permissionCount ?? role.permissions.length }} permissions
+          </span>
+        </div>
+        @if (role.permissions.length > 0) {
+        <div class="rc-perms-chips">
+          @for (slug of getVisiblePermissions(role); track slug) {
+          <span class="perm-chip">{{ slug }}</span>
+          } @if (getExtraPermissionCount(role) > 0) {
+          <span class="perm-chip perm-chip--more">+{{ getExtraPermissionCount(role) }}</span>
+          }
+        </div>
+        }
+      </div>
+
+      <!-- Card Actions -->
+      <div class="rc-actions">
+        <button
+          mat-icon-button
+          class="rc-action-btn"
+          matTooltip="View details"
+          (click)="openDetailDialog(role)"
+        >
+          <mat-icon>visibility</mat-icon>
+        </button>
+
+        <div class="rc-actions-spacer"></div>
+
+        @if (canManage()) { @if (!role.isSystem) {
+        <button
+          mat-icon-button
+          class="rc-action-btn"
+          matTooltip="Edit role"
+          (click)="openEditDialog(role)"
+        >
+          <mat-icon>edit</mat-icon>
+        </button>
+        }
+        <button
+          mat-icon-button
+          class="rc-action-btn"
+          matTooltip="Clone role"
+          (click)="openCloneDialog(role)"
+        >
+          <mat-icon>content_copy</mat-icon>
+        </button>
+        @if (!role.isSystem) {
+        <button
+          mat-icon-button
+          class="rc-action-btn rc-action-btn--danger"
+          matTooltip="Delete role"
+          (click)="deleteRole(role)"
+        >
+          <mat-icon>delete_outline</mat-icon>
+        </button>
+        } }
+      </div>
+    </div>
+    }
+  </div>
+  } }
+</div>

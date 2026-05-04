@@ -1,0 +1,750 @@
+<!-- privacy-policy.html -->
+<div class="legal-page">
+  <!-- ── HERO ─────────────────────────────────────────────────────────────── -->
+  <section class="legal-hero">
+    <div class="container">
+      <div class="legal-hero__badge">Legal</div>
+      <h1 class="legal-hero__title">Privacy Policy</h1>
+      <p class="legal-hero__meta">
+        Last updated: <strong>{{ lastUpdated }}</strong>
+      </p>
+      <p class="legal-hero__summary">
+        This Privacy Policy explains how SMS collects, uses, stores, and protects personal
+        information — with special care for student and child data. We comply with India's
+        <strong>Digital Personal Data Protection Act (DPDP Act), 2023</strong>, the
+        <strong>Information Technology Act, 2000</strong>, and applicable international privacy
+        standards.
+      </p>
+    </div>
+  </section>
+
+  <div class="legal-body container">
+    <!-- ── Sticky ToC ─────────────────────────────────────────────────────── -->
+    <aside class="toc">
+      <div class="toc__header">Contents</div>
+      <nav class="toc__nav">
+        <button
+          *ngFor="let sec of sections"
+          class="toc__item"
+          [class.toc__item--active]="activeSection === sec.id"
+          (click)="scrollTo(sec.id)"
+        >
+          <span class="toc__icon">{{ sec.icon }}</span>
+          <span class="toc__text">{{ sec.title }}</span>
+        </button>
+      </nav>
+    </aside>
+
+    <main class="legal-content">
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 01  OVERVIEW                                                        -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="overview" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">01</span>
+          <h2>Overview</h2>
+        </div>
+        <p>
+          SMS ("we", "our", "us") is a school management platform designed for Indian educational
+          institutions. We are committed to protecting the privacy and security of all individuals
+          whose data is processed through our platform — including school owners, administrators,
+          staff, teachers, parents, and students.
+        </p>
+        <p>
+          This Privacy Policy applies to all users of the SMS platform, whether accessed via our web
+          application or mobile interface.
+        </p>
+        <div class="callout callout--success">
+          <span class="callout__icon">🎯</span>
+          <p>
+            <strong>Core Commitment:</strong> We do not sell, rent, or trade personal data to third
+            parties for profit. Student data is used exclusively to deliver the SMS service to your
+            school. No student is profiled for advertising purposes.
+          </p>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 02  DATA CONTROLLER                                                 -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="controller" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">02</span>
+          <h2>Data Controller &amp; Data Fiduciary</h2>
+        </div>
+        <p>Under the DPDP Act 2023 and applicable privacy law, the following roles apply:</p>
+        <div class="definition-list">
+          <div class="definition-item">
+            <dt>Data Fiduciary (Primary)</dt>
+            <dd>
+              The registered School — the institution that determines the purposes and means of
+              collecting and processing student, staff, and parent data within the platform. The
+              School Owner acts as the authorised representative of the School for data purposes.
+            </dd>
+          </div>
+          <div class="definition-item">
+            <dt>Data Processor</dt>
+            <dd>
+              SMS Platform — we process personal data on behalf of schools strictly in accordance
+              with their instructions and this Policy. We do not determine the purpose of processing
+              independently.
+            </dd>
+          </div>
+          <div class="definition-item">
+            <dt>Data Principal</dt>
+            <dd>
+              The individual whose data is being processed — students, parents/guardians, teachers,
+              and other staff members.
+            </dd>
+          </div>
+        </div>
+        <p>
+          By registering on SMS, the School Owner confirms that the School has obtained, or will
+          obtain, all necessary consents and authorisations from parents, guardians, and staff
+          before entering their personal data into the platform — as required by the DPDP Act 2023.
+        </p>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 03  WHAT WE COLLECT                                                 -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="what-we-collect" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">03</span>
+          <h2>What We Collect</h2>
+        </div>
+
+        <h3 class="subsection-title">School &amp; Administrator Data</h3>
+        <ul class="legal-list">
+          <li>School name, address, contact information, and school code.</li>
+          <li>
+            Owner name, email address, phone number, and securely stored password credentials.
+          </li>
+          <li>
+            Payment verification information (payment reference number, payer name) for setup fee
+            processing.
+          </li>
+        </ul>
+
+        <h3 class="subsection-title">Staff &amp; Teacher Data</h3>
+        <ul class="legal-list">
+          <li>Name, email address, phone number, date of birth, gender, and address.</li>
+          <li>Role, designation, department, and joining date.</li>
+          <li>Teaching qualifications and subject specialisation (for teachers).</li>
+          <li>Profile photo (optional, managed by school administrators).</li>
+        </ul>
+
+        <h3 class="subsection-title">Student Data (Sensitive — Highest Protection Level)</h3>
+        <ul class="legal-list">
+          <li>Name, email address, date of birth, and gender.</li>
+          <li>Admission date, roll number, academic year, class, and section.</li>
+          <li>Attendance records, examination marks, and assignment submissions.</li>
+          <li>Fee payment records and financial ledger entries.</li>
+          <li>Medical information, where voluntarily provided by the school.</li>
+          <li>Parent and guardian relationships and contact details.</li>
+        </ul>
+
+        <h3 class="subsection-title">Automatically Collected Technical Data</h3>
+        <ul class="legal-list">
+          <li>
+            Authentication session tokens stored locally in your browser for session management.
+          </li>
+          <li>Browser type and version, used only for compatibility diagnostics.</li>
+          <li>
+            Anonymised error logs and performance metrics. No personally identifiable information
+            (PII) is included in these logs.
+          </li>
+          <li>
+            For users on the free tier: anonymised, non-personalised contextual data used to display
+            relevant educational advertisements (see Section 07 — Advertising).
+          </li>
+        </ul>
+
+        <div class="callout callout--info">
+          <span class="callout__icon">ℹ️</span>
+          <p>
+            We do <strong>not</strong> collect location data, device fingerprints, social media
+            profiles, biometric data, or any behavioural tracking data for advertising or profiling
+            purposes.
+          </p>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 04  HOW WE USE DATA                                                 -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="how-we-use" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">04</span>
+          <h2>How We Use Data</h2>
+        </div>
+        <div class="use-table">
+          <div class="use-row use-row--header">
+            <span>Purpose</span>
+            <span>Data Used</span>
+            <span>Legal Basis</span>
+          </div>
+          <div class="use-row">
+            <span>Deliver the platform service</span>
+            <span>All user data</span>
+            <span>Contractual necessity</span>
+          </div>
+          <div class="use-row">
+            <span>Account authentication &amp; security</span>
+            <span>Email, credentials, session tokens</span>
+            <span>Legitimate interest</span>
+          </div>
+          <div class="use-row">
+            <span>Academic management (attendance, marks)</span>
+            <span>Student academic data</span>
+            <span>School's lawful instructions</span>
+          </div>
+          <div class="use-row">
+            <span>Fee management &amp; records</span>
+            <span>Enrolment, payment data</span>
+            <span>Contractual / legal obligation</span>
+          </div>
+          <div class="use-row">
+            <span>Transactional email notifications</span>
+            <span>Name, email address</span>
+            <span>Contractual necessity</span>
+          </div>
+          <div class="use-row">
+            <span>Platform improvement (anonymised)</span>
+            <span>Aggregated, de-identified usage data</span>
+            <span>Legitimate interest</span>
+          </div>
+          <div class="use-row">
+            <span>Contextual educational advertising (free tier only)</span>
+            <span>Page context only — no personal profile</span>
+            <span>School consent via Terms agreement</span>
+          </div>
+          <div class="use-row">
+            <span>Legal compliance &amp; audit</span>
+            <span>Relevant records as required</span>
+            <span>Legal obligation</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 05  LEGAL BASIS                                                      -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="legal-basis" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">05</span>
+          <h2>Legal Basis for Processing</h2>
+        </div>
+        <p>
+          We process personal data under the following legal bases as provided under the DPDP Act
+          2023 and the IT Act, 2000:
+        </p>
+        <ul class="legal-list">
+          <li>
+            <strong>Contractual Necessity:</strong> Processing required to deliver the Service under
+            the Terms of Service agreed to by the School at registration.
+          </li>
+          <li>
+            <strong>Legitimate Interests:</strong> Security monitoring, fraud prevention, abuse
+            detection, and service improvement — balanced against individuals' rights.
+          </li>
+          <li>
+            <strong>Legal Obligation:</strong> Where required by Indian law, court order, government
+            directive, or regulatory requirement.
+          </li>
+          <li>
+            <strong>Consent (via School Agreement):</strong> For student and minor data, the School
+            provides institutional consent on behalf of its community at registration by agreeing to
+            these Terms. The School, as Data Fiduciary, is responsible for ensuring underlying
+            parental or guardian consent has been obtained as required by the DPDP Act 2023.
+          </li>
+        </ul>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 06  DATA SHARING                                                     -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="sharing" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">06</span>
+          <h2>Data Sharing &amp; Third Parties</h2>
+        </div>
+        <p>
+          <strong>We do not sell personal data to third parties.</strong> We share data only in
+          these limited, necessary circumstances:
+        </p>
+        <div class="definition-list">
+          <div class="definition-item">
+            <dt>Cloud Infrastructure Providers</dt>
+            <dd>
+              We use reputable, enterprise-grade cloud service providers for hosting, database
+              storage, and global content delivery. Each school's data is stored in an isolated,
+              dedicated data store. All providers are bound by data processing agreements and
+              maintain industry-standard security certifications. We do not disclose specific vendor
+              names in this public document to protect our infrastructure security posture.
+            </dd>
+          </div>
+          <div class="definition-item">
+            <dt>Transactional Email Service</dt>
+            <dd>
+              We use a third-party email delivery service to send transactional messages such as
+              registration confirmations, password resets, and payment receipts. Only the
+              recipient's name and email address are shared for this purpose. This provider does not
+              use your data for its own marketing.
+            </dd>
+          </div>
+          <div class="definition-item">
+            <dt>Advertising Partners (Free Tier Only)</dt>
+            <dd>
+              Schools on the free tier may have contextual, non-personalised educational
+              advertisements displayed on the platform. Ad partners receive only anonymised,
+              non-personal contextual signals (e.g., general subject area of the page). No student
+              PII, behavioural profiles, or tracking data is shared with advertisers. See Section 07
+              for full details.
+            </dd>
+          </div>
+          <div class="definition-item">
+            <dt>Legal Authorities</dt>
+            <dd>
+              We may disclose data to law enforcement agencies, courts, or regulatory authorities
+              when legally required to do so under Indian law or a valid court order. We will notify
+              affected schools unless prohibited by law or court order.
+            </dd>
+          </div>
+        </div>
+        <div class="callout callout--warning">
+          <span class="callout__icon">⚠️</span>
+          <p>
+            All third-party service providers are contractually bound to process data only for the
+            purposes we specify, to maintain appropriate security standards, and to comply with
+            applicable data protection law.
+          </p>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 07  ADVERTISING                                                      -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="advertising" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">07</span>
+          <h2>Advertising on SMS</h2>
+        </div>
+
+        <div class="ad-disclosure-banner">
+          <span class="ad-disclosure-banner__icon">📢</span>
+          <div class="ad-disclosure-banner__text">
+            <strong>Transparency Notice — How SMS is Funded</strong>
+            SMS is available free of charge to schools. To sustain the platform, schools on the free
+            tier may see contextual educational advertisements. Schools that prefer an ad-free
+            experience may upgrade to a Premium plan.
+          </div>
+        </div>
+
+        <h3 class="subsection-title">What Type of Ads We Show</h3>
+        <p>
+          SMS displays only <strong>contextual, non-behavioural</strong> advertisements. This means:
+        </p>
+        <ul class="legal-list">
+          <li>
+            Ads are matched to the <em>content context</em> of the page being viewed (e.g., a
+            mathematics-related page may show ads for educational stationery or course materials),
+            not to a user's personal history or profile.
+          </li>
+          <li>
+            No user tracking, behavioural profiling, or cross-site data collection is performed for
+            advertising purposes.
+          </li>
+          <li>
+            No personally identifiable information of students, teachers, or parents is shared with
+            advertisers.
+          </li>
+        </ul>
+
+        <h3 class="subsection-title">Ad Categories — What We Allow</h3>
+        <ul class="legal-list">
+          <li>Educational courses, tutoring services, and academic tools.</li>
+          <li>Educational stationery, books, and school supplies.</li>
+          <li>Career guidance, scholarship programmes, and vocational training.</li>
+          <li>Age-appropriate technology products for education.</li>
+          <li>Reputable educational institutions and learning platforms.</li>
+        </ul>
+
+        <h3 class="subsection-title">Ad Categories — What We Strictly Prohibit</h3>
+        <ul class="legal-list legal-list--prohibited">
+          <li>Alcohol, tobacco, or any substance-related products.</li>
+          <li>Gambling, betting, or fantasy sports platforms.</li>
+          <li>Dating, adult, or age-inappropriate content.</li>
+          <li>Political advertising or advocacy.</li>
+          <li>Financial products such as loans, credit cards, or investment schemes.</li>
+          <li>Any content that undermines student well-being or academic values.</li>
+        </ul>
+
+        <h3 class="subsection-title">Where Ads Are Shown</h3>
+        <ul class="legal-list">
+          <li>
+            Ads are displayed only in non-sensitive areas such as dashboards and informational
+            pages.
+          </li>
+          <li>
+            Ads are <strong>never</strong> shown on examination pages, result pages, fee payment
+            screens, medical information sections, or any other sensitive workflow.
+          </li>
+          <li>Ads are clearly labelled as "Advertisement" or "Sponsored" at all times.</li>
+        </ul>
+
+        <div class="plan-table">
+          <div class="plan-table__row plan-table__row--header">
+            <div class="plan-table__cell">Feature</div>
+            <div class="plan-table__cell">Free Plan</div>
+            <div class="plan-table__cell">Premium Plan</div>
+          </div>
+          <div class="plan-table__row">
+            <div class="plan-table__cell">Contextual educational ads</div>
+            <div class="plan-table__cell plan-table__cell--yes">Shown</div>
+            <div class="plan-table__cell plan-table__cell--no">Hidden</div>
+          </div>
+          <div class="plan-table__row">
+            <div class="plan-table__cell">Ad-free experience</div>
+            <div class="plan-table__cell plan-table__cell--no">No</div>
+            <div class="plan-table__cell plan-table__cell--yes">Yes</div>
+          </div>
+          <div class="plan-table__row">
+            <div class="plan-table__cell">Behavioural / targeted ads</div>
+            <div class="plan-table__cell plan-table__cell--no">Never</div>
+            <div class="plan-table__cell plan-table__cell--no">Never</div>
+          </div>
+          <div class="plan-table__row">
+            <div class="plan-table__cell">Student PII shared with advertisers</div>
+            <div class="plan-table__cell plan-table__cell--no">Never</div>
+            <div class="plan-table__cell plan-table__cell--no">Never</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 08  CHILDREN'S PRIVACY                                              -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="children" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">08</span>
+          <h2>Children's Privacy</h2>
+        </div>
+        <div class="callout callout--danger">
+          <span class="callout__icon">🧒</span>
+          <p>
+            <strong>Students are our most protected users.</strong> Their data receives our highest
+            level of care, access control, and legal protection.
+          </p>
+        </div>
+        <p>
+          SMS is a school management platform and by nature processes data of minors. We take this
+          responsibility seriously and comply with:
+        </p>
+        <ul class="legal-list">
+          <li>
+            <strong>DPDP Act 2023 (Section 9):</strong> Processing of personal data of minors
+            (persons under 18 years) requires verifiable parental or guardian consent. The School,
+            as Data Fiduciary, is responsible for obtaining this consent before entering any minor's
+            data into the platform.
+          </li>
+          <li>
+            <strong>IT Act, 2000 (Section 43A):</strong> We maintain reasonable security practices
+            for protection of sensitive personal data, including that of minors.
+          </li>
+          <li>
+            <strong>International Standards:</strong> We align with COPPA (US) and GDPR Article 8
+            (EU) principles as best practice, even where not directly applicable.
+          </li>
+        </ul>
+        <p>Our specific protections for student data include:</p>
+        <ul class="legal-list">
+          <li>
+            Student accounts are created and managed entirely by the school — students do not
+            self-register.
+          </li>
+          <li>
+            Student data is visible only to authorised school staff, and to the student's own linked
+            parent or guardian accounts.
+          </li>
+          <li>
+            No student's personal data is used for advertising targeting, behavioural profiling, or
+            any commercial purpose beyond delivering the platform.
+          </li>
+          <li>
+            Advertisements on the free tier are contextual only — matched to page content, not to
+            any student identity, history, or profile.
+          </li>
+          <li>
+            Sensitive data such as medical information is protected by strict, role-based access
+            controls within the platform.
+          </li>
+        </ul>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 09  RETENTION & DELETION                                            -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="retention" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">09</span>
+          <h2>Data Retention &amp; Deletion</h2>
+        </div>
+        <div class="retention-table">
+          <div class="ret-row ret-row--header">
+            <span>Data Type</span>
+            <span>Retention Period</span>
+            <span>Deletion Trigger</span>
+          </div>
+          <div class="ret-row">
+            <span>Active school &amp; user data</span>
+            <span>Duration of active subscription</span>
+            <span>Account termination + 30 days grace</span>
+          </div>
+          <div class="ret-row">
+            <span>Student academic records</span>
+            <span>Duration of enrolment + school's retention policy</span>
+            <span>School request or account termination</span>
+          </div>
+          <div class="ret-row">
+            <span>Fee &amp; financial records</span>
+            <span>7 years (financial/tax legal obligation)</span>
+            <span>After mandatory legal retention period</span>
+          </div>
+          <div class="ret-row">
+            <span>Session tokens</span>
+            <span>Short-lived, auto-expiring</span>
+            <span>On logout or automatic expiry</span>
+          </div>
+          <div class="ret-row">
+            <span>Transactional email logs</span>
+            <span>90 days</span>
+            <span>Automatic rolling deletion</span>
+          </div>
+          <div class="ret-row">
+            <span>Anonymised error &amp; performance logs</span>
+            <span>30 days</span>
+            <span>Automatic rolling deletion</span>
+          </div>
+        </div>
+        <p>
+          Upon account termination, we will provide a complete data export within 7 business days
+          upon request. After the 30-day grace period, all school data is permanently and
+          irreversibly deleted from all systems, including backups.
+        </p>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 10  YOUR RIGHTS                                                      -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="rights" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">10</span>
+          <h2>Your Rights</h2>
+        </div>
+        <p>
+          Under the DPDP Act 2023 and other applicable laws, you and your school have the following
+          rights:
+        </p>
+        <div class="rights-grid">
+          <div class="right-card">
+            <div class="right-card__icon">👁️</div>
+            <h4>Right to Access</h4>
+            <p>Request a summary of the personal data we hold about you or your school.</p>
+          </div>
+          <div class="right-card">
+            <div class="right-card__icon">✏️</div>
+            <h4>Right to Correction</h4>
+            <p>Request correction of inaccurate or incomplete personal data.</p>
+          </div>
+          <div class="right-card">
+            <div class="right-card__icon">🗑️</div>
+            <h4>Right to Erasure</h4>
+            <p>Request deletion of your personal data, subject to legal retention obligations.</p>
+          </div>
+          <div class="right-card">
+            <div class="right-card__icon">📦</div>
+            <h4>Right to Data Portability</h4>
+            <p>Receive a structured export of your school's data in a usable format.</p>
+          </div>
+          <div class="right-card">
+            <div class="right-card__icon">🚫</div>
+            <h4>Right to Withdraw Consent</h4>
+            <p>Withdraw consent for non-essential processing at any time.</p>
+          </div>
+          <div class="right-card">
+            <div class="right-card__icon">📋</div>
+            <h4>Right to Grievance Redressal</h4>
+            <p>
+              Lodge a complaint with our Grievance Officer or with India's Data Protection Board.
+            </p>
+          </div>
+        </div>
+        <p>
+          To exercise any of these rights, contact us at
+          <a href="mailto:privacy@sms.app">privacy@sms.app</a>. We will respond within
+          <strong>30 calendar days</strong>. Identity verification may be required for certain
+          requests.
+        </p>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 11  SECURITY                                                         -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="security" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">11</span>
+          <h2>Security Measures</h2>
+        </div>
+        <p>
+          For full details of our technical and organisational security measures, please refer to
+          our <a routerLink="/public/security">Security Policy</a>. A summary of key protections:
+        </p>
+        <ul class="legal-list">
+          <li>
+            <strong>Encryption in Transit:</strong> All data transmitted between your browser and
+            our servers is encrypted using industry-standard secure protocols.
+          </li>
+          <li>
+            <strong>Encryption at Rest:</strong> All stored data — including school databases — is
+            encrypted at the storage layer.
+          </li>
+          <li>
+            <strong>Password Security:</strong> User passwords are processed using a
+            cryptographically secure, industry-standard adaptive hashing algorithm. Passwords are
+            never stored or logged in readable form.
+          </li>
+          <li>
+            <strong>Session Management:</strong> Authentication uses short-lived, rotating session
+            tokens. Sessions can be terminated instantly by administrators.
+          </li>
+          <li>
+            <strong>Data Isolation:</strong> Each school's data is stored in a dedicated, isolated
+            data store. No cross-school data access is architecturally possible.
+          </li>
+          <li>
+            <strong>Access Control:</strong> A fine-grained, permission-based access control system
+            ensures users can only access data relevant to their assigned role.
+          </li>
+        </ul>
+        <p>
+          In the event of a data breach that may affect your personal data, we will notify affected
+          schools within 72 hours of discovery, in accordance with DPDP Act 2023 requirements.
+        </p>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 12  COOKIES & STORAGE                                               -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="cookies" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">12</span>
+          <h2>Cookies &amp; Local Storage</h2>
+        </div>
+        <p>
+          SMS uses browser local storage (not tracking cookies) to maintain your session and
+          preferences. The data stored locally includes:
+        </p>
+        <ul class="legal-list">
+          <li>
+            <strong>Authentication tokens</strong> — for maintaining your logged-in session. Cleared
+            automatically on logout.
+          </li>
+          <li>
+            <strong>School theme configuration</strong> — for displaying your school's custom
+            branding without delay on page load.
+          </li>
+          <li>
+            <strong>School code and user type</strong> — for session persistence across browser
+            refreshes.
+          </li>
+          <li><strong>Dark mode preference</strong> — your selected display preference.</li>
+        </ul>
+        <p>
+          No locally stored data is transmitted to third parties or used for advertising profiling.
+          You may clear this data at any time via your browser settings, which will end your
+          session.
+        </p>
+        <p>
+          If advertising is active on your school's free tier, any ad-serving technology used is
+          configured to operate without behavioural cookies or cross-site tracking in compliance
+          with our contextual-only advertising commitment.
+        </p>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 13  POLICY CHANGES                                                   -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="changes" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">13</span>
+          <h2>Policy Changes</h2>
+        </div>
+        <p>
+          We may update this Privacy Policy periodically. When material changes are made, we will:
+        </p>
+        <ul class="legal-list">
+          <li>Update the "Last Updated" date displayed at the top of this page.</li>
+          <li>
+            Send an email notification to all registered School Owners at least 14 days before
+            material changes take effect.
+          </li>
+          <li>
+            Display a prominent in-platform notice for a minimum of 14 days following any material
+            update.
+          </li>
+        </ul>
+        <p>
+          Continued use of the Service following the effective date of any changes constitutes
+          acceptance of the revised Policy. If you do not agree with material changes, you have the
+          right to terminate your account and request a full data export before deletion.
+        </p>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 14  CONTACT & GRIEVANCE                                              -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="contact" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">14</span>
+          <h2>Contact &amp; Grievance Officer</h2>
+        </div>
+        <p>
+          In accordance with the DPDP Act 2023 and the IT Act 2000, we have designated a Grievance
+          Officer to address data-related concerns. You may contact us for any privacy queries,
+          requests, or complaints:
+        </p>
+        <div class="contact-block">
+          <div class="contact-block__item">
+            <span class="contact-block__label">🛡️ Privacy &amp; Grievance Officer</span>
+            <a href="mailto:privacy@sms.app">privacy@sms.app</a>
+          </div>
+          <div class="contact-block__item">
+            <span class="contact-block__label">🔒 Security Incidents</span>
+            <a href="mailto:security@sms.app">security@sms.app</a>
+          </div>
+          <div class="contact-block__item">
+            <span class="contact-block__label">⚖️ Legal &amp; Compliance</span>
+            <a href="mailto:legal@sms.app">legal@sms.app</a>
+          </div>
+          <div class="contact-block__item">
+            <span class="contact-block__label">💬 General Support</span>
+            <a href="mailto:support@sms.app">support@sms.app</a>
+          </div>
+        </div>
+        <p>
+          We aim to acknowledge all grievances within <strong>48 hours</strong> and resolve them
+          within <strong>30 calendar days</strong>. If you are unsatisfied with our response, you
+          have the right to lodge a complaint with India's
+          <strong>Data Protection Board of India</strong>, once constituted under the DPDP Act 2023.
+        </p>
+      </section>
+
+      <!-- ── Footer Nav ──────────────────────────────────────────────────── -->
+      <div class="legal-footer-nav">
+        <a routerLink="/public/terms" class="legal-footer-nav__link">← Terms &amp; Conditions</a>
+        <a routerLink="/public/security" class="legal-footer-nav__link">Security Policy →</a>
+      </div>
+    </main>
+  </div>
+</div>

@@ -1,0 +1,942 @@
+<!-- bulk-student-upload.html — v2 (production-grade) -->
+<div class="bulk-upload-page">
+  <!-- ══════════════════════════════ PAGE HEADER ═══════════════════════════ -->
+  <div class="page-header">
+    <div class="header-left">
+      <button class="back-btn" (click)="goBack()" aria-label="Back to students">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+        >
+          <path d="M19 12H5M12 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <div>
+        <h1 class="page-title">Bulk Student Upload</h1>
+        <p class="page-subtitle">Add multiple students to a class-section using an Excel file</p>
+      </div>
+    </div>
+
+    <!-- Step indicator -->
+    <div class="step-indicator" role="list" aria-label="Upload progress">
+      <div
+        class="step"
+        [class.active]="currentStep() === 'select'"
+        [class.done]="stepDone('select')"
+        role="listitem"
+      >
+        <div class="step-circle">
+          <svg
+            *ngIf="stepDone('select')"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+          </svg>
+          <span *ngIf="!stepDone('select')">1</span>
+        </div>
+        <span class="step-label">Select Class</span>
+      </div>
+      <div class="step-connector" [class.done]="stepDone('select')"></div>
+      <div
+        class="step"
+        [class.active]="currentStep() === 'upload'"
+        [class.done]="stepDone('upload')"
+        role="listitem"
+      >
+        <div class="step-circle">
+          <svg
+            *ngIf="stepDone('upload')"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+          </svg>
+          <span *ngIf="!stepDone('upload')">2</span>
+        </div>
+        <span class="step-label">Upload File</span>
+      </div>
+      <div class="step-connector" [class.done]="stepDone('upload')"></div>
+      <div
+        class="step"
+        [class.active]="currentStep() === 'results'"
+        [class.done]="stepDone('results')"
+        role="listitem"
+      >
+        <div class="step-circle">
+          <svg
+            *ngIf="stepDone('results')"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+          </svg>
+          <span *ngIf="!stepDone('results')">3</span>
+        </div>
+        <span class="step-label">Results</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ STEP 1 — SELECT CLASS ═══════════════════════ -->
+  <div class="step-panel" *ngIf="currentStep() === 'select'">
+    <div class="panel-card">
+      <div class="panel-header">
+        <div class="panel-icon icon-select">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+          >
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+        </div>
+        <div>
+          <h2>Choose Target Class & Section</h2>
+          <p>Students from your Excel file will be enrolled in the selected class-section</p>
+        </div>
+      </div>
+
+      <!-- Class-section selector -->
+      <div class="form-group">
+        <label class="form-label" for="cs-select"> Class-Section <span class="req">*</span> </label>
+        <div class="select-wrap">
+          <select
+            id="cs-select"
+            class="form-select"
+            [ngModel]="selectedClassSectionId()"
+            (ngModelChange)="onClassSectionChange($event)"
+            [disabled]="loadingClassSections()"
+          >
+            <option value="" disabled>
+              {{
+                loadingClassSections() ? 'Loading class-sections…' : '— Choose a class-section —'
+              }}
+            </option>
+            <option *ngFor="let cs of classSections()" [value]="cs.id">
+              {{ cs.className }} – {{ cs.sectionName }}
+            </option>
+          </select>
+          <svg
+            class="select-caret"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Capacity card -->
+      <div class="capacity-card" *ngIf="selectedClassSectionId() && !loadingCapacity()">
+        <ng-container *ngIf="capacityInfo() as cap">
+          <div class="cap-header">
+            <span class="cap-title">
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+              Enrollment Capacity — {{ cap.className }} – {{ cap.sectionName }}
+            </span>
+            <span
+              class="cap-badge"
+              [class.cap-full]="cap.remaining === 0"
+              [class.cap-warning]="cap.remaining > 0 && cap.remaining <= 10"
+            >
+              {{ cap.remaining === 0 ? 'Full' : cap.remaining + ' available' }}
+            </span>
+          </div>
+
+          <div class="cap-stats">
+            <div class="cap-stat">
+              <span class="stat-val">{{ cap.existingStudents }}</span>
+              <span class="stat-lbl">Enrolled</span>
+            </div>
+            <div class="cap-sep"></div>
+            <div class="cap-stat">
+              <span
+                class="stat-val"
+                [class.val-good]="cap.remaining > 10"
+                [class.val-warn]="cap.remaining > 0 && cap.remaining <= 10"
+                [class.val-bad]="cap.remaining === 0"
+              >
+                {{ cap.remaining }}
+              </span>
+              <span class="stat-lbl">Available Slots</span>
+            </div>
+            <div class="cap-sep"></div>
+            <div class="cap-stat">
+              <span class="stat-val">{{ cap.maxAllowed }}</span>
+              <span class="stat-lbl">Maximum</span>
+            </div>
+          </div>
+
+          <div class="cap-bar-wrap">
+            <div class="cap-bar">
+              <div
+                class="cap-fill"
+                [style.width.%]="capacityPercent()"
+                [class.fill-warn]="cap.remaining > 0 && cap.remaining <= 10"
+                [class.fill-full]="cap.remaining === 0"
+              ></div>
+            </div>
+            <span class="cap-pct">{{ capacityPercent() }}% full</span>
+          </div>
+
+          <!-- Full alert -->
+          <div class="cap-full-alert" *ngIf="cap.remaining === 0">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
+              />
+            </svg>
+            This class-section is at maximum capacity. No more students can be enrolled.
+          </div>
+        </ng-container>
+        <div class="cap-loading" *ngIf="loadingCapacity()">
+          <span class="mini-spinner"></span> Loading capacity…
+        </div>
+      </div>
+
+      <!-- Template download -->
+      <div class="template-block">
+        <div class="template-info">
+          <div class="template-icon">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14,2 14,8 20,8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+            </svg>
+          </div>
+          <div>
+            <h3>Download Excel Template</h3>
+            <p>
+              Includes sample rows, all supported columns, and a Guide sheet explaining each field
+            </p>
+          </div>
+        </div>
+        <button class="btn-download" (click)="downloadTemplate()">
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7,10 12,15 17,10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          Download Template
+        </button>
+      </div>
+
+      <!-- Field guide -->
+      <div class="field-guide">
+        <h4 class="guide-title">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          Excel Column Guide
+        </h4>
+        <div class="guide-grid">
+          <div class="guide-col required">
+            <span class="guide-col-head">Required</span>
+            <span>Name</span>
+            <span>Email</span>
+            <span>Password</span>
+          </div>
+          <div class="guide-col optional">
+            <span class="guide-col-head">Optional</span>
+            <span>Phone</span>
+            <span>Date of Birth</span>
+            <span>Gender</span>
+            <span>Admission Date</span>
+            <span>Previous School</span>
+          </div>
+          <div class="guide-col optional">
+            <span class="guide-col-head">Optional (cont.)</span>
+            <span>Medical Info</span>
+            <span>Blood Group</span>
+          </div>
+        </div>
+        <p class="guide-note">
+          <strong>Note:</strong> Roll numbers are <em>not</em> assigned during upload — use the Roll
+          Numbers feature after enrollment. To link parents or guardians, use the dedicated
+          <strong>Parents</strong> module after upload.
+        </p>
+      </div>
+
+      <div class="panel-footer">
+        <button
+          class="btn-primary"
+          [disabled]="!selectedClassSectionId() || !capacityInfo()?.canAddMore || loadingCapacity()"
+          (click)="goToUpload()"
+        >
+          Continue to Upload
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ STEP 2 — UPLOAD FILE ═══════════════════════ -->
+  <div class="step-panel" *ngIf="currentStep() === 'upload'">
+    <div class="panel-card">
+      <div class="panel-header">
+        <div class="panel-icon icon-upload">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+          >
+            <polyline points="16,16 12,12 8,16" />
+            <line x1="12" y1="12" x2="12" y2="21" />
+            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+          </svg>
+        </div>
+        <div>
+          <h2>Upload Student Data File</h2>
+          <p>
+            Target: <strong>{{ selectedClassSectionName() }}</strong>
+            <span class="slots-pill" *ngIf="capacityInfo()">
+              {{ capacityInfo()!.remaining }} slot{{ capacityInfo()!.remaining !== 1 ? 's' : '' }}
+              available
+            </span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Drop zone -->
+      <div
+        class="drop-zone"
+        [class.has-file]="selectedFile()"
+        [class.drag-over]="isDragOver()"
+        (dragover)="onDragOver($event)"
+        (dragleave)="isDragOver.set(false)"
+        (drop)="onDrop($event)"
+        (click)="!selectedFile() && fileInput.click()"
+        role="button"
+        [attr.aria-label]="
+          selectedFile()
+            ? 'File selected: ' + selectedFile()!.name
+            : 'Click or drag to upload Excel file'
+        "
+        tabindex="0"
+        (keydown.enter)="!selectedFile() && fileInput.click()"
+      >
+        <input
+          #fileInput
+          type="file"
+          accept=".xlsx,.xls"
+          style="display: none"
+          (change)="onFileSelected($event)"
+        />
+
+        <!-- Empty state -->
+        <div class="drop-empty" *ngIf="!selectedFile()">
+          <div class="drop-icon-wrap" [class.drag-active]="isDragOver()">
+            <svg
+              width="36"
+              height="36"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.4"
+            >
+              <polyline points="16,16 12,12 8,16" />
+              <line x1="12" y1="12" x2="12" y2="21" />
+              <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+            </svg>
+          </div>
+          <p class="drop-main">
+            {{ isDragOver() ? 'Drop to upload' : 'Drag & drop your Excel file here' }}
+          </p>
+          <p class="drop-sub">
+            or <span class="drop-link">click to browse</span> — .xlsx or .xls, max 5 MB
+          </p>
+        </div>
+
+        <!-- File selected state -->
+        <div class="file-preview" *ngIf="selectedFile()">
+          <div class="file-icon-wrap">
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14,2 14,8 20,8" />
+            </svg>
+          </div>
+          <div class="file-meta">
+            <span class="file-name">{{ selectedFile()!.name }}</span>
+            <span class="file-size">{{ formatFileSize(selectedFile()!.size) }}</span>
+          </div>
+          <button class="file-remove" (click)="removeFile($event)" aria-label="Remove file">
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- File error -->
+      <div class="error-strip" *ngIf="fileError()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
+          />
+        </svg>
+        {{ fileError() }}
+      </div>
+
+      <!-- Pre-upload checklist -->
+      <div class="checklist-box">
+        <h4 class="checklist-title">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polyline points="9,11 12,14 22,4" />
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+          </svg>
+          Before uploading — verify these
+        </h4>
+        <ul class="checklist">
+          <li>
+            <span class="check-icon">✓</span>
+            Use the provided template — do not change column names or order
+          </li>
+          <li>
+            <span class="check-icon">✓</span>
+            Maximum <strong>{{ capacityInfo()?.remaining ?? '—' }}</strong> students can be added
+            <span *ngIf="capacityInfo()">
+              ({{ capacityInfo()!.existingStudents }} already enrolled, limit
+              {{ capacityInfo()!.maxAllowed }})</span
+            >
+          </li>
+          <li>
+            <span class="check-icon">✓</span>
+            Every email must be unique — both within the file and across the entire school
+          </li>
+          <li>
+            <span class="check-icon">✓</span>
+            Passwords must be at least 8 characters
+          </li>
+          <li>
+            <span class="check-icon">✓</span>
+            If any email conflict is found, <em>no students will be added</em> — fix all issues and
+            re-upload
+          </li>
+          <li>
+            <span class="check-icon">✓</span>
+            Roll numbers are assigned separately after upload via the Roll Numbers feature
+          </li>
+        </ul>
+      </div>
+
+      <div class="panel-footer">
+        <button class="btn-secondary" (click)="currentStep.set('select')">
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+          Back
+        </button>
+        <button
+          class="btn-primary"
+          [disabled]="!selectedFile() || uploading()"
+          (click)="submitUpload()"
+        >
+          <ng-container *ngIf="!uploading()">
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <polyline points="16,16 12,12 8,16" />
+              <line x1="12" y1="12" x2="12" y2="21" />
+              <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+            </svg>
+            Upload &amp; Enroll Students
+          </ng-container>
+          <ng-container *ngIf="uploading()">
+            <span class="btn-spinner"></span>
+            Processing…
+          </ng-container>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ PROCESSING OVERLAY ═════════════════════════ -->
+  <div class="step-panel" *ngIf="currentStep() === 'processing'">
+    <div class="processing-card">
+      <div class="processing-anim">
+        <div class="orbit-ring">
+          <div class="orbit-dot"></div>
+        </div>
+        <div class="orbit-icon">
+          <svg
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+        </div>
+      </div>
+      <h2>Processing Your File</h2>
+      <p>Validating data, checking for duplicates, and enrolling students…</p>
+      <p class="processing-sub">This may take a few seconds for large files</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ STEP 3 — RESULTS ═══════════════════════════ -->
+  <div class="step-panel" *ngIf="currentStep() === 'results' && uploadResult()">
+    <div class="results-layout">
+      <!-- Result banner -->
+      <div
+        class="result-banner"
+        [class.banner-success]="uploadResult()!.summary.failed === 0"
+        [class.banner-partial]="
+          uploadResult()!.summary.failed > 0 && uploadResult()!.summary.successful > 0
+        "
+        [class.banner-error]="uploadResult()!.summary.successful === 0"
+      >
+        <div class="banner-icon-wrap">
+          <!-- All success -->
+          <svg
+            *ngIf="uploadResult()!.summary.failed === 0"
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+            />
+          </svg>
+          <!-- Partial -->
+          <svg
+            *ngIf="uploadResult()!.summary.failed > 0 && uploadResult()!.summary.successful > 0"
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
+            />
+          </svg>
+          <!-- All fail -->
+          <svg
+            *ngIf="uploadResult()!.summary.successful === 0"
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
+            />
+          </svg>
+        </div>
+        <div class="banner-body">
+          <h3>{{ uploadResult()!.message }}</h3>
+          <div class="summary-pills">
+            <span class="pill pill-success" *ngIf="uploadResult()!.summary.successful > 0">
+              ✓ {{ uploadResult()!.summary.successful }} Enrolled
+            </span>
+            <span class="pill pill-fail" *ngIf="uploadResult()!.summary.failed > 0">
+              ✗ {{ uploadResult()!.summary.failed }} Failed
+            </span>
+            <span class="pill pill-total">
+              {{ uploadResult()!.summary.totalRows }} Total Rows
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Capacity after -->
+      <div class="after-capacity" *ngIf="uploadResult()!.capacityInfo as cap">
+        <div class="after-row">
+          <span class="after-lbl">Class now has</span>
+          <span class="after-val"
+            >{{ cap.totalAfter }} / {{ cap.maxAllowed }} students enrolled</span
+          >
+        </div>
+        <div class="cap-bar slim">
+          <div class="cap-fill" [style.width.%]="(cap.totalAfter / cap.maxAllowed) * 100"></div>
+        </div>
+        <p class="after-note" *ngIf="uploadResult()!.summary.successful > 0">
+          💡 Roll numbers can now be assigned from the <strong>Roll Numbers</strong> section under
+          Academics.
+        </p>
+      </div>
+
+      <!-- Row-by-row table -->
+      <div class="results-table-card">
+        <div class="table-toolbar">
+          <h3>Row-by-Row Results</h3>
+          <div class="filter-pills">
+            <button
+              class="filter-pill"
+              [class.active]="resultFilter() === 'ALL'"
+              (click)="resultFilter.set('ALL')"
+            >
+              All ({{ uploadResult()!.results.length }})
+            </button>
+            <button
+              class="filter-pill pill-s"
+              [class.active]="resultFilter() === 'SUCCESS'"
+              (click)="resultFilter.set('SUCCESS')"
+            >
+              ✓ Success ({{ successRows().length }})
+            </button>
+            <button
+              class="filter-pill pill-f"
+              [class.active]="resultFilter() === 'FAILED'"
+              (click)="resultFilter.set('FAILED')"
+              *ngIf="failedRows().length > 0"
+            >
+              ✗ Failed ({{ failedRows().length }})
+            </button>
+          </div>
+        </div>
+
+        <div class="table-scroll">
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>Row</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Detail</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let row of filteredResults()"
+                [class.tr-success]="row.status === 'SUCCESS'"
+                [class.tr-failed]="row.status === 'FAILED'"
+              >
+                <td class="td-row">#{{ row.rowNumber }}</td>
+                <td class="td-name">{{ row.name || '—' }}</td>
+                <td class="td-email">{{ row.email || '—' }}</td>
+                <td>
+                  <span
+                    class="status-badge"
+                    [class.badge-s]="row.status === 'SUCCESS'"
+                    [class.badge-f]="row.status === 'FAILED'"
+                  >
+                    <svg
+                      *ngIf="row.status === 'SUCCESS'"
+                      width="11"
+                      height="11"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                    </svg>
+                    <svg
+                      *ngIf="row.status === 'FAILED'"
+                      width="11"
+                      height="11"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path
+                        d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+                      />
+                    </svg>
+                    {{ row.status }}
+                  </span>
+                </td>
+                <td class="td-detail">
+                  <span class="detail-ok" *ngIf="row.status === 'SUCCESS'"
+                    >User ID: {{ row.userId }}</span
+                  >
+                  <span class="detail-err" *ngIf="row.status === 'FAILED'">{{ row.error }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel-footer">
+        <button class="btn-secondary" (click)="resetAndStartOver()">
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <polyline points="1,4 1,10 7,10" />
+            <path d="M3.51 15a9 9 0 1 0 .49-3.78" />
+          </svg>
+          Upload Another File
+        </button>
+        <button class="btn-primary" (click)="goBack()">
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+          </svg>
+          View All Students
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ EMAIL CONFLICT POPUP ════════════════════════════ -->
+<div
+  class="popup-overlay"
+  *ngIf="showConflictPopup()"
+  (click)="closeConflictPopup()"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Email Conflicts"
+>
+  <div class="popup-card" (click)="$event.stopPropagation()">
+    <!-- Popup header -->
+    <div class="popup-header">
+      <div class="popup-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
+          />
+        </svg>
+      </div>
+      <div>
+        <h2 class="popup-title">Email Conflicts Found</h2>
+        <p class="popup-sub">No students were added. Fix the issues below and re-upload.</p>
+      </div>
+      <button class="popup-close" (click)="closeConflictPopup()" aria-label="Close">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+        >
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Summary boxes -->
+    <div class="conflict-summary">
+      <div class="conflict-box box-school" *ngIf="inSchoolConflicts().length > 0">
+        <span class="box-count">{{ inSchoolConflicts().length }}</span>
+        <span class="box-label">Already registered<br />in this school</span>
+      </div>
+      <div class="conflict-box box-file" *ngIf="inFileConflicts().length > 0">
+        <span class="box-count">{{ inFileConflicts().length }}</span>
+        <span class="box-label">Duplicate<br />within file</span>
+      </div>
+      <div class="conflict-box box-total">
+        <span class="box-count">{{ emailConflicts().length }}</span>
+        <span class="box-label">Total<br />conflicts</span>
+      </div>
+    </div>
+
+    <!-- What to do guide -->
+    <div class="conflict-guide">
+      <h4>How to fix this:</h4>
+      <ol>
+        <li *ngIf="inSchoolConflicts().length > 0">
+          <strong>Already in school</strong> — These emails belong to existing accounts. Use
+          different email addresses for these students, or if the student already exists, enroll
+          them individually from the student list.
+        </li>
+        <li *ngIf="inFileConflicts().length > 0">
+          <strong>Duplicate in file</strong> — The same email appears more than once in your Excel
+          file. Each student must have a unique email address.
+        </li>
+        <li>Update your Excel file, then <strong>re-upload</strong> the corrected version.</li>
+      </ol>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="conflict-filter-row">
+      <button
+        class="cf-tab"
+        [class.cf-active]="conflictFilter() === 'ALL'"
+        (click)="conflictFilter.set('ALL')"
+      >
+        All ({{ emailConflicts().length }})
+      </button>
+      <button
+        class="cf-tab cf-school"
+        [class.cf-active]="conflictFilter() === 'ALREADY_IN_SCHOOL'"
+        (click)="conflictFilter.set('ALREADY_IN_SCHOOL')"
+        *ngIf="inSchoolConflicts().length > 0"
+      >
+        In School ({{ inSchoolConflicts().length }})
+      </button>
+      <button
+        class="cf-tab cf-file"
+        [class.cf-active]="conflictFilter() === 'DUPLICATE_IN_FILE'"
+        (click)="conflictFilter.set('DUPLICATE_IN_FILE')"
+        *ngIf="inFileConflicts().length > 0"
+      >
+        In File ({{ inFileConflicts().length }})
+      </button>
+    </div>
+
+    <!-- Conflict table -->
+    <div class="conflict-table-wrap">
+      <table class="conflict-table">
+        <thead>
+          <tr>
+            <th>Row #</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Issue</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of filteredConflicts()">
+            <td class="ct-row">#{{ c.rowNumber }}</td>
+            <td class="ct-name">{{ c.name }}</td>
+            <td class="ct-email">{{ c.email }}</td>
+            <td>
+              <span
+                class="issue-badge"
+                [class.issue-school]="c.conflictType === 'ALREADY_IN_SCHOOL'"
+                [class.issue-file]="c.conflictType === 'DUPLICATE_IN_FILE'"
+              >
+                {{
+                  c.conflictType === 'ALREADY_IN_SCHOOL' ? 'Already in school' : 'Duplicate in file'
+                }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Popup footer -->
+    <div class="popup-footer">
+      <button class="btn-secondary" (click)="downloadConflictReport()">
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+        >
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7,10 12,15 17,10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+        Download Conflict Report (.csv)
+      </button>
+      <button class="btn-primary" (click)="closeConflictPopup()">
+        Got It — Fix &amp; Re-upload
+      </button>
+    </div>
+  </div>
+</div>

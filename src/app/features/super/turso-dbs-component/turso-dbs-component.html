@@ -1,0 +1,196 @@
+<div class="page">
+  <header class="page__header">
+    <div>
+      <h1 class="page__title">Turso Databases</h1>
+      <p class="page__subtitle">Provision and monitor your distributed school database fleet</p>
+    </div>
+  </header>
+
+  <!-- Stats row -->
+  <div class="stats-row">
+    <div class="stat-chip stat-chip--total">
+      <svg
+        width="15"
+        height="15"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+      </svg>
+      <span>{{ dbs().length }} total</span>
+    </div>
+    <div class="stat-chip stat-chip--available">
+      <span class="stat-chip__dot"></span>
+      {{ availableCount() }} available
+    </div>
+    <div class="stat-chip stat-chip--assigned">
+      <span class="stat-chip__dot"></span>
+      {{ assignedCount() }} assigned
+    </div>
+  </div>
+
+  <!-- Register form -->
+  <section class="form-card mat-elevation-z1">
+    <h3 class="form-card__title">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="16"></line>
+        <line x1="8" y1="12" x2="16" y2="12"></line>
+      </svg>
+      Register new database
+    </h3>
+    <form [formGroup]="form" (ngSubmit)="addDb()" class="db-form">
+      <div class="form-fields">
+        <mat-form-field appearance="outline">
+          <mat-label>Database URL</mat-label>
+          <input matInput formControlName="url" placeholder="libsql://your-db.turso.io" />
+          <mat-icon matPrefix>link</mat-icon>
+          <mat-error *ngIf="form.get('url')?.hasError('required')">Required</mat-error>
+          <mat-error *ngIf="form.get('url')?.hasError('pattern')"
+            >Must start with libsql://</mat-error
+          >
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Auth token</mat-label>
+          <input
+            matInput
+            type="password"
+            formControlName="authToken"
+            placeholder="Enter token"
+            autocomplete="off"
+          />
+          <mat-icon matPrefix>key</mat-icon>
+          <mat-error>Required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Created by (email)</mat-label>
+          <input
+            matInput
+            type="email"
+            formControlName="createdByEmail"
+            placeholder="devops@company.com"
+          />
+          <mat-icon matPrefix>email</mat-icon>
+          <mat-error>Valid email required</mat-error>
+        </mat-form-field>
+      </div>
+
+      <button
+        mat-flat-button
+        color="primary"
+        type="submit"
+        [disabled]="form.invalid || saving()"
+        class="add-btn"
+      >
+        <mat-icon>{{ saving() ? 'hourglass_empty' : 'add' }}</mat-icon>
+        {{ saving() ? 'Registering...' : 'Register database' }}
+      </button>
+    </form>
+  </section>
+
+  <!-- Databases table -->
+  <div class="table-card mat-elevation-z1">
+    <mat-progress-bar
+      *ngIf="loading()"
+      mode="indeterminate"
+      color="primary"
+      class="loading-bar"
+    ></mat-progress-bar>
+
+    <mat-table [dataSource]="dbs()">
+      <ng-container matColumnDef="id">
+        <mat-header-cell *matHeaderCellDef>ID</mat-header-cell>
+        <mat-cell *matCellDef="let db">
+          <span class="mono-id">#{{ db.id }}</span>
+        </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="url">
+        <mat-header-cell *matHeaderCellDef>Connection URL</mat-header-cell>
+        <mat-cell *matCellDef="let db">
+          <div class="url-cell">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#6b7280"
+              stroke-width="2"
+            >
+              <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+            </svg>
+            <code>{{ db.url }}</code>
+          </div>
+        </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="createdByEmail">
+        <mat-header-cell *matHeaderCellDef>Created by</mat-header-cell>
+        <mat-cell *matCellDef="let db" class="email-cell">{{ db.createdByEmail }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="lastMigrationAt">
+        <mat-header-cell *matHeaderCellDef>Last migration</mat-header-cell>
+        <mat-cell *matCellDef="let db">
+          @if (db.lastMigrationAt) {
+          <span class="date-cell">{{ db.lastMigrationAt | date : 'MMM d, y HH:mm' }}</span>
+          } @else {
+          <span class="never-cell">Never</span>
+          }
+        </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="isAssigned">
+        <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+        <mat-cell *matCellDef="let db">
+          <div
+            class="status-badge"
+            [class.status-badge--assigned]="db.isAssigned"
+            [class.status-badge--free]="!db.isAssigned"
+          >
+            <span class="status-badge__dot"></span>
+            {{ db.isAssigned ? 'Assigned' : 'Available' }}
+          </div>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns" class="table-row"></mat-row>
+
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell empty-state" [attr.colspan]="displayedColumns.length">
+          <div class="empty-state__content">
+            <svg
+              width="40"
+              height="40"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#d1d5db"
+              stroke-width="1.5"
+            >
+              <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+            </svg>
+            <p>{{ loading() ? 'Loading databases...' : 'No databases registered yet' }}</p>
+          </div>
+        </td>
+      </tr>
+    </mat-table>
+  </div>
+</div>

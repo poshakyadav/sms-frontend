@@ -1,0 +1,54 @@
+<div class="form-page">
+  <header>
+    <div>
+      <h1>{{ isEdit() ? 'Edit Section' : 'New Section' }}</h1>
+      <p class="subtitle">
+        Sections are assigned to classes to create class-sections (e.g. Class 10 - A)
+      </p>
+    </div>
+    <button mat-stroked-button (click)="router.navigate(['/school/academics/sections'])">
+      <mat-icon>arrow_back</mat-icon> Back
+    </button>
+  </header>
+
+  <div class="form-card">
+    @if (loading() && isEdit()) {
+    <div class="loading-overlay">
+      <mat-spinner diameter="44"></mat-spinner>
+    </div>
+    } @else {
+    <form [formGroup]="form" (ngSubmit)="save()" class="form-layout">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Section Name</mat-label>
+        <input matInput formControlName="name" placeholder="e.g. A, B, Science, Commerce" />
+        @if (form.get('name')?.errors?.['required'] && form.get('name')?.touched) {
+        <mat-error>Section name is required</mat-error>
+        } @if (form.get('name')?.errors?.['maxlength'] && form.get('name')?.touched) {
+        <mat-error>Maximum 50 characters</mat-error>
+        }
+      </mat-form-field>
+
+      <div class="form-actions">
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="router.navigate(['/school/academics/sections'])"
+        >
+          Cancel
+        </button>
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="form.invalid || loading()"
+        >
+          @if (loading()) {
+          <mat-spinner diameter="18" style="display: inline-block; margin-right: 8px"></mat-spinner>
+          }
+          {{ isEdit() ? 'Update Section' : 'Create Section' }}
+        </button>
+      </div>
+    </form>
+    }
+  </div>
+</div>

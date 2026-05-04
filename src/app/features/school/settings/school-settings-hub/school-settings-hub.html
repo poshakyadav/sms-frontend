@@ -1,0 +1,82 @@
+<!-- school-settings-hub.html -->
+<!-- Settings & Information Hub — permission-filtered, theme-aware -->
+
+<div class="hub-page">
+  <!-- ── Hero Banner ──────────────────────────────────────────────────────── -->
+  <header class="hub-hero">
+    <div class="hub-hero-left">
+      <!-- User avatar pill -->
+      <a
+        class="hero-avatar-link"
+        routerLink="/school/profile/me"
+        matRipple
+        matTooltip="Go to My Profile"
+        matTooltipPosition="right"
+      >
+        <div class="hero-avatar">{{ userInitials() }}</div>
+        <div class="hero-avatar-ring"></div>
+      </a>
+
+      <div class="hero-text">
+        <h1 class="hero-title">Settings & Info</h1>
+        <p class="hero-sub">
+          <span class="hero-role">{{ roleLabel() }}</span>
+          @if (userName()) {
+          <span class="hero-name-sep">·</span>
+          <span class="hero-name">{{ userName() }}</span>
+          }
+        </p>
+      </div>
+    </div>
+
+    <!-- Summary pill -->
+    <div class="hero-summary">
+      <mat-icon class="hero-summary-icon">tune</mat-icon>
+      <span>{{ totalCards() }} available option{{ totalCards() !== 1 ? 's' : '' }}</span>
+    </div>
+  </header>
+
+  <!-- ── Sections ─────────────────────────────────────────────────────────── -->
+  <div class="hub-sections">
+    @for (section of visibleSections(); track trackSection($index, section)) {
+    <section class="hub-section">
+      <!-- Section header -->
+      <div class="section-header">
+        <div class="section-icon-wrap">
+          <mat-icon class="section-icon">{{ section.icon }}</mat-icon>
+        </div>
+        <div class="section-title-block">
+          <h2 class="section-title">{{ section.title }}</h2>
+          <p class="section-subtitle">{{ section.subtitle }}</p>
+        </div>
+      </div>
+
+      <!-- Cards grid -->
+      <div class="cards-grid">
+        @for (card of section.cards; track trackCard($index, card)) {
+        <a
+          class="settings-card {{ card.accentClass }}"
+          [routerLink]="card.route"
+          matRipple
+          matRippleColor="rgba(var(--card-accent-rgb), 0.08)"
+        >
+          <!-- Icon -->
+          <div class="card-icon-wrap">
+            <mat-icon class="card-icon">{{ card.icon }}</mat-icon>
+          </div>
+
+          <!-- Text -->
+          <div class="card-body">
+            <span class="card-label">{{ card.label }}</span>
+            <span class="card-desc">{{ card.description }}</span>
+          </div>
+
+          <!-- Arrow -->
+          <mat-icon class="card-arrow">chevron_right</mat-icon>
+        </a>
+        }
+      </div>
+    </section>
+    }
+  </div>
+</div>

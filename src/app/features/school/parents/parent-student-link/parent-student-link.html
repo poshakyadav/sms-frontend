@@ -1,0 +1,355 @@
+<!-- parent-student-link.html -->
+<div class="psl-page">
+  <!-- ══════════════════════════════════════════════════════════
+       SKELETON LOADER — shown until afterNextRender fires
+       Mirrors the dashboard skeleton pattern to prevent the
+       "full page flashes" on repeated navigation.
+       ══════════════════════════════════════════════════════════ -->
+  @if (!pageReady()) {
+  <div class="psl-skeleton">
+    <div class="skeleton-hero"></div>
+    <div class="skeleton-tabs"></div>
+    <div class="skeleton-panel">
+      <div class="skeleton-step-header"></div>
+      <div class="skeleton-search"></div>
+      <div class="skeleton-empty"></div>
+    </div>
+  </div>
+  }
+
+  <!-- ══════════════════════════════════════════════════════════
+       REAL CONTENT — only rendered after browser paint
+       ══════════════════════════════════════════════════════════ -->
+  @if (pageReady()) {
+
+  <!-- PAGE HERO HEADER -->
+  <div class="psl-hero">
+    <div class="psl-hero-content">
+      <div class="psl-hero-icon-wrap">
+        <mat-icon>family_restroom</mat-icon>
+      </div>
+      <div class="psl-hero-text">
+        <h1 class="psl-hero-title">Parent–Student Links</h1>
+        <p class="psl-hero-subtitle">
+          Assign parents and guardians to students, or view all children linked to a parent.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- WORKFLOW TABS -->
+  <div class="psl-tabs-wrap">
+    <div class="psl-tabs">
+      <button
+        class="psl-tab"
+        [class.active]="activeTab() === 'by-student'"
+        (click)="setTab('by-student')"
+      >
+        <mat-icon>person_search</mat-icon>
+        <span>Find Student → Manage Parents</span>
+      </button>
+      <button
+        class="psl-tab"
+        [class.active]="activeTab() === 'by-parent'"
+        (click)="setTab('by-parent')"
+      >
+        <mat-icon>manage_accounts</mat-icon>
+        <span>Find Parent → View Children</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       TAB: BY STUDENT
+       ══════════════════════════════════════════════════════════ -->
+  @if (activeTab() === 'by-student') {
+  <div class="psl-panel">
+    <!-- Step 1: Student Search -->
+    <div class="psl-step">
+      <div class="psl-step-header">
+        <div class="psl-step-badge">1</div>
+        <div>
+          <h2 class="psl-step-title">Search for a Student</h2>
+          <p class="psl-step-hint">Type at least 2 characters to search by name or email</p>
+        </div>
+      </div>
+
+      <div class="psl-search-wrap" [class.has-value]="studentQuery()">
+        <mat-icon class="psl-search-icon">search</mat-icon>
+        <input
+          class="psl-search-input"
+          type="text"
+          placeholder="Search student by name or email…"
+          [value]="studentQuery()"
+          (input)="onStudentSearchInput($event)"
+          autocomplete="off"
+        />
+        @if (searchingStudents()) {
+        <mat-spinner diameter="18" class="psl-search-spinner"></mat-spinner>
+        } @else if (studentQuery()) {
+        <button class="psl-clear-btn" (click)="clearStudentSearch()">
+          <mat-icon>close</mat-icon>
+        </button>
+        }
+      </div>
+
+      <!-- Student Results Dropdown -->
+      @if (studentResults().length > 0) {
+      <div class="psl-results-list">
+        @for (student of studentResults(); track student.id) {
+        <button class="psl-result-item" (click)="selectStudent(student)">
+          <div class="psl-result-avatar" [style.background]="getAvatarColor(student.name)">
+            @if (student.avatarUrl) {
+            <img [src]="student.avatarUrl" [alt]="student.name" />
+            } @else {
+            {{ getInitials(student.name) }}
+            }
+          </div>
+          <div class="psl-result-info">
+            <span class="psl-result-name">{{ student.name }}</span>
+            <span class="psl-result-meta">{{ student.email }}</span>
+            @if (student.className) {
+            <span class="psl-result-class">
+              <mat-icon>class</mat-icon>
+              {{ student.className }}{{ student.sectionName ? ' – ' + student.sectionName : '' }}
+              @if (student.rollNumber) {
+              <span class="psl-result-roll"> · Roll {{ student.rollNumber }}</span>
+              }
+            </span>
+            }
+          </div>
+          <mat-icon class="psl-result-arrow">chevron_right</mat-icon>
+        </button>
+        }
+      </div>
+      } @else if (studentQuery().trim().length >= 2 && !searchingStudents() &&
+      studentResults().length === 0) {
+      <div class="psl-no-results">
+        <mat-icon>search_off</mat-icon>
+        <span
+          >No students found for "<strong>{{ studentQuery() }}</strong
+          >"</span
+        >
+      </div>
+      }
+    </div>
+
+    <!-- Step 2: Manage Parents (shown only when student is selected) -->
+    @if (selectedStudent()) {
+    <div class="psl-step psl-step-manager">
+      <div class="psl-step-header">
+        <div class="psl-step-badge">2</div>
+        <div class="psl-step-header-row">
+          <div>
+            <h2 class="psl-step-title">Manage Parents for {{ selectedStudent()!.name }}</h2>
+            <p class="psl-step-hint">
+              Assign new parents, set a primary contact, or remove existing links
+            </p>
+          </div>
+          <!-- Quick link to student profile -->
+          <button
+            class="psl-profile-link"
+            (click)="navigateToStudent(selectedStudent()!.id)"
+            matTooltip="View full student profile"
+          >
+            <mat-icon>open_in_new</mat-icon>
+            Profile
+          </button>
+        </div>
+      </div>
+
+      <!-- Selected Student Card -->
+      <div class="psl-selected-student-card">
+        <div class="psl-sscard-avatar" [style.background]="getAvatarColor(selectedStudent()!.name)">
+          @if (selectedStudent()!.avatarUrl) {
+          <img [src]="selectedStudent()!.avatarUrl" [alt]="selectedStudent()!.name" />
+          } @else {
+          {{ getInitials(selectedStudent()!.name) }}
+          }
+        </div>
+        <div class="psl-sscard-info">
+          <span class="psl-sscard-name">{{ selectedStudent()!.name }}</span>
+          <span class="psl-sscard-email">{{ selectedStudent()!.email }}</span>
+          @if (selectedStudent()!.className) {
+          <span class="psl-sscard-class">
+            <mat-icon>class</mat-icon>
+            {{ selectedStudent()!.className
+            }}{{ selectedStudent()!.sectionName ? ' – ' + selectedStudent()!.sectionName : '' }} @if
+            (selectedStudent()!.rollNumber) { · Roll {{ selectedStudent()!.rollNumber }}
+            }
+          </span>
+          }
+        </div>
+        <div class="psl-sscard-chip">
+          <mat-icon>school</mat-icon>
+          Student
+        </div>
+      </div>
+
+      <!-- The actual parent manager component -->
+      <app-student-parents-manager
+        [studentId]="selectedStudent()!.id"
+        [studentName]="selectedStudent()!.name"
+      ></app-student-parents-manager>
+    </div>
+    } @else {
+    <!-- Placeholder when no student is selected -->
+    <div class="psl-empty-state">
+      <div class="psl-empty-icon-wrap">
+        <mat-icon>person_search</mat-icon>
+      </div>
+      <h3>Select a Student Above</h3>
+      <p>Search for a student to view and manage their parent or guardian links.</p>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- ══════════════════════════════════════════════════════════
+       TAB: BY PARENT
+       ══════════════════════════════════════════════════════════ -->
+  @if (activeTab() === 'by-parent') {
+  <div class="psl-panel">
+    <!-- Step 1: Parent Search -->
+    <div class="psl-step">
+      <div class="psl-step-header">
+        <div class="psl-step-badge">1</div>
+        <div>
+          <h2 class="psl-step-title">Search for a Parent</h2>
+          <p class="psl-step-hint">Find a STUDENT_PARENT user to see all their linked children</p>
+        </div>
+      </div>
+
+      <div class="psl-search-wrap" [class.has-value]="parentQuery()">
+        <mat-icon class="psl-search-icon">manage_accounts</mat-icon>
+        <input
+          class="psl-search-input"
+          type="text"
+          placeholder="Search parent by name, email or phone…"
+          [value]="parentQuery()"
+          (input)="onParentSearchInput($event)"
+          autocomplete="off"
+        />
+        @if (searchingParents()) {
+        <mat-spinner diameter="18" class="psl-search-spinner"></mat-spinner>
+        } @else if (parentQuery()) {
+        <button class="psl-clear-btn" (click)="clearParentSearch()">
+          <mat-icon>close</mat-icon>
+        </button>
+        }
+      </div>
+
+      <!-- Parent Results -->
+      @if (parentResults().length > 0) {
+      <div class="psl-results-list">
+        @for (parent of parentResults(); track parent.userId) {
+        <button class="psl-result-item" (click)="selectParent(parent)">
+          <div class="psl-result-avatar" [style.background]="getAvatarColor(parent.name)">
+            @if (parent.avatarUrl) {
+            <img [src]="parent.avatarUrl" [alt]="parent.name" />
+            } @else {
+            {{ getInitials(parent.name) }}
+            }
+          </div>
+          <div class="psl-result-info">
+            <span class="psl-result-name">{{ parent.name }}</span>
+            <span class="psl-result-meta">{{ parent.email }}</span>
+            @if (parent.phone) {
+            <span class="psl-result-meta">{{ parent.phone }}</span>
+            }
+          </div>
+          <div class="psl-result-children-chip">
+            <mat-icon>people</mat-icon>
+            {{ parent.linkedStudentCount }}
+            {{ parent.linkedStudentCount === 1 ? 'child' : 'children' }}
+          </div>
+          <mat-icon class="psl-result-arrow">chevron_right</mat-icon>
+        </button>
+        }
+      </div>
+      } @else if (parentQuery().trim().length >= 2 && !searchingParents() && parentResults().length
+      === 0) {
+      <div class="psl-no-results">
+        <mat-icon>search_off</mat-icon>
+        <span
+          >No parents found for "<strong>{{ parentQuery() }}</strong
+          >"</span
+        >
+      </div>
+      }
+    </div>
+
+    <!-- Step 2: Parent info + linked students -->
+    @if (selectedParent()) {
+    <div class="psl-step">
+      <div class="psl-step-header">
+        <div class="psl-step-badge">2</div>
+        <div>
+          <h2 class="psl-step-title">{{ selectedParent()!.name }}'s Profile</h2>
+          <p class="psl-step-hint">
+            {{ selectedParent()!.linkedStudentCount }}
+            {{ selectedParent()!.linkedStudentCount === 1 ? 'child' : 'children' }} linked to this
+            parent
+          </p>
+        </div>
+      </div>
+
+      <!-- Parent Card -->
+      <div class="psl-parent-card">
+        <div
+          class="psl-parent-card-avatar"
+          [style.background]="getAvatarColor(selectedParent()!.name)"
+        >
+          @if (selectedParent()!.avatarUrl) {
+          <img [src]="selectedParent()!.avatarUrl" [alt]="selectedParent()!.name" />
+          } @else {
+          {{ getInitials(selectedParent()!.name) }}
+          }
+        </div>
+        <div class="psl-parent-card-info">
+          <h3 class="psl-parent-card-name">{{ selectedParent()!.name }}</h3>
+          <div class="psl-parent-card-meta-row">
+            <span class="psl-parent-meta-item">
+              <mat-icon>email</mat-icon>{{ selectedParent()!.email }}
+            </span>
+            @if (selectedParent()!.phone) {
+            <span class="psl-parent-meta-item">
+              <mat-icon>phone</mat-icon>{{ selectedParent()!.phone }}
+            </span>
+            } @if (selectedParent()!.occupation) {
+            <span class="psl-parent-meta-item">
+              <mat-icon>work</mat-icon>{{ selectedParent()!.occupation }}
+            </span>
+            }
+          </div>
+        </div>
+        <div class="psl-parent-children-badge">
+          <mat-icon>family_restroom</mat-icon>
+          {{ selectedParent()!.linkedStudentCount }}
+          {{ selectedParent()!.linkedStudentCount === 1 ? 'Child' : 'Children' }}
+        </div>
+      </div>
+
+      <!-- Guidance note -->
+      <div class="psl-info-note">
+        <mat-icon>info_outline</mat-icon>
+        <span>
+          To manage links for a specific child of this parent, switch to
+          <strong>Find Student</strong> tab, search for the student, then use the parent manager
+          panel there.
+        </span>
+      </div>
+    </div>
+    } @else {
+    <div class="psl-empty-state">
+      <div class="psl-empty-icon-wrap">
+        <mat-icon>manage_accounts</mat-icon>
+      </div>
+      <h3>Select a Parent Above</h3>
+      <p>Search for a parent or guardian to view all their linked children.</p>
+    </div>
+    }
+  </div>
+  } }
+  <!-- end @if (pageReady()) -->
+</div>

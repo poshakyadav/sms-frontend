@@ -1,0 +1,195 @@
+@use '../../../../../shared/styles/academics-shared' as *;
+
+// ── Arrow icon ────────────────────────────────────────────────────────────────
+.arrow-icon {
+  font-size: 18px;
+  height: 18px;
+  width: 18px;
+  color: var(--color-text-muted);
+  vertical-align: middle;
+}
+
+// ── Guide Banner ──────────────────────────────────────────────────────────────
+.guide-banner {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: color-mix(in srgb, var(--color-primary) 5%, var(--color-bg-card));
+  border: 1px solid color-mix(in srgb, var(--color-primary) 16%, transparent);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  margin-bottom: 24px;
+
+  .guide-banner-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+    mat-icon {
+      color: var(--color-primary);
+      font-size: 20px;
+      height: 20px;
+      width: 20px;
+    }
+  }
+
+  .guide-banner-body {
+    flex: 1;
+    strong {
+      display: block;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      margin-bottom: 4px;
+    }
+    p {
+      margin: 0;
+      font-size: 0.82rem;
+      color: var(--color-text-secondary);
+      line-height: 1.55;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px;
+    }
+  }
+}
+
+// ── Scope Card ────────────────────────────────────────────────────────────────
+.scope-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 18px 22px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.scope-card-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+// Stats
+.scope-stats {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.scope-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 20px;
+
+  .stat-num {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    line-height: 1;
+  }
+  .stat-lbl {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+    margin-top: 3px;
+  }
+
+  &:first-child {
+    padding-left: 0;
+  }
+}
+
+.scope-stat-divider {
+  width: 1px;
+  height: 36px;
+  background: var(--color-border);
+}
+
+// Filter
+.scope-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.scope-filter-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.scope-select {
+  min-width: 260px;
+}
+
+.scope-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.current-year-chip {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--color-success) 14%, transparent);
+  color: var(--color-success);
+  padding: 1px 6px;
+  border-radius: 9999px;
+  margin-left: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+}
+
+// ── Badge overrides for list ───────────────────────────────────────────────────
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.76rem;
+  font-weight: 600;
+
+  mat-icon {
+    font-size: 13px;
+    height: 13px;
+    width: 13px;
+  }
+
+  &.global {
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    color: var(--color-primary);
+  }
+
+  &.year-specific {
+    background: color-mix(in srgb, var(--color-secondary, #0ea5e9) 10%, transparent);
+    color: var(--color-secondary, #0ea5e9);
+  }
+}
+
+@media (max-width: 640px) {
+  .scope-card-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .scope-select {
+    min-width: unset;
+    width: 100%;
+  }
+  .scope-filter {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

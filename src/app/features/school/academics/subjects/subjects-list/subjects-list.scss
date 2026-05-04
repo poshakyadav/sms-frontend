@@ -1,0 +1,58 @@
+@use '../../../../../shared/styles/academics-shared' as *;
+
+.search-bar {
+  margin-bottom: 20px;
+
+  .search-field {
+    width: 100%;
+    max-width: 480px;
+  }
+}
+
+// ── Workflow guidance banner ──────────────────────────────────────────────────
+.flow-guide {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-bg-card));
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+
+  mat-icon:first-child {
+    flex-shrink: 0;
+    color: var(--color-primary);
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+    margin-top: 1px;
+  }
+
+  strong {
+    color: var(--color-text-primary);
+  }
+}
+
+.description-cell {
+  max-width: 340px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+}
+
+.no-value {
+  color: var(--color-text-muted);
+}
+
+.action-header-hint {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}

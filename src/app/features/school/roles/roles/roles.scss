@@ -1,0 +1,773 @@
+// roles.scss
+// Production-grade styles for the Roles & Permissions page
+// Uses CSS custom properties from global styles.scss for full theme support
+
+.roles-page {
+  padding: 28px 32px;
+  max-width: 1280px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--color-bg-main);
+
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
+}
+
+// ── Page Header ─────────────────────────────────────────────────────────────
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      margin: 0 0 2px;
+      letter-spacing: -0.3px;
+      line-height: 1.25;
+    }
+
+    p {
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+      margin: 0;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+}
+
+.header-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+
+  mat-icon {
+    color: #fff;
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+  }
+}
+
+// ── Action Buttons ───────────────────────────────────────────────────────────
+
+.btn-create {
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-primary-dark) 100%
+  ) !important;
+  color: var(--color-on-primary) !important;
+  border-radius: var(--radius-sm) !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  letter-spacing: 0.01em !important;
+  height: 40px !important;
+  padding: 0 18px !important;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35) !important;
+  transition: box-shadow 0.2s ease, transform 0.15s ease !important;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    margin-right: 4px;
+  }
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.45) !important;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.btn-refresh {
+  color: var(--color-text-secondary) !important;
+  border-radius: var(--radius-sm) !important;
+  transition: background 0.15s ease, color 0.15s ease !important;
+
+  &:hover {
+    background: var(--color-hover) !important;
+    color: var(--color-primary) !important;
+  }
+}
+
+.btn-retry {
+  background: var(--color-error) !important;
+  color: #fff !important;
+  border-radius: var(--radius-sm) !important;
+  font-weight: 600 !important;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+// ── State Containers (loading / error / empty) ───────────────────────────────
+
+.state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+  gap: 12px;
+
+  .spinner-wrap {
+    margin-bottom: 8px;
+
+    .mat-mdc-progress-spinner circle {
+      stroke: var(--color-primary);
+    }
+  }
+
+  .state-label {
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    margin: 0;
+  }
+
+  .state-icon-wrap {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--color-hover);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+
+    mat-icon {
+      font-size: 30px;
+      width: 30px;
+      height: 30px;
+      color: var(--color-text-muted);
+    }
+
+    &.error {
+      background: rgba(239, 68, 68, 0.1);
+
+      mat-icon {
+        color: var(--color-error);
+      }
+    }
+  }
+
+  .state-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0;
+  }
+
+  .state-desc {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    max-width: 360px;
+    line-height: 1.6;
+    margin: 0;
+  }
+}
+
+// ── Stats Strip ──────────────────────────────────────────────────────────────
+
+.stats-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+
+  @media (max-width: 560px) {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+}
+
+.stat-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+
+  &:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+
+  .stat-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+    margin-bottom: 3px;
+  }
+
+  .stat-label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+  }
+
+  &.stat-total {
+    .stat-value {
+      color: var(--color-text-primary);
+    }
+    border-top: 3px solid var(--color-primary);
+  }
+
+  &.stat-system {
+    .stat-value {
+      color: var(--color-secondary);
+    }
+    border-top: 3px solid var(--color-secondary);
+  }
+
+  &.stat-custom {
+    .stat-value {
+      color: var(--color-success);
+    }
+    border-top: 3px solid var(--color-success);
+  }
+
+  &.stat-staff {
+    .stat-value {
+      color: #2563eb;
+    }
+    border-top: 3px solid #2563eb;
+  }
+
+  &.stat-student {
+    .stat-value {
+      color: #059669;
+    }
+    border-top: 3px solid #059669;
+  }
+
+  &.stat-parent {
+    .stat-value {
+      color: #d97706;
+    }
+    border-top: 3px solid #d97706;
+  }
+
+  &.stat-perms {
+    .stat-value {
+      color: var(--color-primary);
+    }
+    border-top: 3px solid var(--color-primary);
+  }
+}
+
+// ── Controls Bar (Search + Type Filter) ─────────────────────────────────────
+
+.controls-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.search-wrap {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 220px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0 12px;
+  height: 42px;
+  gap: 8px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+  }
+
+  .search-icon {
+    color: var(--color-text-muted);
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  .search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.875rem;
+    color: var(--color-text-primary);
+    line-height: 1;
+
+    &::placeholder {
+      color: var(--color-text-muted);
+    }
+  }
+
+  .search-clear {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    color: var(--color-text-muted);
+    transition: background 0.15s ease, color 0.15s ease;
+    flex-shrink: 0;
+
+    &:hover {
+      background: var(--color-hover);
+      color: var(--color-text-primary);
+    }
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+.filter-tabs {
+  display: flex;
+  align-items: center;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.filter-tab {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  // Explicit color — avoids any browser/Material reset making text invisible
+  color: var(--color-text-secondary) !important;
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+  line-height: 1.4;
+
+  &:hover:not(.active) {
+    background: var(--color-hover);
+    color: var(--color-text-primary) !important;
+  }
+
+  &.active {
+    background: var(--color-primary);
+    color: var(--color-on-primary) !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  }
+}
+
+// ── Category Filter Row ──────────────────────────────────────────────────────
+
+.category-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+
+  .cat-filter-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+}
+
+.cat-filter-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.cat-filter-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-text-secondary) !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
+
+  &:hover:not(.active) {
+    border-color: var(--color-primary);
+    color: var(--color-primary) !important;
+    background: var(--color-active);
+  }
+
+  // ── "All" tab active (no category modifier — gets a neutral slate style) ──
+  &.active {
+    background: var(--color-text-secondary);
+    color: #ffffff !important;
+    border-color: transparent;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+  }
+
+  // ── Category-specific active states override the base .active above ────────
+  &.cat-filter-tab--staff.active {
+    background: #2563eb;
+    color: #ffffff !important;
+    border-color: transparent;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+  }
+
+  &.cat-filter-tab--student.active {
+    background: #059669;
+    color: #ffffff !important;
+    border-color: transparent;
+    box-shadow: 0 2px 8px rgba(5, 150, 105, 0.35);
+  }
+
+  &.cat-filter-tab--parent.active {
+    background: #d97706;
+    color: #ffffff !important;
+    border-color: transparent;
+    box-shadow: 0 2px 8px rgba(217, 119, 6, 0.35);
+  }
+}
+
+// ── Roles Grid ───────────────────────────────────────────────────────────────
+
+.roles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+// ── Role Card ────────────────────────────────────────────────────────────────
+
+.role-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease, transform 0.15s ease, border-color 0.2s ease;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--color-border);
+    transition: background 0.2s ease;
+  }
+
+  &:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    border-color: transparent;
+  }
+
+  &.role-card--system {
+    &::before {
+      background: linear-gradient(90deg, var(--color-secondary), var(--color-primary));
+    }
+
+    .rc-avatar--system {
+      background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+    }
+  }
+
+  &.role-card--custom {
+    &::before {
+      background: linear-gradient(90deg, var(--color-primary), var(--color-success));
+    }
+  }
+}
+
+// Card Header
+.rc-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.rc-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  mat-icon {
+    color: #fff;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.rc-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.rc-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.rc-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.rc-desc {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// Badges
+.rc-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &.rc-badge--system {
+    background: rgba(139, 92, 246, 0.12);
+    color: var(--color-secondary);
+    border: 1px solid rgba(139, 92, 246, 0.25);
+  }
+
+  &.rc-badge--custom {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--color-success);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+  }
+}
+
+.rc-cat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: default;
+
+  .rc-cat-icon {
+    font-size: 12px;
+    width: 12px;
+    height: 12px;
+  }
+
+  &.rc-cat-badge--staff {
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+    border: 1px solid rgba(37, 99, 235, 0.2);
+  }
+
+  &.rc-cat-badge--student {
+    background: rgba(5, 150, 105, 0.1);
+    color: #059669;
+    border: 1px solid rgba(5, 150, 105, 0.2);
+  }
+
+  &.rc-cat-badge--parent {
+    background: rgba(217, 119, 6, 0.1);
+    color: #d97706;
+    border: 1px solid rgba(217, 119, 6, 0.2);
+  }
+}
+
+// Permissions section
+.rc-perms-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rc-perms-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  .rc-perms-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    color: var(--color-text-muted);
+  }
+
+  .rc-perms-count {
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+  }
+}
+
+.rc-perms-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.perm-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  background: var(--color-hover);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  font-size: 0.71rem;
+  font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  transition: background 0.15s ease;
+
+  &.perm-chip--more {
+    background: rgba(59, 130, 246, 0.08);
+    color: var(--color-primary);
+    border-color: rgba(59, 130, 246, 0.2);
+    font-family: inherit;
+    font-weight: 600;
+  }
+}
+
+// Card Actions
+.rc-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-divider);
+  margin-top: auto;
+}
+
+.rc-actions-spacer {
+  flex: 1;
+}
+
+.rc-action-btn {
+  color: var(--color-text-muted) !important;
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 8px !important;
+  transition: background 0.15s ease, color 0.15s ease !important;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    background: var(--color-hover) !important;
+    color: var(--color-primary) !important;
+  }
+
+  &.rc-action-btn--danger:hover {
+    background: rgba(239, 68, 68, 0.1) !important;
+    color: var(--color-error) !important;
+  }
+}

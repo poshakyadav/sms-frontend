@@ -1,0 +1,37 @@
+<!-- confirm-dialog.html -->
+<!-- Production-grade themed confirm dialog -->
+<!-- Supports title, message, confirmText, cancelText, confirmColor (warn/primary) -->
+
+<div class="cd-shell">
+  <!-- Header -->
+  <div class="cd-header" [class.cd-header--warn]="isDestructive">
+    <div class="cd-header-icon" [class.cd-header-icon--warn]="isDestructive">
+      <mat-icon>{{ isDestructive ? 'delete_forever' : 'help_outline' }}</mat-icon>
+    </div>
+    <h2 class="cd-title">{{ title }}</h2>
+    <button mat-icon-button class="cd-close" (click)="close(false)" aria-label="Close">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Body -->
+  <div class="cd-body">
+    <p class="cd-message">{{ message }}</p>
+  </div>
+
+  <!-- Footer -->
+  <div class="cd-footer">
+    <button mat-stroked-button class="cd-btn-cancel" (click)="close(false)">
+      {{ cancelText }}
+    </button>
+    <button
+      mat-flat-button
+      class="cd-btn-confirm"
+      [class.cd-btn-confirm--warn]="isDestructive"
+      (click)="close(true)"
+    >
+      <mat-icon class="cd-btn-icon">{{ isDestructive ? 'delete_outline' : 'check' }}</mat-icon>
+      {{ confirmText }}
+    </button>
+  </div>
+</div>

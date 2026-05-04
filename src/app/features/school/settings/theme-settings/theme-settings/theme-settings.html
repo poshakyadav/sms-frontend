@@ -1,0 +1,172 @@
+<!-- theme-settings.html -->
+<div class="settings-wrapper">
+  <div class="settings-header">
+    <h2 class="settings-title">Theme & Branding</h2>
+    <p class="settings-subtitle">Choose how your school portal looks for everyone.</p>
+  </div>
+
+  @if (loading()) {
+  <div class="loading-bar">
+    <mat-progress-spinner diameter="20" mode="indeterminate" />
+    <span>Applying theme…</span>
+  </div>
+  }
+
+  <mat-tab-group animationDuration="200ms" class="theme-tabs">
+    <!-- ══ PREDEFINED THEMES ══ -->
+    <mat-tab label="Predefined">
+      <div class="themes-grid">
+        @for (theme of themes(); track theme.id) { @if (!theme.isCustomTheme) {
+        <div class="theme-card" [class.active]="theme.id === activeThemeId()">
+          <!-- Active badge -->
+          @if (theme.id === activeThemeId()) {
+          <div class="active-badge">
+            <mat-icon>check_circle</mat-icon>
+            Active
+          </div>
+          }
+          <div class="theme-preview">
+            <div class="swatch-row">
+              <div class="swatch" style="background: var(--color-primary)"></div>
+              <div class="swatch" style="background: var(--color-secondary)"></div>
+              <div class="swatch" style="background: var(--color-success)"></div>
+              <div class="swatch" style="background: var(--color-warning)"></div>
+            </div>
+          </div>
+          <div class="theme-name">{{ theme.themeName }}</div>
+          <button
+            mat-flat-button
+            class="activate-btn"
+            [disabled]="theme.id === activeThemeId() || loading()"
+            (click)="activateTheme(theme.id)"
+          >
+            @if (theme.id === activeThemeId()) {
+            <ng-container><mat-icon>check</mat-icon></ng-container>
+            Active } @else { Apply }
+          </button>
+        </div>
+        } }
+      </div>
+    </mat-tab>
+
+    <!-- ══ CUSTOM THEMES ══ -->
+    <mat-tab label="Custom">
+      <div class="themes-grid">
+        @for (theme of themes(); track theme.id) { @if (theme.isCustomTheme) {
+        <div class="theme-card" [class.active]="theme.id === activeThemeId()">
+          @if (theme.id === activeThemeId()) {
+          <div class="active-badge">
+            <mat-icon>check_circle</mat-icon>
+            Active
+          </div>
+          }
+          <div class="theme-preview">
+            <div class="swatch-row">
+              <div class="swatch" style="background: var(--color-primary)"></div>
+              <div class="swatch" style="background: var(--color-secondary)"></div>
+            </div>
+          </div>
+          <div class="theme-name">{{ theme.themeName }}</div>
+          <div class="theme-card-actions">
+            <button
+              mat-flat-button
+              class="activate-btn"
+              [disabled]="theme.id === activeThemeId() || loading()"
+              (click)="activateTheme(theme.id)"
+            >
+              @if (theme.id === activeThemeId()) {
+              <ng-container><mat-icon>check</mat-icon></ng-container> Active } @else { Apply }
+            </button>
+            <!-- Delete — only for inactive custom themes -->
+            @if (theme.id !== activeThemeId()) { @if (pendingDeleteId() === theme.id) {
+            <div class="confirm-row">
+              <span class="confirm-text">Delete?</span>
+              <button mat-icon-button color="warn" (click)="deleteTheme(theme.id)">
+                <mat-icon>delete</mat-icon>
+              </button>
+              <button mat-icon-button (click)="cancelDelete()">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+            } @else {
+            <button
+              mat-icon-button
+              class="delete-btn"
+              (click)="confirmDelete(theme.id)"
+              matTooltip="Delete theme"
+            >
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+            } }
+          </div>
+        </div>
+        } } @if (hasNoCustomThemes()) {
+        <div class="empty-state">
+          <mat-icon>palette</mat-icon>
+          <p>No custom themes yet. Create one below.</p>
+        </div>
+        }
+      </div>
+    </mat-tab>
+
+    <!-- ══ CREATE CUSTOM THEME ══ -->
+    <mat-tab label="Create custom">
+      <div class="create-form-wrap">
+        <div class="create-form">
+          <mat-form-field appearance="outline" class="field-full">
+            <mat-label>Theme name</mat-label>
+            <mat-icon matPrefix>label_outline</mat-icon>
+            <input
+              matInput
+              [ngModel]="customThemeName()"
+              (input)="customThemeName.set($any($event.target).value)"
+              placeholder="e.g. School Green"
+              maxlength="50"
+            />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="field-full">
+            <mat-label>CSS variables (JSON)</mat-label>
+            <textarea
+              matInput
+              rows="10"
+              [ngModel]="customThemeConfigJson()"
+              (input)="onConfigJsonInput($event)"
+              [placeholder]="placeholderConfig"
+            ></textarea>
+            @if (customThemeJsonError()) {
+            <mat-error>{{ customThemeJsonError() }}</mat-error>
+            }
+          </mat-form-field>
+
+          <div class="hint-box">
+            <mat-icon class="hint-icon">info_outline</mat-icon>
+            <div>
+              <strong>Required keys:</strong>
+              <code>--color-primary</code>, <code>--color-primary-light</code>,
+              <code>--color-primary-dark</code>, <code>--color-on-primary</code>,
+              <code>--color-secondary</code>. Include all 25 CSS variables for the best result.
+            </div>
+          </div>
+
+          <button
+            mat-flat-button
+            color="primary"
+            class="field-full create-btn"
+            [disabled]="loading() || !customThemeName().trim() || !customThemeConfigJson().trim()"
+            (click)="createCustomTheme()"
+          >
+            @if (loading()) {
+            <mat-spinner diameter="18" />
+            Creating… } @else {
+            <ng-container>
+              <mat-icon>add</mat-icon>
+            </ng-container>
+
+            Create theme }
+          </button>
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

@@ -1,0 +1,580 @@
+// src/app/features/school/exams/exams-form/exams-form.scss
+// ─────────────────────────────────────────────────────────────────────────────
+// Strategy (mirrors exams-list.scss approach):
+//
+//   ThemeService writes ALL CSS custom-properties as *inline styles* on <html>.
+//   Inline styles beat any stylesheet rule regardless of specificity.
+//   Therefore:
+//     • We NEVER use [data-theme='dark'] { } blocks inside component SCSS —
+//       the variables are already switched by ThemeService before the browser
+//       paints, so var(--color-*) always resolves to the correct value.
+//     • We DO override Angular Material MDC tokens directly on the component
+//       selectors (no theme wrapper) so they also always resolve correctly.
+//     • For cases where MDC ignores its own tokens and hard-codes a colour
+//       (e.g. the state-layer overlay, select value span), we use direct
+//       element selectors with !important — same as exams-list.scss does for
+//       .mat-mdc-header-cell, .mat-mdc-cell, etc.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Page Shell ────────────────────────────────────────────────────────────────
+.form-page {
+  min-height: 100vh;
+  background-color: var(--color-bg-main);
+  padding: 2rem 1.5rem 4rem;
+  transition: background-color 0.3s ease;
+
+  @media (max-width: 768px) {
+    padding: 1rem 0.75rem 3rem;
+  }
+}
+
+// ── Page Header ───────────────────────────────────────────────────────────────
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 1100px;
+  margin: 0 auto 1.75rem;
+
+  @media (max-width: 600px) {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .header-left {
+    h1 {
+      margin: 0 0 0.25rem;
+      font-size: 1.625rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--color-text-primary);
+      line-height: 1.2;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.875rem;
+      color: var(--color-text-secondary);
+    }
+  }
+
+  button[mat-stroked-button] {
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+    border-radius: var(--radius-sm);
+    font-size: 0.8125rem;
+    white-space: nowrap;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+
+    &:hover {
+      background-color: var(--color-hover);
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+  }
+}
+
+// ── Main Card ─────────────────────────────────────────────────────────────────
+.form-card {
+  max-width: 1100px;
+  margin: 0 auto;
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 2rem 2.25rem;
+  position: relative;
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+
+  @media (max-width: 768px) {
+    padding: 1.25rem 1rem;
+    border-radius: var(--radius-md);
+  }
+}
+
+// ── Loading Overlay ───────────────────────────────────────────────────────────
+.loading-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  padding: 4rem 2rem;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+// ── Section Heading ───────────────────────────────────────────────────────────
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-primary);
+  margin: 2rem 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--color-divider);
+
+  mat-icon {
+    font-size: 1rem;
+    width: 1rem;
+    height: 1rem;
+    line-height: 1;
+    opacity: 0.85;
+  }
+
+  &:first-of-type {
+    margin-top: 0;
+  }
+}
+
+// ── Form Grid (basic details) ─────────────────────────────────────────────────
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem 1.25rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+
+  .type-field-wrap {
+    grid-column: 1 / -1;
+  }
+}
+
+// ── Full-width textarea ───────────────────────────────────────────────────────
+.full-width {
+  width: 100%;
+  margin-top: 0.5rem;
+  display: block;
+}
+
+// ── Exam-type free-text + presets ─────────────────────────────────────────────
+.type-field-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  .type-input {
+    width: 100%;
+  }
+}
+
+.preset-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  padding-bottom: 0.25rem;
+
+  .preset-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-right: 0.25rem;
+    white-space: nowrap;
+  }
+
+  .preset-chip {
+    display: inline-flex;
+    align-items: center;
+    height: 26px;
+    padding: 0 0.65rem;
+    border-radius: 100px;
+    border: 1.5px solid var(--color-border);
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+    line-height: 1;
+
+    &:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background-color: var(--color-hover);
+    }
+
+    &.active {
+      background-color: var(--color-primary);
+      border-color: var(--color-primary);
+      color: var(--color-on-primary);
+      box-shadow: var(--shadow-sm);
+    }
+  }
+}
+
+// ── Timetable Section ─────────────────────────────────────────────────────────
+.timetable-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+$timetable-cols: 1.6fr 1.6fr 1.1fr 0.8fr 0.8fr 0.8fr 0.8fr 40px;
+
+.timetable-row-header {
+  display: grid;
+  grid-template-columns: $timetable-cols;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  background-color: var(--color-divider);
+  border-radius: var(--radius-sm);
+  min-width: 920px;
+
+  span {
+    font-size: 0.69rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+    line-height: 1.3;
+
+    .header-hint {
+      display: block;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+      font-size: 0.65rem;
+      color: var(--color-text-muted);
+      opacity: 0.75;
+    }
+  }
+}
+
+.timetable-row {
+  display: grid;
+  grid-template-columns: $timetable-cols;
+  gap: 0.5rem;
+  align-items: flex-start;
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.75rem 0;
+  min-width: 920px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    border-color: var(--color-primary-light);
+    box-shadow: var(--shadow-sm);
+  }
+
+  mat-form-field {
+    width: 100%;
+  }
+
+  .row-delete-btn {
+    margin-top: 0.55rem;
+    color: var(--color-error);
+    opacity: 0.65;
+    transition: opacity 0.15s, background-color 0.15s;
+    flex-shrink: 0;
+
+    &:hover {
+      opacity: 1;
+      background-color: rgba(239, 68, 68, 0.08);
+    }
+  }
+}
+
+// ── Add Subject Slot button ───────────────────────────────────────────────────
+.add-row-btn {
+  align-self: flex-start;
+  color: var(--color-primary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  padding: 0 0.75rem;
+  margin-top: 0.25rem;
+  transition: background-color 0.15s;
+
+  &:hover {
+    background-color: var(--color-hover);
+  }
+
+  mat-icon {
+    font-size: 1.1rem;
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-right: 0.25rem;
+  }
+}
+
+// ── Form Actions ──────────────────────────────────────────────────────────────
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 1.75rem;
+  margin-top: 1.75rem;
+  border-top: 1px solid var(--color-divider);
+
+  button[mat-button] {
+    color: var(--color-text-secondary);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    transition: background-color 0.15s, color 0.15s;
+
+    &:hover {
+      background-color: var(--color-hover);
+      color: var(--color-text-primary);
+    }
+  }
+
+  button[mat-raised-button] {
+    min-width: 140px;
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s, opacity 0.2s;
+
+    &:not(:disabled):hover {
+      box-shadow: var(--shadow-md);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+    }
+  }
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: stretch;
+
+    button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ANGULAR MATERIAL MDC TOKEN OVERRIDES
+//
+// All rules below are written WITHOUT a [data-theme] wrapper.
+// ThemeService already resolved var(--color-*) to the correct light/dark value
+// via inline styles on <html>, so these rules work in both themes automatically.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ── 1. MDC outlined field token declarations ──────────────────────────────────
+mat-form-field {
+  --mdc-outlined-text-field-label-text-color: var(--color-text-muted);
+  --mdc-outlined-text-field-focus-label-text-color: var(--color-primary);
+  --mdc-outlined-text-field-error-label-text-color: var(--color-error);
+  --mdc-outlined-text-field-input-text-color: var(--color-text-primary);
+  --mdc-outlined-text-field-input-text-placeholder-color: var(--color-text-muted);
+  --mdc-outlined-text-field-outline-color: var(--color-border);
+  --mdc-outlined-text-field-hover-outline-color: var(--color-primary-light);
+  --mdc-outlined-text-field-focus-outline-color: var(--color-primary);
+  --mdc-outlined-text-field-error-outline-color: var(--color-error);
+  --mdc-outlined-text-field-disabled-outline-color: var(--color-border);
+  --mdc-outlined-text-field-disabled-input-text-color: var(--color-text-muted);
+  --mdc-outlined-text-field-disabled-label-text-color: var(--color-text-muted);
+  --mat-form-field-subscript-text-color: var(--color-text-muted);
+}
+
+// ── 2. Wrapper background — locked to surface for ALL states ──────────────────
+// MDC's hover/focus state-layer changes the wrapper bg colour, which in dark
+// mode washes out the border notch. We pin it to our surface token throughout.
+mat-form-field {
+  .mat-mdc-text-field-wrapper {
+    background-color: var(--color-bg-surface) !important;
+    transition: background-color 0.3s;
+  }
+
+  &:hover .mat-mdc-text-field-wrapper,
+  &.mat-focused .mat-mdc-text-field-wrapper {
+    background-color: var(--color-bg-surface) !important;
+  }
+
+  // Eliminate the MDC ripple/state-layer overlay entirely —
+  // it sits between the wrapper bg and the outline segments and can
+  // make them appear invisible by raising opacity.
+  .mat-mdc-form-field-focus-overlay {
+    display: none !important;
+  }
+}
+
+// ── 3. Timetable row fields — slightly deeper background ─────────────────────
+// Fields inside .timetable-row (which has --color-bg-card background) get
+// --color-bg-main so there is a visible depth separation in both themes.
+.timetable-row mat-form-field {
+  .mat-mdc-text-field-wrapper,
+  &:hover .mat-mdc-text-field-wrapper,
+  &.mat-focused .mat-mdc-text-field-wrapper {
+    background-color: var(--color-bg-main) !important;
+  }
+}
+
+// ── 4. Notched-outline border segments — direct element override ──────────────
+// MDC renders the outlined border as three <span> elements. We must style all
+// three directly because a color-scheme:dark declaration on <body> can win over
+// the token declarations above (same problem exams-list.scss solves with
+// background: var(--color-bg-card) !important on each cell).
+mat-form-field {
+  // Idle
+  .mdc-notched-outline__leading,
+  .mdc-notched-outline__notch,
+  .mdc-notched-outline__trailing {
+    border-color: var(--color-border) !important;
+    transition: border-color 0.2s ease;
+  }
+
+  // Hover (not disabled, not focused — MDC adds .mdc-text-field--focused on focus)
+  &:not(.mat-form-field-disabled):hover:not(.mat-focused) {
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+      border-color: var(--color-primary-light) !important;
+    }
+  }
+
+  // Focus
+  &.mat-focused {
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+      border-color: var(--color-primary) !important;
+    }
+  }
+
+  // Error (unfocused)
+  &.mat-form-field-invalid:not(.mat-focused) {
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+      border-color: var(--color-error) !important;
+    }
+  }
+
+  // Error + focused
+  &.mat-form-field-invalid.mat-focused {
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+      border-color: var(--color-error) !important;
+    }
+  }
+}
+
+// ── 5. Input & textarea text colour ──────────────────────────────────────────
+// The MDC token covers most cases; this direct rule is the fallback for when
+// Material's own dark color-scheme stylesheet wins with higher specificity.
+mat-form-field input.mat-mdc-input-element,
+mat-form-field textarea.mat-mdc-input-element {
+  color: var(--color-text-primary) !important;
+  caret-color: var(--color-primary) !important;
+}
+
+// ── 6. Suffix icon ───────────────────────────────────────────────────────────
+mat-form-field .mat-mdc-form-field-icon-suffix mat-icon,
+mat-form-field .mat-icon-suffix {
+  color: var(--color-text-muted);
+  opacity: 0.75;
+}
+
+// ── 7. Hint & error text ─────────────────────────────────────────────────────
+.mat-mdc-form-field-hint {
+  color: var(--color-text-muted) !important;
+  font-size: 0.69rem;
+}
+
+.mat-mdc-form-field-error {
+  color: var(--color-error) !important;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MAT-SELECT
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ── 8. Selected value text — all four DOM levels must be targeted ─────────────
+// Angular Material renders the chosen label through:
+//   mat-select > .mat-mdc-select-trigger > .mat-mdc-select-value
+//     > .mat-mdc-select-value-text > span.mat-mdc-select-min-line
+// Material's color-scheme:dark stylesheet targets the inner span and sets it
+// to a near-black color. We override every ancestor so the cascade cannot win.
+mat-form-field .mat-mdc-select {
+  color: var(--color-text-primary) !important;
+}
+
+mat-form-field .mat-mdc-select-value,
+mat-form-field .mat-mdc-select-value-text,
+mat-form-field .mat-mdc-select-value-text span,
+mat-form-field .mat-mdc-select-min-line {
+  color: var(--color-text-primary) !important;
+}
+
+mat-form-field .mat-mdc-select-placeholder {
+  color: var(--color-text-muted) !important;
+}
+
+// ── 9. Select arrow ──────────────────────────────────────────────────────────
+.mat-mdc-select-arrow {
+  color: var(--color-text-muted) !important;
+}
+
+// ── 10. Dropdown overlay panel ───────────────────────────────────────────────
+.mat-mdc-select-panel {
+  background-color: var(--color-bg-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+// ── 11. Dropdown options ─────────────────────────────────────────────────────
+.mat-mdc-option {
+  color: var(--color-text-primary) !important;
+
+  &:hover:not(.mdc-list-item--disabled),
+  &.mat-mdc-option-active {
+    background-color: var(--color-hover) !important;
+  }
+
+  &.mdc-list-item--selected:not(.mdc-list-item--disabled) {
+    background-color: var(--color-active) !important;
+    color: var(--color-primary) !important;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DATEPICKER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.mat-datepicker-content {
+  background-color: var(--color-bg-surface) !important;
+  color: var(--color-text-primary) !important;
+  box-shadow: var(--shadow-lg) !important;
+  border-radius: var(--radius-md) !important;
+  border: 1px solid var(--color-border) !important;
+}
+
+.mat-calendar-body-cell-content {
+  color: var(--color-text-primary) !important;
+}
+
+.mat-calendar-body-today:not(.mat-calendar-body-selected) {
+  border-color: var(--color-primary) !important;
+}
+
+.mat-calendar-body-selected {
+  background-color: var(--color-primary) !important;
+  color: var(--color-on-primary) !important;
+}

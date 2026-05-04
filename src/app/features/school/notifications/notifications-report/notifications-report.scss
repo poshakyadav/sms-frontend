@@ -1,0 +1,154 @@
+// notifications-report.scss
+@use '../../../../shared/styles/notifications-shared' as *;
+
+// ── Header chips ──────────────────────────────────────────────────────────────
+.id-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: var(--color-hover);
+  border: 1px solid var(--color-border);
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: monospace;
+  color: var(--color-text-secondary);
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
+}
+
+// ── Report two-column layout ──────────────────────────────────────────────────
+.report-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 24px;
+  align-items: start;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ── Ring hero card ────────────────────────────────────────────────────────────
+.ring-hero {
+  position: sticky;
+  top: 24px;
+
+  @media (max-width: 768px) {
+    position: static;
+  }
+}
+
+.ring-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  text-align: center;
+}
+
+// ── SVG progress ring ─────────────────────────────────────────────────────────
+.progress-arc {
+  transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-ring-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    display: block;
+  }
+
+  .progress-label {
+    position: absolute;
+    text-align: center;
+
+    .big-pct {
+      display: block;
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--color-primary);
+      line-height: 1;
+    }
+
+    .sub-text {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--color-text-muted);
+      margin-top: 4px;
+    }
+  }
+}
+
+.ring-caption {
+  h3 {
+    margin: 0 0 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+  }
+
+  .highlight {
+    color: var(--color-primary);
+    font-weight: 700;
+  }
+}
+
+// ── Stats section ─────────────────────────────────────────────────────────────
+.stats-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+// Stat sub-text
+.stat-sub {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+
+// ── Summary card with icon ────────────────────────────────────────────────────
+.summary-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+
+  .summary-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: var(--color-primary);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+  }
+}

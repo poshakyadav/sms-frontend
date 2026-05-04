@@ -1,0 +1,200 @@
+// notifications-list.scss
+@use '../../../../shared/styles/notifications-shared' as *;
+
+// ── Header icon ──────────────────────────────────────────────────────────────
+.header-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    color: var(--color-primary);
+  }
+}
+
+// ── Search bar ────────────────────────────────────────────────────────────────
+.filter-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 260px;
+  min-width: 220px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0 12px;
+  transition: border-color 0.15s;
+
+  &:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
+  }
+
+  .search-icon {
+    color: var(--color-text-muted);
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    flex-shrink: 0;
+  }
+
+  .search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.875rem;
+    color: var(--color-text-primary);
+    padding: 10px 0;
+
+    &::placeholder {
+      color: var(--color-text-muted);
+    }
+  }
+
+  .search-clear {
+    color: var(--color-text-muted);
+    --mdc-icon-button-state-layer-size: 28px;
+    width: 28px;
+    height: 28px;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+// ── Filter pills ──────────────────────────────────────────────────────────────
+.filter-pills {
+  display: flex;
+  gap: 6px;
+}
+
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &.active {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    border-color: var(--color-primary);
+  }
+
+  &:hover:not(.active) {
+    background: var(--color-hover);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+
+  .pill-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    background: color-mix(in srgb, currentColor 15%, transparent);
+
+    &.unread {
+      background: var(--color-error);
+      color: #fff;
+    }
+  }
+}
+
+// ── Notification cards ────────────────────────────────────────────────────────
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+// Icon unread variant
+.notif-icon-wrap.unread-icon {
+  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+
+  mat-icon {
+    color: var(--color-primary);
+  }
+}
+
+// Unread dot indicator
+.unread-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  flex-shrink: 0;
+}
+
+// Meta icons
+.meta-icon {
+  font-size: 13px !important;
+  width: 13px !important;
+  height: 13px !important;
+  vertical-align: middle;
+}
+
+.badge-icon {
+  font-size: 11px !important;
+  width: 11px !important;
+  height: 11px !important;
+}
+
+// Report button
+.report-btn {
+  color: var(--color-text-muted) !important;
+  transition: color 0.15s;
+
+  &:hover {
+    color: var(--color-primary) !important;
+  }
+}
+
+// Empty state icon wrap
+.empty-icon-wrap {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .state-icon {
+    opacity: 0.5;
+    color: var(--color-primary);
+  }
+}

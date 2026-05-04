@@ -1,0 +1,215 @@
+<div class="sf-root">
+  <!-- ── Page header ─────────────────────────────────────────────── -->
+  <header class="sf-header">
+    <div class="sf-header-inner">
+      <div class="sf-header-title">
+        <div class="sf-header-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="2" y="5" width="20" height="14" rx="2" />
+            <path d="M2 10h20" />
+            <path d="M6 15h4M14 15h4" stroke-linecap="round" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="sf-title">My Fees</h1>
+          <p class="sf-subtitle">Fee summary &amp; payment history</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Loading ────────────────────────────────────────────────── -->
+  @if (loading()) {
+  <div class="sf-loading">
+    <div class="sf-spinner"></div>
+    <p>Loading fee details…</p>
+  </div>
+  }
+
+  <!-- ── Error ──────────────────────────────────────────────────── -->
+  @if (error() && !loading()) {
+  <div class="sf-error-card">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 8v4M12 16h.01" stroke-linecap="round" />
+    </svg>
+    <p>{{ error() }}</p>
+    <button class="sf-btn-retry" (click)="load()">Try again</button>
+  </div>
+  }
+
+  <!-- ── Content ────────────────────────────────────────────────── -->
+  @if (!loading() && !error()) { @if (overviews().length === 0) {
+  <div class="sf-empty">
+    <div class="sf-empty-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path
+          d="M9 12h6M9 16h6M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </div>
+    <h3>No fee records found</h3>
+    <p>Fee information will appear here once your account is fully set up.</p>
+  </div>
+  } @else { @for (overview of overviews(); track overview.academicYearId) {
+  <section class="sf-year-block">
+    <!-- Year badge + class info -->
+    <div class="sf-year-header">
+      <span class="sf-year-badge">{{ overview.academicYearName }}</span>
+      <span class="sf-class-tag">{{ overview.className }} – {{ overview.sectionName }}</span>
+      @if (overview.rollNumber) {
+      <span class="sf-roll">Roll No. {{ overview.rollNumber }}</span>
+      }
+    </div>
+
+    <!-- ── Summary cards ──────────────────────────────── -->
+    <div class="sf-summary-grid">
+      <div class="sf-summary-card sf-card-due">
+        <div class="sf-card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 6v6l4 2" stroke-linecap="round" />
+          </svg>
+        </div>
+        <div class="sf-card-content">
+          <p class="sf-card-label">Total Fee</p>
+          <p class="sf-card-value">{{ formatCurrency(overview.totalDue) }}</p>
+        </div>
+      </div>
+
+      <div class="sf-summary-card sf-card-paid">
+        <div class="sf-card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path
+              d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+        <div class="sf-card-content">
+          <p class="sf-card-label">Amount Paid</p>
+          <p class="sf-card-value">{{ formatCurrency(overview.totalPaid) }}</p>
+        </div>
+      </div>
+
+      <div
+        class="sf-summary-card"
+        [class.sf-card-clear]="overview.balance <= 0"
+        [class.sf-card-balance]="overview.balance > 0"
+      >
+        <div class="sf-card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="2" y="7" width="20" height="14" rx="2" />
+            <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" stroke-linecap="round" />
+          </svg>
+        </div>
+        <div class="sf-card-content">
+          <p class="sf-card-label">{{ overview.balance <= 0 ? 'Fully Paid' : 'Balance Due' }}</p>
+          <p class="sf-card-value">
+            {{ overview.balance <= 0 ? '✓ Cleared' : formatCurrency(overview.balance) }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Progress bar ───────────────────────────────── -->
+    <div class="sf-progress-wrap">
+      <div class="sf-progress-label">
+        <span>Payment Progress</span>
+        <span class="sf-progress-pct">{{ overview.collectionRate }}%</span>
+      </div>
+      <div class="sf-progress-track">
+        <div
+          class="sf-progress-fill"
+          [class.sf-fill-full]="overview.collectionRate === 100"
+          [style.width.%]="overview.collectionRate"
+        ></div>
+      </div>
+    </div>
+
+    <!-- ── Fee breakdown table ────────────────────────── -->
+    <div class="sf-section">
+      <h3 class="sf-section-title">Fee Breakdown</h3>
+      <div class="sf-table-wrap">
+        <table class="sf-table">
+          <thead>
+            <tr>
+              <th>Fee Type</th>
+              <th class="sf-th-right">Amount</th>
+              <th class="sf-th-right">Paid</th>
+              <th class="sf-th-right">Balance</th>
+              <th>Due Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (fee of overview.feeBreakdown; track fee.id) {
+            <tr class="sf-tr" [class.sf-tr-overdue]="fee.status === 'OVERDUE'">
+              <td>
+                <div class="sf-fee-type">
+                  <span class="sf-fee-name">{{ formatFeeType(fee.feeType) }}</span>
+                  @if (fee.isMandatory) {
+                  <span class="sf-mandatory-dot" title="Mandatory"></span>
+                  }
+                </div>
+                @if (fee.description) {
+                <span class="sf-fee-desc">{{ fee.description }}</span>
+                }
+              </td>
+              <td class="sf-td-right">{{ formatCurrency(fee.amount) }}</td>
+              <td class="sf-td-right sf-paid-amt">{{ formatCurrency(fee.amountPaid) }}</td>
+              <td class="sf-td-right" [class.sf-bal-zero]="fee.balance <= 0">
+                {{ fee.balance <= 0 ? '—' : formatCurrency(fee.balance) }}
+              </td>
+              <td class="sf-due-date" [class.sf-date-overdue]="isOverdue(fee.dueDate)">
+                {{ fee.dueDate ? formatDate(fee.dueDate) : '—' }}
+              </td>
+              <td>
+                <span class="sf-status-chip" [class]="'sf-status-' + fee.status.toLowerCase()">
+                  {{ fee.status }}
+                </span>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Payment history ────────────────────────────── -->
+    @if (overview.recentPayments.length > 0) {
+    <div class="sf-section">
+      <h3 class="sf-section-title">Payment History</h3>
+      <div class="sf-payments-list">
+        @for (payment of overview.recentPayments; track payment.id) {
+        <div class="sf-payment-row">
+          <div class="sf-payment-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <div class="sf-payment-info">
+            <p class="sf-payment-label">{{ formatFeeType(payment.feeType) }}</p>
+            <p class="sf-payment-meta">
+              {{ formatDate(payment.paymentDate) }} &middot;
+              {{ formatMethod(payment.paymentMethod) }}
+            </p>
+            @if (payment.notes) {
+            <p class="sf-payment-notes">{{ payment.notes }}</p>
+            }
+          </div>
+          <div class="sf-payment-right">
+            <p class="sf-payment-amount">{{ formatCurrency(payment.amountPaid) }}</p>
+            <p class="sf-payment-receipt">{{ payment.receiptNumber }}</p>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+    }
+  </section>
+  } } }
+</div>

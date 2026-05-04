@@ -1,0 +1,416 @@
+<!-- parent-assignments.html -->
+<div class="pa-page">
+  <!-- ══ Hero ══════════════════════════════════════════════════════════════ -->
+  <div class="pa-hero">
+    <div class="pa-hero__bg"></div>
+    <div class="pa-hero__content">
+      <!-- Child context banner -->
+      @if (activeChild()) {
+      <div class="pa-child-banner">
+        <div class="pa-child-avatar">
+          @if (activeChild()!.studentAvatarUrl) {
+          <img [src]="activeChild()!.studentAvatarUrl" [alt]="activeChild()!.studentName" />
+          } @else {
+          <span>{{ activeChild()!.studentName.charAt(0).toUpperCase() }}</span>
+          }
+        </div>
+        <div class="pa-child-info">
+          <span class="pa-child-name">{{ activeChild()!.studentName }}</span>
+          @if (activeChild()!.currentEnrollment) {
+          <span class="pa-child-class">
+            {{ activeChild()!.currentEnrollment!.className }}-{{
+              activeChild()!.currentEnrollment!.sectionName
+            }}
+            &bull; {{ activeChild()!.currentEnrollment!.academicYearName }}
+          </span>
+          }
+        </div>
+      </div>
+      }
+
+      <div class="pa-hero__title-row">
+        <div class="pa-hero__icon-wrap">
+          <mat-icon>family_restroom</mat-icon>
+        </div>
+        <div>
+          <h1 class="pa-hero__title">Assignments Overview</h1>
+          <p class="pa-hero__sub">Monitor your child's academic progress &amp; deadlines</p>
+        </div>
+      </div>
+
+      <!-- Stats Dashboard -->
+      @if (!loading() && !noChildSelected() && !error()) {
+      <div class="pa-dashboard">
+        <div class="pa-kpi pa-kpi--primary">
+          <div class="pa-kpi__ring">
+            <svg viewBox="0 0 36 36">
+              <circle class="pa-kpi__ring-bg" cx="18" cy="18" r="14" />
+              <circle
+                class="pa-kpi__ring-fill"
+                cx="18"
+                cy="18"
+                r="14"
+                [style.stroke-dashoffset]="88 - (88 * stats().completionRate) / 100"
+              />
+            </svg>
+            <span class="pa-kpi__ring-val">{{ stats().completionRate }}%</span>
+          </div>
+          <span class="pa-kpi__lbl">Completion</span>
+        </div>
+
+        <div class="pa-kpi">
+          <span class="pa-kpi__big">{{ stats().pending }}</span>
+          <span class="pa-kpi__lbl">Pending</span>
+          @if (stats().overdue > 0) {
+          <span class="pa-kpi__warn">{{ stats().overdue }} overdue</span>
+          }
+        </div>
+
+        <div class="pa-kpi pa-kpi--done">
+          <span class="pa-kpi__big">{{ stats().done }}</span>
+          <span class="pa-kpi__lbl">Submitted</span>
+        </div>
+
+        <div class="pa-kpi">
+          <span class="pa-kpi__big">{{ stats().graded }}</span>
+          <span class="pa-kpi__lbl">Graded</span>
+          @if (stats().avgScore !== null) {
+          <span class="pa-kpi__sub">avg {{ stats().avgScore }}%</span>
+          }
+        </div>
+
+        <div class="pa-kpi">
+          <span class="pa-kpi__big">{{ stats().total }}</span>
+          <span class="pa-kpi__lbl">Total Tasks</span>
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+
+  <!-- ══ No Child Selected ════════════════════════════════════════════════ -->
+  @if (noChildSelected()) {
+  <div class="pa-state pa-state--noChild">
+    <div class="pa-state__illo">
+      <mat-icon>child_care</mat-icon>
+    </div>
+    <h3>No child selected</h3>
+    <p>Please select a child from the top navigation to view their assignments.</p>
+  </div>
+  }
+
+  <!-- ══ Loading ════════════════════════════════════════════════════════════ -->
+  @else if (loading()) {
+  <div class="pa-state">
+    <mat-spinner diameter="44"></mat-spinner>
+    <p>Loading assignments…</p>
+  </div>
+  }
+
+  <!-- ══ Error ══════════════════════════════════════════════════════════════ -->
+  @else if (error()) {
+  <div class="pa-state pa-state--error">
+    <mat-icon>cloud_off</mat-icon>
+    <h3>Couldn't load assignments</h3>
+    <p>{{ error() }}</p>
+    <button mat-raised-button (click)="loadAssignments()">
+      <mat-icon>refresh</mat-icon> Retry
+    </button>
+  </div>
+  } @else {
+
+  <!-- ══ Controls ═══════════════════════════════════════════════════════════ -->
+  <div class="pa-controls">
+    <!-- Type filter -->
+    <div class="pa-filter-row">
+      <div class="pa-chips">
+        <button
+          class="pa-chip"
+          [class.active]="activeType() === 'ALL'"
+          (click)="setTypeFilter('ALL')"
+        >
+          All <span>{{ stats().total }}</span>
+        </button>
+        <button
+          class="pa-chip pa-chip--assignment"
+          [class.active]="activeType() === 'ASSIGNMENT'"
+          (click)="setTypeFilter('ASSIGNMENT')"
+        >
+          <mat-icon>assignment</mat-icon> Assignments <span>{{ stats().assignments }}</span>
+        </button>
+        <button
+          class="pa-chip pa-chip--homework"
+          [class.active]="activeType() === 'HOME_WORK'"
+          (click)="setTypeFilter('HOME_WORK')"
+        >
+          <mat-icon>home</mat-icon> Homework <span>{{ stats().homework }}</span>
+        </button>
+        <button
+          class="pa-chip pa-chip--classwork"
+          [class.active]="activeType() === 'CLASS_WORK'"
+          (click)="setTypeFilter('CLASS_WORK')"
+        >
+          <mat-icon>class</mat-icon> Classwork <span>{{ stats().classwork }}</span>
+        </button>
+      </div>
+
+      <!-- View toggle -->
+      <div class="pa-view-toggle">
+        <button
+          [class.active]="viewMode() === 'timeline'"
+          (click)="setViewMode('timeline')"
+          matTooltip="Timeline view"
+        >
+          <mat-icon>view_timeline</mat-icon>
+        </button>
+        <button
+          [class.active]="viewMode() === 'subject'"
+          (click)="setViewMode('subject')"
+          matTooltip="By subject"
+        >
+          <mat-icon>menu_book</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Status + date -->
+    <div class="pa-filter-row pa-filter-row--secondary">
+      <div class="pa-status-chips">
+        <button
+          class="pa-status-chip"
+          [class.active]="activeStatus() === 'ALL'"
+          (click)="setStatusFilter('ALL')"
+        >
+          All Status
+        </button>
+        <button
+          class="pa-status-chip"
+          [class.active]="activeStatus() === 'PENDING'"
+          (click)="setStatusFilter('PENDING')"
+        >
+          Pending @if (stats().overdue > 0) { <span class="pa-dot pa-dot--warn"></span> }
+        </button>
+        <button
+          class="pa-status-chip"
+          [class.active]="activeStatus() === 'DONE'"
+          (click)="setStatusFilter('DONE')"
+        >
+          Submitted
+        </button>
+        <button
+          class="pa-status-chip"
+          [class.active]="activeStatus() === 'GRADED'"
+          (click)="setStatusFilter('GRADED')"
+        >
+          Graded
+        </button>
+      </div>
+
+      <div class="pa-date-row" [formGroup]="filterForm">
+        <mat-form-field appearance="outline" class="pa-date-field">
+          <mat-label>From</mat-label>
+          <input matInput [matDatepicker]="fp" formControlName="dateFrom" />
+          <mat-datepicker-toggle matSuffix [for]="fp" />
+          <mat-datepicker #fp />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="pa-date-field">
+          <mat-label>To</mat-label>
+          <input matInput [matDatepicker]="tp" formControlName="dateTo" />
+          <mat-datepicker-toggle matSuffix [for]="tp" />
+          <mat-datepicker #tp />
+        </mat-form-field>
+        <button mat-icon-button (click)="clearFilters()" matTooltip="Clear">
+          <mat-icon>filter_alt_off</mat-icon>
+        </button>
+        <button mat-icon-button (click)="loadAssignments()" matTooltip="Refresh">
+          <mat-icon>refresh</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Empty ══════════════════════════════════════════════════════════════ -->
+  @if (filteredAssignments().length === 0) {
+  <div class="pa-state pa-state--empty">
+    <mat-icon>sentiment_satisfied_alt</mat-icon>
+    <h3>Nothing to show</h3>
+    <p>
+      @if (activeStatus() === 'PENDING') { Your child is all caught up! } @else { No assignments
+      match the current filters. }
+    </p>
+    @if (activeType() !== 'ALL' || activeStatus() !== 'ALL') {
+    <button mat-stroked-button (click)="clearFilters()">Clear Filters</button>
+    }
+  </div>
+  }
+
+  <!-- ══ TIMELINE VIEW ══════════════════════════════════════════════════════ -->
+  @else if (viewMode() === 'timeline') {
+  <div class="pa-timeline">
+    @for (group of groupedByDate(); track trackByDate($index, group)) {
+    <div class="pa-tgroup">
+      <div class="pa-tgroup__header">
+        <div
+          class="pa-tgroup__pill"
+          [class.today]="group.isToday"
+          [class.tomorrow]="group.isTomorrow"
+          [class.overdue]="group.isOverdue"
+        >
+          @if (group.isToday) { <mat-icon>today</mat-icon> } @else if (group.isOverdue) {
+          <mat-icon>warning_amber</mat-icon> }
+          {{ group.label }}
+        </div>
+        <div class="pa-tgroup__line"></div>
+        <span class="pa-tgroup__count"
+          >{{ group.items.length }} task{{ group.items.length !== 1 ? 's' : '' }}</span
+        >
+      </div>
+
+      <div class="pa-cards">
+        @for (task of group.items; track trackById($index, task)) {
+        <div
+          class="pa-card"
+          [class.pa-card--done]="task.studentStatus === 'MARKED_AS_DONE'"
+          [class.pa-card--overdue]="isOverdue(task)"
+          [class.pa-card--graded]="task.teacherStatus === 'GRADED'"
+        >
+          <div class="pa-card__stripe" [class]="getTypeConfig(task.type).cssClass"></div>
+
+          <div class="pa-card__body">
+            <div class="pa-card__head">
+              <div class="pa-card__badges">
+                <span class="pa-type-badge" [class]="getTypeConfig(task.type).cssClass">
+                  <mat-icon>{{ getTypeConfig(task.type).icon }}</mat-icon>
+                  {{ getTypeConfig(task.type).label }}
+                </span>
+                @if (isOverdue(task)) {
+                <span class="pa-overdue-badge"><mat-icon>schedule</mat-icon> Overdue</span>
+                }
+              </div>
+              <!-- Status indicator -->
+              @if (task.type === 'ASSIGNMENT') {
+              <div
+                class="pa-submission-status"
+                [class.submitted]="task.studentStatus === 'MARKED_AS_DONE'"
+                [class.graded]="task.teacherStatus === 'GRADED'"
+              >
+                @if (task.teacherStatus === 'GRADED') {
+                <mat-icon>grade</mat-icon> Graded } @else if (task.studentStatus ===
+                'MARKED_AS_DONE') { <mat-icon>check_circle</mat-icon> Submitted } @else {
+                <mat-icon>pending</mat-icon> Pending }
+              </div>
+              }
+            </div>
+
+            <h3 class="pa-card__title">{{ task.title }}</h3>
+            <p class="pa-card__desc">{{ task.description }}</p>
+
+            <div class="pa-card__info-row">
+              <div class="pa-info-chip">
+                <mat-icon>menu_book</mat-icon>
+                {{ task.subjectName }}
+              </div>
+              <div class="pa-info-chip">
+                <mat-icon>person</mat-icon>
+                {{ task.teacherName }}
+              </div>
+              @if (task.maxMarks) {
+              <div class="pa-info-chip pa-info-chip--marks">
+                <mat-icon>stars</mat-icon>
+                {{ task.maxMarks }} marks
+              </div>
+              }
+            </div>
+
+            <!-- Score display for graded assignments -->
+            @if (task.teacherStatus === 'GRADED' && task.marksObtained !== null &&
+            task.marksObtained !== undefined) {
+            <div class="pa-score-row">
+              <div class="pa-score-bar">
+                <div
+                  class="pa-score-bar__fill"
+                  [class]="getScoreColor(getScorePercent(task))"
+                  [style.width.%]="getScorePercent(task)"
+                ></div>
+              </div>
+              <div class="pa-score-nums" [class]="getScoreColor(getScorePercent(task))">
+                <span class="pa-score-val">{{ task.marksObtained }}</span>
+                @if (task.maxMarks) { <span class="pa-score-max">/ {{ task.maxMarks }}</span> }
+                <span class="pa-score-pct">({{ getScorePercent(task) }}%)</span>
+              </div>
+            </div>
+            }
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- ══ SUBJECT VIEW ═══════════════════════════════════════════════════════ -->
+  @else {
+  <div class="pa-subject-view">
+    @for (group of groupedBySubject(); track trackBySubject($index, group)) {
+    <div class="pa-subject-group">
+      <div class="pa-subject-header">
+        <div class="pa-subject-icon">
+          <mat-icon>menu_book</mat-icon>
+        </div>
+        <div class="pa-subject-title">
+          <h3>{{ group.subject }}</h3>
+          <span>{{ group.items.length }} task{{ group.items.length !== 1 ? 's' : '' }}</span>
+        </div>
+        <div class="pa-subject-meta">
+          @if (group.pending > 0) {
+          <span class="pa-sub-meta-chip pa-sub-meta-chip--pending">
+            {{ group.pending }} pending
+          </span>
+          } @if (group.done > 0) {
+          <span class="pa-sub-meta-chip pa-sub-meta-chip--done"> {{ group.done }} done </span>
+          }
+        </div>
+      </div>
+
+      <div class="pa-subject-list">
+        @for (task of group.items; track trackById($index, task)) {
+        <div
+          class="pa-subject-item"
+          [class.done]="task.studentStatus === 'MARKED_AS_DONE'"
+          [class.overdue]="isOverdue(task)"
+        >
+          <div class="pa-subject-item__left">
+            <div class="pa-stype-dot" [class]="getTypeConfig(task.type).cssClass"></div>
+            <div class="pa-subject-item__text">
+              <span class="pa-subject-item__title">{{ task.title }}</span>
+              <span class="pa-subject-item__type">{{ getTypeConfig(task.type).label }}</span>
+            </div>
+          </div>
+          <div class="pa-subject-item__right">
+            @if (task.type === 'ASSIGNMENT') { @if (task.teacherStatus === 'GRADED' &&
+            task.marksObtained !== null) {
+            <span class="pa-mini-score" [class]="getScoreColor(getScorePercent(task))">
+              {{ task.marksObtained }}{{ task.maxMarks ? '/' + task.maxMarks : '' }}
+            </span>
+            } @else if (task.studentStatus === 'MARKED_AS_DONE') {
+            <span class="pa-mini-status done"><mat-icon>check_circle</mat-icon></span>
+            } @else if (isOverdue(task)) {
+            <span class="pa-mini-status overdue"><mat-icon>warning</mat-icon></span>
+            } @else {
+            <span class="pa-mini-status pending"><mat-icon>radio_button_unchecked</mat-icon></span>
+            } } @if (task.targetDate || task.dueDate) {
+            <span class="pa-mini-date">
+              {{ task.targetDate || task.dueDate | date : 'MMM d' }}
+            </span>
+            }
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+  } }
+  <!-- end else -->
+</div>

@@ -1,0 +1,362 @@
+<div class="form-page">
+  <!-- ── Breadcrumb nav ───────────────────────────────────────────────────── -->
+  <div class="form-page__nav">
+    <button mat-icon-button class="back-btn" (click)="cancel()" matTooltip="Back to users">
+      <mat-icon fontIcon="arrow_back"></mat-icon>
+    </button>
+    <div class="form-page__breadcrumb">
+      <span class="breadcrumb-parent" (click)="cancel()">Admin Users</span>
+      <mat-icon class="breadcrumb-sep" fontIcon="chevron_right"></mat-icon>
+      <span class="breadcrumb-current">
+        {{ loading() ? 'Loading…' : user()?.name ?? 'Edit User' }}
+      </span>
+    </div>
+  </div>
+
+  <div class="form-page__body">
+    <!-- ── Aside ──────────────────────────────────────────────────────────── -->
+    <aside class="form-page__aside">
+      <div class="aside__icon aside__icon--edit">
+        <mat-icon fontIcon="manage_accounts"></mat-icon>
+      </div>
+      <h1 class="aside__title">Edit User</h1>
+
+      @if (user(); as u) {
+      <div class="user-info-card">
+        <div class="user-info__avatar">{{ nameInitial(u.name) }}</div>
+        <div class="user-info__text">
+          <div class="user-info__name">{{ u.name }}</div>
+          <div class="user-info__email">{{ u.email }}</div>
+        </div>
+      </div>
+      }
+
+      <p class="aside__desc">
+        Update profile, reassign roles, or fine-tune direct permissions for this user.
+      </p>
+
+      <!-- Desktop sidebar tab nav -->
+      <nav class="aside__tabs" aria-label="Edit sections">
+        <button
+          class="aside__tab"
+          [class.aside__tab--active]="activeTab() === 'profile'"
+          (click)="activeTab.set('profile')"
+        >
+          <mat-icon fontIcon="person"></mat-icon> Profile
+        </button>
+        <button
+          class="aside__tab"
+          [class.aside__tab--active]="activeTab() === 'roles'"
+          (click)="activeTab.set('roles')"
+          *hasSuperPermission="'roles.manage'"
+        >
+          <mat-icon fontIcon="shield"></mat-icon> Roles
+        </button>
+        <button
+          class="aside__tab"
+          [class.aside__tab--active]="activeTab() === 'permissions'"
+          (click)="activeTab.set('permissions')"
+          *hasSuperPermission="'permissions.manage'"
+        >
+          <mat-icon fontIcon="lock"></mat-icon> Permissions
+        </button>
+      </nav>
+    </aside>
+
+    <!-- ── Main card ──────────────────────────────────────────────────────── -->
+    <main class="form-page__main">
+      @if (loading()) {
+      <!-- Skeleton loader -->
+      <div class="card loading-card" aria-busy="true" aria-label="Loading user data">
+        <div class="skeleton skeleton--title"></div>
+        <div class="skeleton skeleton--field"></div>
+        <div class="skeleton skeleton--field"></div>
+        <div class="skeleton skeleton--field"></div>
+        <div class="skeleton skeleton--field skeleton--field-half"></div>
+      </div>
+
+      } @else {
+      <div class="card">
+        <!-- Mobile tab bar (shown ≤900px) -->
+        <div class="tab-bar mobile-tabs" role="tablist">
+          <button
+            role="tab"
+            class="tab"
+            [class.tab--active]="activeTab() === 'profile'"
+            [attr.aria-selected]="activeTab() === 'profile'"
+            (click)="activeTab.set('profile')"
+          >
+            <mat-icon fontIcon="person"></mat-icon> Profile
+          </button>
+          <button
+            role="tab"
+            class="tab"
+            [class.tab--active]="activeTab() === 'roles'"
+            [attr.aria-selected]="activeTab() === 'roles'"
+            (click)="activeTab.set('roles')"
+            *hasSuperPermission="'roles.manage'"
+          >
+            <mat-icon fontIcon="shield"></mat-icon> Roles
+          </button>
+          <button
+            role="tab"
+            class="tab"
+            [class.tab--active]="activeTab() === 'permissions'"
+            [attr.aria-selected]="activeTab() === 'permissions'"
+            (click)="activeTab.set('permissions')"
+            *hasSuperPermission="'permissions.manage'"
+          >
+            <mat-icon fontIcon="lock"></mat-icon> Permissions
+          </button>
+        </div>
+
+        <!-- ══ PROFILE TAB ══════════════════════════════════════════════ -->
+        @if (activeTab() === 'profile') {
+        <div class="card__section-label">Account details</div>
+
+        <form [formGroup]="profileForm" novalidate>
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label" for="edit-name">Full name</label>
+              <div
+                class="field-input-wrap"
+                [class.field-input-wrap--error]="
+                  hasError(profileForm, 'name', 'required') ||
+                  hasError(profileForm, 'name', 'minlength')
+                "
+              >
+                <mat-icon class="field-icon" fontIcon="badge"></mat-icon>
+                <input
+                  id="edit-name"
+                  formControlName="name"
+                  placeholder="Jane Smith"
+                  autocomplete="off"
+                  class="field-input"
+                />
+              </div>
+              @if (hasError(profileForm, 'name', 'required')) {
+              <span class="field-error">Name is required</span>
+              } @else if (hasError(profileForm, 'name', 'minlength')) {
+              <span class="field-error">At least 2 characters</span>
+              }
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="edit-email">Email address</label>
+              <div
+                class="field-input-wrap"
+                [class.field-input-wrap--error]="
+                  hasError(profileForm, 'email', 'required') ||
+                  hasError(profileForm, 'email', 'email')
+                "
+              >
+                <mat-icon class="field-icon" fontIcon="mail"></mat-icon>
+                <input
+                  id="edit-email"
+                  type="email"
+                  formControlName="email"
+                  placeholder="jane@example.com"
+                  autocomplete="off"
+                  class="field-input"
+                />
+              </div>
+              @if (hasError(profileForm, 'email', 'required')) {
+              <span class="field-error">Email is required</span>
+              } @else if (hasError(profileForm, 'email', 'email')) {
+              <span class="field-error">Invalid email address</span>
+              }
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="edit-password"
+              >New password <span class="field-label__opt">(optional)</span></label
+            >
+            <div
+              class="field-input-wrap"
+              [class.field-input-wrap--error]="hasError(profileForm, 'newPassword', 'minlength')"
+            >
+              <mat-icon class="field-icon" fontIcon="key"></mat-icon>
+              <input
+                id="edit-password"
+                [type]="showPassword() ? 'text' : 'password'"
+                formControlName="newPassword"
+                placeholder="Leave blank to keep current"
+                autocomplete="new-password"
+                class="field-input"
+              />
+              <button
+                type="button"
+                class="field-toggle-btn"
+                (click)="showPassword.set(!showPassword())"
+                [matTooltip]="showPassword() ? 'Hide password' : 'Show password'"
+                aria-label="Toggle password visibility"
+              >
+                <mat-icon [fontIcon]="showPassword() ? 'visibility_off' : 'visibility'"></mat-icon>
+              </button>
+            </div>
+            @if (hasError(profileForm, 'newPassword', 'minlength')) {
+            <span class="field-error">Minimum 8 characters</span>
+            } @else {
+            <span class="field-hint">Leave blank to keep the current password</span>
+            }
+          </div>
+
+          <div class="card__divider"></div>
+
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Account active</div>
+              <div class="toggle-hint">Inactive users cannot log in</div>
+            </div>
+            <mat-slide-toggle formControlName="isActive" color="primary"></mat-slide-toggle>
+          </div>
+
+          <div class="card__footer">
+            <button type="button" mat-button class="cancel-btn" (click)="cancel()">Cancel</button>
+            <button
+              type="button"
+              mat-flat-button
+              color="primary"
+              class="submit-btn"
+              [disabled]="profileForm.invalid || saving()"
+              (click)="saveProfile()"
+            >
+              @if (saving()) {
+              <mat-spinner diameter="18"></mat-spinner>
+              <span>Saving…</span>
+              } @else {
+              <ng-container>
+                <mat-icon fontIcon="save"></mat-icon>
+              </ng-container>
+
+              <span>Save changes</span>
+              }
+            </button>
+          </div>
+        </form>
+        }
+
+        <!-- ══ ROLES TAB ════════════════════════════════════════════════ -->
+        @if (activeTab() === 'roles') {
+        <div class="card__section-label">Assigned roles</div>
+
+        <div class="info-banner">
+          <mat-icon fontIcon="info_outline"></mat-icon>
+          <span
+            >Changing roles will invalidate this user's active sessions and force a re-login.</span
+          >
+        </div>
+
+        <div class="roles-grid">
+          @for (role of allRoles(); track role.id) { @if (role.name !== 'SUPERADMIN') {
+          <label class="role-card" [class.role-card--selected]="isRoleSelected(role.id)">
+            <input
+              type="checkbox"
+              class="role-card__check"
+              [checked]="isRoleSelected(role.id)"
+              (change)="onRoleToggle(role.id, $any($event.target).checked)"
+            />
+            <div class="role-card__body">
+              <span class="role-badge" [ngClass]="getRoleBadgeClass(role.name)">
+                {{ role.name }}
+              </span>
+              @if (role.description) {
+              <p class="role-card__desc">{{ role.description }}</p>
+              }
+              <div class="role-card__check-indicator">
+                <mat-icon fontIcon="check_circle"></mat-icon>
+              </div>
+            </div>
+          </label>
+          } } @empty {
+          <p class="empty-hint">No roles available.</p>
+          }
+        </div>
+
+        @if (!isRoleSelected(0) && rolesForm.get('roleIds')?.value?.length === 0) {
+        <span class="field-error">Select at least one role</span>
+        }
+
+        <div class="card__footer">
+          <button mat-button class="cancel-btn" (click)="cancel()">Cancel</button>
+          <button
+            mat-flat-button
+            color="primary"
+            class="submit-btn"
+            [disabled]="rolesForm.get('roleIds')?.value?.length === 0 || savingRoles()"
+            (click)="saveRoles()"
+          >
+            @if (savingRoles()) {
+            <mat-spinner diameter="18"></mat-spinner>
+            <span>Saving…</span>
+            } @else {
+            <ng-container>
+              <mat-icon fontIcon="save"></mat-icon>
+            </ng-container>
+            <span>Update roles</span>
+            }
+          </button>
+        </div>
+        }
+
+        <!-- ══ PERMISSIONS TAB ══════════════════════════════════════════ -->
+        @if (activeTab() === 'permissions') {
+        <div class="card__section-label">Direct permissions</div>
+
+        <div class="info-banner">
+          <mat-icon fontIcon="info_outline"></mat-icon>
+          <span
+            >Direct permissions are <em>added on top of</em> role permissions. Leave empty to
+            inherit from roles only.</span
+          >
+        </div>
+
+        @if (permissionModules().size === 0) {
+        <p class="empty-hint">No permissions available.</p>
+        } @for (module of permissionModules() | keyvalue; track module.key) {
+        <div class="perm-module">
+          <h4 class="perm-module__title">{{ module.key }}</h4>
+          <div class="perm-grid">
+            @for (perm of $any(module.value); track perm.id) {
+            <label class="perm-item" [class.perm-item--active]="hasPermission(perm.id)">
+              <input
+                type="checkbox"
+                class="perm-check"
+                [checked]="hasPermission(perm.id)"
+                (change)="togglePermission(perm.id, $any($event.target).checked)"
+              />
+              <span class="perm-item__name">{{ perm.name }}</span>
+              <span class="perm-item__slug" [matTooltip]="perm.slug">{{ perm.slug }}</span>
+            </label>
+            }
+          </div>
+        </div>
+        }
+
+        <div class="card__footer">
+          <button mat-button class="cancel-btn" (click)="cancel()">Cancel</button>
+          <button
+            mat-flat-button
+            color="primary"
+            class="submit-btn"
+            [disabled]="savingPermissions()"
+            (click)="savePermissions()"
+          >
+            @if (savingPermissions()) {
+            <mat-spinner diameter="18"></mat-spinner>
+            <span>Saving…</span>
+            } @else {
+            <ng-container>
+              <mat-icon fontIcon="save"></mat-icon>
+            </ng-container>
+            <span>Save permissions</span>
+            }
+          </button>
+        </div>
+        }
+      </div>
+      }
+    </main>
+  </div>
+</div>

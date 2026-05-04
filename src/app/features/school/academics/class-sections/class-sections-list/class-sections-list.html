@@ -1,0 +1,137 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-left">
+      <h1>Class-Sections</h1>
+      <p>Combinations like Class 10 – A, Class 11 – Science, etc.</p>
+    </div>
+    <div class="header-actions">
+      @if (canManage()) {
+      <button
+        mat-raised-button
+        color="primary"
+        [routerLink]="['/school/academics/class-sections/new']"
+      >
+        <mat-icon>add</mat-icon> New Class-Section
+      </button>
+      }
+      <button mat-icon-button (click)="loadClassSections()" matTooltip="Refresh">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  @if (loading()) {
+  <div class="state-container">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading class-sections…</p>
+  </div>
+
+  } @else if (error()) {
+  <div class="state-container error">
+    <mat-icon class="state-icon">error_outline</mat-icon>
+    <h2>Could not load class-sections</h2>
+    <p>{{ error() }}</p>
+    <button mat-raised-button color="primary" (click)="loadClassSections()">Retry</button>
+  </div>
+
+  } @else if (classSections().length === 0) {
+  <div class="state-container">
+    <mat-icon class="state-icon">group_work</mat-icon>
+    <h2>No Class-Sections Yet</h2>
+    <p>Combine a class with a section to create enrollable class-sections.</p>
+    @if (canManage()) {
+    <button
+      mat-raised-button
+      color="primary"
+      [routerLink]="['/school/academics/class-sections/new']"
+    >
+      <mat-icon>add</mat-icon> Create First Class-Section
+    </button>
+    }
+  </div>
+
+  } @else {
+  <div class="table-card overflow-x">
+    <table mat-table [dataSource]="classSections()" [trackBy]="trackById">
+      <!-- Class -->
+      <ng-container matColumnDef="className">
+        <th mat-header-cell *matHeaderCellDef>Class</th>
+        <td mat-cell *matCellDef="let cs">
+          <strong>{{ cs.className }}</strong>
+        </td>
+      </ng-container>
+
+      <!-- Section -->
+      <ng-container matColumnDef="sectionName">
+        <th mat-header-cell *matHeaderCellDef>Section</th>
+        <td mat-cell *matCellDef="let cs">{{ cs.sectionName }}</td>
+      </ng-container>
+
+      <!-- Capacity -->
+      <ng-container matColumnDef="capacity">
+        <th mat-header-cell *matHeaderCellDef>Capacity</th>
+        <td mat-cell *matCellDef="let cs">{{ cs.capacity }}</td>
+      </ng-container>
+
+      <!-- Enrolled -->
+      <ng-container matColumnDef="enrolled">
+        <th mat-header-cell *matHeaderCellDef>Enrolled</th>
+        <td mat-cell *matCellDef="let cs">
+          @if (cs.currentStudents !== undefined) {
+          <span [class.text-warn]="cs.currentStudents >= cs.capacity">
+            {{ cs.currentStudents }} / {{ cs.capacity }}
+          </span>
+          } @else { — }
+        </td>
+      </ng-container>
+
+      <!-- Room -->
+      <ng-container matColumnDef="roomNumber">
+        <th mat-header-cell *matHeaderCellDef>Room</th>
+        <td mat-cell *matCellDef="let cs">{{ cs.roomNumber || '—' }}</td>
+      </ng-container>
+
+      <!-- Class Teacher -->
+      <ng-container matColumnDef="classTeacherName">
+        <th mat-header-cell *matHeaderCellDef>Class Teacher</th>
+        <td mat-cell *matCellDef="let cs">{{ cs.classTeacherName || '—' }}</td>
+      </ng-container>
+
+      <!-- Status -->
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let cs">
+          <span class="badge" [class.active]="cs.isActive" [class.inactive]="!cs.isActive">
+            {{ cs.isActive ? 'Active' : 'Inactive' }}
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- Actions -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let cs">
+          @if (canManage()) {
+          <div class="cell-actions">
+            <button mat-icon-button (click)="edit(cs)" matTooltip="Edit class-section">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              color="warn"
+              (click)="delete(cs)"
+              matTooltip="Delete class-section"
+            >
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </div>
+          }
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+  </div>
+  }
+</div>

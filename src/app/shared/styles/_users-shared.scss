@@ -1,0 +1,506 @@
+// ============================================================
+// _users-shared.scss
+// Single source of truth for ALL users module styles.
+// Import in every users component SCSS:
+//   @use '../../../../shared/styles/users-shared' as *;
+// (adjust relative path as needed)
+// ============================================================
+
+// ── Page shell ───────────────────────────────────────────────────────────────
+.page-container {
+  padding: 32px 28px;
+  max-width: 1340px;
+  margin: 0 auto;
+
+  @media (max-width: 768px) {
+    padding: 20px 16px;
+  }
+}
+
+// ── Page header ───────────────────────────────────────────────────────────────
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 28px;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  .header-left {
+    h1 {
+      margin: 0 0 4px;
+      font-size: 1.875rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      letter-spacing: -0.02em;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--color-text-secondary);
+    }
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    letter-spacing: -0.02em;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .header-actions {
+      width: 100%;
+    }
+  }
+}
+
+// ── Toolbar (search + filters) ────────────────────────────────────────────────
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+
+  .search-field {
+    flex: 1;
+    min-width: 240px;
+    max-width: 420px;
+  }
+
+  @media (max-width: 600px) {
+    .search-field {
+      max-width: 100%;
+      width: 100%;
+    }
+  }
+}
+
+// ── Feedback states ───────────────────────────────────────────────────────────
+.state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 360px;
+  gap: 16px;
+  text-align: center;
+  padding: 40px 20px;
+
+  .state-icon {
+    font-size: 72px;
+    height: 72px;
+    width: 72px;
+    opacity: 0.5;
+    color: var(--color-text-muted);
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
+  p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    max-width: 380px;
+  }
+
+  &.error {
+    .state-icon {
+      color: var(--color-error);
+      opacity: 1;
+    }
+
+    h2 {
+      color: var(--color-error);
+    }
+  }
+}
+
+// ── Table card ────────────────────────────────────────────────────────────────
+.table-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  position: relative;
+
+  table {
+    width: 100%;
+  }
+}
+
+.table-overflow {
+  overflow-x: auto;
+}
+
+// Loading shade inside table
+.loading-shade {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: var(--radius-md);
+}
+
+// Mat-table cell overrides
+.mat-mdc-header-cell {
+  background: var(--color-hover) !important;
+  font-weight: 700 !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary) !important;
+  padding: 14px 16px !important;
+}
+
+.mat-mdc-cell {
+  padding: 14px 16px !important;
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--color-divider) !important;
+}
+
+.mat-mdc-row {
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--color-hover) !important;
+  }
+
+  &:last-child .mat-mdc-cell {
+    border-bottom: none !important;
+  }
+}
+
+// No-data row
+.no-data-cell {
+  text-align: center;
+  padding: 48px 16px !important;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+// ── Role badges ───────────────────────────────────────────────────────────────
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  &.school_owner {
+    background: color-mix(in srgb, #7c3aed 14%, transparent);
+    color: #7c3aed;
+  }
+
+  &.principal {
+    background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+    color: var(--color-primary-dark);
+  }
+
+  &.teacher {
+    background: color-mix(in srgb, var(--color-info) 14%, transparent);
+    color: var(--color-info);
+  }
+
+  &.student {
+    background: color-mix(in srgb, var(--color-success) 14%, transparent);
+    color: var(--color-success);
+  }
+
+  &.student_parent {
+    background: color-mix(in srgb, #f59e0b 14%, transparent);
+    color: #b45309;
+  }
+
+  &.manager,
+  &.staff {
+    background: color-mix(in srgb, var(--color-text-muted) 14%, transparent);
+    color: var(--color-text-secondary);
+  }
+}
+
+// ── Status indicator ──────────────────────────────────────────────────────────
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--color-text-muted);
+
+    &.active {
+      background: var(--color-success);
+    }
+
+    &.inactive {
+      background: var(--color-error);
+    }
+  }
+
+  &.active {
+    color: var(--color-success);
+  }
+
+  &.inactive {
+    color: var(--color-error);
+  }
+}
+
+// ── Cell actions ──────────────────────────────────────────────────────────────
+.cell-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+// ── User avatar / initials ────────────────────────────────────────────────────
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+    color: var(--color-primary-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    text-transform: uppercase;
+  }
+
+  .user-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+
+    .user-name {
+      font-weight: 600;
+      color: var(--color-text-primary);
+      font-size: 0.9rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-email {
+      font-size: 0.78rem;
+      color: var(--color-text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}
+
+// ── Form page ─────────────────────────────────────────────────────────────────
+.form-page {
+  max-width: 960px;
+  margin: 32px auto;
+  padding: 0 24px 48px;
+
+  @media (max-width: 600px) {
+    padding: 0 16px 32px;
+    margin: 20px auto;
+  }
+
+  .form-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 28px;
+    gap: 16px;
+    flex-wrap: wrap;
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.88rem;
+      color: var(--color-text-secondary);
+    }
+
+    @media (max-width: 600px) {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+}
+
+// ── Form section card ─────────────────────────────────────────────────────────
+.form-section {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--color-divider);
+    background: var(--color-hover);
+
+    mat-icon {
+      color: var(--color-primary);
+      font-size: 20px;
+      height: 20px;
+      width: 20px;
+    }
+
+    .section-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--color-text-secondary);
+      margin: 0;
+    }
+  }
+
+  .section-body {
+    padding: 20px;
+  }
+}
+
+// ── Form grids ────────────────────────────────────────────────────────────────
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.col-span-2 {
+  grid-column: span 2;
+
+  @media (max-width: 640px) {
+    grid-column: span 1;
+  }
+}
+
+.col-span-3 {
+  grid-column: span 3;
+
+  @media (max-width: 900px) {
+    grid-column: span 2;
+  }
+
+  @media (max-width: 560px) {
+    grid-column: span 1;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+// ── Form actions ──────────────────────────────────────────────────────────────
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+
+  button {
+    min-width: 120px;
+  }
+
+  @media (max-width: 480px) {
+    flex-direction: column-reverse;
+
+    button {
+      width: 100%;
+    }
+  }
+}
+
+// ── Loading overlay ───────────────────────────────────────────────────────────
+.loading-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 16px;
+  color: var(--color-text-secondary);
+}
+
+// ── Role-specific section (conditional profile fields) ────────────────────────
+.role-fields-card {
+  background: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg-card));
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+
+  .section-header {
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    border-bottom-color: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  }
+}

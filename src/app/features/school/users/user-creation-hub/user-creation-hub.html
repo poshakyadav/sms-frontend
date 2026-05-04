@@ -1,0 +1,587 @@
+<!-- user-creation-hub.html -->
+<!-- UPDATED: The staff role picker now shows only staff-category roles.
+     A small info note explains that student/parent roles have dedicated flows. -->
+
+<div class="hub-page">
+  <!-- ══════════════════════════════════════════════════════════════════════
+             PHASE 1: PERSONA SELECTOR
+             ══════════════════════════════════════════════════════════════════════ -->
+  @if (!selectedPersona()) {
+
+  <div class="hub-header">
+    <div class="hub-header-left">
+      <button class="hub-back-btn" (click)="router.navigate(['/school/users'])">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <h1 class="hub-title">Add New User</h1>
+        <p class="hub-subtitle">Choose the type of user you want to create</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="persona-grid">
+    @for (persona of personas; track persona.id) {
+    <button
+      class="persona-card persona-card--{{ persona.bgClass }}"
+      (click)="selectPersona(persona)"
+      [style.--persona-color]="persona.color"
+    >
+      <div class="persona-card__glow"></div>
+      <div class="persona-card__icon-wrap">
+        <mat-icon class="persona-card__icon">{{ persona.icon }}</mat-icon>
+      </div>
+      <div class="persona-card__body">
+        <h3 class="persona-card__label">{{ persona.label }}</h3>
+        <p class="persona-card__tagline">{{ persona.tagline }}</p>
+        <div class="persona-card__steps-hint">
+          @if (persona.id !== 'bulk') { @for (step of persona.steps; track step.id; let i = $index)
+          {
+          <span class="step-dot" [class.step-dot--first]="i === 0"></span>
+          }
+          <span class="steps-count">{{ persona.steps.length }} steps</span>
+          } @else {
+          <span class="steps-count bulk-badge">Excel / CSV</span>
+          }
+        </div>
+      </div>
+      <mat-icon class="persona-card__arrow">arrow_forward</mat-icon>
+    </button>
+    }
+  </div>
+
+  }
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+             PHASE 2: STEPPER WORKFLOW
+             ══════════════════════════════════════════════════════════════════════ -->
+  @else {
+
+  <div class="stepper-layout" [attr.data-persona]="selectedPersona()!.id">
+    <!-- ── Left sidebar ────────────────────────────────────────────────── -->
+    <aside class="step-sidebar" [style.--persona-color]="selectedPersona()!.color">
+      <div class="step-sidebar__header">
+        <button class="step-sidebar__back" (click)="backToHub()">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <div class="step-sidebar__persona-badge">
+          <mat-icon>{{ selectedPersona()!.icon }}</mat-icon>
+          <span>{{ selectedPersona()!.label }}</span>
+        </div>
+      </div>
+
+      <div class="step-sidebar__progress-wrap">
+        <div class="step-sidebar__progress-track">
+          <div class="step-sidebar__progress-fill" [style.width.%]="progress()"></div>
+        </div>
+        <span class="step-sidebar__progress-label">
+          Step {{ currentStep() + 1 }} of {{ steps().length }}
+        </span>
+      </div>
+
+      <nav class="step-nav">
+        @for (step of steps(); track step.id; let i = $index) {
+        <div
+          class="step-nav__item"
+          [class.is-done]="i < currentStep()"
+          [class.is-active]="i === currentStep()"
+          [class.is-pending]="i > currentStep()"
+        >
+          <div class="step-nav__indicator">
+            @if (i < currentStep()) {
+            <mat-icon class="step-nav__check">check</mat-icon>
+            } @else {
+            <span class="step-nav__num">{{ i + 1 }}</span>
+            }
+          </div>
+          <div class="step-nav__text">
+            <span class="step-nav__title">{{ step.title }}</span>
+            <span class="step-nav__sub">{{ step.subtitle }}</span>
+          </div>
+        </div>
+        }
+      </nav>
+    </aside>
+
+    <!-- ── Main step content ─────────────────────────────────────────────── -->
+    <main class="step-main">
+      <div class="step-header">
+        <div class="step-header__icon" [style.--persona-color]="selectedPersona()!.color">
+          <mat-icon>{{ steps()[currentStep()]?.icon }}</mat-icon>
+        </div>
+        <div>
+          <h2 class="step-header__title">{{ steps()[currentStep()]?.title }}</h2>
+          <p class="step-header__sub">{{ steps()[currentStep()]?.subtitle }}</p>
+        </div>
+      </div>
+
+      <!-- ══ STEP: ROLE (staff) ══ -->
+      @if (currentStepId() === 'role') {
+      <div class="step-body">
+        <!-- UPDATED: Info note clarifying this shows only staff roles -->
+        <div class="field-hint">
+          Select the specific staff role for this user. Only staff-category roles are shown here —
+          students and parents have their own dedicated creation flows above.
+        </div>
+
+        <div class="role-search-wrap">
+          <mat-icon class="role-search-icon">search</mat-icon>
+          <input
+            class="role-search-input"
+            type="text"
+            placeholder="Search staff roles…"
+            [value]="staffRoleSearch()"
+            (input)="onStaffRoleSearchInput($event)"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="role-cards-grid">
+          @for (role of filteredStaffRoles(); track role.id) {
+          <button
+            class="role-option-card"
+            [class.selected]="selectedStaffRole()?.id === role.id"
+            (click)="selectStaffRole(role)"
+            type="button"
+          >
+            <mat-icon class="role-option-icon">{{ getRoleIcon(role.name) }}</mat-icon>
+            <div class="role-option-info">
+              <span class="role-option-name">{{ formatRoleName(role.name) }}</span>
+              @if (role.description) {
+              <span class="role-option-desc">{{ role.description }}</span>
+              }
+            </div>
+            @if (selectedStaffRole()?.id === role.id) {
+            <mat-icon class="role-option-check">check_circle</mat-icon>
+            }
+          </button>
+          } @if (filteredStaffRoles().length === 0) {
+          <div class="role-empty">
+            <mat-icon>search_off</mat-icon>
+            <span>No staff roles match your search</span>
+          </div>
+          }
+        </div>
+      </div>
+      }
+
+      <!-- ══ STEP: ACCOUNT ══ -->
+      @if (currentStepId() === 'account') {
+      <form class="step-body step-form" [formGroup]="accountForm" novalidate>
+        <div class="form-row-2">
+          <!-- Full Name -->
+          <mat-form-field appearance="outline" class="col-full">
+            <mat-label>Full Name</mat-label>
+            <mat-icon matPrefix>badge</mat-icon>
+            <input matInput formControlName="name" placeholder="e.g. Ravi Sharma" />
+            @if (accountForm.get('name')?.hasError('required') && accountForm.get('name')?.touched)
+            {
+            <mat-error>Name is required</mat-error>
+            } @if (accountForm.get('name')?.hasError('minlength') &&
+            accountForm.get('name')?.touched) {
+            <mat-error>Minimum 2 characters</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Email with verification -->
+          <mat-form-field appearance="outline" class="col-full">
+            <mat-label>Email Address</mat-label>
+            <mat-icon matPrefix>email</mat-icon>
+            <input
+              matInput
+              type="email"
+              formControlName="email"
+              placeholder="user@school.edu"
+              (input)="onEmailInput($event)"
+              autocomplete="off"
+            />
+            <div matSuffix class="email-check-suffix">
+              @if (emailCheckStatus() === 'checking') {
+              <mat-spinner diameter="18" class="email-spinner"></mat-spinner>
+              } @else if (emailCheckStatus() === 'available') {
+              <mat-icon class="email-icon email-icon--ok" matTooltip="Email is available"
+                >check_circle</mat-icon
+              >
+              } @else if (emailCheckStatus() === 'taken') {
+              <mat-icon class="email-icon email-icon--err" matTooltip="Email already in use"
+                >cancel</mat-icon
+              >
+              } @else if (emailCheckStatus() === 'error') {
+              <mat-icon
+                class="email-icon email-icon--warn"
+                matTooltip="Verification failed — you may proceed"
+                >warning</mat-icon
+              >
+              } @else {
+              <button
+                type="button"
+                class="email-check-btn"
+                (click)="checkEmailNow()"
+                matTooltip="Check email availability"
+                [disabled]="!accountForm.get('email')?.value || accountForm.get('email')?.invalid"
+              >
+                Verify
+              </button>
+              }
+            </div>
+            @if (accountForm.get('email')?.hasError('required') &&
+            accountForm.get('email')?.touched) {
+            <mat-error>Email is required</mat-error>
+            } @if (accountForm.get('email')?.hasError('email') && accountForm.get('email')?.touched)
+            {
+            <mat-error>Enter a valid email</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Email status message -->
+          @if (emailCheckMessage()) {
+          <div
+            class="email-status-msg col-full"
+            [class.msg--ok]="emailCheckStatus() === 'available'"
+            [class.msg--err]="emailCheckStatus() === 'taken'"
+            [class.msg--warn]="emailCheckStatus() === 'error'"
+          >
+            @if (emailCheckStatus() === 'available') {
+            <mat-icon>check_circle</mat-icon>
+            } @else if (emailCheckStatus() === 'taken') {
+            <mat-icon>cancel</mat-icon>
+            } @else {
+            <mat-icon>warning</mat-icon>
+            }
+            <span>{{ emailCheckMessage() }}</span>
+          </div>
+          }
+
+          <!-- Password -->
+          <mat-form-field appearance="outline" class="col-full">
+            <mat-label>Temporary Password</mat-label>
+            <mat-icon matPrefix>lock</mat-icon>
+            <input matInput type="password" formControlName="password" />
+            <mat-hint>Min 8 characters — emailed to user</mat-hint>
+            @if (accountForm.get('password')?.hasError('required') &&
+            accountForm.get('password')?.touched) {
+            <mat-error>Password is required</mat-error>
+            } @if (accountForm.get('password')?.hasError('minlength') &&
+            accountForm.get('password')?.touched) {
+            <mat-error>Minimum 8 characters</mat-error>
+            }
+          </mat-form-field>
+        </div>
+      </form>
+      }
+
+      <!-- ══ STEP: PERSONAL ══ -->
+      @if (currentStepId() === 'personal') {
+      <form class="step-body step-form" [formGroup]="personalForm" novalidate>
+        <div class="form-row-2">
+          <mat-form-field appearance="outline">
+            <mat-label>Phone</mat-label>
+            <mat-icon matPrefix>phone</mat-icon>
+            <input matInput formControlName="phone" placeholder="10-digit number" />
+            @if (personalForm.get('phone')?.hasError('minlength') &&
+            personalForm.get('phone')?.touched) {
+            <mat-error>At least 10 digits</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Alternate Phone</mat-label>
+            <mat-icon matPrefix>phone</mat-icon>
+            <input matInput formControlName="alternatePhone" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Date of Birth</mat-label>
+            <mat-icon matPrefix>cake</mat-icon>
+            <input
+              matInput
+              [matDatepicker]="dobPicker"
+              formControlName="dateOfBirth"
+              placeholder="DD/MM/YYYY"
+            />
+            <mat-hint>DD/MM/YYYY</mat-hint>
+            <mat-datepicker-toggle matIconSuffix [for]="dobPicker" />
+            <mat-datepicker #dobPicker />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Gender</mat-label>
+            <mat-select formControlName="gender">
+              <mat-option value="">Not specified</mat-option>
+              @for (g of genders; track g.value) {
+              <mat-option [value]="g.value">{{ g.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Blood Group</mat-label>
+            <mat-select formControlName="bloodGroup">
+              <mat-option value="">Not specified</mat-option>
+              @for (bg of bloodGroups; track bg) {
+              <mat-option [value]="bg">{{ bg }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Address</mat-label>
+            <input matInput formControlName="addressLineOne" placeholder="Street / Colony" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>City</mat-label>
+            <input matInput formControlName="city" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>State</mat-label>
+            <input matInput formControlName="state" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Postal Code</mat-label>
+            <input matInput formControlName="postalCode" />
+          </mat-form-field>
+        </div>
+      </form>
+      }
+
+      <!-- ══ STEP: ACADEMIC (student) ══ -->
+      @if (currentStepId() === 'academic') {
+      <form class="step-body step-form" [formGroup]="studentAcademicForm" novalidate>
+        <div class="form-row-2">
+          <mat-form-field appearance="outline">
+            <mat-label>Admission Date</mat-label>
+            <mat-icon matPrefix>event</mat-icon>
+            <input
+              matInput
+              [matDatepicker]="admPicker"
+              formControlName="admissionDate"
+              placeholder="DD/MM/YYYY"
+            />
+            <mat-hint>DD/MM/YYYY</mat-hint>
+            <mat-datepicker-toggle matIconSuffix [for]="admPicker" />
+            <mat-datepicker #admPicker />
+          </mat-form-field>
+
+          <div class="roll-number-info-card">
+            <mat-icon>info_outline</mat-icon>
+            <p>
+              <strong>Roll number</strong> can be assigned after the student is enrolled in a
+              class-section, via <em>Academics → Roll Numbers</em>.
+            </p>
+          </div>
+
+          <mat-form-field appearance="outline" class="col-full">
+            <mat-label>Previous School</mat-label>
+            <mat-icon matPrefix>school</mat-icon>
+            <input matInput formControlName="previousSchool" placeholder="Transfer from…" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="col-full">
+            <mat-label>Medical Information</mat-label>
+            <mat-icon matPrefix>medical_information</mat-icon>
+            <textarea
+              matInput
+              formControlName="medicalInfo"
+              rows="3"
+              placeholder="Allergies, conditions, notes…"
+            ></textarea>
+          </mat-form-field>
+        </div>
+      </form>
+      }
+
+      <!-- ══ STEP: TEACHING (teacher) ══ -->
+      @if (currentStepId() === 'teaching') {
+      <form class="step-body step-form" [formGroup]="teachingForm" novalidate>
+        <div class="form-row-2">
+          <mat-form-field appearance="outline">
+            <mat-label>Qualification</mat-label>
+            <mat-icon matPrefix>military_tech</mat-icon>
+            <input matInput formControlName="qualification" placeholder="e.g. M.Sc, B.Ed" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Experience (Years)</mat-label>
+            <input matInput type="number" formControlName="experienceYears" min="0" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Specialization / Subject</mat-label>
+            <input matInput formControlName="specialization" placeholder="e.g. Mathematics" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Joining Date</mat-label>
+            <mat-icon matPrefix>event</mat-icon>
+            <input
+              matInput
+              [matDatepicker]="joinPicker"
+              formControlName="joiningDate"
+              placeholder="DD/MM/YYYY"
+            />
+            <mat-hint>DD/MM/YYYY</mat-hint>
+            <mat-datepicker-toggle matIconSuffix [for]="joinPicker" />
+            <mat-datepicker #joinPicker />
+          </mat-form-field>
+        </div>
+      </form>
+      }
+
+      <!-- ══ STEP: PROFILE (parent) ══ -->
+      @if (currentStepId() === 'profile') {
+      <form class="step-body step-form" [formGroup]="parentProfileForm" novalidate>
+        <div class="form-row-2">
+          <mat-form-field appearance="outline">
+            <mat-label>Occupation</mat-label>
+            <mat-icon matPrefix>work</mat-icon>
+            <input matInput formControlName="occupation" placeholder="e.g. Engineer, Teacher" />
+          </mat-form-field>
+        </div>
+        <div class="profile-info-card">
+          <mat-icon>info_outline</mat-icon>
+          <p>
+            After creating the parent account, you can link their children using the
+            <strong>Parent-Student Manager</strong> from the Students section.
+          </p>
+        </div>
+      </form>
+      }
+
+      <!-- ══ STEP: WORK (staff) ══ -->
+      @if (currentStepId() === 'work') {
+      <form class="step-body step-form" [formGroup]="staffWorkForm" novalidate>
+        <div class="form-row-2">
+          <mat-form-field appearance="outline">
+            <mat-label>Department</mat-label>
+            <mat-icon matPrefix>corporate_fare</mat-icon>
+            <input matInput formControlName="department" placeholder="e.g. Administration" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Monthly Salary (₹)</mat-label>
+            <mat-icon matPrefix>currency_rupee</mat-icon>
+            <input matInput type="number" formControlName="salary" min="0" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Shift</mat-label>
+            <mat-select formControlName="shift">
+              <mat-option value="">Not assigned</mat-option>
+              @for (s of shifts; track s.value) {
+              <mat-option [value]="s.value">{{ s.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Joining Date</mat-label>
+            <mat-icon matPrefix>event</mat-icon>
+            <input
+              matInput
+              [matDatepicker]="staffPicker"
+              formControlName="joiningDate"
+              placeholder="DD/MM/YYYY"
+            />
+            <mat-hint>DD/MM/YYYY</mat-hint>
+            <mat-datepicker-toggle matIconSuffix [for]="staffPicker" />
+            <mat-datepicker #staffPicker />
+          </mat-form-field>
+        </div>
+      </form>
+      }
+
+      <!-- ══ STEP: PARENTS (student — post-creation) ══ -->
+      @if (currentStepId() === 'parents') {
+      <div class="step-body parents-step">
+        <div class="parents-success-banner">
+          <div class="success-icon-wrap">
+            <mat-icon>check_circle</mat-icon>
+          </div>
+          <div>
+            <h3>Student Created Successfully!</h3>
+            <p>
+              Now link parents or guardians to
+              <strong>{{ accountForm.get('name')?.value }}</strong
+              >. This step is optional — you can do it later from the student's profile.
+            </p>
+          </div>
+        </div>
+
+        @if (createdUserId()) {
+        <app-student-parents-manager
+          [studentId]="createdUserId()!"
+          [studentName]="accountForm.get('name')?.value || 'Student'"
+        />
+        }
+      </div>
+      }
+
+      <!-- ══ Step Footer ══ -->
+      <div class="step-footer">
+        <button class="step-btn step-btn--secondary" type="button" (click)="prev()">
+          <mat-icon>{{ isFirstStep() ? 'close' : 'arrow_back' }}</mat-icon>
+          {{ isFirstStep() ? 'Change Type' : 'Back' }}
+        </button>
+
+        <div class="step-footer__right">
+          @if (currentStepId() === 'parents') {
+          <button class="step-btn step-btn--ghost" type="button" (click)="skipParents()">
+            Skip & Finish
+          </button>
+          <button class="step-btn step-btn--primary" type="button" (click)="goToUsersList()">
+            <mat-icon>check</mat-icon>
+            Done
+          </button>
+          } @else if (selectedPersona()?.id === 'student' && currentStepId() === 'academic') {
+          <button
+            class="step-btn step-btn--primary step-btn--submit"
+            type="button"
+            (click)="next()"
+            [disabled]="!canProceed() || submitting()"
+          >
+            @if (submitting()) {
+            <mat-spinner diameter="18"></mat-spinner>
+            Admitting… } @else {
+            <mat-icon>person_add</mat-icon>
+            Admit Student }
+          </button>
+          } @else if (isLastStep() && currentStepId() !== 'parents') {
+          <button
+            class="step-btn step-btn--primary step-btn--submit"
+            type="button"
+            (click)="next()"
+            [disabled]="!canProceed() || submitting()"
+          >
+            @if (submitting()) {
+            <mat-spinner diameter="18"></mat-spinner>
+            Creating… } @else {
+            <mat-icon>person_add</mat-icon>
+            Create {{ selectedPersona()!.label.split(' ')[1] }}
+            }
+          </button>
+          } @else { @if (currentStepId() === 'account' && emailCheckStatus() === 'taken') {
+          <div class="email-block-warning">
+            <mat-icon>block</mat-icon>
+            <span>Resolve email conflict to continue</span>
+          </div>
+          } @else {
+          <button
+            class="step-btn step-btn--primary"
+            type="button"
+            (click)="next()"
+            [disabled]="!canProceed()"
+          >
+            Continue
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+          } }
+        </div>
+      </div>
+    </main>
+  </div>
+
+  }
+</div>

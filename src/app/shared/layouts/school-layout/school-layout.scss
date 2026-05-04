@@ -1,0 +1,90 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// school-layout.scss — Full layout shell: header + sidebar + content
+// Dark mode: uses :host-context([data-theme="dark"]) which checks the <html>
+// element where ThemeService sets the data-theme attribute.
+// ─────────────────────────────────────────────────────────────────────────────
+
+:host {
+  display: block;
+  height: 100%;
+}
+
+.school-layout-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--color-bg-main, #f4f5f9);
+  transition: background 0.25s ease;
+
+  // Dark mode: ThemeService sets data-theme="dark" on <html>
+  :host-context([data-theme='dark']) & {
+    background: #13151a;
+  }
+}
+
+// Header takes its natural height (64px / 56px mobile)
+.school-layout-header {
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+// Body row: sidebar + main
+.school-layout-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden; // Children scroll individually
+}
+
+// Sidebar occupies its own width (component controls it via signal)
+.school-layout-sidebar {
+  flex-shrink: 0;
+  height: 100%;
+  overflow: visible; // Must be visible so collapse btn can protrude
+
+  // On mobile the sidebar becomes a fixed overlay — remove from flow
+  @media (max-width: 768px) {
+    width: 0 !important;
+    overflow: visible;
+  }
+}
+
+// Main content scrolls independently
+.school-main-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px;
+  box-sizing: border-box;
+  min-width: 0; // Prevent flex blowout
+
+  // Custom scrollbar
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.12) transparent;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.12);
+    border-radius: 5px;
+  }
+
+  :host-context([data-theme='dark']) & {
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 12px;
+  }
+}

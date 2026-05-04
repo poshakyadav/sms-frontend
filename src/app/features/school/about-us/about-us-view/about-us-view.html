@@ -1,0 +1,403 @@
+<!-- about-us-view.html -->
+<!-- ─────────────────────────────────────────────────────────────────────────
+  School About Us — Read-Only View
+  Route: /school/about-us  |  Accessible to ALL authenticated school users
+  ───────────────────────────────────────────────────────────────────────── -->
+
+<div class="about-page">
+  <!-- ══ HERO ════════════════════════════════════════════════════════════ -->
+  <div class="hero">
+    <div class="hero-orbs" aria-hidden="true">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
+
+    <div class="hero-inner">
+      <div class="hero-eyebrow">
+        <mat-icon>school</mat-icon>
+        <span>Our School</span>
+      </div>
+      <h1 class="hero-title">About Us</h1>
+
+      <p class="hero-desc" *ngIf="!loading() && data()?.description">
+        {{ data()!.description }}
+      </p>
+      <p class="hero-desc" *ngIf="!loading() && !data()?.description">
+        Learn about our school's history, values, and community.
+      </p>
+
+      <!-- Edit button — only settings.manage users -->
+      <a
+        *ngIf="!loading() && canEdit()"
+        routerLink="/school/settings/about-us"
+        class="hero-edit-btn"
+        matTooltip="Edit About Us content (settings.manage)"
+      >
+        <mat-icon>edit</mat-icon>
+        Edit Content
+      </a>
+    </div>
+  </div>
+
+  <!-- ══ LOADING ══════════════════════════════════════════════════════════ -->
+  <div class="center-state" *ngIf="loading()">
+    <mat-spinner diameter="44"></mat-spinner>
+    <p>Loading school information…</p>
+  </div>
+
+  <!-- ══ ERROR ════════════════════════════════════════════════════════════ -->
+  <div class="center-state" *ngIf="!loading() && error()">
+    <div class="state-box state-box--error">
+      <mat-icon class="state-icon state-icon--error">error_outline</mat-icon>
+      <h3>Could not load</h3>
+      <p>{{ error() }}</p>
+      <button mat-flat-button class="retry-btn" (click)="load()">
+        <mat-icon>refresh</mat-icon>
+        Retry
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ EMPTY STATE ══════════════════════════════════════════════════════ -->
+  <div class="center-state" *ngIf="!loading() && !error() && !hasContent()">
+    <div class="state-box">
+      <div class="empty-icon-wrap">
+        <mat-icon>auto_stories</mat-icon>
+      </div>
+      <h3>Nothing here yet</h3>
+      <p *ngIf="canEdit()">
+        Fill in your school's story, mission, and milestones to inspire your community.
+      </p>
+      <p *ngIf="!canEdit()">The school administration hasn't published About Us content yet.</p>
+      <a *ngIf="canEdit()" routerLink="/school/settings/about-us" class="cta-btn">
+        <mat-icon>add</mat-icon>
+        Add Content Now
+      </a>
+    </div>
+  </div>
+
+  <!-- ══ MAIN CONTENT ══════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="!loading() && !error() && hasContent()">
+    <!-- ── Stats Strip ──────────────────────────────────────────────────── -->
+    <div class="stats-strip" *ngIf="hasStats()">
+      <div class="stats-inner">
+        <div class="stat-item" *ngIf="data()!.totalStudents !== null">
+          <div class="stat-icon stat-icon--blue"><mat-icon>people</mat-icon></div>
+          <div class="stat-body">
+            <span class="stat-val">{{ formatStat(data()!.totalStudents) }}</span>
+            <span class="stat-lbl">Students</span>
+          </div>
+        </div>
+
+        <div
+          class="stat-sep"
+          *ngIf="data()!.totalStudents !== null && data()!.totalTeachers !== null"
+        ></div>
+
+        <div class="stat-item" *ngIf="data()!.totalTeachers !== null">
+          <div class="stat-icon stat-icon--green"><mat-icon>school</mat-icon></div>
+          <div class="stat-body">
+            <span class="stat-val">{{ formatStat(data()!.totalTeachers) }}</span>
+            <span class="stat-lbl">Teachers</span>
+          </div>
+        </div>
+
+        <div
+          class="stat-sep"
+          *ngIf="data()!.totalTeachers !== null && data()!.totalStaff !== null"
+        ></div>
+
+        <div class="stat-item" *ngIf="data()!.totalStaff !== null">
+          <div class="stat-icon stat-icon--orange"><mat-icon>badge</mat-icon></div>
+          <div class="stat-body">
+            <span class="stat-val">{{ formatStat(data()!.totalStaff) }}</span>
+            <span class="stat-lbl">Staff</span>
+          </div>
+        </div>
+
+        <div class="stat-sep" *ngIf="data()!.totalStaff !== null && data()!.campusAreaAcres"></div>
+
+        <div class="stat-item" *ngIf="data()!.campusAreaAcres">
+          <div class="stat-icon stat-icon--purple"><mat-icon>landscape</mat-icon></div>
+          <div class="stat-body">
+            <span class="stat-val">{{ data()!.campusAreaAcres }}</span>
+            <span class="stat-lbl">Acre Campus</span>
+          </div>
+        </div>
+
+        <div class="stat-sep" *ngIf="data()!.campusAreaAcres && data()!.foundedYear"></div>
+
+        <div class="stat-item" *ngIf="data()!.foundedYear">
+          <div class="stat-icon stat-icon--amber"><mat-icon>history_edu</mat-icon></div>
+          <div class="stat-body">
+            <span class="stat-val">{{ data()!.foundedYear }}</span>
+            <span class="stat-lbl">Established</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /stats-strip -->
+
+    <!-- ── Content Grid ─────────────────────────────────────────────────── -->
+    <div class="page-body">
+      <div class="content-grid">
+        <!-- LEFT COLUMN ──────────────────────────────────────────────────── -->
+        <div class="col-main">
+          <!-- Affiliation / Accreditation badges -->
+          <div
+            class="badge-row"
+            *ngIf="data()!.affiliationBoard || data()!.accreditation || data()!.affiliationNumber"
+          >
+            <div class="aff-badge" *ngIf="data()!.affiliationBoard">
+              <mat-icon>verified</mat-icon>
+              <span>{{ data()!.affiliationBoard }}</span>
+            </div>
+            <div class="aff-badge aff-badge--gold" *ngIf="data()!.accreditation">
+              <mat-icon>stars</mat-icon>
+              <span>{{ data()!.accreditation }}</span>
+            </div>
+            <div class="aff-badge aff-badge--muted" *ngIf="data()!.affiliationNumber">
+              <mat-icon>tag</mat-icon>
+              <span>Aff. No. {{ data()!.affiliationNumber }}</span>
+            </div>
+          </div>
+
+          <!-- Mission -->
+          <div class="card" *ngIf="data()!.mission">
+            <div class="card-hd">
+              <div class="card-icon card-icon--blue"><mat-icon>flag</mat-icon></div>
+              <h2>Our Mission</h2>
+            </div>
+            <div class="card-body">
+              <p class="rich-text">{{ data()!.mission }}</p>
+            </div>
+          </div>
+
+          <!-- Vision -->
+          <div class="card" *ngIf="data()!.vision">
+            <div class="card-hd">
+              <div class="card-icon card-icon--indigo"><mat-icon>visibility</mat-icon></div>
+              <h2>Our Vision</h2>
+            </div>
+            <div class="card-body">
+              <p class="rich-text">{{ data()!.vision }}</p>
+            </div>
+          </div>
+
+          <!-- History -->
+          <div class="card" *ngIf="data()!.history">
+            <div class="card-hd">
+              <div class="card-icon card-icon--amber"><mat-icon>auto_stories</mat-icon></div>
+              <h2>Our History</h2>
+            </div>
+            <div class="card-body">
+              <div class="founding-meta" *ngIf="data()!.foundedBy || data()!.foundedYear">
+                <mat-icon>person</mat-icon>
+                <span *ngIf="data()!.foundedBy">
+                  Founded by <strong>{{ data()!.foundedBy }}</strong>
+                </span>
+                <span *ngIf="data()!.foundedYear"> · Est. {{ data()!.foundedYear }}</span>
+              </div>
+              <p class="rich-text">{{ data()!.history }}</p>
+            </div>
+          </div>
+
+          <!-- Core Values -->
+          <div class="card" *ngIf="data()!.coreValues?.length">
+            <div class="card-hd">
+              <div class="card-icon card-icon--teal"><mat-icon>diamond</mat-icon></div>
+              <h2>Core Values</h2>
+            </div>
+            <div class="card-body">
+              <div class="values-grid">
+                <div class="value-item" *ngFor="let v of data()!.coreValues; let i = index">
+                  <div class="value-num">{{ i + 1 }}</div>
+                  <div class="value-text">
+                    <h4>{{ v.title }}</h4>
+                    <p *ngIf="v.description">{{ v.description }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Achievements Timeline -->
+          <div class="card" *ngIf="data()!.achievements?.length">
+            <div class="card-hd">
+              <div class="card-icon card-icon--gold"><mat-icon>emoji_events</mat-icon></div>
+              <h2>Achievements &amp; Milestones</h2>
+            </div>
+            <div class="card-body">
+              <div class="timeline">
+                <div class="tl-item" *ngFor="let a of data()!.achievements; let last = last">
+                  <div class="tl-dot"></div>
+                  <div class="tl-year" *ngIf="a.year">{{ a.year }}</div>
+                  <div class="tl-year" *ngIf="!a.year">&nbsp;</div>
+                  <div class="tl-content" [class.tl-content--last]="last">
+                    <h4>{{ a.title }}</h4>
+                    <p *ngIf="a.description">{{ a.description }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- /col-main -->
+
+        <!-- RIGHT COLUMN (sidebar) ───────────────────────────────────────── -->
+        <div class="col-side">
+          <!-- Principal Message -->
+          <div class="card principal-card" *ngIf="data()!.principalName">
+            <div class="principal-hd">
+              <div class="principal-avatar">
+                <img
+                  *ngIf="data()!.principalAvatarUrl"
+                  [src]="data()!.principalAvatarUrl"
+                  [alt]="data()!.principalName"
+                  class="avatar-img"
+                  (error)="onImgError($event)"
+                />
+                <mat-icon *ngIf="!data()!.principalAvatarUrl" class="avatar-icon">
+                  person
+                </mat-icon>
+              </div>
+              <div>
+                <h3 class="principal-name">{{ data()!.principalName }}</h3>
+                <span class="principal-role">Principal / Head of School</span>
+              </div>
+            </div>
+            <p class="principal-msg" *ngIf="data()!.principalMessage">
+              "{{ data()!.principalMessage }}"
+            </p>
+          </div>
+
+          <!-- Facilities -->
+          <div class="card" *ngIf="data()!.facilities?.length">
+            <div class="side-hd">
+              <mat-icon>apartment</mat-icon>
+              <h3>Facilities</h3>
+            </div>
+            <div class="facility-list">
+              <div class="facility-chip" *ngFor="let f of data()!.facilities">
+                <mat-icon>check_circle</mat-icon>
+                <span>{{ f }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gallery -->
+          <div class="card gallery-card" *ngIf="data()!.galleryUrls?.length">
+            <div class="side-hd">
+              <mat-icon>photo_library</mat-icon>
+              <h3>Gallery</h3>
+            </div>
+
+            <div class="gallery-main">
+              <img
+                [src]="data()!.galleryUrls[activeGalleryIndex()]"
+                alt="School gallery photo"
+                class="gallery-img"
+                (error)="onImgError($event)"
+              />
+              <button
+                class="g-nav g-prev"
+                *ngIf="data()!.galleryUrls.length > 1"
+                (click)="prevGallery()"
+                aria-label="Previous photo"
+              >
+                <mat-icon>chevron_left</mat-icon>
+              </button>
+              <button
+                class="g-nav g-next"
+                *ngIf="data()!.galleryUrls.length > 1"
+                (click)="nextGallery()"
+                aria-label="Next photo"
+              >
+                <mat-icon>chevron_right</mat-icon>
+              </button>
+            </div>
+
+            <!-- Dot indicators -->
+            <div class="g-dots" *ngIf="data()!.galleryUrls.length > 1">
+              <button
+                class="g-dot"
+                [class.active]="i === activeGalleryIndex()"
+                *ngFor="let url of data()!.galleryUrls; let i = index"
+                (click)="setGalleryIndex(i)"
+                [attr.aria-label]="'Photo ' + (i + 1)"
+              ></button>
+            </div>
+
+            <!-- Thumbnails -->
+            <div class="g-thumbs" *ngIf="data()!.galleryUrls.length > 1">
+              <img
+                *ngFor="let url of data()!.galleryUrls; let i = index"
+                [src]="url"
+                class="g-thumb"
+                [class.active]="i === activeGalleryIndex()"
+                (click)="setGalleryIndex(i)"
+                (error)="onImgError($event)"
+                alt="Gallery thumbnail"
+              />
+            </div>
+          </div>
+
+          <!-- Social Links -->
+          <div class="card social-card" *ngIf="hasSocial()">
+            <div class="side-hd">
+              <mat-icon>share</mat-icon>
+              <h3>Follow Us</h3>
+            </div>
+            <div class="social-list">
+              <button
+                class="social-btn fb"
+                *ngIf="data()!.facebookUrl"
+                (click)="openSocial(data()!.facebookUrl)"
+              >
+                <span class="s-icon-txt">f</span>
+                <span>Facebook</span>
+              </button>
+              <button
+                class="social-btn tw"
+                *ngIf="data()!.twitterUrl"
+                (click)="openSocial(data()!.twitterUrl)"
+              >
+                <mat-icon>close</mat-icon>
+                <span>Twitter / X</span>
+              </button>
+              <button
+                class="social-btn ig"
+                *ngIf="data()!.instagramUrl"
+                (click)="openSocial(data()!.instagramUrl)"
+              >
+                <mat-icon>photo_camera</mat-icon>
+                <span>Instagram</span>
+              </button>
+              <button
+                class="social-btn yt"
+                *ngIf="data()!.youtubeUrl"
+                (click)="openSocial(data()!.youtubeUrl)"
+              >
+                <mat-icon>smart_display</mat-icon>
+                <span>YouTube</span>
+              </button>
+              <button
+                class="social-btn li"
+                *ngIf="data()!.linkedinUrl"
+                (click)="openSocial(data()!.linkedinUrl)"
+              >
+                <mat-icon>business</mat-icon>
+                <span>LinkedIn</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <!-- /col-side -->
+      </div>
+      <!-- /content-grid -->
+    </div>
+    <!-- /page-body -->
+  </ng-container>
+</div>
+<!-- /about-page -->

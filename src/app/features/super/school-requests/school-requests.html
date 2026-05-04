@@ -1,0 +1,338 @@
+<!-- school-requests.html -->
+<div class="sr-page">
+  <!-- ══════════════════════════════════════════════
+         PAGE HEADER
+         ══════════════════════════════════════════════ -->
+  <div class="sr-page-header">
+    <div class="sr-header-left">
+      <div class="sr-header-icon">
+        <mat-icon>domain_add</mat-icon>
+      </div>
+      <div>
+        <h1 class="sr-page-title">
+          School Registration Requests @if (pendingCount() > 0) {
+          <span class="sr-pending-badge">{{ pendingCount() }} pending</span>
+          }
+        </h1>
+        <p class="sr-page-sub">
+          Schools that have submitted a registration interest. Review and follow up with them.
+        </p>
+      </div>
+    </div>
+    <button
+      mat-stroked-button
+      class="sr-refresh-btn"
+      (click)="loadRequests()"
+      [disabled]="loading()"
+    >
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+         FILTERS & SEARCH
+         ══════════════════════════════════════════════ -->
+  <div class="sr-toolbar">
+    <!-- Status filter chips -->
+    <div class="sr-filter-chips">
+      @for (f of statusFilters; track f.value) {
+      <button
+        class="sr-chip"
+        [class.active]="statusFilter() === f.value"
+        (click)="statusFilter.set(f.value)"
+      >
+        {{ f.label }}
+        @if (f.value !== 'ALL') {
+        <span class="sr-chip-count">
+          {{ requests() | filteredCount : f.value }}
+        </span>
+        }
+      </button>
+      }
+    </div>
+
+    <!-- Search -->
+    <div class="sr-search-wrap">
+      <mat-icon class="sr-search-icon">search</mat-icon>
+      <input
+        class="sr-search-input"
+        type="text"
+        placeholder="Search by school, owner, city…"
+        [value]="searchQuery()"
+        (input)="searchQuery.set($any($event.target).value)"
+      />
+      @if (searchQuery()) {
+      <button class="sr-search-clear" (click)="searchQuery.set('')">
+        <mat-icon>close</mat-icon>
+      </button>
+      }
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+         MAIN CONTENT
+         ══════════════════════════════════════════════ -->
+  <div class="sr-content" [class.panel-open]="panelOpen()">
+    <!-- Table -->
+    <div class="sr-table-wrap">
+      @if (loading()) {
+      <div class="sr-loading">
+        <mat-spinner diameter="40"></mat-spinner>
+        <span>Loading requests…</span>
+      </div>
+      } @else if (filteredRequests().length === 0) {
+      <div class="sr-empty">
+        <div class="sr-empty-icon">
+          <mat-icon>inbox</mat-icon>
+        </div>
+        <h3>No requests found</h3>
+        <p>
+          @if (searchQuery() || statusFilter() !== 'ALL') { Try adjusting your filters or search
+          query. } @else { When schools submit registration requests, they'll appear here. }
+        </p>
+      </div>
+      } @else {
+
+      <table class="sr-table">
+        <thead>
+          <tr>
+            <th>School</th>
+            <th>Owner</th>
+            <th>Location</th>
+            <th>Type</th>
+            <th>Students</th>
+            <th>Status</th>
+            <th>Submitted</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (req of filteredRequests(); track req.id) {
+          <tr
+            class="sr-row"
+            [class.active]="selectedRequest()?.id === req.id"
+            (click)="openPanel(req)"
+          >
+            <td class="sr-cell-school">
+              <div class="sr-school-avatar">{{ getInitials(req.schoolName) }}</div>
+              <div class="sr-school-info">
+                <span class="sr-school-name">{{ req.schoolName }}</span>
+                @if (req.message) {
+                <span class="sr-has-msg" matTooltip="Has a message">
+                  <mat-icon>chat_bubble_outline</mat-icon>
+                </span>
+                }
+              </div>
+            </td>
+
+            <td class="sr-cell-owner">
+              <span class="sr-owner-name">{{ req.ownerName }}</span>
+              <span class="sr-owner-email">{{ req.ownerEmail }}</span>
+            </td>
+
+            <td class="sr-cell-location">{{ req.city }}, {{ req.state }}</td>
+
+            <td>
+              <span class="sr-type-badge">{{ schoolTypeLabels[req.schoolType] }}</span>
+            </td>
+
+            <td class="sr-cell-students">
+              {{ req.estimatedStudents ?? '—' }}
+            </td>
+
+            <td>
+              <span
+                class="sr-status-chip"
+                [style.color]="statusConfig[req.status]?.color"
+                [style.background]="statusConfig[req.status]?.bg"
+              >
+                <span
+                  class="sr-status-dot"
+                  [style.background]="statusConfig[req.status]?.dotColor"
+                ></span>
+                {{ statusConfig[req.status]?.label }}
+              </span>
+            </td>
+
+            <td class="sr-cell-date">{{ formatDate(req.createdAt) }}</td>
+
+            <td class="sr-cell-action">
+              <mat-icon class="sr-chevron">chevron_right</mat-icon>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+
+      <div class="sr-table-footer">
+        Showing {{ filteredRequests().length }} of {{ requests().length }} requests
+      </div>
+
+      }
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+           DETAIL PANEL (slide-over)
+           ══════════════════════════════════════════════ -->
+    @if (panelOpen() && selectedRequest()) {
+    <div class="sr-panel" [class.open]="panelOpen()">
+      <!-- Panel header -->
+      <div class="sr-panel-header">
+        <div>
+          <h2 class="sr-panel-title">{{ selectedRequest()!.schoolName }}</h2>
+          <span
+            class="sr-status-chip"
+            [style.color]="statusConfig[selectedRequest()!.status]?.color"
+            [style.background]="statusConfig[selectedRequest()!.status]?.bg"
+          >
+            <span
+              class="sr-status-dot"
+              [style.background]="statusConfig[selectedRequest()!.status]?.dotColor"
+            ></span>
+            {{ statusConfig[selectedRequest()!.status]?.label }}
+          </span>
+        </div>
+        <button class="sr-panel-close" (click)="closePanel()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="sr-panel-body">
+        <!-- School info -->
+        <div class="sr-detail-section">
+          <div class="sr-detail-section-label"><mat-icon>domain</mat-icon> School Information</div>
+          <div class="sr-detail-grid">
+            <div class="sr-detail-row">
+              <span class="sr-detail-key">School Name</span>
+              <span class="sr-detail-val">{{ selectedRequest()!.schoolName }}</span>
+            </div>
+            <div class="sr-detail-row">
+              <span class="sr-detail-key">Type</span>
+              <span class="sr-detail-val">{{
+                schoolTypeLabels[selectedRequest()!.schoolType]
+              }}</span>
+            </div>
+            <div class="sr-detail-row">
+              <span class="sr-detail-key">City</span>
+              <span class="sr-detail-val">{{ selectedRequest()!.city }}</span>
+            </div>
+            <div class="sr-detail-row">
+              <span class="sr-detail-key">State</span>
+              <span class="sr-detail-val">{{ selectedRequest()!.state }}</span>
+            </div>
+            <div class="sr-detail-row">
+              <span class="sr-detail-key">Est. Students</span>
+              <span class="sr-detail-val">{{
+                selectedRequest()!.estimatedStudents ?? 'Not specified'
+              }}</span>
+            </div>
+            <div class="sr-detail-row">
+              <span class="sr-detail-key">Submitted</span>
+              <span class="sr-detail-val">{{ formatDateTime(selectedRequest()!.createdAt) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Owner info -->
+        <div class="sr-detail-section">
+          <div class="sr-detail-section-label"><mat-icon>person</mat-icon> Owner / Contact</div>
+          <div class="sr-detail-grid">
+            <div class="sr-detail-row">
+              <span class="sr-detail-key">Name</span>
+              <span class="sr-detail-val">{{ selectedRequest()!.ownerName }}</span>
+            </div>
+            <div class="sr-detail-row">
+              <span class="sr-detail-key">Email</span>
+              <a [href]="'mailto:' + selectedRequest()!.ownerEmail" class="sr-detail-link">
+                {{ selectedRequest()!.ownerEmail }}
+              </a>
+            </div>
+            <div class="sr-detail-row">
+              <span class="sr-detail-key">Phone</span>
+              <a [href]="'tel:' + selectedRequest()!.ownerPhone" class="sr-detail-link">
+                {{ selectedRequest()!.ownerPhone }}
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Message from school -->
+        @if (selectedRequest()!.message) {
+        <div class="sr-detail-section">
+          <div class="sr-detail-section-label">
+            <mat-icon>chat_bubble_outline</mat-icon> Message from School
+          </div>
+          <div class="sr-message-box">{{ selectedRequest()!.message }}</div>
+        </div>
+        }
+
+        <!-- Status actions -->
+        @if (canManage()) {
+        <div class="sr-detail-section">
+          <div class="sr-detail-section-label"><mat-icon>sync_alt</mat-icon> Update Status</div>
+          <div class="sr-status-actions">
+            @for (s of getNextStatuses(selectedRequest()!.status); track s.value) {
+            <button
+              mat-stroked-button
+              class="sr-status-action-btn"
+              [class]="'status-' + s.value.toLowerCase()"
+              (click)="updateStatus(s.value)"
+              [disabled]="updatingStatus()"
+            >
+              @if (updatingStatus()) {
+              <mat-spinner diameter="14"></mat-spinner>
+              } @else {
+              <span
+                class="sr-status-dot"
+                [style.background]="statusConfig[s.value]?.dotColor"
+              ></span>
+              } Mark as {{ s.label }}
+            </button>
+            } @if (getNextStatuses(selectedRequest()!.status).length === 0) {
+            <p class="sr-no-actions">No further status transitions available.</p>
+            }
+          </div>
+        </div>
+
+        <!-- Internal Notes -->
+        <div class="sr-detail-section">
+          <div class="sr-detail-section-label">
+            <mat-icon>sticky_note_2</mat-icon> Internal Notes
+            <span class="sr-private-label">Private — not shown to schools</span>
+          </div>
+          <textarea
+            class="sr-notes-area"
+            placeholder="Add internal notes, follow-up reminders, or context here…"
+            [value]="notesValue()"
+            (input)="notesValue.set($any($event.target).value)"
+            rows="5"
+          >
+          </textarea>
+          <button
+            mat-flat-button
+            class="sr-save-notes-btn"
+            (click)="saveNotes()"
+            [disabled]="savingNotes()"
+          >
+            @if (savingNotes()) {
+            <mat-spinner diameter="16"></mat-spinner>
+            Saving… } @else {
+            <ng-container>
+              <mat-icon>save</mat-icon>
+              Save Notes
+            </ng-container>
+            }
+          </button>
+        </div>
+        } @if (selectedRequest()!.reviewedAt) {
+        <div class="sr-reviewed-info">
+          <mat-icon>check_circle_outline</mat-icon>
+          Reviewed on {{ formatDateTime(selectedRequest()!.reviewedAt!) }}
+        </div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+</div>

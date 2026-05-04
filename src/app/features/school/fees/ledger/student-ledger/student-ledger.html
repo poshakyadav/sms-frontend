@@ -1,0 +1,305 @@
+<!-- student-ledger.html -->
+<div class="ledger-page">
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- HEADER                                                             -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <div class="page-header">
+    <div class="header-left">
+      <button class="back-btn" (click)="goBack()" matTooltip="Back to Record Payment">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="header-text">
+        <div class="breadcrumb">Fee Management</div>
+        <h1>Student Ledger</h1>
+        @if (!loading() && activeLedger()) {
+        <p class="student-meta">
+          <span class="meta-chip"> <mat-icon>person</mat-icon>{{ studentName() }} </span>
+          <span class="meta-sep">·</span>
+          <span class="meta-chip">
+            <mat-icon>class</mat-icon>{{ className() }} – {{ sectionName() }}
+          </span>
+          @if (academicYearName()) {
+          <span class="meta-sep">·</span>
+          <span class="meta-chip">
+            <mat-icon>calendar_today</mat-icon>{{ academicYearName() }}
+          </span>
+          }
+        </p>
+        }
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button
+        class="refresh-btn"
+        (click)="loadLedger()"
+        [disabled]="loading()"
+        matTooltip="Refresh"
+      >
+        <mat-icon [class.spinning]="loading()">refresh</mat-icon>
+        <span>Refresh</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- LOADING STATE                                                      -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  @if (loading()) {
+  <div class="state-container">
+    <div class="loading-ring">
+      <mat-spinner diameter="48"></mat-spinner>
+    </div>
+    <p>Loading ledger…</p>
+  </div>
+  }
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- ERROR STATE                                                        -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  @else if (error()) {
+  <div class="state-container error">
+    <div class="state-icon-wrap error">
+      <mat-icon>error_outline</mat-icon>
+    </div>
+    <h2>Something went wrong</h2>
+    <p>{{ error() }}</p>
+    <button class="retry-btn" (click)="loadLedger()"><mat-icon>refresh</mat-icon> Try again</button>
+  </div>
+  }
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- EMPTY STATE                                                        -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  @else if (ledgers().length === 0) {
+  <div class="state-container">
+    <div class="state-icon-wrap">
+      <mat-icon>receipt_long</mat-icon>
+    </div>
+    <h2>No Ledger Data</h2>
+    <p>No fee records found for this student.</p>
+  </div>
+  }
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- MAIN CONTENT                                                       -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  @else {
+
+  <!-- Year Tabs (if multiple academic years) -->
+  @if (ledgers().length > 1) {
+  <div class="year-tabs">
+    @for (l of ledgers(); track l.yearId; let i = $index) {
+    <button class="year-tab" [class.active]="activeLedgerIndex() === i" (click)="selectLedger(i)">
+      <mat-icon>school</mat-icon>
+      {{ l.academicYearName }}
+      @if (l.balance > 0) {
+      <span class="year-tab-badge">Due</span>
+      }
+    </button>
+    }
+  </div>
+  }
+
+  <!-- KPI Summary Strip -->
+  <div class="kpi-strip">
+    <div class="kpi-card">
+      <div class="kpi-icon neutral"><mat-icon>account_balance_wallet</mat-icon></div>
+      <div class="kpi-body">
+        <span class="kpi-label">Total Assigned</span>
+        <span class="kpi-value">₹{{ formatINR(activeLedger()!.totalDue) }}</span>
+      </div>
+    </div>
+
+    <div class="kpi-divider"></div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon success"><mat-icon>check_circle</mat-icon></div>
+      <div class="kpi-body">
+        <span class="kpi-label">Total Paid</span>
+        <span class="kpi-value success">₹{{ formatINR(activeLedger()!.totalPaid) }}</span>
+      </div>
+    </div>
+
+    <div class="kpi-divider"></div>
+
+    <div class="kpi-card">
+      <div
+        class="kpi-icon"
+        [class.error]="activeLedger()!.balance > 0"
+        [class.success]="activeLedger()!.balance <= 0"
+      >
+        <mat-icon>{{ activeLedger()!.balance > 0 ? 'pending' : 'verified' }}</mat-icon>
+      </div>
+      <div class="kpi-body">
+        <span class="kpi-label">Balance Due</span>
+        <span
+          class="kpi-value"
+          [class.error]="activeLedger()!.balance > 0"
+          [class.success]="activeLedger()!.balance <= 0"
+        >
+          ₹{{ formatINR(activeLedger()!.balance) }}
+        </span>
+      </div>
+    </div>
+
+    <div class="kpi-divider"></div>
+
+    <!-- Collection rate with progress arc -->
+    <div class="kpi-card kpi-rate">
+      <div class="rate-circle">
+        <svg viewBox="0 0 36 36" class="rate-svg">
+          <path
+            class="rate-bg"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+          />
+          <path
+            class="rate-fill"
+            [class.success]="collectionRate() >= 80"
+            [class.warning]="collectionRate() >= 40 && collectionRate() < 80"
+            [class.error]="collectionRate() < 40"
+            [attr.stroke-dasharray]="collectionRate() + ', 100'"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+          />
+        </svg>
+        <span class="rate-text">{{ collectionRate() }}%</span>
+      </div>
+      <div class="kpi-body">
+        <span class="kpi-label">Collection Rate</span>
+        <span class="kpi-sub">of total fees</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Two-column layout: Fees + Payments -->
+  <div class="content-grid">
+    <!-- ── LEFT: Assigned Fee Structures ─────────────────────────────── -->
+    <section class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <mat-icon>receipt</mat-icon>
+          <h2>Assigned Fees</h2>
+        </div>
+        <span class="panel-count">{{ activeLedger()!.details.fees.length }} item(s)</span>
+      </div>
+
+      <div class="panel-body">
+        @if (activeLedger()!.details.fees.length === 0) {
+        <div class="panel-empty">
+          <mat-icon>receipt_long</mat-icon>
+          <p>No fees assigned</p>
+        </div>
+        } @else {
+        <div class="fee-list">
+          @for (fee of activeLedger()!.details.fees; track fee.id) {
+          <div class="fee-item" [class]="'fee-item--' + feeStatusClass(fee)">
+            <div class="fee-item-left">
+              <div class="fee-item-header">
+                <span class="fee-name">{{ fee.feeType }}</span>
+                <span class="fee-badge" [class]="'fee-badge--' + feeStatusClass(fee)">
+                  {{ feeStatusLabel(fee) }}
+                </span>
+                @if (fee.isMandatory) {
+                <span class="fee-mandatory-dot" matTooltip="Mandatory"></span>
+                }
+              </div>
+
+              @if (fee.dueDate) {
+              <div class="fee-meta">
+                <mat-icon>event</mat-icon>
+                <span>Due {{ fee.dueDate | date : 'dd MMM yyyy' }}</span>
+              </div>
+              } @if (fee.description) {
+              <div class="fee-desc">{{ fee.description }}</div>
+              }
+
+              <!-- Progress bar -->
+              <div class="fee-progress">
+                <div class="fee-progress-track">
+                  <div
+                    class="fee-progress-fill"
+                    [class]="'fill--' + feeStatusClass(fee)"
+                    [style.width.%]="paidPercentForFee(fee)"
+                  ></div>
+                </div>
+                <span class="fee-progress-pct">{{ paidPercentForFee(fee) }}%</span>
+              </div>
+            </div>
+
+            <div class="fee-item-right">
+              <div class="fee-amounts">
+                <div class="fee-amt-row">
+                  <span class="fee-amt-label">Total</span>
+                  <span class="fee-amt-value">₹{{ formatINR(fee.amount) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          }
+        </div>
+        }
+      </div>
+    </section>
+
+    <!-- ── RIGHT: Payment History ─────────────────────────────────────── -->
+    <section class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <mat-icon>history</mat-icon>
+          <h2>Payment History</h2>
+        </div>
+        <span class="panel-count">{{ activeLedger()!.details.payments.length }} payment(s)</span>
+      </div>
+
+      <div class="panel-body">
+        @if (activeLedger()!.details.payments.length === 0) {
+        <div class="panel-empty">
+          <mat-icon>payments</mat-icon>
+          <p>No payments recorded yet</p>
+        </div>
+        } @else {
+        <div class="payment-list">
+          @for (payment of activeLedger()!.details.payments; track payment.id) {
+          <div class="payment-item">
+            <div class="payment-method-icon" [class]="'method--' + payment.paymentMethod">
+              <mat-icon>{{ methodIcon(payment.paymentMethod) }}</mat-icon>
+            </div>
+
+            <div class="payment-details">
+              <div class="payment-top">
+                <span class="payment-fee-type">{{ payment.feeType }}</span>
+                <span class="payment-amount">₹{{ formatINR(payment.amountPaid) }}</span>
+              </div>
+              <div class="payment-bottom">
+                <span class="payment-date">
+                  {{ payment.paymentDate | date : 'dd MMM yyyy' }}
+                </span>
+                <span
+                  class="payment-method-badge"
+                  [class]="'method-badge--' + payment.paymentMethod"
+                >
+                  {{ methodLabel(payment.paymentMethod) }}
+                </span>
+              </div>
+              <div class="payment-receipt">
+                <mat-icon>confirmation_number</mat-icon>
+                <span>{{ payment.receiptNumber }}</span>
+              </div>
+              @if (payment.notes) {
+              <div class="payment-notes">
+                <mat-icon>notes</mat-icon>
+                <span>{{ payment.notes }}</span>
+              </div>
+              }
+            </div>
+          </div>
+          }
+        </div>
+        }
+      </div>
+    </section>
+  </div>
+  <!-- end content-grid -->
+  }<!-- end @else main content -->
+</div>
+<!-- end ledger-page -->

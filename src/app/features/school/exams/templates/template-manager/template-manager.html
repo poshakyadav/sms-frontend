@@ -1,0 +1,122 @@
+<div class="page-container">
+  <!-- ── Header ────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>Card Templates</h1>
+      <p>Manage Admit Card &amp; Report Card HTML templates</p>
+    </div>
+    <div class="header-actions">
+      <button mat-stroked-button (click)="loadTemplates()" matTooltip="Refresh templates">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Loading ───────────────────────────────────────────────────── -->
+  @if (loading()) {
+  <div class="state-container">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading templates…</p>
+  </div>
+  } @else {
+  <!-- ── Tabs: load existing ─────────────────────────────────── -->
+  <div class="template-tab-strip">
+    <button mat-stroked-button (click)="loadTemplateForEdit('ADMIT_CARD')">
+      <mat-icon>badge</mat-icon> Load Admit Card Template
+    </button>
+    <button mat-stroked-button (click)="loadTemplateForEdit('REPORT_CARD')">
+      <mat-icon>summarize</mat-icon> Load Report Card Template
+    </button>
+    <span class="strip-divider">or use a starter:</span>
+    <button mat-button (click)="useStarter('ADMIT_CARD')">
+      <mat-icon>auto_fix_high</mat-icon> Admit Card Starter
+    </button>
+    <button mat-button (click)="useStarter('REPORT_CARD')">
+      <mat-icon>auto_fix_high</mat-icon> Report Card Starter
+    </button>
+  </div>
+
+  <!-- ── Split layout ───────────────────────────────────────── -->
+  <div class="split-layout">
+    <!-- Editor -->
+    <div class="editor-pane">
+      <div class="pane-title"><mat-icon>code</mat-icon> HTML Editor</div>
+
+      <form [formGroup]="form">
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Template Name</mat-label>
+            <input matInput formControlName="name" placeholder="e.g. Official 2026 Template" />
+            @if (form.get('name')?.hasError('required') && form.get('name')?.touched) {
+            <mat-error>Name is required</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Template Type</mat-label>
+            <mat-select formControlName="type">
+              <mat-option value="ADMIT_CARD">Admit Card</mat-option>
+              <mat-option value="REPORT_CARD">Report Card</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>HTML Content</mat-label>
+          <textarea
+            matInput
+            formControlName="htmlContent"
+            rows="22"
+            placeholder="Paste your HTML template here. Use placeholders for dynamic data."
+            style="font-family: 'Courier New', monospace; font-size: 0.82rem; line-height: 1.5"
+          ></textarea>
+          @if (form.get('htmlContent')?.hasError('minlength') && form.get('htmlContent')?.touched) {
+          <mat-error>HTML content must be at least 100 characters</mat-error>
+          }
+          <mat-hint>
+            <span>Placeholders (use in your HTML): </span>
+            <span class="placeholder-list" ngNonBindable>
+              {{ studentName }}, {{ className }}, {{ sectionName }}, {{ rollNumber }},
+              {{ examName }}, {{ schoolName }}, {{ schoolLogo }}, {{ timetableTable }} (admit card
+              only), {{ marksTable }} (report card only), {{ percentage }} (report card only),
+              {{ currentDate }}
+            </span>
+          </mat-hint>
+        </mat-form-field>
+
+        <div class="form-actions">
+          <button
+            mat-raised-button
+            color="primary"
+            type="button"
+            (click)="saveTemplate()"
+            [disabled]="form.invalid || saving()"
+          >
+            @if (saving()) {
+            <mat-spinner
+              diameter="18"
+              style="display: inline-block; margin-right: 6px"
+            ></mat-spinner>
+            } @else {
+            <mat-icon>save</mat-icon>
+            } Save Template
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Preview -->
+    <div class="preview-pane">
+      <div class="pane-title"><mat-icon>preview</mat-icon> Live Preview</div>
+      @if (previewHtml()) {
+      <div class="preview-frame" [innerHTML]="previewHtml()"></div>
+      } @else {
+      <div class="preview-empty">
+        <mat-icon>web</mat-icon>
+        <p>Start typing HTML to see a live preview here</p>
+      </div>
+      }
+    </div>
+  </div>
+  }
+</div>

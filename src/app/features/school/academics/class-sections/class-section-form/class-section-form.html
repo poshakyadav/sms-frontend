@@ -1,0 +1,140 @@
+<div class="form-page">
+  <header>
+    <div>
+      <h1>{{ isEdit() ? 'Edit Class-Section' : 'New Class-Section' }}</h1>
+      <p class="subtitle">
+        {{
+          isEdit()
+            ? 'Update the class-section details below'
+            : 'Combine a class with a section (e.g. Class 10 + Section A)'
+        }}
+      </p>
+    </div>
+    <button mat-stroked-button (click)="router.navigate(['/school/academics/class-sections'])">
+      <mat-icon>arrow_back</mat-icon> Back
+    </button>
+  </header>
+
+  <!-- Not-found state (edit mode only) -->
+  @if (notFound()) {
+  <div class="state-container error">
+    <mat-icon class="state-icon">search_off</mat-icon>
+    <h2>Class-Section Not Found</h2>
+    <p>Redirecting back…</p>
+  </div>
+
+  <!-- Loading dropdowns / existing record -->
+  } @else if (loadingForm()) {
+  <div class="state-container">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>{{ isEdit() ? 'Loading class-section data…' : 'Loading form data…' }}</p>
+  </div>
+
+  <!-- Form -->
+  } @else {
+  <div class="form-card">
+    <form [formGroup]="form" (ngSubmit)="save()" class="form-grid">
+      <!-- Class -->
+      <mat-form-field appearance="outline">
+        <mat-label>Class *</mat-label>
+        <mat-select formControlName="classId">
+          @for (cls of classes(); track cls.id) {
+          <mat-option [value]="cls.id">
+            {{ cls.name }}
+            <span class="capacity-badge">(Level {{ cls.level }})</span>
+          </mat-option>
+          }
+        </mat-select>
+        @if (classControl?.errors?.['required'] && classControl?.touched) {
+        <mat-error>Class is required</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Section -->
+      <mat-form-field appearance="outline">
+        <mat-label>Section *</mat-label>
+        <mat-select formControlName="sectionId">
+          @for (sec of sections(); track sec.id) {
+          <mat-option [value]="sec.id">{{ sec.name }}</mat-option>
+          }
+        </mat-select>
+        @if (sectionControl?.errors?.['required'] && sectionControl?.touched) {
+        <mat-error>Section is required</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Capacity — hard cap at 50 -->
+      <mat-form-field appearance="outline">
+        <mat-label>Capacity *</mat-label>
+        <input
+          matInput
+          type="number"
+          formControlName="capacity"
+          placeholder="e.g. 40"
+          min="1"
+          [max]="maxCapacity"
+        />
+        <mat-hint>Maximum students per section (1–{{ maxCapacity }})</mat-hint>
+        @if (capacityControl?.errors?.['required'] && capacityControl?.touched) {
+        <mat-error>Capacity is required</mat-error>
+        } @if (capacityControl?.errors?.['min'] && capacityControl?.touched) {
+        <mat-error>Minimum 1 student</mat-error>
+        } @if (capacityControl?.errors?.['max'] && capacityControl?.touched) {
+        <mat-error>Maximum {{ maxCapacity }} students allowed per section</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Class Teacher (optional) -->
+      <mat-form-field appearance="outline">
+        <mat-label>Class Teacher (optional)</mat-label>
+        <mat-select formControlName="classTeacherId">
+          <mat-option [value]="null">— Not assigned —</mat-option>
+          @for (t of teachers(); track t.id) {
+          <mat-option [value]="t.id">{{ t.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Room Number (optional) -->
+      <mat-form-field appearance="outline">
+        <mat-label>Room Number (optional)</mat-label>
+        <input matInput formControlName="roomNumber" placeholder="e.g. Room 101, Block A-2" />
+        <mat-hint>Max 20 characters</mat-hint>
+      </mat-form-field>
+
+      <!-- Status (edit mode only — new sections are always active) -->
+      @if (isEdit()) {
+      <mat-form-field appearance="outline">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="isActive">
+          <mat-option [value]="true">Active</mat-option>
+          <mat-option [value]="false">Inactive</mat-option>
+        </mat-select>
+      </mat-form-field>
+      }
+
+      <!-- Actions — spans full grid width -->
+      <div class="form-actions" style="grid-column: 1 / -1">
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="router.navigate(['/school/academics/class-sections'])"
+        >
+          Cancel
+        </button>
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="form.invalid || submitting()"
+        >
+          @if (submitting()) {
+          <mat-spinner diameter="18" style="display: inline-block; margin-right: 8px"></mat-spinner>
+          }
+          {{ isEdit() ? 'Update Class-Section' : 'Create Class-Section' }}
+        </button>
+      </div>
+    </form>
+  </div>
+  }
+</div>

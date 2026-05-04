@@ -1,0 +1,306 @@
+<!-- role-form-dialog.html -->
+<!-- UPDATED: Category selector added for create mode (step before permissions). -->
+<!-- Edit mode shows a locked read-only category badge instead. -->
+
+<div class="rfd-shell">
+  <!-- ── Header ──────────────────────────────────────────────────────── -->
+  <div class="rfd-header">
+    <div class="rfd-header-left">
+      <div class="rfd-header-icon" [class.rfd-header-icon--edit]="isEdit">
+        <mat-icon>{{ isEdit ? 'edit' : 'add_moderator' }}</mat-icon>
+      </div>
+      <div>
+        <h2 class="rfd-title">{{ isEdit ? 'Edit Role' : 'Create Role' }}</h2>
+        <p class="rfd-subtitle">
+          {{
+            isEdit
+              ? 'Update role name, description, or permissions'
+              : 'Define a new role with granular permissions'
+          }}
+        </p>
+      </div>
+    </div>
+    <button mat-icon-button class="rfd-close" (click)="cancel()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- ── Body ───────────────────────────────────────────────────────── -->
+  <div class="rfd-body">
+    <!-- ── STEP 1: Role Type / Category ──────────────────────────────────── -->
+    <section class="rfd-section">
+      <div class="rfd-section-label">
+        Role Type @if (!isEdit) {
+        <span class="rfd-required-star">*</span>
+        }
+      </div>
+
+      <!-- CREATE MODE: Interactive category selector cards -->
+      @if (!isEdit) {
+      <div class="rfd-category-grid">
+        @for (cat of categoryOptions; track cat.value) {
+        <button
+          type="button"
+          class="rfd-cat-card"
+          [class.rfd-cat-card--active]="selectedCategory() === cat.value"
+          [class.rfd-cat-card--staff]="cat.value === 'staff'"
+          [class.rfd-cat-card--student]="cat.value === 'student'"
+          [class.rfd-cat-card--parent]="cat.value === 'parent'"
+          (click)="selectCategory(cat.value)"
+        >
+          <div class="rcc-check">
+            @if (selectedCategory() === cat.value) {
+            <mat-icon class="rcc-check-icon">check_circle</mat-icon>
+            } @else {
+            <mat-icon class="rcc-check-icon rcc-check-icon--empty">radio_button_unchecked</mat-icon>
+            }
+          </div>
+          <div class="rcc-icon-wrap">
+            <mat-icon>{{ cat.icon }}</mat-icon>
+          </div>
+          <div class="rcc-body">
+            <p class="rcc-label">{{ cat.label }}</p>
+            <p class="rcc-desc">{{ cat.description }}</p>
+          </div>
+        </button>
+        }
+      </div>
+
+      @if (!selectedCategory()) {
+      <p class="rfd-cat-hint">
+        <mat-icon class="rfd-cat-hint-icon">info_outline</mat-icon>
+        Select a role type to load the available permissions.
+      </p>
+      } }
+
+      <!-- EDIT MODE: Locked read-only category badge -->
+      @if (isEdit && lockedCategoryOption) {
+      <div
+        class="rfd-cat-locked"
+        [class.rfd-cat-locked--staff]="lockedCategoryOption.value === 'staff'"
+        [class.rfd-cat-locked--student]="lockedCategoryOption.value === 'student'"
+        [class.rfd-cat-locked--parent]="lockedCategoryOption.value === 'parent'"
+      >
+        <mat-icon class="rcl-icon">{{ lockedCategoryOption.icon }}</mat-icon>
+        <div class="rcl-text">
+          <span class="rcl-label">{{ lockedCategoryOption.label }} Role</span>
+          <span class="rcl-hint">Role type is permanent and cannot be changed after creation</span>
+        </div>
+        <mat-icon class="rcl-lock" matTooltip="Category is locked">lock</mat-icon>
+      </div>
+      }
+    </section>
+
+    <!-- ── STEP 2: Role Details ───────────────────────────────────────────── -->
+    <section class="rfd-section">
+      <div class="rfd-section-label">Role Details</div>
+      <form [formGroup]="form" class="rfd-form-grid">
+        <mat-form-field appearance="outline" class="rfd-field">
+          <mat-label>Role Name</mat-label>
+          <input
+            matInput
+            formControlName="name"
+            placeholder="e.g. Senior Teacher"
+            autocomplete="off"
+          />
+          @if (form.get('name')?.hasError('required') && form.get('name')?.touched) {
+          <mat-error>Name is required</mat-error>
+          } @if (form.get('name')?.hasError('minlength')) {
+          <mat-error>At least 2 characters</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="rfd-field">
+          <mat-label>Description</mat-label>
+          <textarea
+            matInput
+            formControlName="description"
+            rows="2"
+            placeholder="Brief description of what this role can do"
+          ></textarea>
+          @if ( form.get('description')?.hasError('required') && form.get('description')?.touched )
+          {
+          <mat-error>Description is required</mat-error>
+          }
+        </mat-form-field>
+      </form>
+    </section>
+
+    <!-- ── STEP 3: Templates (create mode only, only after category chosen) ── -->
+    @if (!isEdit && selectedCategory() && filteredTemplates().length > 0) {
+    <section class="rfd-section">
+      <div class="rfd-section-label">
+        Start from a template
+        <span class="rfd-optional">(optional)</span>
+      </div>
+      <div class="rfd-templates-grid">
+        @for (template of filteredTemplates(); track template.id) {
+        <button
+          class="rfd-template-card"
+          [class.rfd-template-card--active]="selectedTemplateId() === template.id"
+          (click)="applyTemplate(template)"
+          type="button"
+        >
+          <div class="rtc-check">
+            <mat-icon>{{
+              selectedTemplateId() === template.id ? 'check_circle' : 'radio_button_unchecked'
+            }}</mat-icon>
+          </div>
+          <div class="rtc-body">
+            <p class="rtc-name">{{ template.name }}</p>
+            <p class="rtc-desc">{{ template.description }}</p>
+            <span class="rtc-count">
+              <mat-icon>lock</mat-icon>{{ template.permissionSlugs.length }} permissions
+            </span>
+          </div>
+        </button>
+        }
+      </div>
+    </section>
+    }
+
+    <!-- ── STEP 4: Permissions Picker ──────────────────────────────────────── -->
+    <!-- Only shown after a category is selected (create) or always in edit mode -->
+    @if (selectedCategory()) {
+    <section class="rfd-section rfd-section--perms">
+      <div class="rfd-perms-header">
+        <div class="rfd-section-label">
+          Permissions @if (selectedCategory()) {
+          <span
+            class="rfd-cat-badge"
+            [class.rfd-cat-badge--staff]="selectedCategory() === 'staff'"
+            [class.rfd-cat-badge--student]="selectedCategory() === 'student'"
+            [class.rfd-cat-badge--parent]="selectedCategory() === 'parent'"
+          >
+            {{ selectedCategory() | titlecase }}
+          </span>
+          }
+        </div>
+        <div class="rfd-perms-actions">
+          <button type="button" class="rfd-text-btn" (click)="selectAll()">Select all</button>
+          <span class="rfd-divider">|</span>
+          <button type="button" class="rfd-text-btn" (click)="clearAll()">Clear all</button>
+        </div>
+      </div>
+
+      @if (loadingPermissions()) {
+      <div class="rfd-loading-perms">
+        <mat-spinner diameter="32"></mat-spinner>
+        <span>Loading permissions…</span>
+      </div>
+      } @else {
+      <div class="rfd-picker">
+        <!-- Search -->
+        <div class="rfd-picker-search">
+          <mat-icon class="rps-icon">search</mat-icon>
+          <input
+            class="rps-input"
+            type="text"
+            [value]="permissionSearch()"
+            (input)="permissionSearch.set($any($event.target).value)"
+            placeholder="Search permissions…"
+          />
+          @if (permissionSearch()) {
+          <button class="rps-clear" (click)="permissionSearch.set('')" type="button">
+            <mat-icon>close</mat-icon>
+          </button>
+          }
+        </div>
+
+        <!-- Module Groups -->
+        <div class="rfd-picker-body">
+          @for (group of filteredGroups(); track group.module) {
+          <div class="rfd-module">
+            <!-- Module Header -->
+            <div class="rfd-module-header" (click)="toggleModule(group)">
+              <mat-checkbox
+                [checked]="isModuleFullySelected(group)"
+                [indeterminate]="isModulePartiallySelected(group)"
+                (change)="toggleModulePermissions(group)"
+                (click)="$event.stopPropagation()"
+                color="primary"
+                class="rfd-module-check"
+              ></mat-checkbox>
+              <span class="rfd-module-name">{{ group.module }}</span>
+              <span class="rfd-module-count">{{ group.permissions.length }}</span>
+              <mat-icon
+                class="rfd-module-chevron"
+                [class.rfd-module-chevron--open]="group.expanded"
+              >
+                expand_more
+              </mat-icon>
+            </div>
+
+            <!-- Permissions List -->
+            @if (group.expanded) {
+            <div class="rfd-perm-list">
+              @for (perm of group.permissions; track perm.id) {
+              <div class="rfd-perm-item" (click)="togglePermission(perm.id)">
+                <mat-checkbox
+                  [checked]="isSelected(perm.id)"
+                  (change)="togglePermission(perm.id)"
+                  (click)="$event.stopPropagation()"
+                  color="primary"
+                ></mat-checkbox>
+                <div class="rfd-perm-info">
+                  <span class="rfd-perm-name">{{ perm.name }}</span>
+                  <span class="rfd-perm-slug">{{ perm.slug }}</span>
+                </div>
+              </div>
+              }
+            </div>
+            }
+          </div>
+          } @if (filteredGroups().length === 0 && !loadingPermissions()) {
+          <div class="rfd-no-results">
+            @if (permissionSearch()) {
+            <mat-icon>search_off</mat-icon>
+            <p>No permissions match "{{ permissionSearch() }}"</p>
+            } @else {
+            <mat-icon>lock_open</mat-icon>
+            <p>No permissions available for this role type.</p>
+            }
+          </div>
+          }
+        </div>
+
+        <!-- Footer -->
+        <div class="rfd-picker-footer">
+          <mat-icon class="rpf-icon">check_circle</mat-icon>
+          <span class="rpf-selected">{{ selectedCount() }} selected</span>
+          <span class="rpf-total">of {{ totalCount() }}</span>
+        </div>
+      </div>
+      }
+    </section>
+    }
+
+    <!-- Placeholder shown in create mode before category is chosen -->
+    @if (!isEdit && !selectedCategory()) {
+    <div class="rfd-category-placeholder">
+      <mat-icon>lock_outline</mat-icon>
+      <p>Choose a role type above to see available permissions.</p>
+    </div>
+    }
+  </div>
+
+  <!-- ── Footer ─────────────────────────────────────────────────────── -->
+  <div class="rfd-footer">
+    <button mat-stroked-button class="rfd-btn-cancel" (click)="cancel()" [disabled]="saving()">
+      Cancel
+    </button>
+    <button
+      mat-flat-button
+      class="rfd-btn-save"
+      (click)="save()"
+      [disabled]="
+        saving() || form.invalid || selectedCount() === 0 || (!isEdit && !selectedCategory())
+      "
+    >
+      @if (saving()) {
+      <mat-spinner diameter="16" class="rfd-btn-spinner"></mat-spinner>
+      }
+      {{ isEdit ? 'Save Changes' : 'Create Role' }}
+    </button>
+  </div>
+</div>

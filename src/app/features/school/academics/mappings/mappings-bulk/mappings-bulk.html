@@ -1,0 +1,206 @@
+<!-- mappings-bulk.html -->
+<div class="form-page bulk-page">
+  <header>
+    <div>
+      <h1>Create Promotion Mappings</h1>
+      <p class="subtitle">
+        Define where each class-section promotes to. Create global (every-year) mappings or
+        year-specific overrides.
+      </p>
+    </div>
+    <button mat-stroked-button (click)="router.navigate(['/school/academics/mappings'])">
+      <mat-icon>arrow_back</mat-icon> Back
+    </button>
+  </header>
+
+  @if (loadingData()) {
+  <div class="state-container">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading data…</p>
+  </div>
+  } @else {
+
+  <div class="form-card">
+    <!-- ── SCOPE SELECTION ─────────────────────────────────────────────── -->
+    <div class="scope-block">
+      <p class="section-label">Mapping Scope</p>
+      <p class="scope-hint">
+        Choose whether these mappings apply every year (global) or only for a specific academic
+        year.
+      </p>
+
+      <div class="scope-options">
+        <!-- Global -->
+        <div
+          class="scope-card"
+          [class.selected]="scopeMode() === 'global'"
+          (click)="scopeMode.set('global')"
+        >
+          <div class="radio-dot" [class.on]="scopeMode() === 'global'"></div>
+          <div class="scope-card-icon global">
+            <mat-icon>public</mat-icon>
+          </div>
+          <div class="scope-card-content">
+            <strong>Global — every year</strong>
+            <p>
+              Automatically reused for every academic year. Best for standard promotion paths that
+              don't change.
+            </p>
+            <span class="tag recommended">Recommended</span>
+          </div>
+        </div>
+
+        <!-- Year-specific -->
+        <div
+          class="scope-card"
+          [class.selected]="scopeMode() === 'year'"
+          (click)="scopeMode.set('year')"
+        >
+          <div class="radio-dot" [class.on]="scopeMode() === 'year'"></div>
+          <div class="scope-card-icon year">
+            <mat-icon>event</mat-icon>
+          </div>
+          <div class="scope-card-content">
+            <strong>Year-specific override</strong>
+            <p>
+              Applies only to the selected academic year. Overrides any global mapping for that
+              year. Useful for restructuring classes.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Year selector (only when year-specific chosen) -->
+      @if (scopeMode() === 'year') {
+      <div class="year-selector">
+        <mat-form-field appearance="outline">
+          <mat-label>Academic Year</mat-label>
+          <mat-icon matPrefix>calendar_today</mat-icon>
+          <mat-select [ngModel]="selectedYearId()" (ngModelChange)="selectedYearId.set($event)">
+            @for (year of academicYears(); track year.id) {
+            <mat-option [value]="year.id">
+              {{ year.name }}{{ year.isCurrent ? ' — Current Year' : '' }}
+            </mat-option>
+            }
+          </mat-select>
+          @if (!selectedYearId()) {
+          <mat-hint>Select the year these mappings should apply to</mat-hint>
+          }
+        </mat-form-field>
+      </div>
+      }
+
+      <!-- Active scope summary chip -->
+      <div class="active-scope-row">
+        <mat-icon>check_circle</mat-icon>
+        <span>
+          @if (scopeMode() === 'global') { Mappings will be <strong>global</strong> — reused every
+          academic year } @else if (selectedYearId()) { Mappings will apply to
+          <strong>{{ currentYearName() }}</strong> only } @else { Select an academic year above }
+        </span>
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- ── MAPPING ROWS ───────────────────────────────────────────────── -->
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <p class="section-label" style="margin-top: 24px">Mapping Rows</p>
+      <p class="scope-hint">
+        Map each current class-section to its next year destination. Each source can appear only
+        once.
+      </p>
+
+      <div formArrayName="mappings" class="rows-list">
+        @for (row of rows; track $index; let i = $index) {
+        <div
+          [formGroupName]="i"
+          class="mapping-row"
+          [class.has-error]="isDuplicateSource(i) || isSelfMapping(row)"
+        >
+          <!-- Row number -->
+          <div class="row-num">{{ i + 1 }}</div>
+
+          <!-- From -->
+          <mat-form-field appearance="outline">
+            <mat-label>From (current)</mat-label>
+            <mat-icon matPrefix>class</mat-icon>
+            <mat-select formControlName="currentClassSectionId">
+              @for (cs of classSections(); track cs.id) {
+              <mat-option [value]="cs.id">{{ label(cs) }}</mat-option>
+              }
+            </mat-select>
+            @if ( row.get('currentClassSectionId')?.errors?.['required'] &&
+            row.get('currentClassSectionId')?.touched ) {
+            <mat-error>Required</mat-error>
+            } @else if (isDuplicateSource(i)) {
+            <mat-error>Duplicate source — already used in another row</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Arrow indicator -->
+          <div class="arrow-col">
+            <mat-icon>arrow_forward</mat-icon>
+          </div>
+
+          <!-- To -->
+          <mat-form-field appearance="outline">
+            <mat-label>To (next year)</mat-label>
+            <mat-icon matPrefix>school</mat-icon>
+            <mat-select formControlName="nextClassSectionId">
+              @for (cs of classSections(); track cs.id) {
+              <mat-option [value]="cs.id">{{ label(cs) }}</mat-option>
+              }
+            </mat-select>
+            @if ( row.get('nextClassSectionId')?.errors?.['required'] &&
+            row.get('nextClassSectionId')?.touched ) {
+            <mat-error>Required</mat-error>
+            } @else if (isSelfMapping(row)) {
+            <mat-error>Cannot map a class to itself</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Remove -->
+          <button
+            mat-icon-button
+            color="warn"
+            type="button"
+            (click)="removeRow(i)"
+            matTooltip="Remove row"
+            [disabled]="rows.length === 1"
+          >
+            <mat-icon>remove_circle_outline</mat-icon>
+          </button>
+        </div>
+        }
+      </div>
+
+      <!-- Add row -->
+      <button mat-stroked-button type="button" (click)="addRow()" class="add-row-btn">
+        <mat-icon>add</mat-icon> Add Another Row
+      </button>
+
+      <!-- Form actions -->
+      <div class="form-actions">
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="router.navigate(['/school/academics/mappings'])"
+        >
+          Cancel
+        </button>
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="formHasErrors() || submitting()"
+        >
+          @if (submitting()) {
+          <mat-spinner diameter="18" style="display: inline-block; margin-right: 8px"></mat-spinner>
+          } Save {{ rows.length }} Mapping{{ rows.length > 1 ? 's' : '' }}
+        </button>
+      </div>
+    </form>
+  </div>
+  }
+</div>

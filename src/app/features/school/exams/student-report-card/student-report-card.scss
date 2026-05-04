@@ -1,0 +1,267 @@
+// shared styles for all card views — admit & report, student & parent
+.card-shell {
+  padding: 16px 24px 0;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 8px);
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--color-text-primary);
+  transition: background 0.15s;
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+  &:hover {
+    background: var(--color-hover);
+  }
+}
+
+.print-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-sm, 8px);
+  padding: 8px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  color: #fff;
+  font-weight: 600;
+  transition: opacity 0.15s;
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+.page-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 24px;
+
+  h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin: 0 0 2px;
+  }
+
+  p {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin: 0;
+  }
+}
+
+.meta-icon {
+  width: 44px;
+  height: 44px;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  border-radius: var(--radius-sm, 8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  mat-icon {
+    color: var(--color-primary);
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+  }
+}
+
+// ── Feedback states ────────────────────────────────────────────────────────
+
+.feedback-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+  max-width: 500px;
+  margin: 0 auto;
+  gap: 12px;
+
+  h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin: 0;
+  }
+
+  p {
+    color: var(--color-text-secondary);
+    margin: 0;
+    line-height: 1.6;
+  }
+}
+
+// Loading spinner ring
+.spinner-ring {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Not-published gate
+.gate-state {
+  .gate-icon-wrap {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: color-mix(in srgb, #f59e0b 15%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+
+    mat-icon {
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
+      color: #d97706;
+    }
+  }
+}
+
+// Error state
+.error-state {
+  .error-icon-wrap {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-error) 12%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+
+    mat-icon {
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
+      color: var(--color-error);
+    }
+  }
+}
+
+.back-btn-alt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 8px);
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--color-text-primary);
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+  &:hover {
+    background: var(--color-hover);
+  }
+}
+
+// ── Preview shell ──────────────────────────────────────────────────────────
+
+.preview-shell {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 24px 24px;
+}
+
+.preview-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+  border-radius: var(--radius-sm, 8px);
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: var(--color-primary);
+    flex-shrink: 0;
+  }
+}
+
+.card-preview {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  background: #fff; // card itself is always white (it's a printed document)
+}
+
+.bottom-actions {
+  max-width: 900px;
+  margin: 16px auto 0;
+  padding: 0 24px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+// Print — hide everything except the card content
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+.meta-icon.report {
+  background: color-mix(in srgb, #8b5cf6 12%, transparent);
+  mat-icon {
+    color: #7c3aed;
+  }
+}

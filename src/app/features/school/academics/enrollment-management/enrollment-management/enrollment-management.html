@@ -1,0 +1,758 @@
+<!-- enrollment-management.html — UPDATED with status badges + detail dialog -->
+
+<div class="page-container">
+  <!-- ══════════════════════════════════════════════════════════════════════
+             PAGE HEADER
+        ══════════════════════════════════════════════════════════════════════ -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>Enrollment Management</h1>
+      <p>
+        Enroll new students and manage previously unenrolled records for the current academic year
+      </p>
+    </div>
+    <div class="header-actions">
+      <button mat-icon-button (click)="refreshAll()" matTooltip="Refresh all data">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+             FEATURE GUIDE BANNER
+        ══════════════════════════════════════════════════════════════════════ -->
+  <div class="feature-guide">
+    <div class="guide-icon">
+      <mat-icon>info</mat-icon>
+    </div>
+    <div class="guide-content">
+      <h3>How Enrollment Management Works</h3>
+      <div class="guide-grid">
+        <div class="guide-item">
+          <mat-icon class="guide-item-icon enroll-icon">person_add</mat-icon>
+          <div>
+            <strong>Enroll Tab</strong>
+            <p>
+              Shows all active students not yet enrolled in the current year — both
+              <span class="badge-inline new-inline">New</span> registrations and
+              <span class="badge-inline temp-inline">Temporary Leave</span> students returning.
+            </p>
+          </div>
+        </div>
+        <div class="guide-item">
+          <mat-icon class="guide-item-icon history-icon">history</mat-icon>
+          <div>
+            <strong>Unenrolled Students Tab</strong>
+            <p>
+              Shows students who were <span class="highlight-perm">permanently unenrolled</span>.
+              Their accounts are deactivated. To re-enroll them, first reactivate their account from
+              <strong>Users</strong>, then enroll from the Enroll tab.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+             TABS
+        ══════════════════════════════════════════════════════════════════════ -->
+  <div class="tabs-wrapper">
+    <mat-tab-group
+      animationDuration="200ms"
+      (selectedIndexChange)="onTabChange($event)"
+      [selectedIndex]="activeTabIndex()"
+    >
+      <!-- ================================================================
+                 TAB 1 — ENROLL STUDENTS
+            ================================================================ -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">person_add</mat-icon>
+          <span>Enroll Students</span>
+          @if (!loadingEnroll() && enrollTotalAll() > 0) {
+          <span class="tab-badge enroll-badge">{{ enrollTotalAll() }}</span>
+          }
+        </ng-template>
+
+        <div class="tab-content">
+          <!-- ── Loading ──────────────────────────────────────────────── -->
+          @if (loadingEnroll()) {
+          <div class="state-container">
+            <mat-spinner diameter="52"></mat-spinner>
+            <p>Loading students awaiting enrollment…</p>
+          </div>
+          }
+
+          <!-- ── Error ────────────────────────────────────────────────── -->
+          @else if (enrollError()) {
+          <div class="state-container error">
+            <mat-icon class="state-icon">error_outline</mat-icon>
+            <h2>Failed to Load</h2>
+            <p>{{ enrollError() }}</p>
+            <button mat-raised-button color="primary" (click)="loadEnrollTabData()">
+              <mat-icon>refresh</mat-icon> Retry
+            </button>
+          </div>
+          } @else {
+
+          <!-- ── Step 2: Enroll Form Panel ──────────────────────────── -->
+          @if (selectedStudent()) {
+          <div class="enroll-panel">
+            <div class="enroll-panel-header">
+              <div class="panel-back-btn" (click)="cancelEnrollSelection()">
+                <mat-icon>arrow_back</mat-icon>
+                <span>Back to list</span>
+              </div>
+              <div class="panel-title">
+                <mat-icon>how_to_reg</mat-icon>
+                <span>Complete Enrollment</span>
+              </div>
+            </div>
+
+            <!-- Student banner -->
+            <div
+              class="selected-student-banner"
+              [class.banner-temp]="
+                selectedStudent()!.enrollStudentStatus === 'TEMPORARILY_UNENROLLED'
+              "
+            >
+              <div class="ss-avatar">{{ getInitials(selectedStudent()!.name) }}</div>
+              <div class="ss-info">
+                <div class="ss-name-row">
+                  <span class="ss-name">{{ selectedStudent()!.name }}</span>
+                  <!-- Status pill inside banner -->
+                  @if (selectedStudent()!.enrollStudentStatus === 'TEMPORARILY_UNENROLLED') {
+                  <span class="enroll-status-pill temp-pill">
+                    <mat-icon>schedule</mat-icon>Temp. Leave
+                  </span>
+                  } @else {
+                  <span class="enroll-status-pill new-pill">
+                    <mat-icon>fiber_new</mat-icon>New
+                  </span>
+                  }
+                </div>
+                <div class="ss-meta">
+                  @if (selectedStudent()!.email) {
+                  <span><mat-icon>email</mat-icon>{{ selectedStudent()!.email }}</span>
+                  } @if (selectedStudent()!.phone) {
+                  <span><mat-icon>phone</mat-icon>{{ selectedStudent()!.phone }}</span>
+                  } @if (selectedStudent()!.gender) {
+                  <span><mat-icon>person</mat-icon>{{ selectedStudent()!.gender }}</span>
+                  }
+                </div>
+                <!-- Show previous class info if temp unenrolled -->
+                @if (selectedStudent()!.enrollStudentStatus === 'TEMPORARILY_UNENROLLED' &&
+                selectedStudent()!.lastClassName) {
+                <div class="ss-prev-class">
+                  <mat-icon>school</mat-icon>
+                  Previously: {{ selectedStudent()!.lastClassName }} —
+                  {{ selectedStudent()!.lastSectionName }}
+                  @if (selectedStudent()!.lastRollNumber) {
+                  <span class="prev-roll">Roll {{ selectedStudent()!.lastRollNumber }}</span>
+                  }
+                </div>
+                }
+              </div>
+              <button
+                mat-icon-button
+                (click)="cancelEnrollSelection()"
+                matTooltip="Choose a different student"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+
+            <!-- Enrollment form -->
+            <div class="enroll-form-card">
+              <h3 class="form-section-title">
+                <mat-icon>school</mat-icon>
+                Assign to Class-Section
+              </h3>
+              <form [formGroup]="enrollForm" (ngSubmit)="confirmEnroll()" class="enroll-form-grid">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Class-Section *</mat-label>
+                  <mat-icon matPrefix>class</mat-icon>
+                  <mat-select formControlName="classSectionId">
+                    @for (cs of availableClassSections(); track cs.id) {
+                    <mat-option [value]="cs.id">
+                      {{ cs.className }} — {{ cs.sectionName }}
+                      <span class="capacity-note">
+                        ({{ cs.currentStudents ?? 0 }}/{{ cs.capacity }} students)
+                      </span>
+                    </mat-option>
+                    }
+                  </mat-select>
+                  @if (classSectionControl?.errors?.['required'] && classSectionControl?.touched) {
+                  <mat-error>Please select a class-section</mat-error>
+                  }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Roll Number (optional)</mat-label>
+                  <mat-icon matPrefix>tag</mat-icon>
+                  <input
+                    matInput
+                    formControlName="rollNumber"
+                    placeholder="Auto-generated if left blank"
+                  />
+                  <mat-hint>Leave blank to auto-generate the next available roll number</mat-hint>
+                </mat-form-field>
+
+                <div class="form-actions-row">
+                  <button mat-stroked-button type="button" (click)="cancelEnrollSelection()">
+                    Cancel
+                  </button>
+                  <button
+                    mat-raised-button
+                    color="primary"
+                    type="submit"
+                    [disabled]="enrollForm.invalid || submittingEnroll()"
+                    class="confirm-btn"
+                  >
+                    @if (submittingEnroll()) {
+                    <mat-spinner diameter="18"></mat-spinner>
+                    <span>Enrolling…</span>
+                    } @else {
+                    <ng-container>
+                      <mat-icon>how_to_reg</mat-icon>
+                      <span>Confirm Enrollment</span>
+                    </ng-container>
+                    }
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+          }
+
+          <!-- ── Step 1: Student List ───────────────────────────────── -->
+          @if (!selectedStudent()) {
+
+          <!-- All enrolled empty state -->
+          @if (enrollTotalAll() === 0) {
+          <div class="state-container success-state">
+            <div class="success-icon-wrap">
+              <mat-icon>celebration</mat-icon>
+            </div>
+            <h2>All Students Are Enrolled!</h2>
+            <p>
+              Every active student in the system has an active enrollment for the current academic
+              year. Great work! 🎉
+            </p>
+          </div>
+          } @else {
+
+          <!-- ── Status Summary Cards ───────────────────────────────── -->
+          <div class="status-summary">
+            <button
+              class="summary-card"
+              [class.active]="enrollStatusFilter() === 'ALL'"
+              (click)="setEnrollStatusFilter('ALL')"
+            >
+              <div class="sc-icon all-icon"><mat-icon>people</mat-icon></div>
+              <div class="sc-body">
+                <span class="sc-count">{{ enrollTotalAll() }}</span>
+                <span class="sc-label">All Pending</span>
+              </div>
+            </button>
+
+            <button
+              class="summary-card"
+              [class.active]="enrollStatusFilter() === 'NEW'"
+              (click)="setEnrollStatusFilter('NEW')"
+            >
+              <div class="sc-icon new-icon"><mat-icon>fiber_new</mat-icon></div>
+              <div class="sc-body">
+                <span class="sc-count">{{ newStudentCount() }}</span>
+                <span class="sc-label">New Students</span>
+              </div>
+              @if (newStudentCount() > 0) {
+              <div class="sc-dot new-dot"></div>
+              }
+            </button>
+
+            <button
+              class="summary-card"
+              [class.active]="enrollStatusFilter() === 'TEMPORARILY_UNENROLLED'"
+              (click)="setEnrollStatusFilter('TEMPORARILY_UNENROLLED')"
+            >
+              <div class="sc-icon temp-icon"><mat-icon>schedule</mat-icon></div>
+              <div class="sc-body">
+                <span class="sc-count">{{ tempUnenrolledCount() }}</span>
+                <span class="sc-label">Returning (Temp Leave)</span>
+              </div>
+              @if (tempUnenrolledCount() > 0) {
+              <div class="sc-dot temp-dot"></div>
+              }
+            </button>
+
+            <div class="summary-card info-card">
+              <div class="sc-icon section-icon"><mat-icon>class</mat-icon></div>
+              <div class="sc-body">
+                <span class="sc-count">{{ availableClassSections().length }}</span>
+                <span class="sc-label">Available Sections</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Search -->
+          <div class="search-bar">
+            <mat-form-field appearance="outline" class="search-field">
+              <mat-label>Search students…</mat-label>
+              <mat-icon matPrefix>search</mat-icon>
+              <input
+                matInput
+                [ngModel]="enrollSearchQuery()"
+                (ngModelChange)="onEnrollSearchChange($event)"
+                placeholder="Search by name, email, phone, gender, or class"
+              />
+              @if (enrollSearchQuery()) {
+              <button
+                matSuffix
+                mat-icon-button
+                (click)="onEnrollSearchChange('')"
+                matTooltip="Clear search"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+              }
+            </mat-form-field>
+          </div>
+
+          <!-- Active filter chip -->
+          @if (enrollStatusFilter() !== 'ALL') {
+          <div class="active-filter-bar">
+            <span class="filter-label">Filtering by:</span>
+            <span
+              class="filter-chip"
+              [class.new-chip]="enrollStatusFilter() === 'NEW'"
+              [class.temp-chip]="enrollStatusFilter() === 'TEMPORARILY_UNENROLLED'"
+            >
+              <mat-icon>{{ enrollStatusFilter() === 'NEW' ? 'fiber_new' : 'schedule' }}</mat-icon>
+              {{ enrollStatusFilter() === 'NEW' ? 'New Students' : 'Temporary Leave' }}
+              <button mat-icon-button class="chip-clear" (click)="setEnrollStatusFilter('ALL')">
+                <mat-icon>close</mat-icon>
+              </button>
+            </span>
+            <span class="filter-count"
+              >{{ enrollTotalFiltered() }} result{{ enrollTotalFiltered() !== 1 ? 's' : '' }}</span
+            >
+          </div>
+          }
+
+          <!-- No search results -->
+          @if (enrollTotalFiltered() === 0 && (enrollSearchQuery() || enrollStatusFilter() !==
+          'ALL')) {
+          <div class="state-container">
+            <mat-icon class="state-icon">search_off</mat-icon>
+            <h2>No Matches Found</h2>
+            <p>
+              @if (enrollSearchQuery()) { No students match "{{ enrollSearchQuery() }}". } @else {
+              No students in this category. }
+            </p>
+            <div class="empty-actions">
+              @if (enrollSearchQuery()) {
+              <button mat-stroked-button (click)="onEnrollSearchChange('')">
+                <mat-icon>clear</mat-icon> Clear Search
+              </button>
+              } @if (enrollStatusFilter() !== 'ALL') {
+              <button mat-stroked-button (click)="setEnrollStatusFilter('ALL')">
+                <mat-icon>filter_list_off</mat-icon> Show All
+              </button>
+              }
+            </div>
+          </div>
+          }
+
+          <!-- Table -->
+          @if (enrollTotalFiltered() > 0) {
+          <div class="table-card overflow-x">
+            <div class="table-info-bar">
+              <span>
+                Showing <strong>{{ enrollVisibleStudents().length }}</strong> of
+                <strong>{{ enrollTotalFiltered() }}</strong> students
+              </span>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Status</th>
+                  <th>Gender</th>
+                  <th>Date of Birth</th>
+                  <th>Blood Group</th>
+                  <th class="col-action"></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (s of enrollVisibleStudents(); track s.id) {
+                <tr
+                  class="table-row"
+                  [class.row-temp-unenrolled]="s.enrollStudentStatus === 'TEMPORARILY_UNENROLLED'"
+                >
+                  <td>
+                    <div class="student-cell">
+                      @if (s.avatarUrl) {
+                      <img class="avatar-sm" [src]="s.avatarUrl" [alt]="s.name" />
+                      } @else {
+                      <div class="avatar-initials">{{ getInitials(s.name) }}</div>
+                      }
+                      <div class="student-cell-info">
+                        <span class="cell-name">{{ s.name }}</span>
+                        @if (s.email) {
+                        <span class="cell-sub">{{ s.email }}</span>
+                        } @if (s.phone) {
+                        <span class="cell-sub">{{ s.phone }}</span>
+                        }
+                        <!-- Previous class info for temp unenrolled -->
+                        @if (s.enrollStudentStatus === 'TEMPORARILY_UNENROLLED' && s.lastClassName)
+                        {
+                        <span class="cell-prev-class">
+                          <mat-icon>arrow_back</mat-icon>
+                          {{ s.lastClassName }} – {{ s.lastSectionName }}
+                        </span>
+                        }
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <!-- ── NEW ENROLLMENT STATUS BADGE ── -->
+                    @if (s.enrollStudentStatus === 'TEMPORARILY_UNENROLLED') {
+                    <span class="enroll-status-badge temp-badge">
+                      <mat-icon>schedule</mat-icon>
+                      Temp. Leave
+                    </span>
+                    } @else {
+                    <span class="enroll-status-badge new-badge">
+                      <mat-icon>fiber_new</mat-icon>
+                      New
+                    </span>
+                    }
+                  </td>
+                  <td>
+                    <span class="cell-text">{{ s.gender || '—' }}</span>
+                  </td>
+                  <td>
+                    <span class="cell-text">{{ formatDate(s.dateOfBirth) }}</span>
+                  </td>
+                  <td>
+                    @if (s.bloodGroup) {
+                    <span class="blood-badge">{{ s.bloodGroup }}</span>
+                    } @else {
+                    <span class="cell-muted">—</span>
+                    }
+                  </td>
+                  <td class="col-action">
+                    <div class="cell-actions-row">
+                      <!-- ── Detail button (only for temp unenrolled) ── -->
+                      @if (s.enrollStudentStatus === 'TEMPORARILY_UNENROLLED') {
+                      <button
+                        mat-icon-button
+                        class="detail-icon-btn"
+                        (click)="openEnrollStudentDetailDialog(s, $event)"
+                        matTooltip="View unenrollment reason & details"
+                        matTooltipPosition="left"
+                      >
+                        <mat-icon>info_outline</mat-icon>
+                      </button>
+                      } @if (canEnroll()) {
+                      <button
+                        mat-raised-button
+                        [color]="
+                          s.enrollStudentStatus === 'TEMPORARILY_UNENROLLED' ? 'accent' : 'primary'
+                        "
+                        class="enroll-btn"
+                        (click)="selectStudentForEnroll(s)"
+                      >
+                        @if (s.enrollStudentStatus === 'TEMPORARILY_UNENROLLED') {
+                        <ng-container>
+                          <mat-icon>replay</mat-icon>
+                          <span>Re-Enroll</span>
+                        </ng-container>
+                        } @else {
+                        <ng-container>
+                          <mat-icon>person_add</mat-icon>
+                          <span>Enroll</span>
+                        </ng-container>
+                        }
+                      </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+                }
+              </tbody>
+            </table>
+
+            <!-- Load More -->
+            @if (enrollHasMore()) {
+            <div class="load-more-bar">
+              <button mat-stroked-button (click)="loadMoreEnroll()" class="load-more-btn">
+                <mat-icon>expand_more</mat-icon>
+                Load More
+                <span class="load-more-count">
+                  ({{ enrollTotalFiltered() - enrollVisibleStudents().length }} more)
+                </span>
+              </button>
+            </div>
+            }
+          </div>
+          } } } }
+        </div>
+      </mat-tab>
+
+      <!-- ================================================================
+                 TAB 2 — PERMANENTLY UNENROLLED STUDENTS
+            ================================================================ -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">history_edu</mat-icon>
+          <span>Unenrolled Students</span>
+          @if (!loadingUnenroll() && unenrollTotalAll() > 0) {
+          <span class="tab-badge unenroll-badge">{{ unenrollTotalAll() }}</span>
+          }
+        </ng-template>
+
+        <div class="tab-content">
+          <!-- ── Loading ──────────────────────────────────────────────── -->
+          @if (loadingUnenroll()) {
+          <div class="state-container">
+            <mat-spinner diameter="52"></mat-spinner>
+            <p>Loading permanently unenrolled students…</p>
+          </div>
+          }
+
+          <!-- ── Error ────────────────────────────────────────────────── -->
+          @else if (unenrollError()) {
+          <div class="state-container error">
+            <mat-icon class="state-icon">error_outline</mat-icon>
+            <h2>Failed to Load</h2>
+            <p>{{ unenrollError() }}</p>
+            <button mat-raised-button color="primary" (click)="loadUnenrollHistoryData()">
+              <mat-icon>refresh</mat-icon> Retry
+            </button>
+          </div>
+          } @else {
+
+          <!-- ── Empty state ──────────────────────────────────────── -->
+          @if (unenrollTotalAll() === 0) {
+          <div class="state-container">
+            <mat-icon class="state-icon">check_circle_outline</mat-icon>
+            <h2>No Permanently Unenrolled Students</h2>
+            <p>
+              No students have been permanently unenrolled. Students who leave the school
+              permanently will appear here with their last class details.
+            </p>
+          </div>
+          } @else {
+
+          <!-- How-to notice -->
+          <div class="reactivate-notice">
+            <mat-icon>info</mat-icon>
+            <div class="notice-text">
+              <strong>To re-enroll a permanently unenrolled student:</strong>
+              go to <strong>Users → Edit User</strong> and reactivate their account first. Once
+              reactivated, the student will appear in the <em>Enroll</em> tab automatically.
+            </div>
+          </div>
+
+          <!-- Stats strip -->
+          <div class="mini-stats">
+            <div class="mini-stat danger">
+              <mat-icon class="ms-icon">block</mat-icon>
+              <span class="ms-value">{{ unenrollTotalAll() }}</span>
+              <span class="ms-label">Permanently Unenrolled</span>
+            </div>
+            @if (unenrollSearchQuery()) {
+            <div class="mini-stat muted">
+              <span class="ms-value">{{ unenrollTotalFiltered() }}</span>
+              <span class="ms-label">Search Results</span>
+            </div>
+            }
+          </div>
+
+          <!-- Search -->
+          <div class="search-bar">
+            <mat-form-field appearance="outline" class="search-field">
+              <mat-label>Search unenrolled students…</mat-label>
+              <mat-icon matPrefix>search</mat-icon>
+              <input
+                matInput
+                [ngModel]="unenrollSearchQuery()"
+                (ngModelChange)="onUnenrollSearchChange($event)"
+                placeholder="Search by name, email, phone, class, roll no, or reason"
+              />
+              @if (unenrollSearchQuery()) {
+              <button matSuffix mat-icon-button (click)="onUnenrollSearchChange('')">
+                <mat-icon>close</mat-icon>
+              </button>
+              }
+            </mat-form-field>
+          </div>
+
+          <!-- No search results -->
+          @if (unenrollTotalFiltered() === 0 && unenrollSearchQuery()) {
+          <div class="state-container">
+            <mat-icon class="state-icon">search_off</mat-icon>
+            <h2>No Matches Found</h2>
+            <p>No unenrolled students match "{{ unenrollSearchQuery() }}".</p>
+            <button mat-stroked-button (click)="onUnenrollSearchChange('')">
+              <mat-icon>clear</mat-icon> Clear Search
+            </button>
+          </div>
+          }
+
+          <!-- Table -->
+          @if (unenrollTotalFiltered() > 0) {
+          <div class="table-card overflow-x">
+            <div class="table-info-bar">
+              <span>
+                Showing <strong>{{ unenrollHistoryVisible().length }}</strong> of
+                <strong>{{ unenrollTotalFiltered() }}</strong> students
+              </span>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Gender</th>
+                  <th>Last Class</th>
+                  <th>Unenrolled On</th>
+                  <th>Reason</th>
+                  <th class="col-action">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (s of unenrollHistoryVisible(); track s.id) {
+                <tr class="table-row row-permanent">
+                  <!-- Student -->
+                  <td>
+                    <div class="student-cell">
+                      @if (s.avatarUrl) {
+                      <img class="avatar-sm avatar-inactive" [src]="s.avatarUrl" [alt]="s.name" />
+                      } @else {
+                      <div class="avatar-initials avatar-inactive">
+                        {{ getInitials(s.name) }}
+                      </div>
+                      }
+                      <div class="student-cell-info">
+                        <span class="cell-name name-inactive">{{ s.name }}</span>
+                        @if (s.email) {
+                        <span class="cell-sub">{{ s.email }}</span>
+                        } @if (s.phone) {
+                        <span class="cell-sub">{{ s.phone }}</span>
+                        }
+                        <!-- Account status badge -->
+                        @if (s.isActive === false) {
+                        <span class="account-deact-badge">
+                          <mat-icon>block</mat-icon>Account Deactivated
+                        </span>
+                        }
+                      </div>
+                    </div>
+                  </td>
+
+                  <!-- Gender -->
+                  <td>
+                    <span class="cell-text">{{ s.gender || '—' }}</span>
+                  </td>
+
+                  <!-- Last Class -->
+                  <td>
+                    @if (s.lastClassName) {
+                    <div class="last-class-cell">
+                      <span class="class-name">
+                        {{ s.lastClassName }} — {{ s.lastSectionName }}
+                      </span>
+                      @if (s.lastRollNumber) {
+                      <span class="roll-chip">Roll {{ s.lastRollNumber }}</span>
+                      }
+                    </div>
+                    } @else {
+                    <span class="cell-muted">—</span>
+                    }
+                  </td>
+
+                  <!-- Unenrolled On -->
+                  <td>
+                    <span class="cell-text">{{ formatDate(s.unenrolledAt) }}</span>
+                  </td>
+
+                  <!-- Reason preview -->
+                  <td class="reason-col">
+                    @if (s.unenrollmentReason) {
+                    <span
+                      class="reason-preview"
+                      [matTooltip]="s.unenrollmentReason"
+                      matTooltipPosition="left"
+                    >
+                      {{ s.unenrollmentReason | slice : 0 : 40
+                      }}{{ s.unenrollmentReason.length > 40 ? '…' : '' }}
+                    </span>
+                    } @else {
+                    <span class="cell-muted">—</span>
+                    }
+                  </td>
+
+                  <!-- Actions -->
+                  <td class="col-action">
+                    <div class="cell-actions">
+                      <!-- View profile -->
+                      <button
+                        mat-icon-button
+                        [routerLink]="['/school/students', s.id]"
+                        matTooltip="View student profile"
+                        class="action-btn"
+                      >
+                        <mat-icon>visibility</mat-icon>
+                      </button>
+
+                      <!-- ── NEW: View unenrollment details ── -->
+                      <button
+                        mat-icon-button
+                        class="detail-action-btn"
+                        (click)="openHistoryDetailDialog(s, $event)"
+                        matTooltip="View unenrollment details & reason"
+                        matTooltipPosition="left"
+                      >
+                        <mat-icon>info_outline</mat-icon>
+                      </button>
+
+                      <!-- Disabled re-enroll with clear tooltip -->
+                      <button
+                        mat-stroked-button
+                        class="reenroll-btn disabled-reenroll"
+                        disabled
+                        matTooltip="Reactivate account first via Users → Edit User, then enroll from the Enroll tab"
+                        matTooltipPosition="left"
+                      >
+                        <mat-icon>lock</mat-icon>
+                        <span>Reactivate First</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                }
+              </tbody>
+            </table>
+
+            <!-- Load More -->
+            @if (unenrollHasMore()) {
+            <div class="load-more-bar">
+              <button mat-stroked-button (click)="loadMoreUnenroll()" class="load-more-btn">
+                <mat-icon>expand_more</mat-icon>
+                Load More
+                <span class="load-more-count">
+                  ({{ unenrollTotalFiltered() - unenrollHistoryVisible().length }} more)
+                </span>
+              </button>
+            </div>
+            }
+          </div>
+          } } }
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>

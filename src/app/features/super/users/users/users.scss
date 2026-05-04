@@ -1,0 +1,554 @@
+// users.scss
+// Fully theme-aware — consumes super-tokens (--st-*) for dark/light support.
+// No hardcoded colours.
+
+// ── Page shell ───────────────────────────────────────────────────────────────
+.page {
+  padding: 2.5rem;
+  max-width: 1280px;
+  margin: 0 auto;
+  background: transparent;
+  min-height: calc(100vh - 60px); // 60px = super-header height
+}
+
+// ── Header ───────────────────────────────────────────────────────────────────
+.page__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.75rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.page__header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.page__title {
+  font-size: 1.875rem;
+  font-weight: 800;
+  color: var(--st-text-primary);
+  margin: 0;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.page__subtitle {
+  color: var(--st-text-secondary);
+  margin: 0;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.user-count-pill {
+  display: inline-flex;
+  align-items: center;
+  background: var(--st-blue-bg);
+  color: var(--st-blue-text);
+  border: 1px solid var(--st-blue-border);
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+// ── Create button ─────────────────────────────────────────────────────────────
+.create-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  height: 44px !important;
+  padding: 0 1.25rem !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  // Use Angular Material's primary colour — works in both themes
+  background-color: var(--st-primary) !important;
+  color: #fff !important;
+  transition: opacity 0.18s ease, transform 0.18s ease !important;
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 18px !important;
+    width: 18px !important;
+    height: 18px !important;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    opacity: 0.88;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// ── Loading bar ───────────────────────────────────────────────────────────────
+.loading-bar {
+  width: 100%;
+  height: 3px !important;
+  border-radius: 2px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+// ── Error state ───────────────────────────────────────────────────────────────
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem 2rem;
+  text-align: center;
+  background: var(--st-red-bg);
+  border: 1px solid var(--st-red-border);
+  border-radius: var(--st-radius-lg);
+
+  &__icon {
+    font-size: 42px !important;
+    width: 42px !important;
+    height: 42px !important;
+    color: var(--st-red) !important;
+  }
+
+  &__msg {
+    margin: 0;
+    color: var(--st-red-text);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+}
+
+.retry-btn {
+  color: var(--st-red-text) !important;
+  border-color: var(--st-red-border) !important;
+  border-radius: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+
+  mat-icon {
+    font-size: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+  }
+}
+
+// ── Table card ────────────────────────────────────────────────────────────────
+.table-card {
+  background: var(--st-bg-surface);
+  border: 1px solid var(--st-border);
+  border-radius: var(--st-radius-lg);
+  overflow: hidden;
+  position: relative;
+  box-shadow: var(--st-shadow-sm);
+}
+
+// ── Mat table overrides ───────────────────────────────────────────────────────
+.users-table {
+  width: 100%;
+  // Critical: prevent mat-table's default white background leaking through
+  background: transparent !important;
+
+  mat-header-row {
+    background: var(--st-bg-subtle) !important;
+    border-bottom: 1px solid var(--st-border) !important;
+    min-height: 44px;
+  }
+
+  mat-header-cell {
+    background: var(--st-bg-subtle) !important;
+    color: var(--st-text-muted) !important;
+    font-weight: 700 !important;
+    font-size: 0.7rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.07em !important;
+    padding: 0.75rem 1rem !important;
+    border-bottom: 1px solid var(--st-border) !important;
+  }
+
+  mat-cell {
+    padding: 1rem !important;
+    border-bottom: 1px solid var(--st-bg-subtle) !important;
+    color: var(--st-text-primary) !important;
+    background: var(--st-bg-surface) !important;
+  }
+
+  mat-row {
+    background: var(--st-bg-surface) !important;
+    transition: background 0.15s ease;
+  }
+}
+
+.table-row:hover mat-cell {
+  background: var(--st-bg-hover) !important;
+}
+
+// ── No-data row ───────────────────────────────────────────────────────────────
+.no-data-row {
+  display: block !important;
+  background: var(--st-bg-surface) !important;
+}
+
+// ── Skeleton loader ───────────────────────────────────────────────────────────
+.skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem 0;
+}
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.skeleton {
+  background: var(--st-bg-subtle);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, var(--st-bg-hover) 50%, transparent 100%);
+    animation: shimmer 1.4s ease-in-out infinite;
+  }
+
+  &--circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  &--line {
+    height: 12px;
+    border-radius: 6px;
+  }
+
+  &--line-lg {
+    width: 180px;
+  }
+
+  &--line-sm {
+    width: 120px;
+    margin-top: 6px;
+    opacity: 0.65;
+  }
+}
+
+.skeleton-lines {
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+// ── User cell ─────────────────────────────────────────────────────────────────
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--st-blue-bg);
+  color: var(--st-blue-text);
+  border: 1px solid var(--st-blue-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+
+  .table-row:hover & {
+    transform: scale(1.06);
+  }
+
+  &--self {
+    background: var(--st-green-bg);
+    color: var(--st-green-text);
+    border-color: var(--st-green-border);
+  }
+}
+
+.user-cell__info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.user-cell__name {
+  font-weight: 600;
+  color: var(--st-text-primary);
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.self-badge {
+  background: var(--st-green-bg);
+  color: var(--st-green-text);
+  border: 1px solid var(--st-green-border);
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.user-cell__email {
+  font-size: 0.78rem;
+  color: var(--st-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+  margin-top: 1px;
+}
+
+// ── Roles cell ────────────────────────────────────────────────────────────────
+.roles-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.role-badge {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  border: 1px solid transparent;
+
+  &--superadmin {
+    background: var(--st-purple-bg);
+    color: var(--st-purple-text);
+    border-color: var(--st-purple-border);
+  }
+
+  &--manager {
+    background: var(--st-blue-bg);
+    color: var(--st-blue-text);
+    border-color: var(--st-blue-border);
+  }
+
+  &--user {
+    background: var(--st-green-bg);
+    color: var(--st-green-text);
+    border-color: var(--st-green-border);
+  }
+}
+
+.empty-roles {
+  font-size: 0.78rem;
+  color: var(--st-text-muted);
+  font-style: italic;
+}
+
+// ── Status indicator ──────────────────────────────────────────────────────────
+.status-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+
+  &::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  &--active {
+    color: var(--st-green-text);
+
+    &::before {
+      background: var(--st-green);
+      box-shadow: 0 0 0 3px var(--st-green-bg);
+      animation: pulse-status 2.5s ease-in-out infinite;
+    }
+  }
+
+  &--inactive {
+    color: var(--st-text-muted);
+
+    &::before {
+      background: var(--st-border-strong);
+    }
+  }
+}
+
+@keyframes pulse-status {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px var(--st-green-bg);
+  }
+  50% {
+    box-shadow: 0 0 0 5px var(--st-green-bg);
+  }
+}
+
+.date-cell {
+  color: var(--st-text-muted) !important;
+  font-size: 0.82rem !important;
+  font-variant-numeric: tabular-nums;
+}
+
+// ── Actions cell ──────────────────────────────────────────────────────────────
+.actions-cell {
+  display: flex;
+  gap: 2px;
+  justify-content: flex-end;
+}
+
+.action-btn {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 8px !important;
+  transition: background 0.15s ease, transform 0.15s ease !important;
+
+  mat-icon {
+    font-size: 18px !important;
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  &--edit {
+    color: var(--st-primary) !important;
+
+    &:hover {
+      background: rgba(129, 140, 248, 0.12) !important;
+    }
+  }
+
+  &--delete {
+    color: var(--st-red) !important;
+
+    &:hover:not([disabled]) {
+      background: var(--st-red-bg) !important;
+    }
+  }
+
+  &[disabled] {
+    opacity: 0.3 !important;
+    pointer-events: none;
+  }
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+.empty-state {
+  padding: 4rem 2rem !important;
+  text-align: center;
+  width: 100%;
+  display: block;
+  background: var(--st-bg-surface) !important;
+}
+
+.empty-state__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.empty-state__icon {
+  font-size: 48px !important;
+  width: 48px !important;
+  height: 48px !important;
+  color: var(--st-border-strong) !important;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--st-text-secondary);
+}
+
+.empty-state__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--st-text-muted);
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+@media (max-width: 1024px) {
+  .mat-column-created {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 1.25rem 1rem;
+  }
+
+  .page__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .create-btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .table-card {
+    overflow-x: auto;
+    border-radius: var(--st-radius-md);
+  }
+
+  .user-cell__email {
+    max-width: 140px;
+  }
+}
+
+@media (max-width: 600px) {
+  .mat-column-status {
+    display: none !important;
+  }
+
+  .page__title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .mat-column-roles {
+    display: none !important;
+  }
+}

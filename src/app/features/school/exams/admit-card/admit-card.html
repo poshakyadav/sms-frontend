@@ -1,0 +1,95 @@
+<!-- admit-card.html -->
+<div class="card-viewer-page">
+  <!-- ── Toolbar (hidden on print) ─────────────────────────────────────── -->
+  <div class="viewer-toolbar no-print">
+    <div class="toolbar-left">
+      <button class="back-btn" (click)="goBack()" matTooltip="Back to Students">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="toolbar-title">
+        <span class="title-label">Admit Card Preview</span>
+        <span class="title-sub">Staff View · Print-ready</span>
+      </div>
+    </div>
+
+    <div class="toolbar-actions">
+      @if (!loading() && !errorType() && cardHtml()) {
+      <button class="action-btn print-btn" (click)="print()">
+        <mat-icon>print</mat-icon>
+        <span>Print</span>
+      </button>
+      }
+    </div>
+  </div>
+
+  <!-- ── Loading ───────────────────────────────────────────────────────── -->
+  @if (loading()) {
+  <div class="viewer-state no-print">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p class="state-msg">Generating admit card…</p>
+  </div>
+  }
+
+  <!-- ── Error States ───────────────────────────────────────────────────── -->
+  @else if (errorType()) {
+
+  <!-- Bad / missing params -->
+  @if (errorType() === 'params') {
+  <div class="viewer-state no-print">
+    <div class="state-icon-wrap warn">
+      <mat-icon>link_off</mat-icon>
+    </div>
+    <h2 class="state-title">Invalid Link</h2>
+    <p class="state-msg">{{ errorMessage() }}</p>
+    <button mat-stroked-button (click)="goBack()"><mat-icon>arrow_back</mat-icon> Go Back</button>
+  </div>
+  }
+
+  <!-- Not found -->
+  @else if (errorType() === 'not_found') {
+  <div class="viewer-state no-print">
+    <div class="state-icon-wrap warn">
+      <mat-icon>search_off</mat-icon>
+    </div>
+    <h2 class="state-title">Not Found</h2>
+    <p class="state-msg">{{ errorMessage() }}</p>
+    <button mat-stroked-button (click)="goBack()"><mat-icon>arrow_back</mat-icon> Go Back</button>
+  </div>
+  }
+
+  <!-- Student not enrolled in this exam's class-section -->
+  @else if (errorType() === 'no_enrollment') {
+  <div class="viewer-state no-print">
+    <div class="state-icon-wrap info">
+      <mat-icon>person_off</mat-icon>
+    </div>
+    <h2 class="state-title">Student Not Enrolled</h2>
+    <p class="state-msg">{{ errorMessage() }}</p>
+    <button mat-stroked-button (click)="goBack()"><mat-icon>arrow_back</mat-icon> Go Back</button>
+  </div>
+  }
+
+  <!-- Generic server error -->
+  @else {
+  <div class="viewer-state no-print">
+    <div class="state-icon-wrap error">
+      <mat-icon>error_outline</mat-icon>
+    </div>
+    <h2 class="state-title">Failed to Load</h2>
+    <p class="state-msg">{{ errorMessage() }}</p>
+    <div class="state-actions">
+      <button mat-raised-button color="primary" (click)="retry()">
+        <mat-icon>refresh</mat-icon> Retry
+      </button>
+      <button mat-stroked-button (click)="goBack()"><mat-icon>arrow_back</mat-icon> Go Back</button>
+    </div>
+  </div>
+  } }
+
+  <!-- ── Card Render ────────────────────────────────────────────────────── -->
+  @else if (cardHtml()) {
+  <div class="card-render-wrapper">
+    <div class="card-render" [innerHTML]="cardHtml()"></div>
+  </div>
+  }
+</div>

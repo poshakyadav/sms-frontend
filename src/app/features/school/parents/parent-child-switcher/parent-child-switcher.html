@@ -1,0 +1,99 @@
+<!-- Only render for parents who have children loaded -->
+<div class="switcher-container" *ngIf="isParent() && hasChildren()">
+  <!-- ── Trigger button ── -->
+  <button
+    class="switcher-trigger"
+    (click)="toggleDropdown()"
+    [class.open]="isOpen()"
+    [attr.aria-expanded]="isOpen()"
+    aria-haspopup="listbox"
+    aria-label="Switch student profile"
+  >
+    <!-- Active child avatar -->
+    <div
+      class="trigger-avatar"
+      [style.background]="getAvatarColor(activeChild()?.studentName ?? '')"
+    >
+      <img
+        *ngIf="activeChild()?.studentAvatarUrl"
+        [src]="activeChild()!.studentAvatarUrl"
+        [alt]="activeChild()!.studentName"
+        class="avatar-img"
+      />
+      <span *ngIf="!activeChild()?.studentAvatarUrl" class="avatar-initials">
+        {{ getInitials(activeChild()?.studentName ?? '?') }}
+      </span>
+    </div>
+
+    <!-- Active child name + class -->
+    <div class="trigger-info">
+      <span class="trigger-name">{{ activeChild()?.studentName ?? 'Select Student' }}</span>
+      <span class="trigger-class" *ngIf="activeChild()?.currentEnrollment">
+        {{ activeChild()!.currentEnrollment!.className }}
+        &middot;
+        {{ activeChild()!.currentEnrollment!.sectionName }}
+      </span>
+    </div>
+
+    <!-- Chevron -->
+    <svg
+      class="trigger-chevron"
+      [class.rotated]="isOpen()"
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.5"
+    >
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  </button>
+
+  <!-- ── Dropdown ── -->
+  <div class="switcher-dropdown" *ngIf="isOpen()" role="listbox" aria-label="Student profiles">
+    <div class="dropdown-header">
+      <span class="dropdown-label">Switch Student</span>
+    </div>
+
+    <div class="dropdown-children">
+      <button
+        class="dropdown-child"
+        *ngFor="let child of children()"
+        [class.active]="child.studentId === activeChildId()"
+        role="option"
+        [attr.aria-selected]="child.studentId === activeChildId()"
+        (click)="switchTo(child)"
+      >
+        <div class="child-avatar" [style.background]="getAvatarColor(child.studentName)">
+          <img
+            *ngIf="child.studentAvatarUrl"
+            [src]="child.studentAvatarUrl"
+            [alt]="child.studentName"
+            class="avatar-img"
+          />
+          <span *ngIf="!child.studentAvatarUrl" class="avatar-initials-sm">
+            {{ getInitials(child.studentName) }}
+          </span>
+        </div>
+
+        <div class="child-details">
+          <span class="child-name">{{ child.studentName }}</span>
+          <span class="child-meta" *ngIf="child.currentEnrollment">
+            {{ child.currentEnrollment.className }} – {{ child.currentEnrollment.sectionName }}
+          </span>
+          <span class="child-meta not-enrolled" *ngIf="!child.currentEnrollment">
+            Not enrolled
+          </span>
+        </div>
+
+        <!-- Active check -->
+        <div class="active-check" *ngIf="child.studentId === activeChildId()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+          </svg>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>

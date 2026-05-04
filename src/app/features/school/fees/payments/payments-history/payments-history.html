@@ -1,0 +1,114 @@
+<div class="payments-history-page">
+  <!-- ── Header ─────────────────────────────────────────────────────── -->
+  <div class="back-header">
+    <button mat-icon-button (click)="goBack()" matTooltip="Back to Record Payment">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div>
+      <h1>Payment History</h1>
+      <div class="header-meta">Enrollment #{{ enrollmentId() }}</div>
+    </div>
+    <button mat-icon-button (click)="loadHistory()" matTooltip="Refresh" style="margin-left: auto">
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+
+  <!-- ── Loading ────────────────────────────────────────────────────── -->
+  @if (loading()) {
+  <div class="state-container">
+    <mat-spinner diameter="44"></mat-spinner>
+    <p>Loading payment history…</p>
+  </div>
+  }
+
+  <!-- ── Error ──────────────────────────────────────────────────────── -->
+  @else if (error()) {
+  <div class="state-container error">
+    <mat-icon class="state-icon">error_outline</mat-icon>
+    <h2>Failed to Load</h2>
+    <p>{{ error() }}</p>
+    <button mat-raised-button color="primary" (click)="loadHistory()">
+      <mat-icon>refresh</mat-icon> Retry
+    </button>
+  </div>
+  }
+
+  <!-- ── Empty ──────────────────────────────────────────────────────── -->
+  @else if (history().length === 0) {
+  <div class="state-container">
+    <mat-icon class="state-icon">receipt_long</mat-icon>
+    <h2>No Payments Yet</h2>
+    <p>No payment records exist for this enrollment.</p>
+    <button mat-stroked-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon> Back to Payments
+    </button>
+  </div>
+  }
+
+  <!-- ── Results ────────────────────────────────────────────────────── -->
+  @else {
+
+  <!-- Summary -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total Transactions</div>
+      <div class="stat-value">{{ history().length }}</div>
+    </div>
+    <div class="stat-card success">
+      <div class="stat-label">Total Paid</div>
+      <div class="stat-value">₹{{ totalPaid() | number }}</div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-scroll">
+      <table mat-table [dataSource]="history()">
+        <ng-container matColumnDef="date">
+          <th mat-header-cell *matHeaderCellDef>Date</th>
+          <td mat-cell *matCellDef="let p">
+            {{ p.paymentDate | date : 'mediumDate' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="feeType">
+          <th mat-header-cell *matHeaderCellDef>Fee Type</th>
+          <td mat-cell *matCellDef="let p">
+            <span class="fee-type-chip">{{ p.feeType }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="amount">
+          <th mat-header-cell *matHeaderCellDef>Amount Paid</th>
+          <td mat-cell *matCellDef="let p">
+            <span class="amount-cell paid">₹{{ p.amountPaid | number }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="method">
+          <th mat-header-cell *matHeaderCellDef>Method</th>
+          <td mat-cell *matCellDef="let p">
+            <span class="method-badge {{ p.paymentMethod }}">{{ p.paymentMethod }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="receipt">
+          <th mat-header-cell *matHeaderCellDef>Receipt #</th>
+          <td mat-cell *matCellDef="let p">
+            <span class="receipt-number">{{ p.receiptNumber }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="notes">
+          <th mat-header-cell *matHeaderCellDef>Notes</th>
+          <td mat-cell *matCellDef="let p" style="color: var(--color-text-secondary)">
+            {{ p.notes || '—' }}
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+  </div>
+  }
+</div>

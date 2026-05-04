@@ -1,0 +1,646 @@
+<!-- terms-and-conditions.html -->
+<div class="legal-page">
+  <!-- ── HERO ─────────────────────────────────────────────────────────────── -->
+  <section class="legal-hero">
+    <div class="container">
+      <div class="legal-hero__badge">Legal</div>
+      <h1 class="legal-hero__title">Terms &amp; Conditions</h1>
+      <p class="legal-hero__meta">
+        Last updated: <strong>{{ lastUpdated }}</strong> &nbsp;·&nbsp; Effective:
+        <strong>{{ effectiveDate }}</strong>
+      </p>
+      <p class="legal-hero__summary">
+        These Terms govern your access to and use of the SMS (School Management System) platform. By
+        registering a school or accessing the platform, you agree to be bound by these Terms. Please
+        read them carefully before proceeding.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── BODY ──────────────────────────────────────────────────────────────── -->
+  <div class="legal-body container">
+    <!-- ToC -->
+    <aside class="toc">
+      <div class="toc__header">Table of Contents</div>
+      <nav class="toc__nav">
+        <button
+          *ngFor="let sec of sections"
+          class="toc__item"
+          [class.toc__item--active]="activeSection === sec.id"
+          (click)="scrollTo(sec.id)"
+        >
+          <span class="toc__icon">{{ sec.icon }}</span>
+          <span class="toc__text">{{ sec.title }}</span>
+        </button>
+      </nav>
+    </aside>
+
+    <main class="legal-content">
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 01  ACCEPTANCE                                                       -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="acceptance" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">01</span>
+          <h2>Acceptance of Terms</h2>
+        </div>
+        <p>
+          By accessing or using the SMS platform (the <strong>"Service"</strong>), you confirm that
+          you have read, understood, and agree to be bound by these Terms and Conditions
+          (<strong>"Terms"</strong>), together with our
+          <a routerLink="/public/privacy">Privacy Policy</a> and
+          <a routerLink="/public/security">Security Policy</a>, which are incorporated into these
+          Terms by reference.
+        </p>
+        <p>
+          If you are agreeing on behalf of an educational institution, you represent and warrant
+          that you have the legal authority to bind that institution to these Terms.
+        </p>
+        <div class="callout callout--warning">
+          <span class="callout__icon">⚠️</span>
+          <p>
+            <strong>If you do not agree to these Terms, you must not use the Service.</strong>
+            Continued use of the Service after any update to these Terms constitutes your acceptance
+            of the revised Terms.
+          </p>
+        </div>
+        <p>
+          These Terms are governed by the laws of India, including the
+          <strong>Information Technology Act, 2000</strong>, the
+          <strong>Digital Personal Data Protection Act (DPDP Act), 2023</strong>, the
+          <strong>Consumer Protection Act, 2019</strong>, and other applicable Indian legislation.
+        </p>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 02  DEFINITIONS                                                      -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="definitions" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">02</span>
+          <h2>Definitions</h2>
+        </div>
+        <div class="definition-list">
+          <div class="definition-item">
+            <dt>"Platform" / "Service"</dt>
+            <dd>The SMS web application, APIs, and all associated services operated by us.</dd>
+          </div>
+          <div class="definition-item">
+            <dt>"School" / "Institution"</dt>
+            <dd>
+              Any educational institution that has registered and been approved to use the Platform.
+            </dd>
+          </div>
+          <div class="definition-item">
+            <dt>"School Owner"</dt>
+            <dd>
+              The primary administrator who registered the School on the Platform and holds the
+              principal account. The School Owner acts as the authorised representative of the
+              School for all purposes under these Terms.
+            </dd>
+          </div>
+          <div class="definition-item">
+            <dt>"School User"</dt>
+            <dd>
+              Any individual authorised by the School Owner to access the Platform — including
+              principals, vice-principals, teachers, administrative staff, accountants, parents,
+              guardians, and students.
+            </dd>
+          </div>
+          <div class="definition-item">
+            <dt>"Student Data"</dt>
+            <dd>
+              Any personally identifiable information (PII) relating to a student, including but not
+              limited to: name, date of birth, contact details, academic records, attendance
+              history, fee records, and health information.
+            </dd>
+          </div>
+          <div class="definition-item">
+            <dt>"Free Plan"</dt>
+            <dd>
+              The no-cost tier of the Service, which includes contextual educational advertising as
+              described in Section 08.
+            </dd>
+          </div>
+          <div class="definition-item">
+            <dt>"Premium Plan"</dt>
+            <dd>
+              A paid subscription tier that provides an advertisement-free experience and may
+              include additional features, as published on the Platform from time to time.
+            </dd>
+          </div>
+          <div class="definition-item">
+            <dt>"We" / "Us" / "Our"</dt>
+            <dd>
+              The operators and developers of the SMS platform, the entity with whom the School
+              enters into these Terms.
+            </dd>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 03  ELIGIBILITY & REGISTRATION                                       -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="eligibility" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">03</span>
+          <h2>Eligibility &amp; Registration</h2>
+        </div>
+        <p>To register a School on the Platform, the School Owner must:</p>
+        <ul class="legal-list">
+          <li>
+            Represent a legally constituted educational institution — including a registered trust,
+            society, private limited company, government school, or government-aided institution.
+          </li>
+          <li>Provide accurate, current, and complete registration information.</li>
+          <li>
+            Have received a valid invitation from our team or submitted a registration request that
+            has been approved.
+          </li>
+          <li>
+            Complete any applicable setup fee payment and await our confirmation of activation.
+          </li>
+        </ul>
+        <p>
+          The School Owner is solely responsible for ensuring that all School Users who access the
+          Platform are made aware of, and comply with, these Terms. The School Owner accepts these
+          Terms on behalf of the School and all its users.
+        </p>
+        <p>
+          Registration using fraudulent, inaccurate, or misleading information will result in
+          immediate account termination. Any fees paid in such cases are non-refundable.
+        </p>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 04  ACCESS & SECURITY                                                -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="access" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">04</span>
+          <h2>Access &amp; Account Security</h2>
+        </div>
+        <p>You are responsible for:</p>
+        <ul class="legal-list">
+          <li>Maintaining the confidentiality of your login credentials at all times.</li>
+          <li>All activities that occur under your account or using your credentials.</li>
+          <li>
+            Immediately notifying us at
+            <a href="mailto:security@sms.app">security@sms.app</a> if you suspect any unauthorised
+            access to your account.
+          </li>
+          <li>
+            Ensuring that staff accounts are deactivated promptly when an individual leaves the
+            school or changes roles.
+          </li>
+        </ul>
+        <p>
+          We provide role-based and permission-based access controls to help schools manage and
+          restrict access appropriately. However, the School Owner is responsible for correctly
+          assigning roles and permissions to all School Users within their institution.
+        </p>
+        <div class="callout callout--info">
+          <span class="callout__icon">ℹ️</span>
+          <p>
+            <strong>Important:</strong> We will never request your password via email, phone call,
+            or chat message. If you receive such a request, do not comply and report it to us
+            immediately.
+          </p>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 05  PERMITTED USE                                                    -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="permitted-use" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">05</span>
+          <h2>Permitted Use</h2>
+        </div>
+        <p>
+          Subject to your compliance with these Terms, we grant you a limited, non-exclusive,
+          non-transferable, revocable licence to access and use the Service for your School's
+          internal educational management purposes, including:
+        </p>
+        <ul class="legal-list">
+          <li>
+            Managing student enrolments, academic records, attendance, fees, examinations, and
+            assignments.
+          </li>
+          <li>
+            Communicating with parents, guardians, and students through the platform's notification
+            system.
+          </li>
+          <li>
+            Generating academic reports, fee reports, and administrative documents for internal
+            school use.
+          </li>
+          <li>Managing staff roles, permissions, and school-level settings within the platform.</li>
+        </ul>
+        <p>
+          This licence is granted solely to the registered School and may not be transferred,
+          sublicensed, or used for the benefit of any other institution without our prior written
+          consent.
+        </p>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 06  PROHIBITED CONDUCT                                               -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="prohibited" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">06</span>
+          <h2>Prohibited Conduct</h2>
+        </div>
+        <p>You must not use the Service to:</p>
+        <ul class="legal-list legal-list--prohibited">
+          <li>Violate any applicable law, regulation, or court order in India or elsewhere.</li>
+          <li>
+            Attempt to gain unauthorised access to any part of the Service or to another school's
+            data.
+          </li>
+          <li>Upload, transmit, or introduce malicious code, viruses, or harmful content.</li>
+          <li>
+            Reverse-engineer, decompile, disassemble, or attempt to extract the source code or
+            architecture of the Service.
+          </li>
+          <li>
+            Resell, sublicence, or commercially exploit the Service without our prior written
+            authorisation.
+          </li>
+          <li>Send unsolicited bulk communications (spam) through the platform.</li>
+          <li>
+            Interfere with or disrupt the integrity, performance, or availability of the Service or
+            its infrastructure.
+          </li>
+          <li>
+            Share login credentials with individuals who are not authorised School Users of your
+            registered institution.
+          </li>
+          <li>
+            Use Student Data for any purpose outside of legitimate school administration within the
+            platform.
+          </li>
+          <li>
+            Use the platform to harass, abuse, defame, or cause harm to any individual, including
+            students, parents, or staff.
+          </li>
+        </ul>
+        <p>
+          Violations of these prohibitions may result in immediate account suspension or termination
+          and, where conduct is unlawful, referral to appropriate law enforcement authorities.
+        </p>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 07  DATA & PRIVACY                                                   -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="data" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">07</span>
+          <h2>Data &amp; Privacy</h2>
+        </div>
+        <p>
+          The collection, use, and protection of personal data — especially Student Data — is
+          governed in detail by our <a routerLink="/public/privacy">Privacy Policy</a>. The
+          following principles apply:
+        </p>
+        <ul class="legal-list">
+          <li>
+            <strong>Data Ownership:</strong> The School owns all Student Data and staff data entered
+            into the Platform. We act solely as a data processor on the School's behalf and do not
+            claim any rights over that data.
+          </li>
+          <li>
+            <strong>Data Isolation:</strong> Each School's data is stored in a dedicated, isolated
+            environment. No cross-school data access is possible by design.
+          </li>
+          <li>
+            <strong>No Sale of Data:</strong> We do not sell, rent, or trade any personal data to
+            third parties for profit.
+          </li>
+          <li>
+            <strong>Data Portability:</strong> You may request a structured export of your School's
+            data at any time by contacting our support team.
+          </li>
+          <li>
+            <strong>Data Deletion:</strong> Upon account termination, your data will be retained for
+            a 30-day grace period for export, after which it will be permanently and irreversibly
+            deleted from all systems.
+          </li>
+        </ul>
+
+        <div class="callout callout--success">
+          <span class="callout__icon">🏫</span>
+          <p>
+            <strong>School-Level Consent:</strong> By accepting these Terms, the School Owner — as
+            the authorised representative of the School — provides institutional consent for the
+            collection and processing of student, parent, and staff data as described in our Privacy
+            Policy. The School, as Data Fiduciary under the DPDP Act 2023, is responsible for
+            ensuring that appropriate parental or guardian consent has been obtained for all minor
+            students before their data is entered into the platform.
+          </p>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 08  ADVERTISING & PREMIUM                                            -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="advertising" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">08</span>
+          <h2>Advertising &amp; Premium Plan</h2>
+        </div>
+
+        <h3 class="subsection-title">Free Plan — Ad-Supported</h3>
+        <p>
+          SMS is available at no charge on our Free Plan. To sustain the platform and continue
+          improving it, schools on the Free Plan will have
+          <strong>contextual, educational advertisements</strong> displayed within certain areas of
+          the platform.
+        </p>
+        <p>By accepting these Terms for the Free Plan, the School:</p>
+        <ul class="legal-list">
+          <li>
+            Acknowledges and consents to the display of contextual educational advertisements to all
+            School Users (including students, teachers, and administrative staff) within
+            non-sensitive areas of the platform.
+          </li>
+          <li>
+            Acknowledges that these advertisements are
+            <strong>contextual and non-behavioural</strong> — meaning they are matched to the
+            general subject area of the page being viewed, not to any individual user's personal
+            profile, history, or identity.
+          </li>
+          <li>
+            Acknowledges that no student's personally identifiable information (PII) is shared with
+            advertising partners for any purpose.
+          </li>
+        </ul>
+
+        <div class="callout callout--info">
+          <span class="callout__icon">📢</span>
+          <p>
+            All advertisements are clearly labelled as "Advertisement" or "Sponsored" within the
+            platform. Advertisements are never displayed on examination pages, result pages, fee
+            payment screens, or other sensitive academic workflows.
+          </p>
+        </div>
+
+        <p>
+          We permit only age-appropriate, educationally relevant advertising categories, including
+          educational courses, academic tools, stationery, books, and career guidance.
+          Advertisements for alcohol, tobacco, gambling, adult content, political campaigns, and
+          financial products are strictly prohibited on our platform.
+        </p>
+
+        <h3 class="subsection-title">Premium Plan — Ad-Free</h3>
+        <p>
+          Schools may upgrade to our <strong>Premium Plan</strong> to remove all advertisements from
+          the platform for all their users. The Premium Plan may also include additional features,
+          as published on the platform from time to time.
+        </p>
+        <ul class="legal-list">
+          <li>Premium Plan pricing and features will be published on the platform.</li>
+          <li>
+            Where applicable, <strong>Goods and Services Tax (GST)</strong> will be charged on
+            Premium Plan subscriptions at the rate applicable under Indian law at the time of
+            billing.
+          </li>
+          <li>Premium Plan subscriptions are managed through our payment system.</li>
+          <li>
+            Downgrading from Premium to Free Plan restores contextual advertising as described
+            above.
+          </li>
+        </ul>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 09  PAYMENT & FEES                                                   -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="payment" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">09</span>
+          <h2>Payment &amp; Fees</h2>
+        </div>
+
+        <h3 class="subsection-title">Setup Fee</h3>
+        <p>
+          Access to the platform may require a one-time setup fee, the amount of which is displayed
+          during the registration process. By submitting payment proof:
+        </p>
+        <ul class="legal-list">
+          <li>You authorise us to verify the payment details you have submitted.</li>
+          <li>
+            You acknowledge that account activation is subject to our verification of the payment,
+            which typically occurs within 24 business hours of submission.
+          </li>
+        </ul>
+        <div class="callout callout--warning">
+          <span class="callout__icon">💳</span>
+          <p>
+            <strong>Refund Policy — Setup Fee:</strong> Setup fees are non-refundable once your
+            school account has been activated and provisioned. If activation fails due to an error
+            on our part, a full refund will be processed within 7 business days.
+          </p>
+        </div>
+
+        <h3 class="subsection-title">Premium Subscription</h3>
+        <ul class="legal-list">
+          <li>
+            Premium Plan subscription fees, billing cycles, and payment methods will be specified at
+            the time of upgrade.
+          </li>
+          <li>
+            Applicable GST will be added to Premium Plan fees and shown clearly before payment is
+            confirmed.
+          </li>
+          <li>
+            Subscription cancellation policies and refund eligibility (if any) for Premium Plan will
+            be communicated at the time of subscription.
+          </li>
+        </ul>
+
+        <h3 class="subsection-title">Future Pricing Changes</h3>
+        <p>
+          We reserve the right to introduce, modify, or remove fees for any tier of the Service. We
+          will provide at least <strong>60 days' advance written notice</strong> to all registered
+          School Owners before any pricing changes affecting existing schools take effect.
+        </p>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 10  INTELLECTUAL PROPERTY                                            -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="ip" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">10</span>
+          <h2>Intellectual Property</h2>
+        </div>
+        <p>
+          All software, code, design, trademarks, logos, user interface elements, and content
+          comprising the SMS Platform are the exclusive intellectual property of the Platform
+          operators and are protected under applicable Indian and international intellectual
+          property law, including the <strong>Copyright Act, 1957</strong> and the
+          <strong>Trade Marks Act, 1999</strong>.
+        </p>
+        <p>
+          Nothing in these Terms grants you any licence or right to use our trademarks, service
+          marks, logos, or trade names without our prior written consent.
+        </p>
+        <p>
+          <strong>Your Content and Data:</strong> You retain full ownership of all data you upload
+          to the Platform — including student records, documents, and school information. By using
+          the Service, you grant us a limited, non-exclusive licence to host, process, and store
+          this data solely as necessary to provide the Service to you. This licence terminates upon
+          account closure and completion of the data retention period.
+        </p>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 11  LIMITATION OF LIABILITY                                          -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="liability" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">11</span>
+          <h2>Limitation of Liability</h2>
+        </div>
+        <p>
+          To the fullest extent permitted by applicable law in India, we shall not be liable for:
+        </p>
+        <ul class="legal-list">
+          <li>
+            Any indirect, incidental, special, consequential, or punitive damages arising from use
+            of the Service.
+          </li>
+          <li>
+            Loss of data caused by events beyond our reasonable control, including force majeure
+            events, natural disasters, or third-party infrastructure failures.
+          </li>
+          <li>
+            Decisions made by school administrators, teachers, or other School Users based on data
+            or reports generated within the Platform.
+          </li>
+          <li>
+            Unauthorised access resulting from the School's failure to maintain adequate account
+            security or credential hygiene.
+          </li>
+          <li>
+            Service interruptions caused by scheduled or emergency maintenance, communicated in
+            advance where reasonably practicable.
+          </li>
+        </ul>
+        <p>
+          Our total aggregate liability to you for any claim arising out of or related to these
+          Terms or the Service shall not exceed the total fees paid by you to us in the twelve (12)
+          months immediately preceding the event giving rise to the claim.
+        </p>
+        <p>
+          The Service is provided <strong>"as is"</strong> and <strong>"as available"</strong>
+          without warranties of any kind, express or implied, except as expressly required by
+          applicable Indian law.
+        </p>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 12  TERMINATION                                                      -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="termination" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">12</span>
+          <h2>Termination</h2>
+        </div>
+        <p>Either party may terminate access to the Service:</p>
+        <ul class="legal-list">
+          <li>
+            <strong>By You:</strong> Contact our support team at
+            <a href="mailto:support@sms.app">support@sms.app</a> to request account deactivation.
+            Your data will be retained for 30 days following the request to allow for export, after
+            which it will be permanently deleted.
+          </li>
+          <li>
+            <strong>By Us:</strong> We may suspend or terminate your account immediately if you
+            materially breach these Terms, engage in prohibited conduct, or if continued operation
+            poses a legal, security, or regulatory risk. We will notify you of the reason for
+            termination unless legally prohibited from doing so.
+          </li>
+        </ul>
+        <p>
+          Upon termination, your licence to access the Service ceases immediately. We will make your
+          data available for export for 30 days following termination. After this period, all data
+          will be permanently and irreversibly deleted.
+        </p>
+        <p>
+          Sections that by their nature should survive termination — including Intellectual
+          Property, Limitation of Liability, and Governing Law — shall continue to apply after
+          termination of these Terms.
+        </p>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 13  GOVERNING LAW                                                    -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="governing" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">13</span>
+          <h2>Governing Law &amp; Dispute Resolution</h2>
+        </div>
+        <p>
+          These Terms shall be governed by and construed in accordance with the laws of the Republic
+          of India. Any dispute, controversy, or claim arising out of or in connection with these
+          Terms — including their validity, breach, or termination — shall be subject to the
+          exclusive jurisdiction of the competent courts of India.
+        </p>
+        <p>
+          <strong>Dispute Resolution — First Step:</strong> We strongly encourage resolution of any
+          dispute through direct communication before initiating formal proceedings. Please contact
+          us at <a href="mailto:legal@sms.app">legal@sms.app</a> with a description of your concern.
+          We will make good-faith efforts to resolve disputes amicably within 30 days.
+        </p>
+        <p>
+          Nothing in this clause limits your rights to contact India's Data Protection Board for
+          matters concerning personal data under the DPDP Act 2023, or to seek consumer redressal
+          under the Consumer Protection Act, 2019.
+        </p>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- 14  CONTACT                                                          -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <section id="contact" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">14</span>
+          <h2>Contact Us</h2>
+        </div>
+        <p>
+          For any questions, clarifications, or concerns regarding these Terms, please contact us:
+        </p>
+        <div class="contact-block">
+          <div class="contact-block__item">
+            <span class="contact-block__label">⚖️ Legal Enquiries</span>
+            <a href="mailto:legal@sms.app">legal@sms.app</a>
+          </div>
+          <div class="contact-block__item">
+            <span class="contact-block__label">🛡️ Data Protection &amp; Privacy</span>
+            <a href="mailto:privacy@sms.app">privacy@sms.app</a>
+          </div>
+          <div class="contact-block__item">
+            <span class="contact-block__label">🔒 Security</span>
+            <a href="mailto:security@sms.app">security@sms.app</a>
+          </div>
+          <div class="contact-block__item">
+            <span class="contact-block__label">💬 General Support</span>
+            <a href="mailto:support@sms.app">support@sms.app</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Footer Nav ──────────────────────────────────────────────────── -->
+      <div class="legal-footer-nav">
+        <a routerLink="/public/privacy" class="legal-footer-nav__link">← Privacy Policy</a>
+        <a routerLink="/public/security" class="legal-footer-nav__link">Security Policy →</a>
+      </div>
+    </main>
+  </div>
+</div>

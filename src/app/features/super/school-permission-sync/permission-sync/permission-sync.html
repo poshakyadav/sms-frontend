@@ -1,0 +1,168 @@
+<!-- permission-sync.html -->
+
+<div class="sync-page">
+  <!-- ── Page header ─────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="header-left">
+      <div class="header-icon-wrap">
+        <mat-icon class="header-icon">sync_lock</mat-icon>
+        <div class="icon-pulse"></div>
+      </div>
+      <div class="header-text">
+        <h1 class="page-title">Permission Sync</h1>
+        <p class="page-sub">Propagate new permissions &amp; role assignments to school databases</p>
+      </div>
+    </div>
+
+    <button
+      class="sync-all-btn"
+      (click)="syncAll()"
+      [disabled]="syncAllLoading() || syncingSchoolCode()"
+    >
+      <span class="btn-spinner" *ngIf="syncAllLoading()">
+        <mat-icon class="spin">autorenew</mat-icon>
+      </span>
+      <mat-icon *ngIf="!syncAllLoading()">bolt</mat-icon>
+      <span>{{ syncAllLoading() ? 'Syncing All…' : 'Sync All Schools' }}</span>
+    </button>
+  </div>
+
+  <!-- ── Info banner ──────────────────────────────────────────────────────── -->
+  <div class="info-banner">
+    <mat-icon class="info-icon">info</mat-icon>
+    <div class="info-text">
+      <strong>Non-destructive operation</strong> — sync only <em>adds</em> missing permissions,
+      roles, and role-permission links. It never removes existing assignments or custom roles. Safe
+      to run at any time.
+    </div>
+  </div>
+
+  <!-- ── Batch result ─────────────────────────────────────────────────────── -->
+  <div class="batch-result" *ngIf="batchResult()">
+    <div class="batch-stat" [class.has-failures]="batchResult()!.failed > 0">
+      <mat-icon>{{ batchResult()!.failed > 0 ? 'warning' : 'check_circle' }}</mat-icon>
+      <span>
+        Batch complete: <strong>{{ batchResult()!.succeeded }}</strong> succeeded,
+        <strong class="fail-count" *ngIf="batchResult()!.failed > 0">
+          {{ batchResult()!.failed }} failed
+        </strong>
+        <span *ngIf="batchResult()!.failed === 0">0 failed</span>
+        of <strong>{{ batchResult()!.total }}</strong> total
+      </span>
+    </div>
+    <button class="close-batch" (click)="clearBatch()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- ── Loading state ────────────────────────────────────────────────────── -->
+  <div class="loading-state" *ngIf="loading()">
+    <mat-icon class="spin">autorenew</mat-icon>
+    <span>Loading schools…</span>
+  </div>
+
+  <!-- ── Error state ──────────────────────────────────────────────────────── -->
+  <div class="error-state" *ngIf="error() && !loading()">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ error() }}</span>
+    <button class="retry-btn" (click)="loadSchools()">Retry</button>
+  </div>
+
+  <!-- ── Schools table ────────────────────────────────────────────────────── -->
+  <div class="table-wrap" *ngIf="!loading() && !error()">
+    <!-- Search bar -->
+    <div class="table-toolbar">
+      <div class="search-wrap">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input
+          class="search-input"
+          type="text"
+          placeholder="Filter schools…"
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
+        />
+      </div>
+      <span class="school-count">{{ filteredSchools().length }} schools</span>
+    </div>
+
+    <table class="schools-table">
+      <thead>
+        <tr>
+          <th>School</th>
+          <th>Code</th>
+          <th>Status</th>
+          <th>Last Sync Result</th>
+          <th class="action-col">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let school of filteredSchools(); trackBy: trackByCode"
+          class="school-row"
+          [class.syncing]="syncingSchoolCode() === school.uniqueCode"
+          [class.sync-done]="syncResults().has(school.uniqueCode)"
+        >
+          <td class="name-cell">
+            <div class="school-name-wrap">
+              <div class="school-avatar">
+                {{ school.name.charAt(0).toUpperCase() }}
+              </div>
+              <span class="school-name">{{ school.name }}</span>
+            </div>
+          </td>
+
+          <td class="code-cell">
+            <span class="code-badge">{{ school.uniqueCode }}</span>
+          </td>
+
+          <td class="status-cell">
+            <span class="status-chip active">
+              <span class="status-dot"></span>
+              Active
+            </span>
+          </td>
+
+          <td class="result-cell">
+            <ng-container *ngIf="syncResults().get(school.uniqueCode) as r; else noResult">
+              <div class="sync-result" [class.error]="r.error">
+                <mat-icon class="result-icon">
+                  {{ r.error ? 'error_outline' : r.alreadyUpToDate ? 'done_all' : 'check_circle' }}
+                </mat-icon>
+                <span *ngIf="r.error" class="result-error">{{ r.error }}</span>
+                <span *ngIf="!r.error" class="result-counts">
+                  <ng-container *ngIf="r.alreadyUpToDate"> Already up to date </ng-container>
+                  <ng-container *ngIf="!r.alreadyUpToDate">
+                    +{{ r.permissionsAdded }} perms &nbsp;·&nbsp; +{{ r.rolesAdded }} roles
+                    &nbsp;·&nbsp; +{{ r.roleLinksAdded }} links
+                  </ng-container>
+                </span>
+              </div>
+            </ng-container>
+            <ng-template #noResult>
+              <span class="no-result">—</span>
+            </ng-template>
+          </td>
+
+          <td class="action-cell">
+            <button
+              class="sync-btn"
+              (click)="syncOne(school.uniqueCode)"
+              [disabled]="syncAllLoading() || !!syncingSchoolCode()"
+              [class.loading]="syncingSchoolCode() === school.uniqueCode"
+            >
+              <mat-icon class="spin" *ngIf="syncingSchoolCode() === school.uniqueCode"
+                >autorenew</mat-icon
+              >
+              <mat-icon *ngIf="syncingSchoolCode() !== school.uniqueCode">sync</mat-icon>
+              <span>{{ syncingSchoolCode() === school.uniqueCode ? 'Syncing…' : 'Sync' }}</span>
+            </button>
+          </td>
+        </tr>
+
+        <tr *ngIf="filteredSchools().length === 0">
+          <td colspan="5" class="empty-row">No schools match "{{ searchQuery() }}"</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

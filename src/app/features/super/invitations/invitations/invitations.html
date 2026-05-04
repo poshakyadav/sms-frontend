@@ -1,0 +1,350 @@
+<!-- features/super/invitations/invitations.html -->
+
+<div class="inv-root">
+  <header class="inv-header">
+    <div class="inv-header__left">
+      <div class="inv-header__icon">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+          ></path>
+          <polyline points="22,6 12,13 2,6"></polyline>
+        </svg>
+      </div>
+      <div>
+        <h1 class="inv-header__title">School Invitations</h1>
+        <p class="inv-header__sub">Invite schools and track their onboarding status</p>
+      </div>
+    </div>
+    <button class="btn btn--primary" (click)="openCreate()">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+      >
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      Send Invitation
+    </button>
+  </header>
+
+  <!-- Stats row -->
+  @if (!loading() && !error()) {
+  <div class="inv-stats">
+    <div class="stat-pill">
+      <span class="stat-pill__val">{{ invitations().length }}</span>
+      <span class="stat-pill__label">Total</span>
+    </div>
+    <div class="stat-pill stat-pill--amber">
+      <span class="stat-pill__val">{{ pendingCount }}</span>
+      <span class="stat-pill__label">Pending</span>
+    </div>
+    <div class="stat-pill stat-pill--green">
+      <span class="stat-pill__val">{{ activeCount }}</span>
+      <span class="stat-pill__label">Active</span>
+    </div>
+  </div>
+
+  <!-- Filter tabs -->
+  <div class="inv-tabs">
+    @for (tab of [ { key: 'ALL', label: 'All' }, { key: 'PENDING', label: 'Pending' }, { key:
+    'REGISTERED', label: 'Registered' }, { key: 'PAYMENT_SUBMITTED', label: 'Payment Submitted' }, {
+    key: 'PAYMENT_APPROVED', label: 'Active' }, { key: 'EXPIRED', label: 'Expired' }, { key:
+    'CANCELLED', label: 'Cancelled' } ]; track tab.key) {
+    <button
+      class="inv-tab"
+      [class.inv-tab--active]="filterStatus() === tab.key"
+      (click)="setFilter(tab.key)"
+    >
+      {{ tab.label }}
+    </button>
+    }
+  </div>
+  }
+
+  <!-- Loading -->
+  @if (loading()) {
+  <div class="inv-loading">
+    <div class="inv-spinner"></div>
+    <p>Loading invitations…</p>
+  </div>
+  }
+
+  <!-- Error -->
+  @if (!loading() && error()) {
+  <div class="inv-error">
+    <p>{{ error() }}</p>
+    <button class="btn btn--primary" (click)="loadInvitations()">Retry</button>
+  </div>
+  }
+
+  <!-- Empty -->
+  @if (!loading() && !error() && filteredInvitations().length === 0) {
+  <div class="inv-empty">
+    <svg
+      width="48"
+      height="48"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1"
+    >
+      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+      <polyline points="22,6 12,13 2,6"></polyline>
+    </svg>
+    <p>
+      {{
+        filterStatus() === 'ALL'
+          ? 'No invitations yet. Send your first one!'
+          : 'No invitations with this status.'
+      }}
+    </p>
+    @if (filterStatus() === 'ALL') {
+    <button class="btn btn--primary" (click)="openCreate()">Send first invitation</button>
+    }
+  </div>
+  }
+
+  <!-- Table -->
+  @if (!loading() && !error() && filteredInvitations().length > 0) {
+  <div class="inv-table-wrap">
+    <table class="inv-table">
+      <thead>
+        <tr>
+          <th>School</th>
+          <th>Contact</th>
+          <th>Status</th>
+          <th>Invited By</th>
+          <th>Expires</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (inv of filteredInvitations(); track inv.id) {
+        <tr class="inv-table__row">
+          <td>
+            <div class="inv-school-cell">
+              <div class="inv-school-cell__avatar">
+                {{ inv.schoolName.charAt(0).toUpperCase() }}
+              </div>
+              <div>
+                <div class="inv-school-cell__name">{{ inv.schoolName }}</div>
+                @if (inv.city) {
+                <div class="inv-school-cell__city">{{ inv.city }}</div>
+                }
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="inv-contact">
+              <div class="inv-contact__email">{{ inv.schoolEmail }}</div>
+              @if (inv.schoolPhone) {
+              <div class="inv-contact__phone">{{ inv.schoolPhone }}</div>
+              }
+            </div>
+          </td>
+          <td>
+            <span class="badge" [class]="getStatusInfo(inv.status).cls">
+              {{ getStatusInfo(inv.status).label }}
+            </span>
+          </td>
+          <td>
+            <span class="inv-inviter">{{ inv.inviterName || '—' }}</span>
+          </td>
+          <td>
+            <span class="inv-expiry" [class.inv-expiry--expired]="isExpired(inv.expiresAt)">
+              {{ inv.expiresAt | date : 'MMM d, y' }}
+              @if (isExpired(inv.expiresAt)) {
+              <span class="inv-expiry__tag">Expired</span>
+              }
+            </span>
+          </td>
+          <td>
+            <div class="inv-actions">
+              @if (canResend(inv.status)) {
+              <button
+                class="action-btn action-btn--resend"
+                [disabled]="resendingId() === inv.id"
+                (click)="resendInvitation(inv.id)"
+                title="Resend invite email"
+              >
+                @if (resendingId() === inv.id) {
+                <span class="mini-spinner"></span>
+                } @else {
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M21.5 2L11 13"></path>
+                  <path d="M21.5 2L15 22 11 13 2 9l19.5-7z"></path>
+                </svg>
+                } Resend
+              </button>
+              } @if (canCancel(inv.status)) {
+              <button
+                class="action-btn action-btn--cancel"
+                [disabled]="cancellingId() === inv.id"
+                (click)="cancelInvitation(inv.id, inv.schoolName)"
+                title="Cancel invitation"
+              >
+                @if (cancellingId() === inv.id) {
+                <span class="mini-spinner"></span>
+                } @else {
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                } Cancel
+              </button>
+              }
+            </div>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+</div>
+
+<!-- Create Invitation Modal -->
+@if (showCreateModal()) {
+<div class="modal-overlay" (click)="closeCreate()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal__header">
+      <h2 class="modal__title">Send School Invitation</h2>
+      <button class="modal__close" (click)="closeCreate()">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <form [formGroup]="createForm" (ngSubmit)="createInvitation()" class="modal__body">
+      <div class="field">
+        <label class="field__label">School Name <span class="req">*</span></label>
+        <input
+          class="field__input"
+          formControlName="schoolName"
+          placeholder="e.g. Sunrise Public School"
+        />
+        @if (createForm.get('schoolName')?.touched && createForm.get('schoolName')?.invalid) {
+        <span class="field__error">School name is required</span>
+        }
+      </div>
+
+      <div class="field">
+        <label class="field__label">School Owner Email <span class="req">*</span></label>
+        <input
+          class="field__input"
+          type="email"
+          formControlName="schoolEmail"
+          placeholder="owner@school.com"
+        />
+        @if (createForm.get('schoolEmail')?.touched && createForm.get('schoolEmail')?.invalid) {
+        <span class="field__error">Valid email required</span>
+        }
+      </div>
+
+      <div class="field-row-2">
+        <div class="field">
+          <label class="field__label">Phone</label>
+          <input class="field__input" formControlName="schoolPhone" placeholder="Optional" />
+        </div>
+        <div class="field">
+          <label class="field__label">City</label>
+          <input class="field__input" formControlName="city" placeholder="Optional" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field__label">Link Expiry (days) <span class="req">*</span></label>
+        <input class="field__input" type="number" formControlName="expiryDays" min="1" max="90" />
+        <span class="field__hint">Registration link will expire after this many days</span>
+      </div>
+
+      <div class="field">
+        <label class="field__label">Internal Notes</label>
+        <textarea
+          class="field__input field__input--textarea"
+          formControlName="notes"
+          rows="2"
+          placeholder="Any internal notes about this school (not visible to school)"
+        ></textarea>
+      </div>
+
+      <div class="modal__info">
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        An email with a registration link will be sent to the school. They'll need to register and
+        pay the setup fee before getting access.
+      </div>
+
+      <div class="modal__actions">
+        <button type="button" class="btn btn--ghost" (click)="closeCreate()">Cancel</button>
+        <button
+          type="submit"
+          class="btn btn--primary"
+          [disabled]="creating() || createForm.invalid"
+        >
+          @if (creating()) {
+          <span class="btn-spinner"></span>
+          Sending… } @else {
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M21.5 2L11 13"></path>
+            <path d="M21.5 2L15 22 11 13 2 9l19.5-7z"></path>
+          </svg>
+          Send Invitation }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+}

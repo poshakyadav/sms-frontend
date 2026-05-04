@@ -1,0 +1,284 @@
+// theme-settings.scss
+// Uses the global CSS variable system — all colors come from the active theme.
+
+// ── Page shell ────────────────────────────────────────────────────────────────
+.settings-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 28px;
+
+  @media (max-width: 768px) {
+    padding: 20px 16px;
+  }
+}
+
+// ── Page header ───────────────────────────────────────────────────────────────
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 40px;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  .header-left {
+    h1 {
+      margin: 0 0 4px;
+      font-size: 1.875rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      letter-spacing: -0.02em;
+    }
+    p {
+      margin: 0;
+      color: var(--color-text-secondary);
+      font-size: 0.9rem;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+// ── Feedback states ───────────────────────────────────────────────────────────
+.state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 360px;
+  gap: 16px;
+  text-align: center;
+
+  .state-icon {
+    font-size: 64px;
+    height: 64px;
+    width: 64px;
+    opacity: 0.55;
+    color: var(--color-text-muted);
+  }
+
+  h2 {
+    margin: 0;
+    color: var(--color-text-primary);
+  }
+  p {
+    margin: 0;
+    color: var(--color-text-secondary);
+  }
+
+  &.error {
+    .state-icon {
+      color: var(--color-error);
+      opacity: 1;
+    }
+    h2 {
+      color: var(--color-error);
+    }
+  }
+}
+
+// ── Section grouping ──────────────────────────────────────────────────────────
+.theme-section {
+  margin-bottom: 52px;
+}
+
+.section-heading {
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+.section-subtitle {
+  margin: 0 0 24px;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+// ── Theme card grid ───────────────────────────────────────────────────────────
+.themes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+// ── Individual theme card ─────────────────────────────────────────────────────
+.theme-card {
+  position: relative;
+  background: var(--color-bg-card);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+  user-select: none;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--color-primary) 50%, transparent);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+
+  // ── Active state ──────────────────────────────────────────────────
+  &.is-active {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
+
+    &:hover {
+      transform: none;
+    }
+  }
+
+  // ── Loading state ─────────────────────────────────────────────────
+  &.is-activating {
+    pointer-events: none;
+    opacity: 0.7;
+  }
+}
+
+// ── Colour preview strip (top of card) ───────────────────────────────────────
+.theme-preview {
+  height: 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+}
+
+.preview-bar {
+  flex: 1;
+}
+
+// Default colours — override per theme using data-theme-name if pre-loaded
+// For now we use a generic gradient that looks polished
+.primary-bar {
+  background: var(--color-primary, #3b82f6);
+}
+.secondary-bar {
+  background: var(--color-secondary, #8b5cf6);
+}
+.bg-bar {
+  background: var(--color-bg-main, #f8fafc);
+}
+
+.custom-preview {
+  // Slightly different visual treatment for custom themes
+  .primary-bar {
+    background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+  }
+}
+
+// ── Card info row ─────────────────────────────────────────────────────────────
+.theme-info {
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-height: 48px;
+}
+
+.theme-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.custom-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-secondary);
+  background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
+  padding: 2px 7px;
+  border-radius: 9999px;
+}
+
+.active-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-primary);
+
+  mat-icon {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+  }
+}
+
+// ── Delete button ─────────────────────────────────────────────────────────────
+.delete-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(4px);
+  width: 32px;
+  height: 32px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+
+  .theme-card:hover & {
+    opacity: 1;
+  }
+}
+
+// ── Activating overlay ────────────────────────────────────────────────────────
+.activating-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(2px);
+}
+
+// ── Read-only notice ──────────────────────────────────────────────────────────
+.read-only-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: color-mix(in srgb, var(--color-info) 8%, var(--color-bg-surface));
+  border: 1px solid color-mix(in srgb, var(--color-info) 24%, transparent);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  margin-top: 24px;
+
+  mat-icon {
+    color: var(--color-info);
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+    flex-shrink: 0;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+  }
+}

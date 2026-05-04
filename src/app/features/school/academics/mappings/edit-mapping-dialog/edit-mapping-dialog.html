@@ -1,0 +1,119 @@
+<div class="dialog-shell">
+  <!-- Header -->
+  <div class="dialog-header">
+    <div class="dialog-header-icon">
+      <mat-icon>edit</mat-icon>
+    </div>
+    <div>
+      <h2>Edit Mapping</h2>
+      <p>{{ data.mapping.currentDisplayName }} → {{ data.mapping.nextDisplayName }}</p>
+    </div>
+    <button mat-icon-button class="close-btn" (click)="cancel()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Body -->
+  <div class="dialog-body" [formGroup]="form">
+    <!-- From -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>From (current class-section)</mat-label>
+      <mat-icon matPrefix>class</mat-icon>
+      <mat-select formControlName="currentClassSectionId">
+        @for (cs of classSections(); track cs.id) {
+        <mat-option [value]="cs.id">{{ cs.className }} — {{ cs.sectionName }}</mat-option>
+        }
+      </mat-select>
+      @if (form.get('currentClassSectionId')?.errors?.['required'] &&
+      form.get('currentClassSectionId')?.touched) {
+      <mat-error>Required</mat-error>
+      }
+    </mat-form-field>
+
+    <!-- Arrow -->
+    <div class="arrow-row">
+      <mat-icon>arrow_downward</mat-icon>
+      <span>promotes to</span>
+    </div>
+
+    <!-- To -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>To (next class-section)</mat-label>
+      <mat-icon matPrefix>school</mat-icon>
+      <mat-select formControlName="nextClassSectionId">
+        @for (cs of classSections(); track cs.id) {
+        <mat-option [value]="cs.id">{{ cs.className }} — {{ cs.sectionName }}</mat-option>
+        }
+      </mat-select>
+      @if (form.get('nextClassSectionId')?.errors?.['required'] &&
+      form.get('nextClassSectionId')?.touched) {
+      <mat-error>Required</mat-error>
+      }
+    </mat-form-field>
+
+    <!-- Scope -->
+    <div class="scope-section">
+      <p class="scope-label">Scope</p>
+      <div class="scope-options">
+        <!-- Global -->
+        <div
+          class="scope-card"
+          [class.selected]="scopeType() === 'global'"
+          (click)="scopeType.set('global')"
+        >
+          <div class="radio-dot" [class.on]="scopeType() === 'global'"></div>
+          <mat-icon class="scope-icon global-icon">public</mat-icon>
+          <div>
+            <strong>Global</strong>
+            <p>Reused every year automatically</p>
+          </div>
+        </div>
+        <!-- Year-specific -->
+        <div
+          class="scope-card"
+          [class.selected]="scopeType() === 'year'"
+          (click)="scopeType.set('year')"
+        >
+          <div class="radio-dot" [class.on]="scopeType() === 'year'"></div>
+          <mat-icon class="scope-icon year-icon">event</mat-icon>
+          <div>
+            <strong>Year-specific</strong>
+            <p>Overrides global for one year</p>
+          </div>
+        </div>
+      </div>
+
+      @if (scopeType() === 'year') {
+      <mat-form-field appearance="outline" class="full-width year-select">
+        <mat-label>Academic Year</mat-label>
+        <mat-select formControlName="academicYearId">
+          @for (year of data.academicYears; track year.id) {
+          <mat-option [value]="year.id">
+            {{ year.name }}{{ year.isCurrent ? ' (current)' : '' }}
+          </mat-option>
+          }
+        </mat-select>
+        @if (scopeType() === 'year' && form.get('academicYearId')?.errors?.['required'] &&
+        form.get('academicYearId')?.touched) {
+        <mat-error>Select an academic year</mat-error>
+        }
+      </mat-form-field>
+      }
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="dialog-actions">
+    <button mat-button (click)="cancel()" [disabled]="saving()">Cancel</button>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="save()"
+      [disabled]="form.invalid || saving()"
+    >
+      @if (saving()) {
+      <mat-spinner diameter="18" style="display: inline-block; margin-right: 6px"></mat-spinner> }
+      Save Changes
+    </button>
+  </div>
+</div>

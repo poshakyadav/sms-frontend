@@ -1,0 +1,91 @@
+// assignment-submissions-component.scss
+@use '../../../../shared/styles/assignments-shared' as *;
+
+// ── Progress bar ──────────────────────────────────────────────────────────────
+.progress-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+  flex-wrap: wrap;
+
+  .progress-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 160px;
+
+    .progress-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--color-text-muted);
+    }
+
+    .progress-count {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+  }
+
+  .progress-track {
+    flex: 1;
+    height: 8px;
+    background: var(--color-divider);
+    border-radius: 9999px;
+    overflow: hidden;
+    min-width: 80px;
+
+    .progress-fill {
+      height: 100%;
+      background: var(--color-primary);
+      border-radius: 9999px;
+      transition: width 0.4s ease;
+    }
+  }
+
+  .progress-pct {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    min-width: 44px;
+    text-align: right;
+  }
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .progress-track {
+      width: 100%;
+    }
+  }
+}
+
+// ── Unsaved changes banner ────────────────────────────────────────────────────
+.changes-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 40%, transparent);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  font-size: 0.875rem;
+  color: var(--color-text-primary);
+
+  mat-icon {
+    color: var(--color-warning);
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+}

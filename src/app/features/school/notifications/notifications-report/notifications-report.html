@@ -1,0 +1,146 @@
+<!-- notifications-report.html -->
+<div class="page-container">
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <button mat-icon-button (click)="goBack()" matTooltip="Back to notifications">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1>Delivery Report</h1>
+    <span class="id-chip">
+      <mat-icon>tag</mat-icon>
+      {{ notificationId }}
+    </span>
+    <button mat-icon-button (click)="retry()" matTooltip="Refresh" [disabled]="loading()">
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+
+  <!-- ── Loading State ─────────────────────────────────────────────────── -->
+  @if (loading()) {
+  <div class="state-container">
+    <mat-spinner diameter="52"></mat-spinner>
+    <p>Loading delivery report…</p>
+  </div>
+  }
+
+  <!-- ── Error State ────────────────────────────────────────────────────── -->
+  @if (error() && !loading()) {
+  <div class="state-container error">
+    <mat-icon class="state-icon">error_outline</mat-icon>
+    <h2>Failed to load report</h2>
+    <p>{{ error() }}</p>
+    <button mat-raised-button color="primary" (click)="retry()">
+      <mat-icon>refresh</mat-icon> Try Again
+    </button>
+  </div>
+  }
+
+  <!-- ── Report Content ─────────────────────────────────────────────────── -->
+  @if (report() && !loading()) {
+  <div class="report-layout">
+    <!-- Progress Ring Hero -->
+    <div class="ring-hero">
+      <div class="ring-card">
+        <div class="progress-ring-wrap">
+          <svg width="180" height="180" viewBox="0 0 180 180">
+            <!-- Track -->
+            <circle
+              cx="90"
+              cy="90"
+              r="70"
+              fill="none"
+              stroke="var(--color-divider)"
+              stroke-width="12"
+            />
+            <!-- Progress -->
+            <circle
+              cx="90"
+              cy="90"
+              r="70"
+              fill="none"
+              stroke="var(--color-primary)"
+              stroke-width="12"
+              stroke-linecap="round"
+              [attr.stroke-dasharray]="circumference"
+              [attr.stroke-dashoffset]="strokeDashoffset()"
+              transform="rotate(-90 90 90)"
+              class="progress-arc"
+            />
+          </svg>
+
+          <div class="progress-label">
+            <span class="big-pct">{{ percentage() }}%</span>
+            <span class="sub-text">Read Rate</span>
+          </div>
+        </div>
+
+        <div class="ring-caption">
+          <h3>Delivery Overview</h3>
+          <p>
+            <strong class="highlight">{{ readCount() }}</strong> out of
+            <strong>{{ total() }}</strong> recipients have read this notification.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-section">
+      <div class="stats-grid">
+        <!-- Total Recipients -->
+        <div class="stat-card">
+          <div class="stat-icon-wrap primary">
+            <mat-icon>people</mat-icon>
+          </div>
+          <div class="stat-value">{{ total() }}</div>
+          <div class="stat-label">Total Recipients</div>
+        </div>
+
+        <!-- Read -->
+        <div class="stat-card">
+          <div class="stat-icon-wrap success">
+            <mat-icon>mark_email_read</mat-icon>
+          </div>
+          <div class="stat-value">{{ readCount() }}</div>
+          <div class="stat-label">Read</div>
+          @if (total() > 0) {
+          <div class="stat-sub">
+            {{ (readCount() / total()) * 100 | number : '1.0-0' }}% of recipients
+          </div>
+          }
+        </div>
+
+        <!-- Unread -->
+        <div class="stat-card">
+          <div class="stat-icon-wrap warning">
+            <mat-icon>mark_email_unread</mat-icon>
+          </div>
+          <div class="stat-value">{{ unreadCount() }}</div>
+          <div class="stat-label">Pending</div>
+          @if (total() > 0 && unreadCount() > 0) {
+          <div class="stat-sub">Haven't opened yet</div>
+          }
+        </div>
+      </div>
+
+      <!-- Summary bar -->
+      <div class="summary-card">
+        <mat-icon class="summary-icon">info_outline</mat-icon>
+        <p>
+          @if (percentage() === 100) { 🎉 <strong>All recipients</strong> have read this
+          notification! } @else if (percentage() >= 75) {
+          <strong class="highlight">{{ percentage() }}%</strong> engagement — great reach!
+          <strong>{{ unreadCount() }}</strong> recipient{{ unreadCount() === 1 ? '' : 's' }} still
+          to open. } @else if (percentage() >= 50) {
+          <strong class="highlight">{{ percentage() }}%</strong> have read this.
+          <strong>{{ unreadCount() }}</strong> recipient{{ unreadCount() === 1 ? '' : 's' }} haven't
+          opened it yet. } @else if (total() === 0) { No recipients were targeted for this
+          notification. } @else { <strong>{{ unreadCount() }}</strong> of
+          <strong>{{ total() }}</strong> recipients haven't read this yet. Consider sending a
+          reminder. }
+        </p>
+      </div>
+    </div>
+  </div>
+  }
+</div>

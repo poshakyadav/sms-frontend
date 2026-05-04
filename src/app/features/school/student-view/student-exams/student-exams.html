@@ -1,0 +1,477 @@
+<div class="exams-root">
+  <!-- ── Hero Header ─────────────────────────────────────────────────────── -->
+  <div class="hero-header">
+    <div class="hero-bg-pattern"></div>
+    <div class="hero-content">
+      <div class="hero-left">
+        <div class="hero-badge">
+          <mat-icon>school</mat-icon>
+          <span>Exam Centre</span>
+        </div>
+        <h1 class="hero-title">My Examinations</h1>
+        <p class="hero-sub">Track your schedule, results, and performance</p>
+      </div>
+
+      @if (nextExam() && daysUntilNext() !== null && daysUntilNext()! >= 0) {
+      <div class="next-exam-pill">
+        <div class="pill-icon">
+          <mat-icon>event_upcoming</mat-icon>
+        </div>
+        <div class="pill-text">
+          <span class="pill-label">Next Exam</span>
+          <span class="pill-name">{{ nextExam()!.name }}</span>
+          <span class="pill-countdown" [class.urgent]="daysUntilNext()! <= 3">
+            {{
+              daysUntilNext() === 0
+                ? 'Today!'
+                : daysUntilNext() === 1
+                ? 'Tomorrow'
+                : daysUntilNext() + ' days away'
+            }}
+          </span>
+        </div>
+      </div>
+      }
+    </div>
+
+    <!-- Stats row -->
+    @if (!loading() && overallStats()) {
+    <div class="stats-ribbon">
+      <div class="stat-chip">
+        <span class="chip-val">{{ overallStats()!.total }}</span>
+        <span class="chip-lbl">Total Exams</span>
+      </div>
+      <div class="stat-chip accent">
+        <span class="chip-val">{{ overallStats()!.upcoming }}</span>
+        <span class="chip-lbl">Upcoming</span>
+      </div>
+      <div class="stat-chip" [class.success]="overallStats()!.avgPct >= 60">
+        <span class="chip-val">{{ overallStats()!.avgPct }}%</span>
+        <span class="chip-lbl">Avg Score</span>
+      </div>
+      <div class="stat-chip success">
+        <span class="chip-val">{{ overallStats()!.passed }}/{{ overallStats()!.withResults }}</span>
+        <span class="chip-lbl">Passed</span>
+      </div>
+    </div>
+    }
+  </div>
+
+  <!-- ── View Toggle ──────────────────────────────────────────────────────── -->
+  <div class="view-toggle-bar">
+    <button
+      class="toggle-btn"
+      [class.active]="viewMode() === 'schedule'"
+      (click)="setView('schedule')"
+    >
+      <mat-icon>calendar_month</mat-icon>
+      <span>Schedule</span>
+    </button>
+    <button
+      class="toggle-btn"
+      [class.active]="viewMode() === 'results'"
+      (click)="setView('results')"
+    >
+      <mat-icon>bar_chart</mat-icon>
+      <span>Results</span>
+    </button>
+  </div>
+
+  <!-- ── Loading ──────────────────────────────────────────────────────────── -->
+  @if (loading()) {
+  <div class="state-container">
+    <div class="loader-ring"></div>
+    <p>Loading your exam data…</p>
+  </div>
+  }
+
+  <!-- ── Error ────────────────────────────────────────────────────────────── -->
+  @else if (error()) {
+  <div class="state-container error-state">
+    <mat-icon class="state-icon">error_outline</mat-icon>
+    <h3>Something went wrong</h3>
+    <p>{{ error() }}</p>
+    <button mat-raised-button class="retry-btn" (click)="loadExams()">
+      <mat-icon>refresh</mat-icon> Try Again
+    </button>
+  </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- SCHEDULE VIEW                                                          -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  @else if (viewMode() === 'schedule') {
+
+  <!-- Tab switcher -->
+  <div class="tab-row">
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'upcoming'"
+      (click)="setActiveTab('upcoming')"
+    >
+      <mat-icon>upcoming</mat-icon>
+      Upcoming @if (upcomingExams().length > 0) {
+      <span class="tab-badge">{{ upcomingExams().length }}</span>
+      }
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'past'" (click)="setActiveTab('past')">
+      <mat-icon>history</mat-icon>
+      Past Exams @if (pastExams().length > 0) {
+      <span class="tab-badge">{{ pastExams().length }}</span>
+      }
+    </button>
+  </div>
+
+  <!-- No detail selected -->
+  @if (!selectedExam()) {
+
+  <!-- Upcoming list -->
+  @if (activeTab() === 'upcoming') { @if (upcomingExams().length === 0) {
+  <div class="state-container">
+    <div class="empty-icon-wrap success">
+      <mat-icon>celebration</mat-icon>
+    </div>
+    <h3>No Upcoming Exams</h3>
+    <p>You're all clear for now. Enjoy the break!</p>
+  </div>
+  } @else {
+  <div class="exam-grid">
+    @for (exam of upcomingExams(); track exam.id) {
+    <div class="exam-card upcoming" (click)="selectExam(exam)">
+      <div class="card-top">
+        <div class="exam-type-badge" [class]="exam.type.toLowerCase().replace('_', '-')">
+          {{ formatType(exam.type) }}
+        </div>
+        <div class="exam-meta">
+          <span class="class-pill">{{ exam.className }} – {{ exam.sectionName }}</span>
+        </div>
+      </div>
+
+      <h3 class="exam-title">{{ exam.name }}</h3>
+      @if (exam.description) {
+      <p class="exam-desc">{{ exam.description }}</p>
+      }
+
+      <div class="exam-dates-row">
+        <div class="date-block">
+          <mat-icon>event</mat-icon>
+          <div>
+            <span class="date-label">Starts</span>
+            <span class="date-val">{{ formatDate(getExamFirstDate(exam)) }}</span>
+          </div>
+        </div>
+        @if (getExamLastDate(exam) !== getExamFirstDate(exam)) {
+        <div class="date-block">
+          <mat-icon>event_available</mat-icon>
+          <div>
+            <span class="date-label">Ends</span>
+            <span class="date-val">{{ formatDate(getExamLastDate(exam)) }}</span>
+          </div>
+        </div>
+        }
+      </div>
+
+      <div class="subjects-preview">
+        @for (t of exam.timetable.slice(0,3); track t.id) {
+        <div
+          class="subject-chip"
+          [class.today]="isDateToday(t.date)"
+          [class.past]="isDatePast(t.date)"
+        >
+          <span class="subj-name">{{ t.subjectName }}</span>
+          <span class="subj-date">{{ formatDate(t.date) }}</span>
+          @if (isDateToday(t.date)) {
+          <span class="today-dot"></span>
+          }
+        </div>
+        } @if (exam.timetable.length > 3) {
+        <div class="subject-chip more">+{{ exam.timetable.length - 3 }} more</div>
+        }
+      </div>
+
+      <div class="card-footer">
+        <span
+          class="countdown-badge"
+          [class.urgent]="
+            getCountdown(getExamFirstDate(exam)) === 'Tomorrow' ||
+            getCountdown(getExamFirstDate(exam)) === 'Today'
+          "
+        >
+          <mat-icon>schedule</mat-icon>
+          {{ getCountdown(getExamFirstDate(exam)) }}
+        </span>
+        <div class="card-actions">
+          <button
+            mat-icon-button
+            (click)="viewAdmitCard(exam); $event.stopPropagation()"
+            matTooltip="Admit Card"
+          >
+            <mat-icon>badge</mat-icon>
+          </button>
+          <mat-icon class="chevron">chevron_right</mat-icon>
+        </div>
+      </div>
+    </div>
+    }
+  </div>
+  } }
+
+  <!-- Past list -->
+  @if (activeTab() === 'past') { @if (pastExams().length === 0) {
+  <div class="state-container">
+    <div class="empty-icon-wrap">
+      <mat-icon>assignment</mat-icon>
+    </div>
+    <h3>No Past Exams Yet</h3>
+    <p>Completed exams will appear here after they conclude.</p>
+  </div>
+  } @else {
+  <div class="exam-grid">
+    @for (exam of examsWithResults(); track exam.id) {
+    <div class="exam-card past" (click)="selectExam(exam)">
+      <div class="card-top">
+        <div class="exam-type-badge" [class]="exam.type.toLowerCase().replace('_', '-')">
+          {{ formatType(exam.type) }}
+        </div>
+        @if (exam.results.length > 0) {
+        <div class="score-ring" [class]="getPercentageClass(exam.percentage)">
+          <span>{{ exam.percentage }}%</span>
+        </div>
+        }
+      </div>
+
+      <h3 class="exam-title">{{ exam.name }}</h3>
+      <span class="class-pill">{{ exam.className }} – {{ exam.sectionName }}</span>
+
+      @if (exam.results.length > 0) {
+      <div class="result-summary">
+        <div class="result-bar-wrap">
+          <div class="result-bar">
+            <div
+              class="result-fill"
+              [style.width.%]="exam.percentage"
+              [class]="getPercentageClass(exam.percentage)"
+            ></div>
+          </div>
+          <span class="result-label">{{ exam.totalObtained }}/{{ exam.totalMax }}</span>
+        </div>
+        <div class="result-status" [class.pass]="exam.isPassed" [class.fail]="!exam.isPassed">
+          <mat-icon>{{ exam.isPassed ? 'check_circle' : 'cancel' }}</mat-icon>
+          {{ exam.isPassed ? 'Passed' : 'Failed' }}
+        </div>
+      </div>
+      } @else {
+      <div class="awaiting-badge">
+        <mat-icon>hourglass_empty</mat-icon>
+        Results awaited
+      </div>
+      }
+
+      <div class="card-footer">
+        <span class="date-range-small">
+          {{ formatDate(getExamFirstDate(exam)) }}
+        </span>
+        <mat-icon class="chevron">chevron_right</mat-icon>
+      </div>
+    </div>
+    }
+  </div>
+  } } }
+
+  <!-- Exam detail panel -->
+  @if (selectedExam()) {
+  <div class="detail-panel">
+    <div class="detail-header">
+      <button class="back-btn" (click)="clearSelection()">
+        <mat-icon>arrow_back</mat-icon>
+        Back to list
+      </button>
+      <div class="detail-actions">
+        <button mat-stroked-button class="action-btn" (click)="viewAdmitCard(selectedExam()!)">
+          <mat-icon>badge</mat-icon> Admit Card
+        </button>
+        @if (isDatePast(getExamLastDate(selectedExam()!))) {
+        <button mat-stroked-button class="action-btn" (click)="viewReportCard(selectedExam()!)">
+          <mat-icon>summarize</mat-icon> Report Card
+        </button>
+        }
+      </div>
+    </div>
+
+    <div class="detail-hero">
+      <div
+        class="exam-type-badge large"
+        [class]="selectedExam()!.type.toLowerCase().replace('_', '-')"
+      >
+        {{ formatType(selectedExam()!.type) }}
+      </div>
+      <h2>{{ selectedExam()!.name }}</h2>
+      <p class="class-pill">{{ selectedExam()!.className }} – {{ selectedExam()!.sectionName }}</p>
+      @if (selectedExam()!.description) {
+      <p class="detail-desc">{{ selectedExam()!.description }}</p>
+      }
+    </div>
+
+    <!-- Timetable -->
+    <div class="timetable-section">
+      <h3 class="section-title">
+        <mat-icon>calendar_month</mat-icon>
+        Exam Timetable
+      </h3>
+      <div class="timetable-grid">
+        @for (entry of selectedExam()!.timetable; track entry.id) {
+        <div
+          class="timetable-card"
+          [class.today]="isDateToday(entry.date)"
+          [class.past]="isDatePast(entry.date)"
+        >
+          @if (isDateToday(entry.date)) {
+          <div class="today-ribbon">TODAY</div>
+          }
+          <div class="tc-subject">
+            <mat-icon>menu_book</mat-icon>
+            <span>{{ entry.subjectName }}</span>
+          </div>
+          <div class="tc-date">
+            <mat-icon>event</mat-icon>
+            <span>{{ formatDate(entry.date) }}</span>
+          </div>
+          @if (entry.startTime) {
+          <div class="tc-time">
+            <mat-icon>schedule</mat-icon>
+            <span
+              >{{ formatTime(entry.startTime)
+              }}{{ entry.endTime ? ' – ' + formatTime(entry.endTime) : '' }}</span
+            >
+          </div>
+          } @if (entry.roomNumber) {
+          <div class="tc-room">
+            <mat-icon>meeting_room</mat-icon>
+            <span>{{ entry.roomNumber }}</span>
+          </div>
+          }
+          <div class="tc-marks">
+            <mat-icon>grade</mat-icon>
+            <span>{{ entry.maxMarks }} marks</span>
+            @if (entry.passingMarks) {
+            <span class="passing">(Pass: {{ entry.passingMarks }})</span>
+            }
+          </div>
+
+          <!-- Show result if past -->
+          @if (isDatePast(entry.date)) { @for (result of getExamResults(selectedExam()!.id); track
+          result.classSubjectId) { @if (result.classSubjectId === entry.classSubjectId) {
+          <div class="inline-result" [class]="getSubjectStatus(result)">
+            <div class="ir-score">
+              {{ result.marksObtained }}/{{ result.maxMarks }} @if (result.grade) {
+              <span class="ir-grade">{{ result.grade }}</span> }
+            </div>
+            @if (result.remarks) {
+            <div class="ir-remark">{{ result.remarks }}</div>
+            }
+            <div class="ir-status">
+              <mat-icon>{{
+                getSubjectStatus(result) === 'pass' ? 'check_circle' : 'cancel'
+              }}</mat-icon>
+              {{ getSubjectStatus(result) === 'pass' ? 'Passed' : 'Failed' }}
+            </div>
+          </div>
+          } } }
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+  } }
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- RESULTS VIEW                                                           -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  @else if (viewMode() === 'results') { @if (examsWithResults().length === 0) {
+  <div class="state-container">
+    <div class="empty-icon-wrap">
+      <mat-icon>bar_chart</mat-icon>
+    </div>
+    <h3>No Results Yet</h3>
+    <p>Results will appear here once your exams are completed and marks are entered.</p>
+  </div>
+  } @else {
+
+  <div class="results-container">
+    @for (exam of examsWithResults(); track exam.id) {
+    <div class="result-card">
+      <div class="rc-header">
+        <div class="rc-title-group">
+          <div class="exam-type-badge small" [class]="exam.type.toLowerCase().replace('_', '-')">
+            {{ formatType(exam.type) }}
+          </div>
+          <h3>{{ exam.name }}</h3>
+        </div>
+        @if (exam.results.length > 0) {
+        <div class="rc-score-block" [class]="getPercentageClass(exam.percentage)">
+          <div class="rc-pct">{{ exam.percentage }}%</div>
+          <div class="rc-status">
+            <mat-icon>{{ exam.isPassed ? 'emoji_events' : 'cancel' }}</mat-icon>
+            {{ exam.isPassed ? 'Pass' : 'Fail' }}
+          </div>
+        </div>
+        }
+      </div>
+
+      @if (exam.results.length === 0) {
+      <div class="awaiting-results">
+        <mat-icon>hourglass_empty</mat-icon>
+        <span>Results awaited</span>
+      </div>
+      } @else {
+      <!-- Subject breakdown -->
+      <div class="subject-breakdown">
+        @for (mark of exam.results; track mark.classSubjectId) {
+        <div class="sb-row" [class]="getSubjectStatus(mark)">
+          <div class="sb-subject">
+            <span class="status-dot" [class]="getSubjectStatus(mark)"></span>
+            <span>{{ mark.subjectName }}</span>
+          </div>
+          <div class="sb-bar-wrap">
+            <div class="sb-bar">
+              <div
+                class="sb-fill"
+                [class]="getSubjectStatus(mark)"
+                [style.width.%]="(mark.marksObtained / mark.maxMarks) * 100"
+              ></div>
+            </div>
+          </div>
+          <div class="sb-score">
+            <strong>{{ mark.marksObtained }}</strong
+            >/{{ mark.maxMarks }}
+          </div>
+          @if (mark.grade) {
+          <div class="sb-grade">{{ mark.grade }}</div>
+          }
+        </div>
+        }
+      </div>
+
+      <!-- Total row -->
+      <div class="total-row">
+        <span>Total Score</span>
+        <div class="total-right">
+          <strong>{{ exam.totalObtained }}/{{ exam.totalMax }}</strong>
+          <span class="total-pct" [class]="getPercentageClass(exam.percentage)"
+            >{{ exam.percentage }}%</span
+          >
+        </div>
+      </div>
+
+      <div class="rc-footer">
+        <span class="date-range-small">{{ formatDate(getExamFirstDate(exam)) }}</span>
+        <button mat-button class="report-link" (click)="viewReportCard(exam)">
+          <mat-icon>summarize</mat-icon> View Report Card
+        </button>
+      </div>
+      }
+    </div>
+    }
+  </div>
+  } }
+</div>

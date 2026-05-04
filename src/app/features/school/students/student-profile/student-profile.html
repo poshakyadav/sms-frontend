@@ -1,0 +1,139 @@
+<!-- student-profile.html -->
+<div class="page-container">
+  @if (loading()) {
+  <div class="state-container">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading your profile…</p>
+  </div>
+  } @else if (error()) {
+  <div class="state-container error">
+    <mat-icon class="state-icon">error_outline</mat-icon>
+    <h2>Could not load profile</h2>
+    <p>{{ error() }}</p>
+  </div>
+  } @else if (student()) {
+  <div class="page-header">
+    <div class="header-left">
+      <h1>My Profile</h1>
+      <p>Your student information</p>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <div class="profile-hero">
+    <div class="avatar-section">
+      @if (student()!.avatarUrl) {
+      <img class="avatar-circle" [src]="student()!.avatarUrl" [alt]="student()!.name" />
+      } @else {
+      <div class="avatar-placeholder">
+        <mat-icon>person</mat-icon>
+      </div>
+      }
+    </div>
+
+    <div class="hero-info">
+      <h2 class="hero-name">{{ student()!.name }}</h2>
+      <p class="hero-email"><mat-icon>email</mat-icon>{{ student()!.email }}</p>
+
+      <div class="hero-meta">
+        @if (student()!.rollNumber) {
+        <span class="meta-item"
+          ><mat-icon>badge</mat-icon> Roll No: {{ student()!.rollNumber }}</span
+        >
+        } @if (student()!.phone) {
+        <span class="meta-item"><mat-icon>phone</mat-icon> {{ student()!.phone }}</span>
+        } @if (student()!.gender) {
+        <span class="meta-item"><mat-icon>person</mat-icon> {{ student()!.gender }}</span>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <!-- Personal Info -->
+    <div class="detail-card">
+      <div class="detail-card-header">
+        <mat-icon>person</mat-icon>
+        <h3>Personal Information</h3>
+      </div>
+      <div class="detail-card-body">
+        <div class="field-list">
+          <div class="field-row">
+            <span class="field-label">Full Name</span>
+            <span class="field-value">{{ student()!.name }}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Email</span>
+            <span class="field-value">{{ student()!.email }}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Phone</span>
+            <span class="field-value">{{ student()!.phone || '—' }}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Date of Birth</span>
+            <span class="field-value">{{
+              (student()!.dateOfBirth | date : 'mediumDate') || '—'
+            }}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Gender</span>
+            <span class="field-value">{{ student()!.gender || '—' }}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Blood Group</span>
+            <span class="field-value">{{ student()!.bloodGroup || '—' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Academic Info -->
+    <div class="detail-card">
+      <div class="detail-card-header">
+        <mat-icon>school</mat-icon>
+        <h3>Academic Information</h3>
+      </div>
+      <div class="detail-card-body">
+        <div class="field-list">
+          <div class="field-row">
+            <span class="field-label">Roll Number</span>
+            <span class="field-value">{{ student()!.rollNumber || '—' }}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Admission Date</span>
+            <span class="field-value">{{
+              (student()!.admissionDate | date : 'mediumDate') || '—'
+            }}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Current Class</span>
+            <span class="field-value">
+              @if (student()!.enrollments.length) {
+              {{ student()!.enrollments[0].className }} —
+              {{ student()!.enrollments[0].sectionName }}
+              } @else { — }
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Address -->
+    <div class="detail-card full-width">
+      <div class="detail-card-header">
+        <mat-icon>location_on</mat-icon>
+        <h3>Address</h3>
+      </div>
+      <div class="detail-card-body">
+        <div class="field-list">
+          <div class="field-row">
+            <span class="field-label">Address</span>
+            <span class="field-value">{{ getAddress(student()!) || '—' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>

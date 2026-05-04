@@ -1,0 +1,431 @@
+// role-detail-dialog.scss
+// Production-grade styles for the Role Detail (read-only) dialog
+// Full theming via CSS custom properties from global styles.scss
+
+.rdd-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 88vh;
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+// ── Header ───────────────────────────────────────────────────────────────────
+
+.rdd-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 20px 24px 18px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  gap: 12px;
+  background: var(--color-bg-surface);
+}
+
+.rdd-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.rdd-header-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+
+  mat-icon {
+    color: #fff;
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+  }
+
+  &.rdd-header-icon--system {
+    background: linear-gradient(135deg, var(--color-secondary) 0%, #6d28d9 100%);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
+  }
+}
+
+.rdd-header-text {
+  min-width: 0;
+
+  .rdd-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin: 0 0 3px;
+    letter-spacing: -0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .rdd-subtitle {
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+    margin: 0;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+.rdd-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.rdd-close {
+  color: var(--color-text-muted) !important;
+
+  &:hover {
+    background: var(--color-hover) !important;
+    color: var(--color-text-primary) !important;
+  }
+}
+
+// Badges
+.rdd-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+
+  &.rdd-badge--system {
+    background: rgba(139, 92, 246, 0.12);
+    color: var(--color-secondary);
+    border: 1px solid rgba(139, 92, 246, 0.25);
+  }
+
+  &.rdd-badge--custom {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--color-success);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+  }
+}
+
+.rdd-cat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  cursor: default;
+
+  .rdd-cat-icon {
+    font-size: 13px;
+    width: 13px;
+    height: 13px;
+  }
+
+  &.rdd-cat-badge--staff {
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+    border: 1px solid rgba(37, 99, 235, 0.2);
+  }
+
+  &.rdd-cat-badge--student {
+    background: rgba(5, 150, 105, 0.1);
+    color: #059669;
+    border: 1px solid rgba(5, 150, 105, 0.2);
+  }
+
+  &.rdd-cat-badge--parent {
+    background: rgba(217, 119, 6, 0.1);
+    color: #d97706;
+    border: 1px solid rgba(217, 119, 6, 0.2);
+  }
+}
+
+// ── Meta Row ──────────────────────────────────────────────────────────────────
+
+.rdd-meta {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 24px;
+  background: var(--color-bg-surface);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.rdd-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px 10px 0;
+  margin-right: 16px;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+
+  &:last-child {
+    margin-right: 0;
+  }
+
+  mat-icon {
+    font-size: 15px;
+    width: 15px;
+    height: 15px;
+    color: var(--color-text-muted);
+  }
+
+  &.rdd-meta-item--cat {
+    mat-icon {
+      color: var(--color-primary);
+    }
+  }
+}
+
+// ── Category Banner ───────────────────────────────────────────────────────────
+
+.rdd-cat-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 24px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--color-border);
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  p {
+    margin: 0;
+    color: var(--color-text-secondary);
+
+    strong {
+      font-weight: 600;
+    }
+  }
+
+  &.rdd-cat-banner--staff {
+    background: rgba(37, 99, 235, 0.05);
+    border-left: 0;
+    mat-icon {
+      color: #2563eb;
+    }
+    border-bottom-color: rgba(37, 99, 235, 0.1);
+    border-top: 1px solid rgba(37, 99, 235, 0.1);
+  }
+
+  &.rdd-cat-banner--student {
+    background: rgba(5, 150, 105, 0.05);
+    mat-icon {
+      color: #059669;
+    }
+    border-bottom-color: rgba(5, 150, 105, 0.1);
+    border-top: 1px solid rgba(5, 150, 105, 0.1);
+  }
+
+  &.rdd-cat-banner--parent {
+    background: rgba(217, 119, 6, 0.05);
+    mat-icon {
+      color: #d97706;
+    }
+    border-bottom-color: rgba(217, 119, 6, 0.1);
+    border-top: 1px solid rgba(217, 119, 6, 0.1);
+  }
+}
+
+// ── Body ─────────────────────────────────────────────────────────────────────
+
+.rdd-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 4px;
+  }
+}
+
+// Empty state
+.rdd-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  gap: 10px;
+  text-align: center;
+  color: var(--color-text-muted);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-md);
+
+  mat-icon {
+    font-size: 36px;
+    width: 36px;
+    height: 36px;
+  }
+
+  p {
+    font-size: 0.875rem;
+    margin: 0;
+  }
+}
+
+// Module groups
+.rdd-modules {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rdd-module {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.rdd-module-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  background: var(--color-bg-card);
+  border-bottom: 1px solid var(--color-divider);
+
+  .rdd-module-name {
+    font-size: 0.83rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    text-transform: capitalize;
+  }
+
+  .rdd-module-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 20px;
+    padding: 0 6px;
+    background: var(--color-primary);
+    color: #fff;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+}
+
+.rdd-perm-list {
+  padding: 8px 0;
+}
+
+.rdd-perm-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--color-divider);
+  transition: background 0.12s ease;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: var(--color-hover);
+  }
+
+  .rdd-perm-check {
+    font-size: 15px;
+    width: 15px;
+    height: 15px;
+    color: var(--color-success);
+    flex-shrink: 0;
+  }
+}
+
+.rdd-perm-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+
+  .rdd-perm-name {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--color-text-primary);
+  }
+
+  .rdd-perm-slug {
+    font-size: 0.71rem;
+    font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+// ── Footer ────────────────────────────────────────────────────────────────────
+
+.rdd-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 14px 24px;
+  border-top: 1px solid var(--color-border);
+  flex-shrink: 0;
+  background: var(--color-bg-surface);
+}
+
+.rdd-btn-close {
+  background: var(--color-primary) !important;
+  color: var(--color-on-primary) !important;
+  border-radius: var(--radius-sm) !important;
+  font-weight: 600 !important;
+  height: 40px !important;
+  min-width: 100px !important;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25) !important;
+  transition: box-shadow 0.2s ease, transform 0.15s ease !important;
+
+  &:hover {
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35) !important;
+    transform: translateY(-1px);
+  }
+}

@@ -1,0 +1,103 @@
+// _super-tokens.scss
+// Super-portal design tokens
+// IMPORTANT: Super portal DEFAULTS to DARK. :root gets dark values so the
+// very first paint is correct without waiting for JS to set data-theme.
+// Light mode is an explicit opt-in: [data-theme='light'] on <html>.
+
+// ── Dark mode — DEFAULT ───────────────────────────────────────────────────────
+:root,
+[data-theme='dark'] {
+  --st-bg-page: #0f172a;
+  --st-bg-surface: #1e293b;
+  --st-bg-subtle: #162032;
+  --st-bg-hover: #243044;
+
+  --st-border: #334155;
+  --st-border-strong: #475569;
+
+  --st-text-primary: #f1f5f9;
+  --st-text-secondary: #94a3b8;
+  --st-text-muted: #64748b;
+
+  --st-primary: #818cf8;
+  --st-primary-bg: #1e1b4b;
+  --st-primary-text: #a5b4fc;
+
+  --st-green: #34d399;
+  --st-green-bg: #064e3b;
+  --st-green-text: #6ee7b7;
+  --st-green-border: #065f46;
+
+  --st-amber: #fbbf24;
+  --st-amber-bg: #451a03;
+  --st-amber-text: #fcd34d;
+  --st-amber-border: #78350f;
+
+  --st-red: #f87171;
+  --st-red-bg: #450a0a;
+  --st-red-text: #fca5a5;
+  --st-red-border: #7f1d1d;
+
+  --st-blue: #60a5fa;
+  --st-blue-bg: #0c1e3e;
+  --st-blue-text: #93c5fd;
+  --st-blue-border: #1e3a5f;
+
+  --st-purple: #a78bfa;
+  --st-purple-bg: #1e1240;
+  --st-purple-text: #c4b5fd;
+  --st-purple-border: #3b2063;
+
+  --st-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --st-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --st-radius-sm: 8px;
+  --st-radius-md: 12px;
+  --st-radius-lg: 16px;
+}
+
+// ── Light mode — explicit opt-in ──────────────────────────────────────────────
+[data-theme='light'] {
+  --st-bg-page: #f3f4f6;
+  --st-bg-surface: #ffffff;
+  --st-bg-subtle: #f9fafb;
+  --st-bg-hover: #f3f4f6;
+
+  --st-border: #e5e7eb;
+  --st-border-strong: #d1d5db;
+
+  --st-text-primary: #111827;
+  --st-text-secondary: #6b7280;
+  --st-text-muted: #9ca3af;
+
+  --st-primary: #4f46e5;
+  --st-primary-bg: #eef2ff;
+  --st-primary-text: #3730a3;
+
+  --st-green: #059669;
+  --st-green-bg: #ecfdf5;
+  --st-green-text: #065f46;
+  --st-green-border: #6ee7b7;
+
+  --st-amber: #d97706;
+  --st-amber-bg: #fffbeb;
+  --st-amber-text: #92400e;
+  --st-amber-border: #fde68a;
+
+  --st-red: #ef4444;
+  --st-red-bg: #fef2f2;
+  --st-red-text: #b91c1c;
+  --st-red-border: #fecaca;
+
+  --st-blue: #2563eb;
+  --st-blue-bg: #eff6ff;
+  --st-blue-text: #1e40af;
+  --st-blue-border: #bfdbfe;
+
+  --st-purple: #7c3aed;
+  --st-purple-bg: #f5f3ff;
+  --st-purple-text: #6d28d9;
+  --st-purple-border: #ddd6fe;
+
+  --st-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --st-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+}

@@ -1,0 +1,76 @@
+<div class="card-shell no-print">
+  <div class="topbar">
+    <button class="back-btn" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon><span>Back to Exams</span>
+    </button>
+    @if (state() === 'ready') {
+    <button class="print-btn" (click)="print()">
+      <mat-icon>print</mat-icon><span>Print Admit Card</span>
+    </button>
+    }
+  </div>
+  @if (state() === 'ready') {
+  <div class="page-meta">
+    <div class="meta-icon"><mat-icon>badge</mat-icon></div>
+    <div>
+      <h1>Admit Card</h1>
+      @if (activeChild()) {
+      <p>
+        For <strong>{{ activeChild()!.studentName }}</strong> — carry this to the examination hall
+      </p>
+      } @else {
+      <p>Official exam admit card</p>
+      }
+    </div>
+  </div>
+  }
+</div>
+
+@if (state() === 'loading') {
+<div class="feedback-container no-print">
+  <div class="spinner-ring"></div>
+  <p>Generating admit card…</p>
+</div>
+} @else if (state() === 'not-published') {
+<div class="feedback-container gate-state no-print">
+  <div class="gate-icon-wrap"><mat-icon>lock_clock</mat-icon></div>
+  <h2>Admit Card Not Yet Published</h2>
+  <p>
+    The school hasn't published the admit card for this exam yet. @if (activeChild()) { Please check
+    back later for <strong>{{ activeChild()!.studentName }}</strong
+    >'s admit card. }
+  </p>
+  <button class="back-btn-alt" (click)="goBack()">
+    <mat-icon>arrow_back</mat-icon> Back to Exams
+  </button>
+</div>
+} @else if (state() === 'error') {
+<div class="feedback-container error-state no-print">
+  <div class="error-icon-wrap"><mat-icon>error_outline</mat-icon></div>
+  <h2>Could Not Load Admit Card</h2>
+  <p>
+    {{
+      !examId
+        ? 'Missing exam ID.'
+        : !activeChild()
+        ? 'No child selected. Please select a child from the top bar.'
+        : 'Something went wrong. Please try again.'
+    }}
+  </p>
+  <button class="back-btn-alt" (click)="goBack()"><mat-icon>arrow_back</mat-icon> Go Back</button>
+</div>
+} @else if (state() === 'ready') {
+<div class="preview-shell">
+  <div class="preview-notice no-print">
+    <mat-icon>info_outline</mat-icon>
+    <span>Preview — use the <strong>Print</strong> button above for a clean printout</span>
+  </div>
+  <div class="card-preview" [innerHTML]="htmlContent()"></div>
+</div>
+<div class="bottom-actions no-print">
+  <button class="back-btn-alt" (click)="goBack()">
+    <mat-icon>arrow_back</mat-icon> Back to Exams
+  </button>
+  <button class="print-btn" (click)="print()"><mat-icon>print</mat-icon> Print Admit Card</button>
+</div>
+}

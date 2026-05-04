@@ -1,0 +1,399 @@
+<!-- fee-payment-dialog.html — FIXED -->
+<!-- Changes:
+  1. Fee Breakdown now iterates allFees() instead of dueFees() — shows cleared fees too
+  2. Cleared fees show "Cleared" badge and are non-clickable in single-fee mode
+  3. "Pay All" tab amount shows totalDue() (sum of remaining) not totalFeeAmount()
+  4. Payment mode tabs disable correctly when no pending fees exist
+-->
+<div class="dialog-backdrop" [class.animating-out]="animatingOut()" (click)="closeDialog()">
+  <div
+    class="dialog-panel"
+    [class.animating-out]="animatingOut()"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <!-- HEADER                                                         -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <div class="dialog-header">
+      <div class="header-content">
+        <div class="header-icon">
+          <mat-icon>payments</mat-icon>
+        </div>
+        <div class="header-text">
+          <h2>Record Payment</h2>
+          <p class="student-name">{{ student().name }}</p>
+        </div>
+      </div>
+      <button class="close-btn" (click)="closeDialog()" matTooltip="Close">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <!-- LOADING STATE                                                  -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    @if (loading()) {
+    <div class="dialog-loading">
+      <mat-spinner diameter="36"></mat-spinner>
+      <p>Loading fee details…</p>
+    </div>
+    }
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <!-- NO FEES STATE (no fee structures at all)                       -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    @else if (allFees().length === 0) {
+    <div class="dialog-empty">
+      <div class="empty-icon">
+        <mat-icon>check_circle</mat-icon>
+      </div>
+      <h3>No Fees Assigned</h3>
+      <p>{{ student().name }} has no fee structures assigned for this class-section.</p>
+      <button class="btn-secondary" (click)="closeDialog()">
+        <mat-icon>close</mat-icon> Close
+      </button>
+    </div>
+    }
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <!-- ALL CLEARED STATE (fees exist but all paid)                   -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    @else if (dueFees().length === 0) {
+    <div class="dialog-body">
+      <!-- Still show the summary strip -->
+      <div class="student-summary">
+        <div class="summary-chip">
+          <span class="chip-label">Total Assigned</span>
+          <span class="chip-value neutral">₹{{ formatINR(totalFeeAmount()) }}</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-chip">
+          <span class="chip-label">Already Paid</span>
+          <span class="chip-value success">₹{{ formatINR(totalPaid()) }}</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-chip">
+          <span class="chip-label">Total Due</span>
+          <span class="chip-value success">₹0</span>
+        </div>
+      </div>
+
+      <div class="dialog-empty" style="min-height: 220px">
+        <div class="empty-icon">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <h3>All Clear!</h3>
+        <p>{{ student().name }} has no outstanding fees. All dues have been cleared.</p>
+      </div>
+
+      <!-- Still show breakdown of cleared fees -->
+      <div class="fees-section" style="padding: 0 0 16px">
+        <p class="section-label">Fee Breakdown</p>
+        <div class="fee-list">
+          @for (fee of allFees(); track fee.id) {
+          <div class="fee-card pay-all-mode cleared-fee">
+            <div class="fee-card-left">
+              <div class="fee-header-row">
+                <span class="fee-type-name">{{ fee.feeType }}</span>
+                <span class="fee-status-badge cleared">Cleared</span>
+              </div>
+              @if (fee.dueDate) {
+              <span class="fee-due-date">
+                <mat-icon>event</mat-icon>
+                Due: {{ fee.dueDate | date : 'dd MMM yyyy' }}
+              </span>
+              }
+              <div class="fee-progress-wrap">
+                <div class="fee-progress-bar">
+                  <div class="fee-progress-fill cleared" style="width: 100%"></div>
+                </div>
+                <span class="fee-progress-label">100% paid</span>
+              </div>
+            </div>
+            <div class="fee-card-right">
+              <div class="fee-amounts">
+                <div class="fee-amount-row">
+                  <span class="fee-amount-label">Total</span>
+                  <span class="fee-amount-value">₹{{ formatINR(fee.amount) }}</span>
+                </div>
+                <div class="fee-amount-row">
+                  <span class="fee-amount-label">Paid</span>
+                  <span class="fee-amount-value success">₹{{ formatINR(fee.paid) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+
+      <div class="dialog-actions">
+        <button class="btn-secondary" (click)="closeDialog()">
+          <mat-icon>close</mat-icon> Close
+        </button>
+      </div>
+    </div>
+    }
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <!-- MAIN CONTENT (pending fees exist)                             -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    @else {
+
+    <!-- Student Summary Strip -->
+    <div class="student-summary">
+      <div class="summary-chip">
+        <span class="chip-label">Total Assigned</span>
+        <span class="chip-value neutral">₹{{ formatINR(totalFeeAmount()) }}</span>
+      </div>
+      <div class="summary-divider"></div>
+      <div class="summary-chip">
+        <span class="chip-label">Already Paid</span>
+        <span class="chip-value success">₹{{ formatINR(totalPaid()) }}</span>
+      </div>
+      <div class="summary-divider"></div>
+      <div class="summary-chip">
+        <span class="chip-label">Total Due</span>
+        <span class="chip-value error">₹{{ formatINR(totalDue()) }}</span>
+      </div>
+    </div>
+
+    <!-- ── SCROLLABLE BODY ──────────────────────────────────────────── -->
+    <div class="dialog-body">
+      <!-- ── PAYMENT MODE SELECTOR ───────────────────────────────────── -->
+      <div class="mode-section">
+        <p class="section-label">Payment Option</p>
+        <div class="mode-tabs">
+          <button
+            class="mode-tab"
+            [class.active]="paymentMode() === 'all'"
+            (click)="setPayAllMode()"
+          >
+            <mat-icon>done_all</mat-icon>
+            <span>Pay All Dues</span>
+            <span class="mode-tab-amount">₹{{ formatINR(totalDue()) }}</span>
+          </button>
+          <button
+            class="mode-tab"
+            [class.active]="paymentMode() === 'single'"
+            (click)="paymentMode() !== 'single' && selectSingleFee(dueFees()[0])"
+          >
+            <mat-icon>label</mat-icon>
+            <span>Pay by Fee Type</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── FEE STRUCTURE LIST (ALL fees — including cleared) ───────── -->
+      <div class="fees-section">
+        <p class="section-label">
+          Fee Breakdown @if (allFees().length > dueFees().length) {
+          <span class="cleared-count-badge">
+            {{ allFees().length - dueFees().length }} cleared
+          </span>
+          }
+        </p>
+        <div class="fee-list">
+          @for (fee of allFees(); track fee.id) {
+          <div
+            class="fee-card"
+            [class.selected]="isSelected(fee)"
+            [class.pay-all-mode]="paymentMode() === 'all' && !isCleared(fee)"
+            [class.cleared-fee]="isCleared(fee)"
+            [class.clickable]="paymentMode() === 'single' && !isCleared(fee)"
+            (click)="paymentMode() === 'single' && !isCleared(fee) && selectSingleFee(fee)"
+          >
+            <div class="fee-card-left">
+              <div class="fee-header-row">
+                <span class="fee-type-name">{{ fee.feeType }}</span>
+                <span class="fee-status-badge" [class]="feeStatusClass(fee)">
+                  {{ feeStatusLabel(fee) }}
+                </span>
+              </div>
+
+              @if (fee.dueDate) {
+              <span class="fee-due-date">
+                <mat-icon>event</mat-icon>
+                Due: {{ fee.dueDate | date : 'dd MMM yyyy' }}
+              </span>
+              }
+
+              <!-- Progress bar -->
+              <div class="fee-progress-wrap">
+                <div class="fee-progress-bar">
+                  <div
+                    class="fee-progress-fill"
+                    [class]="feeStatusClass(fee)"
+                    [style.width.%]="paidPercent(fee)"
+                  ></div>
+                </div>
+                <span class="fee-progress-label">{{ paidPercent(fee) }}% paid</span>
+              </div>
+            </div>
+
+            <div class="fee-card-right">
+              <div class="fee-amounts">
+                <div class="fee-amount-row">
+                  <span class="fee-amount-label">Total</span>
+                  <span class="fee-amount-value">₹{{ formatINR(fee.amount) }}</span>
+                </div>
+                @if (fee.paid > 0) {
+                <div class="fee-amount-row">
+                  <span class="fee-amount-label">Paid</span>
+                  <span class="fee-amount-value success">₹{{ formatINR(fee.paid) }}</span>
+                </div>
+                } @if (!isCleared(fee)) {
+                <div class="fee-amount-row due">
+                  <span class="fee-amount-label">Due</span>
+                  <span class="fee-amount-value error">₹{{ formatINR(fee.remaining) }}</span>
+                </div>
+                }
+              </div>
+
+              @if (paymentMode() === 'single') {
+              <div class="fee-select-indicator">
+                @if (isCleared(fee)) {
+                <mat-icon class="cleared-check">check_circle</mat-icon>
+                } @else if (isSelected(fee)) {
+                <mat-icon class="selected-check">check_circle</mat-icon>
+                } @else {
+                <mat-icon class="unselected-check">radio_button_unchecked</mat-icon>
+                }
+              </div>
+              }
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- ── PAYMENT FORM ──────────────────────────────────────────────── -->
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="form-section">
+          <p class="section-label">Payment Details</p>
+
+          <div class="form-grid">
+            <!-- Amount Field -->
+            <div class="field-group" [class.has-error]="amountErrors">
+              <label class="field-label">
+                Amount to Pay (₹) @if (maxPayable() > 0) {
+                <span class="field-hint">Max: ₹{{ formatINR(maxPayable()) }}</span>
+                }
+              </label>
+              <div class="amount-input-wrap" [class.error]="amountErrors">
+                <span class="currency-prefix">₹</span>
+                <input
+                  type="number"
+                  inputmode="numeric"
+                  formControlName="amountPaid"
+                  class="amount-input"
+                  [placeholder]="maxPayable().toString()"
+                  min="1"
+                  [max]="maxPayable()"
+                  (input)="onAmountInput()"
+                />
+                <button
+                  type="button"
+                  class="fill-max-btn"
+                  (click)="form.patchValue({ amountPaid: maxPayable() }); onAmountInput()"
+                  matTooltip="Fill maximum payable amount"
+                >
+                  MAX
+                </button>
+              </div>
+              @if (amountErrors) {
+              <span class="field-error">
+                <mat-icon>error_outline</mat-icon>
+                {{ amountErrors }}
+              </span>
+              }
+            </div>
+
+            <!-- Payment Method -->
+            <div class="field-group">
+              <label class="field-label">Payment Method</label>
+              <div class="method-selector">
+                @for (method of paymentMethods; track method.value) {
+                <label
+                  class="method-option"
+                  [class.active]="form.get('paymentMethod')?.value === method.value"
+                >
+                  <input
+                    type="radio"
+                    formControlName="paymentMethod"
+                    [value]="method.value"
+                    hidden
+                  />
+                  <mat-icon>{{ method.icon }}</mat-icon>
+                  <span>{{ method.label }}</span>
+                </label>
+                }
+              </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="field-group full-span">
+              <label class="field-label">Notes <span class="optional-tag">optional</span></label>
+              <textarea
+                formControlName="notes"
+                class="notes-input"
+                rows="2"
+                placeholder="e.g. Partial payment for Q1 fees, Reference: UPI-123…"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SUMMARY CONFIRM BAR ─────────────────────────────────────── -->
+        @if (form.get('amountPaid')?.value && !amountErrors) {
+        <div class="confirm-summary">
+          <div class="confirm-row">
+            <span class="confirm-label">
+              <mat-icon>receipt</mat-icon>
+              You are paying
+            </span>
+            <span class="confirm-amount">₹{{ formatINR(form.get('amountPaid')?.value ?? 0) }}</span>
+          </div>
+          <div class="confirm-row sub">
+            <span>via {{ form.get('paymentMethod')?.value | titlecase }}</span>
+            @if (paymentMode() === 'single' && selectedFee()) {
+            <span>for {{ selectedFee()!.feeType }}</span>
+            } @else {
+            <span>distributed across {{ dueFees().length }} pending fee(s)</span>
+            }
+          </div>
+        </div>
+        }
+
+        <!-- ── ACTION BUTTONS ──────────────────────────────────────────── -->
+        <div class="dialog-actions">
+          <button
+            type="button"
+            class="btn-secondary"
+            (click)="closeDialog()"
+            [disabled]="submitting()"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="form.invalid || submitting() || dueFees().length === 0"
+          >
+            @if (submitting()) {
+            <mat-spinner diameter="18"></mat-spinner>
+            <span>Processing…</span>
+            } @else {
+            <mat-icon>check_circle</mat-icon>
+            <span>Confirm Payment</span>
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+    <!-- end dialog-body -->
+    }
+  </div>
+  <!-- end dialog-panel -->
+</div>
+<!-- end dialog-backdrop -->

@@ -1,0 +1,257 @@
+// theme-settings.scss
+// Uses only CSS custom properties — fully theme-aware.
+
+.settings-wrapper {
+  padding: 28px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+// ── Page header ───────────────────────────────────────────────────────────────
+.settings-header {
+  margin-bottom: 28px;
+}
+
+.settings-title {
+  margin: 0 0 4px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.settings-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+// ── Loading bar ───────────────────────────────────────────────────────────────
+.loading-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  font-size: 0.87rem;
+  color: var(--color-text-secondary);
+  padding: 10px 14px;
+  background: var(--color-hover);
+  border-radius: var(--radius-sm);
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+.theme-tabs {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+// ── Themes grid ───────────────────────────────────────────────────────────────
+.themes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  padding: 24px;
+}
+
+// ── Theme card ────────────────────────────────────────────────────────────────
+.theme-card {
+  position: relative;
+  background: var(--color-bg-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+
+  &:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+
+  &.active {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
+  }
+}
+
+// ── Active badge ──────────────────────────────────────────────────────────────
+.active-badge {
+  position: absolute;
+  top: -1px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 10px 3px 7px;
+  border-radius: 0 0 8px 8px;
+
+  mat-icon {
+    font-size: 13px;
+    height: 13px;
+    width: 13px;
+  }
+}
+
+// ── Swatches ──────────────────────────────────────────────────────────────────
+.theme-preview {
+  padding: 12px;
+  background: var(--color-bg-main);
+  border-radius: var(--radius-sm);
+}
+
+.swatch-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.swatch {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+}
+
+// ── Theme name ────────────────────────────────────────────────────────────────
+.theme-name {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: center;
+}
+
+// ── Activate button ───────────────────────────────────────────────────────────
+.activate-btn {
+  width: 100%;
+  background: var(--color-primary) !important;
+  color: var(--color-on-primary) !important;
+  border-radius: var(--radius-sm) !important;
+
+  &[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// ── Card actions row (custom themes) ─────────────────────────────────────────
+.theme-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.delete-btn {
+  align-self: flex-end;
+  color: var(--color-error) !important;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.confirm-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: color-mix(in srgb, var(--color-error) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-error) 20%, transparent);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+}
+
+.confirm-text {
+  font-size: 0.8rem;
+  color: var(--color-error);
+  font-weight: 600;
+  flex: 1;
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+.empty-state {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 20px;
+  color: var(--color-text-muted);
+  text-align: center;
+
+  mat-icon {
+    font-size: 48px;
+    height: 48px;
+    width: 48px;
+    opacity: 0.4;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+}
+
+// ── Create form ───────────────────────────────────────────────────────────────
+.create-form-wrap {
+  padding: 24px;
+}
+
+.create-form {
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field-full {
+  width: 100%;
+}
+
+.hint-box {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 16px;
+  background: color-mix(in srgb, var(--color-info) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-info) 20%, transparent);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+
+  .hint-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+    color: var(--color-info);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  code {
+    background: var(--color-bg-main);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    color: var(--color-primary-dark);
+  }
+}
+
+.create-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}

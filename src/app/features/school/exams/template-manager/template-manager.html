@@ -1,0 +1,276 @@
+<div class="tm-root">
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- HERO HEADER                                                            -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-inner">
+      <div class="hero-left">
+        <div class="hero-icon">
+          <mat-icon>style</mat-icon>
+        </div>
+        <div>
+          <h1>Card Templates</h1>
+          <p>Choose the design for your school's admit cards and report cards</p>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <button class="btn-ghost" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Back
+        </button>
+        @if (hasAnyChanges()) {
+        <button class="btn-discard" (click)="discardChanges()" [disabled]="saving()">
+          <mat-icon>undo</mat-icon>
+          Discard
+        </button>
+        <button class="btn-save" (click)="saveAll()" [disabled]="saving()">
+          @if (saving()) {
+          <div class="btn-spinner"></div>
+          } @else {
+          <mat-icon>save</mat-icon>
+          } Save Changes
+        </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- LOADING                                                                -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  @if (loading()) {
+  <div class="state-center">
+    <div class="pulse-ring"></div>
+    <p>Loading templates…</p>
+  </div>
+  } @else {
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- TYPE TABS                                                              -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div class="type-tabs">
+    @for (tab of tabs; track tab.key) {
+    <button
+      class="type-tab"
+      [class.active]="activeType() === tab.key"
+      [class]="activeType() === tab.key ? 'active ' + tab.accentClass : ''"
+      (click)="setType(tab.key)"
+    >
+      <mat-icon>{{ tab.icon }}</mat-icon>
+      <span>{{ tab.label }}</span>
+      @if (tab.key === 'ADMIT_CARD' && admitHasChanges()) {
+      <span class="change-dot"></span>
+      } @if (tab.key === 'REPORT_CARD' && reportHasChanges()) {
+      <span class="change-dot"></span>
+      }
+    </button>
+    }
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- UNSAVED BANNER                                                         -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  @if (hasAnyChanges()) {
+  <div class="unsaved-banner">
+    <mat-icon>pending_actions</mat-icon>
+    <span>You have unsaved template changes — click <strong>Save Changes</strong> to apply.</span>
+    <button class="btn-save-inline" (click)="saveAll()" [disabled]="saving()">
+      @if (saving()) {
+      <div class="btn-spinner-sm"></div>
+      } @else { <mat-icon>save</mat-icon> } Save
+    </button>
+  </div>
+  }
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- TEMPLATE GRID                                                          -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  @if (currentConfig()) {
+  <div class="content-shell">
+    <div class="section-intro">
+      <h2>
+        @if (activeType() === 'ADMIT_CARD') { Admit Card Designs } @else { Report Card Designs }
+      </h2>
+      <p>
+        Click a template to select it, or click <strong>Preview</strong> to see a full-page sample
+        before choosing.
+      </p>
+    </div>
+
+    <div class="template-grid">
+      @for (tmpl of currentConfig()!.templates; track tmpl.key) {
+      <button
+        class="template-card"
+        [class.selected]="isSelected(tmpl.key)"
+        [class.currently-active]="isActive(tmpl.key)"
+        (click)="selectTemplate(tmpl.key)"
+        type="button"
+      >
+        <!-- Visual thumbnail -->
+        <div class="thumb-area" [ngClass]="getThumbnailClass(tmpl.thumbnail)">
+          <div class="thumb-content">
+            @if (tmpl.thumbnail === 'classic') {
+            <!-- Classic: two-tone header + table lines -->
+            <div class="tc-header-bar"></div>
+            <div class="tc-banner"></div>
+            <div class="tc-body">
+              <div class="tc-info-row">
+                <div class="tc-info-block"></div>
+                <div class="tc-info-block"></div>
+                <div class="tc-info-block"></div>
+              </div>
+              <div class="tc-table">
+                <div class="tc-table-head"></div>
+                @for (r of [1,2,3]; track r) {
+                <div class="tc-table-row"></div>
+                }
+              </div>
+            </div>
+            } @else if (tmpl.thumbnail === 'modern') {
+            <!-- Modern: gradient hero + card grid -->
+            <div class="tm-hero-grad">
+              <div class="tm-logo-circle"></div>
+              <div class="tm-lines">
+                <div class="tm-line wide"></div>
+                <div class="tm-line medium"></div>
+                <div class="tm-badge"></div>
+              </div>
+            </div>
+            <div class="tm-strip"></div>
+            <div class="tm-cards">
+              @for (c of [1,2,3,4]; track c) {
+              <div class="tm-card-item"></div>
+              }
+            </div>
+            <div class="tm-table-mini">
+              <div class="tm-th"></div>
+              @for (r of [1,2]; track r) {
+              <div class="tm-tr"></div>
+              }
+            </div>
+            } @else {
+            <!-- Minimal: top rule + clean type -->
+            <div class="min-rule top"></div>
+            <div class="min-header">
+              <div class="min-lines">
+                <div class="min-line bold"></div>
+                <div class="min-line thin"></div>
+              </div>
+              <div class="min-tag"></div>
+            </div>
+            <div class="min-exam-name"></div>
+            <div class="min-info-row">
+              @for (c of [1,2,3,4]; track c) {
+              <div class="min-cell"></div>
+              }
+            </div>
+            <div class="min-table">
+              <div class="min-th"></div>
+              @for (r of [1,2,3]; track r) {
+              <div class="min-tr"></div>
+              }
+            </div>
+            <div class="min-rule bottom"></div>
+            }
+          </div>
+
+          <!-- Selection overlay -->
+          @if (isSelected(tmpl.key)) {
+          <div class="selected-overlay">
+            <div class="check-circle">
+              <mat-icon>check</mat-icon>
+            </div>
+          </div>
+          }
+
+          <!-- ── PREVIEW BUTTON (hover overlay) ────────────────────────────── -->
+          <div class="preview-hover-overlay">
+            <button
+              class="btn-preview"
+              (click)="openPreview(tmpl, $event)"
+              [disabled]="isPreviewLoading(tmpl.key)"
+              matTooltip="Preview with sample data"
+              type="button"
+            >
+              @if (isPreviewLoading(tmpl.key)) {
+              <div class="preview-btn-spinner"></div>
+              } @else {
+              <mat-icon>open_in_new</mat-icon>
+              }
+              <span>{{ isPreviewLoading(tmpl.key) ? 'Loading…' : 'Preview' }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Card footer -->
+        <div class="card-footer">
+          <div class="card-info">
+            <div class="card-name">{{ tmpl.name }}</div>
+            <div class="card-desc">{{ tmpl.description }}</div>
+          </div>
+          <div class="card-badges">
+            @if (isActive(tmpl.key) && !isSelected(tmpl.key)) {
+            <span class="badge-live">Live</span>
+            } @if (isSelected(tmpl.key) && isActive(tmpl.key)) {
+            <span class="badge-live">Live</span>
+            } @if (isSelected(tmpl.key) && !isActive(tmpl.key)) {
+            <span class="badge-staged">Selected</span>
+            }
+          </div>
+        </div>
+
+        <!-- ── PREVIEW BUTTON (always-visible below footer on mobile) ──────── -->
+        <div class="card-preview-row">
+          <button
+            class="btn-preview-inline"
+            (click)="openPreview(tmpl, $event)"
+            [disabled]="isPreviewLoading(tmpl.key)"
+            type="button"
+          >
+            @if (isPreviewLoading(tmpl.key)) {
+            <div class="preview-btn-spinner-sm"></div>
+            } @else {
+            <mat-icon>visibility</mat-icon>
+            }
+            {{ isPreviewLoading(tmpl.key) ? 'Loading…' : 'Preview' }}
+          </button>
+        </div>
+      </button>
+      }
+    </div>
+
+    <!-- Save footer -->
+    @if (hasAnyChanges()) {
+    <div class="save-footer">
+      <div class="save-footer-left">
+        <mat-icon>info_outline</mat-icon>
+        <span>Changes affect all future admit/report card generations.</span>
+      </div>
+      <div class="save-footer-actions">
+        <button class="btn-discard" (click)="discardChanges()" [disabled]="saving()">
+          Discard
+        </button>
+        <button class="btn-save" (click)="saveAll()" [disabled]="saving()">
+          @if (saving()) {
+          <div class="btn-spinner"></div>
+          } @else { <mat-icon>save</mat-icon> } Save Changes
+        </button>
+      </div>
+    </div>
+    }
+  </div>
+  } }
+  <!-- end @else (not loading) -->
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- PREVIEW MODAL (rendered outside the grid flow via portal pattern)         -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+@if (previewTemplate()) {
+<app-template-preview-modal
+  [template]="previewTemplate()!"
+  [cardType]="previewCardType()"
+  (closed)="closePreview()"
+/>
+}

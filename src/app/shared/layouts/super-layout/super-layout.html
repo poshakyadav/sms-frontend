@@ -1,0 +1,14 @@
+<!-- Super Admin Portal Layout -->
+<div class="super-layout-root">
+  <!-- Sticky operator header -->
+  <app-super-header class="super-layout-header" (hamburgerClick)="openMobileSidebar()" />
+
+  <!-- Body: sidebar + content -->
+  <div class="super-layout-body">
+    <app-super-sidebar class="super-layout-sidebar" />
+
+    <main class="super-main-content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

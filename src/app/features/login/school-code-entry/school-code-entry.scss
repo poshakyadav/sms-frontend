@@ -1,0 +1,49 @@
+// school-code-entry.scss
+// All structural / colour rules live in _auth-shared.scss.
+// Only component-specific overrides go here.
+@use '../../../shared/styles/auth-shared' as *;
+
+// ── Code-check icon colour ────────────────────────────────────────────────────
+.code-check-icon {
+  font-size: 18px;
+  height: 18px;
+  width: 18px;
+  color: var(--color-success);
+  transition: color 0.2s ease;
+}
+
+// ── Footer layout adjustments for code-entry 
+
+// ── Footer layout ──────────────────────────────────────────────────────────────
+.auth-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+// ── Legal links cluster ────────────────────────────────────────────────────────
+.auth-footer-legal {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.auth-footer-legal-link {
+  font-size: 0.8rem;
+  color: var(--color-text-muted, var(--color-text-secondary));
+  text-decoration: none;
+  transition: color 0.15s ease;
+
+  &:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+  }
+}
+
+.auth-footer-sep {
+  font-size: 0.8rem;
+  color: var(--color-text-muted, var(--color-text-secondary));
+  opacity: 0.5;
+}

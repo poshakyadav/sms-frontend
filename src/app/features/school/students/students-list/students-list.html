@@ -1,0 +1,386 @@
+<div class="page-container">
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>Students</h1>
+      <p>Select a class-section to view and manage enrolled students</p>
+    </div>
+    <div class="header-actions">
+      @if (selectedClassSectionId()) {
+      <button
+        mat-icon-button
+        (click)="loadStudents(selectedClassSectionId()!)"
+        matTooltip="Refresh"
+      >
+        <mat-icon>refresh</mat-icon>
+      </button>
+      }
+    </div>
+  </div>
+
+  <!-- ── Class-Section Selector ─────────────────────────────────────────── -->
+  <div class="selector-card">
+    <div class="selector-card-inner">
+      <div class="selector-icon">
+        <mat-icon>class</mat-icon>
+      </div>
+      <div class="selector-content">
+        <label class="selector-label">Select Class &amp; Section</label>
+        <p class="selector-hint">Choose a class-section to load its students</p>
+      </div>
+      <div class="selector-field">
+        @if (loadingClassSections()) {
+        <div class="selector-loading">
+          <mat-spinner diameter="20"></mat-spinner>
+          <span>Loading sections…</span>
+        </div>
+        } @else {
+        <mat-form-field appearance="outline" class="cs-select">
+          <mat-label>Class &amp; Section</mat-label>
+          <mat-icon matPrefix>school</mat-icon>
+          <mat-select
+            [ngModel]="selectedClassSectionId()"
+            (ngModelChange)="onClassSectionChange($event)"
+          >
+            @for (cs of classSections(); track cs.id) {
+            <mat-option [value]="cs.id">
+              {{ cs.className }} — {{ cs.sectionName }}
+              @if (cs.currentStudents !== undefined) {
+              <span class="option-count">({{ cs.currentStudents }} students)</span>
+              }
+            </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- ── No class selected ──────────────────────────────────────────────── -->
+  @if (!selectedClassSectionId() && !loadingClassSections()) {
+  <div class="empty-pick">
+    <div class="empty-pick-icon">
+      <mat-icon>waving_hand</mat-icon>
+    </div>
+    <h2>Pick a class to get started</h2>
+    <p>
+      Once you select a class and section above, all enrolled students will appear here with their
+      details and actions.
+    </p>
+  </div>
+  } @if (selectedClassSectionId()) {
+
+  <!-- ── Bulk Action Bar ─────────────────────────────────────────────────── -->
+  @if (selectedCount() > 0) {
+  <div class="bulk-bar" [class.visible]="selectedCount() > 0">
+    <div class="bulk-bar-left">
+      <mat-icon>check_circle</mat-icon>
+      <strong>{{ selectedCount() }}</strong> student{{ selectedCount() > 1 ? 's' : '' }} selected
+      <button mat-button (click)="clearSelection()" class="clear-btn">
+        <mat-icon>close</mat-icon> Clear
+      </button>
+    </div>
+    <div class="bulk-bar-right">
+      @if (canPromote()) {
+      <button mat-raised-button color="accent" (click)="promoteSelected()">
+        <mat-icon>upgrade</mat-icon>
+        Promote {{ selectedCount() }} Student{{ selectedCount() > 1 ? 's' : '' }}
+      </button>
+      }
+    </div>
+  </div>
+  }
+
+  <!-- ── Stats ──────────────────────────────────────────────────────────── -->
+  @if (!loadingStudents() && !error()) {
+  <div class="stats-strip">
+    <div class="stat-card accent">
+      <span class="stat-value">{{ totalStudents() }}</span>
+      <span class="stat-label">Enrolled</span>
+    </div>
+    <div class="stat-card success">
+      <span class="stat-value">{{ activeStudents() }}</span>
+      <span class="stat-label">Active</span>
+    </div>
+    <div class="stat-card muted">
+      <span class="stat-value">{{ totalStudents() - activeStudents() }}</span>
+      <span class="stat-label">Inactive</span>
+    </div>
+    @if (selectedClassSection(); as cs) {
+    <div class="stat-card info">
+      <span class="stat-value">{{ cs.capacity }}</span>
+      <span class="stat-label">Capacity</span>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- ── Search + Actions Bar ───────────────────────────────────────────── -->
+  @if (!loadingStudents() && !error()) {
+    <div class="filter-bar">
+    
+      <!-- Search input — only useful when there are students to filter -->
+      @if (students().length > 0) {
+      <mat-form-field appearance="outline">
+        <mat-label>Search students…</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input
+          matInput
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          placeholder="Name, email or roll number"
+        />
+        @if (searchQuery()) {
+        <button matSuffix mat-icon-button (click)="searchQuery.set('')">
+          <mat-icon>close</mat-icon>
+        </button>
+        }
+      </mat-form-field>
+      }
+    
+      <!-- ── Assign Roll Numbers Button ────────────────────────────────────── -->
+      <!-- Shown whenever a class-section is selected, regardless of student count -->
+      @if (canAssignRollNumbers()) {
+      <button
+        mat-stroked-button
+        class="roll-assign-btn"
+        [class.has-rolls]="hasExistingRollNumbers()"
+        (click)="openAssignRollNumbersDialog()"
+        [disabled]="students().length === 0"
+        [matTooltip]="
+          students().length === 0
+            ? 'No students enrolled in this class-section'
+            : hasExistingRollNumbers()
+            ? 'Reassign roll numbers (will overwrite existing)'
+            : 'Auto-assign roll numbers to all students'
+        "
+      >
+        <mat-icon>format_list_numbered</mat-icon>
+        <span class="roll-assign-label">
+          {{ hasExistingRollNumbers() ? 'Reassign Roll Nos.' : 'Assign Roll Nos.' }}
+        </span>
+        @if (hasExistingRollNumbers()) {
+        <span class="roll-overwrite-badge" matTooltip="Existing roll numbers will be overwritten">
+          <mat-icon>warning_amber</mat-icon>
+        </span>
+        }
+      </button>
+      }
+    
+      @if (canPromote() && students().length > 0) {
+      <div class="filter-promote-hint">
+        <mat-icon>info_outline</mat-icon>
+        <span>Select students to promote them</span>
+      </div>
+      }
+    </div>
+    }
+
+  <!-- ── Assign Roll Numbers CTA (shown when no students yet loaded or empty) ── -->
+  @if (!loadingStudents() && students().length === 0 && canAssignRollNumbers() &&
+  selectedClassSectionId() && !error()) {
+  <!-- intentionally empty — no students, nothing to assign -->
+  }
+
+  <!-- ── Loading ──────────────────────────────────────────────────────── -->
+  @if (loadingStudents()) {
+  <div class="state-container">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>
+      Loading students for {{ selectedClassSection()?.className }} —
+      {{ selectedClassSection()?.sectionName }}…
+    </p>
+  </div>
+  }
+
+  <!-- ── Error ────────────────────────────────────────────────────────── -->
+  @else if (error()) {
+  <div class="state-container error">
+    <mat-icon class="state-icon">error_outline</mat-icon>
+    <h2>Something went wrong</h2>
+    <p>{{ error() }}</p>
+    <button mat-raised-button color="primary" (click)="loadStudents(selectedClassSectionId()!)">
+      Try Again
+    </button>
+  </div>
+  }
+
+  <!-- ── Empty ────────────────────────────────────────────────────────── -->
+  @else if (filteredStudents().length === 0 && !loadingStudents()) {
+  <div class="state-container">
+    <mat-icon class="state-icon">person_search</mat-icon>
+    <h2>{{ searchQuery() ? 'No students match your search' : 'No Students Enrolled' }}</h2>
+    <p>
+      {{
+        searchQuery()
+          ? 'Try adjusting your search term.'
+          : 'No students are currently enrolled in ' +
+            selectedClassSection()?.className +
+            ' — ' +
+            selectedClassSection()?.sectionName +
+            '.'
+      }}
+    </p>
+  </div>
+  }
+
+  <!-- ── Table ─────────────────────────────────────────────────────────── -->
+  @else if (!loadingStudents()) {
+  <div class="table-card overflow-x">
+    <table mat-table [dataSource]="filteredStudents()" [trackBy]="trackById">
+      <!-- Checkbox Column -->
+      <ng-container matColumnDef="select">
+        <th mat-header-cell *matHeaderCellDef class="col-check">
+          @if (canPromote()) {
+          <mat-checkbox
+            [checked]="allSelected()"
+            [indeterminate]="someSelected()"
+            (change)="toggleSelectAll()"
+            color="primary"
+            matTooltip="Select all"
+          ></mat-checkbox>
+          }
+        </th>
+        <td mat-cell *matCellDef="let s" class="col-check">
+          @if (canPromote()) {
+          <mat-checkbox
+            [checked]="isSelected(s.id)"
+            (change)="toggleSelect(s.id)"
+            (click)="$event.stopPropagation()"
+            color="primary"
+          ></mat-checkbox>
+          }
+        </td>
+      </ng-container>
+
+      <!-- Roll Number Column -->
+      <ng-container matColumnDef="rollNumber">
+        <th mat-header-cell *matHeaderCellDef>Roll No.</th>
+        <td mat-cell *matCellDef="let s">
+          <span class="roll-badge">{{ s.rollNumber || '—' }}</span>
+        </td>
+      </ng-container>
+
+      <!-- Name + Avatar Column -->
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Student</th>
+        <td mat-cell *matCellDef="let s">
+          <div class="student-cell">
+            @if (s.avatarUrl) {
+            <img class="avatar-sm" [src]="s.avatarUrl" [alt]="s.name" />
+            } @else {
+            <div class="avatar-initials">{{ getInitials(s.name) }}</div>
+            }
+            <div class="student-info">
+              <span class="student-name">{{ s.name }}</span>
+              <span class="student-email">{{ s.email }}</span>
+            </div>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Gender Column -->
+      <ng-container matColumnDef="gender">
+        <th mat-header-cell *matHeaderCellDef>Gender</th>
+        <td mat-cell *matCellDef="let s">
+          <span class="text-secondary">{{ s.gender || '—' }}</span>
+        </td>
+      </ng-container>
+
+      <!-- Blood Group Column -->
+      <ng-container matColumnDef="bloodGroup">
+        <th mat-header-cell *matHeaderCellDef>Blood</th>
+        <td mat-cell *matCellDef="let s">
+          @if (s.bloodGroup) {
+          <span class="blood-badge">{{ s.bloodGroup }}</span>
+          } @else {
+          <span class="text-muted">—</span>
+          }
+        </td>
+      </ng-container>
+
+      <!-- Status Column -->
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let s">
+          <span class="badge" [class.active]="s.isActive" [class.inactive]="!s.isActive">
+            {{ s.isActive ? 'Active' : 'Inactive' }}
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- ── Actions Column ──────────────────────────────────────────────── -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let s">
+          <div class="cell-actions" (click)="$event.stopPropagation()">
+            <!-- View profile -->
+            <button
+              mat-icon-button
+              [routerLink]="['/school/students', s.id]"
+              matTooltip="View profile"
+            >
+              <mat-icon>visibility</mat-icon>
+            </button>
+
+            <!-- Fee report -->
+            @if (canViewFees()) {
+            <button
+              mat-icon-button
+              [routerLink]="['/school/fees/ledger', s.id]"
+              matTooltip="Fee ledger"
+            >
+              <mat-icon>receipt_long</mat-icon>
+            </button>
+            }
+
+            <!-- Attendance -->
+            @if (canViewAttendance()) {
+            <button
+              mat-icon-button
+              [routerLink]="['/school/attendance/student', s.id]"
+              matTooltip="Attendance report"
+            >
+              <mat-icon>event_available</mat-icon>
+            </button>
+            }
+
+            <!-- Promote single -->
+            @if (canPromote()) {
+            <button
+              mat-icon-button
+              color="accent"
+              (click)="promoteSingle(s, $event)"
+              matTooltip="Promote student"
+            >
+              <mat-icon>upgrade</mat-icon>
+            </button>
+            }
+
+            <!-- Unenroll -->
+            @if (canUnenroll()) {
+            <button
+              mat-icon-button
+              class="unenroll-icon-btn"
+              (click)="openUnenrollDialog(s, $event)"
+              matTooltip="Unenroll student"
+            >
+              <mat-icon>person_remove</mat-icon>
+            </button>
+            }
+          </div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr
+        mat-row
+        *matRowDef="let row; columns: displayedColumns"
+        [class.selected-row]="isSelected(row.id)"
+        [routerLink]="['/school/students', row.id]"
+      ></tr>
+    </table>
+  </div>
+  } }
+</div>

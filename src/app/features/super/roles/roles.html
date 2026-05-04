@@ -1,0 +1,178 @@
+<div class="page">
+  <header class="page__header">
+    <div>
+      <h1 class="page__title">Roles</h1>
+      <p class="page__subtitle">Manage role-based permission groups for admin users</p>
+    </div>
+
+    <ng-container *hasSuperPermission="'roles.manage'">
+      <button
+        mat-flat-button
+        color="primary"
+        class="create-btn"
+        (click)="startCreate()"
+        *ngIf="!creating()"
+      >
+        <mat-icon>add</mat-icon>
+        New Role
+      </button>
+    </ng-container>
+  </header>
+
+  <!-- Create / Edit inline form -->
+  @if (creating() || editing()) {
+  <div class="form-card mat-elevation-z1">
+    <h3 class="form-card__title">
+      <mat-icon>{{ editing() ? 'edit' : 'add_circle' }}</mat-icon>
+      {{ editing() ? 'Edit Role: ' + editing()!.name : 'Create New Role' }}
+    </h3>
+
+    <form [formGroup]="form" class="role-form" (ngSubmit)="save()">
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Role name</mat-label>
+          <input matInput formControlName="name" placeholder="e.g. ContentManager" />
+          <mat-error *ngIf="form.get('name')?.hasError('required')">Required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Description</mat-label>
+          <input
+            matInput
+            formControlName="description"
+            placeholder="Brief description of this role's purpose"
+          />
+          <mat-error *ngIf="form.get('description')?.hasError('required')">Required</mat-error>
+          <mat-error *ngIf="form.get('description')?.hasError('minlength')"
+            >At least 5 characters</mat-error
+          >
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline" style="width: 100%">
+        <mat-label>Permissions</mat-label>
+        <mat-select formControlName="permissionIds" multiple>
+          @for (module of getPermissionModules(allPermissions()) | keyvalue; track module.key) {
+          <mat-optgroup [label]="module.key">
+            @for (perm of $any(module.value); track perm.id) {
+            <mat-option [value]="perm.id">
+              {{ perm.name }}
+              <span style="font-size: 0.75rem; color: #9ca3af; margin-left: 6px">{{
+                perm.slug
+              }}</span>
+            </mat-option>
+            }
+          </mat-optgroup>
+          }
+        </mat-select>
+        <mat-hint>Select one or more permissions</mat-hint>
+        <mat-error *ngIf="form.get('permissionIds')?.hasError('required')"
+          >Select at least one permission</mat-error
+        >
+      </mat-form-field>
+
+      @if (form.get('permissionIds')?.value?.length) {
+      <p class="perm-count">
+        {{ form.get('permissionIds')?.value?.length }} permission(s) selected
+      </p>
+      }
+
+      <div class="form-actions">
+        <button mat-button type="button" (click)="cancelForm()">Cancel</button>
+        <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || saving()">
+          @if (saving()) { Saving... } @else { {{ editing() ? 'Update role' : 'Create role' }} }
+        </button>
+      </div>
+    </form>
+  </div>
+  }
+
+  <!-- Roles table -->
+  <div class="table-card mat-elevation-z1">
+    <mat-progress-bar
+      *ngIf="loading()"
+      mode="indeterminate"
+      color="primary"
+      class="loading-bar"
+    ></mat-progress-bar>
+
+    <mat-table [dataSource]="roles()">
+      <ng-container matColumnDef="name">
+        <mat-header-cell *matHeaderCellDef>Role</mat-header-cell>
+        <mat-cell *matCellDef="let role">
+          <div class="role-name-cell">
+            <span class="role-name">{{ role.name }}</span>
+            <span class="system-badge" *ngIf="role.isSystem">system</span>
+            <span class="role-desc">{{ role.description }}</span>
+          </div>
+        </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="permissions">
+        <mat-header-cell *matHeaderCellDef>Permissions</mat-header-cell>
+        <mat-cell *matCellDef="let role">
+          <div class="perms-cell">
+            @for (perm of asPermArray(role.permissions).slice(0, 4); track perm.id) {
+            <span class="perm-tag" [matTooltip]="perm.slug">{{ perm.name }}</span>
+            } @if (role.permissions.length > 4) {
+            <span class="perm-tag perm-tag--more">+{{ role.permissions.length - 4 }} more</span>
+            } @if (role.permissions.length === 0) {
+            <span class="empty-perms">No permissions</span>
+            }
+          </div>
+        </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="system">
+        <mat-header-cell *matHeaderCellDef>Type</mat-header-cell>
+        <mat-cell *matCellDef="let role">
+          <span
+            class="type-badge"
+            [class.type-badge--system]="role.isSystem"
+            [class.type-badge--custom]="!role.isSystem"
+          >
+            {{ role.isSystem ? 'System' : 'Custom' }}
+          </span>
+        </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef></mat-header-cell>
+        <mat-cell *matCellDef="let role">
+          <div class="actions-cell">
+            <button
+              mat-icon-button
+              class="action-btn action-btn--edit"
+              (click)="startEdit(role)"
+              [disabled]="role.isSystem"
+              [matTooltip]="role.isSystem ? 'System roles cannot be edited' : 'Edit role'"
+            >
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              class="action-btn action-btn--delete"
+              (click)="deleteRole(role)"
+              [disabled]="role.isSystem"
+              [matTooltip]="role.isSystem ? 'System roles cannot be deleted' : 'Delete role'"
+            >
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </div>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns" class="table-row"></mat-row>
+
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell empty-state" [attr.colspan]="displayedColumns.length">
+          <div class="empty-state__content">
+            <mat-icon>shield</mat-icon>
+            <p>{{ loading() ? 'Loading roles...' : 'No roles found' }}</p>
+          </div>
+        </td>
+      </tr>
+    </mat-table>
+  </div>
+</div>

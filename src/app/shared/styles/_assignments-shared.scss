@@ -1,0 +1,555 @@
+// ============================================================
+// _assignments-shared.scss
+// Single source of truth for ALL assignments module styles.
+// Import in every assignments component SCSS:
+//   @use '../../../../../shared/styles/assignments-shared' as *;
+// (adjust relative path as needed)
+// ============================================================
+
+// ── Page shell ───────────────────────────────────────────────────────────────
+.page-container {
+  padding: 32px 28px;
+  max-width: 1340px;
+  margin: 0 auto;
+
+  @media (max-width: 768px) {
+    padding: 20px 16px;
+  }
+}
+
+// ── Page header ───────────────────────────────────────────────────────────────
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  .header-left {
+    h1 {
+      margin: 0 0 4px;
+      font-size: 1.875rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      letter-spacing: -0.02em;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--color-text-secondary);
+    }
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    letter-spacing: -0.02em;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .header-actions {
+      width: 100%;
+    }
+  }
+}
+
+// ── Feedback states ───────────────────────────────────────────────────────────
+.state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 360px;
+  gap: 16px;
+  text-align: center;
+  padding: 40px 20px;
+
+  .state-icon {
+    font-size: 72px;
+    height: 72px;
+    width: 72px;
+    opacity: 0.5;
+    color: var(--color-text-muted);
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
+  p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    max-width: 380px;
+  }
+
+  &.error {
+    .state-icon {
+      color: var(--color-error);
+      opacity: 1;
+    }
+
+    h2 {
+      color: var(--color-error);
+    }
+  }
+}
+
+// ── Filter card ───────────────────────────────────────────────────────────────
+.filter-card {
+  background: var(--color-bg-card) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-sm) !important;
+  border: 1px solid var(--color-border) !important;
+  margin-bottom: 28px;
+
+  .mat-mdc-card-content {
+    padding: 20px 24px !important;
+  }
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  align-items: flex-start;
+
+  .filter-actions {
+    display: flex;
+    align-items: center;
+    padding-top: 4px;
+  }
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ── Table card ────────────────────────────────────────────────────────────────
+.table-card {
+  background: var(--color-bg-card) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-sm) !important;
+  border: 1px solid var(--color-border) !important;
+  overflow: hidden;
+
+  table {
+    width: 100%;
+  }
+}
+
+.table-overflow {
+  overflow-x: auto;
+}
+
+// Mat-table overrides
+.mat-mdc-header-cell {
+  background: var(--color-hover) !important;
+  font-weight: 700 !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary) !important;
+  padding: 14px 16px !important;
+}
+
+.mat-mdc-cell {
+  padding: 14px 16px !important;
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--color-divider) !important;
+}
+
+.mat-mdc-row {
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--color-hover) !important;
+  }
+
+  &:last-child .mat-mdc-cell {
+    border-bottom: none !important;
+  }
+}
+
+// ── Form page ─────────────────────────────────────────────────────────────────
+.form-page {
+  max-width: 860px;
+  margin: 36px auto;
+  padding: 0 24px;
+
+  @media (max-width: 600px) {
+    padding: 0 16px;
+    margin: 20px auto;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+    gap: 16px;
+    flex-wrap: wrap;
+
+    h1 {
+      margin: 0;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+    }
+
+    @media (max-width: 600px) {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+}
+
+// ── Form card ─────────────────────────────────────────────────────────────────
+.form-card {
+  background: var(--color-bg-card) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-md) !important;
+  border: 1px solid var(--color-border) !important;
+  padding: 36px !important;
+
+  @media (max-width: 600px) {
+    padding: 24px 20px !important;
+  }
+}
+
+// ── Form layout ───────────────────────────────────────────────────────────────
+.form-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+// ── Form actions ──────────────────────────────────────────────────────────────
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-divider);
+
+  button {
+    min-width: 120px;
+  }
+}
+
+// ── Loading overlay inside forms ──────────────────────────────────────────────
+.loading-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  gap: 16px;
+  color: var(--color-text-secondary);
+}
+
+// ── Badge chips ───────────────────────────────────────────────────────────────
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+
+  &.pending {
+    background: color-mix(in srgb, var(--color-warning) 14%, transparent);
+    color: var(--color-warning);
+  }
+
+  &.done {
+    background: color-mix(in srgb, var(--color-success) 14%, transparent);
+    color: var(--color-success);
+  }
+
+  &.graded {
+    background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+    color: var(--color-primary-dark);
+  }
+
+  &.received {
+    background: color-mix(in srgb, var(--color-info) 14%, transparent);
+    color: var(--color-info);
+  }
+
+  &.not-received {
+    background: color-mix(in srgb, var(--color-error) 10%, transparent);
+    color: var(--color-error);
+  }
+
+  &.assignment {
+    background: color-mix(in srgb, var(--color-secondary) 14%, transparent);
+    color: var(--color-secondary);
+  }
+
+  &.classwork {
+    background: color-mix(in srgb, var(--color-info) 14%, transparent);
+    color: var(--color-info);
+  }
+
+  &.homework {
+    background: color-mix(in srgb, var(--color-warning) 14%, transparent);
+    color: var(--color-warning);
+  }
+}
+
+// ── Cell actions ──────────────────────────────────────────────────────────────
+.cell-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+// ── Student Timeline ──────────────────────────────────────────────────────────
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.timeline-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.timeline-date-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+
+  .date-badge {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    padding: 6px 16px;
+    border-radius: 9999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .date-line {
+    flex: 1;
+    height: 1px;
+    background: var(--color-divider);
+  }
+}
+
+.timeline-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-left: 4px;
+}
+
+// ── Task card (student view) ──────────────────────────────────────────────────
+.task-card {
+  background: var(--color-bg-card) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-sm) !important;
+  border: 1px solid var(--color-border) !important;
+  border-left: 4px solid var(--color-border) !important;
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+
+  &:hover {
+    box-shadow: var(--shadow-md) !important;
+    transform: translateY(-1px);
+  }
+
+  &.assignment {
+    border-left-color: var(--color-secondary) !important;
+  }
+
+  &.class_work {
+    border-left-color: var(--color-info) !important;
+  }
+
+  &.home_work {
+    border-left-color: var(--color-warning) !important;
+  }
+
+  .task-header {
+    padding: 16px 20px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+
+    .task-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      margin: 0 0 4px;
+    }
+
+    .task-subtitle {
+      font-size: 0.82rem;
+      color: var(--color-text-secondary);
+      margin: 0;
+    }
+  }
+
+  .task-body {
+    padding: 0 20px 12px;
+
+    p {
+      margin: 0 0 12px;
+      font-size: 0.88rem;
+      color: var(--color-text-secondary);
+      line-height: 1.55;
+    }
+  }
+
+  .task-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+
+    .due-label {
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+
+      strong {
+        color: var(--color-text-secondary);
+      }
+    }
+  }
+
+  .task-footer {
+    padding: 10px 20px 16px;
+    border-top: 1px solid var(--color-divider);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+}
+
+// ── Aggregates summary bar ────────────────────────────────────────────────────
+.aggregates-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1px;
+  background: var(--color-border);
+  border-top: 1px solid var(--color-border);
+
+  .stat-item {
+    background: var(--color-bg-card);
+    padding: 16px 20px;
+    text-align: center;
+
+    .stat-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--color-text-muted);
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      display: block;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+  }
+}
+
+// ── Compact form fields (grading table) ───────────────────────────────────────
+.compact-field {
+  width: 100%;
+
+  .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+  }
+}
+
+// ── Student info cell ─────────────────────────────────────────────────────────
+.student-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  .student-name {
+    font-weight: 600;
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+  }
+
+  .student-roll {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+  }
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .aggregates-bar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .aggregates-bar {
+    grid-template-columns: 1fr;
+  }
+}

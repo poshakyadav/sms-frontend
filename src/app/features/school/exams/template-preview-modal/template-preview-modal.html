@@ -1,0 +1,138 @@
+<div
+  class="preview-backdrop"
+  [class.fullscreen]="isFullscreen()"
+  (click)="close()"
+  role="dialog"
+  aria-modal="true"
+  [attr.aria-label]="'Preview: ' + template().name"
+>
+  <div class="preview-sheet" (click)="$event.stopPropagation()">
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- MODAL HEADER                                                       -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div class="preview-header">
+      <div class="preview-header-left">
+        <div class="preview-type-badge" [class.report]="cardType() === 'REPORT_CARD'">
+          <mat-icon>{{ cardType() === 'ADMIT_CARD' ? 'badge' : 'summarize' }}</mat-icon>
+          <span>{{ cardTypeLabel }}</span>
+        </div>
+        <div class="preview-title-block">
+          <h2 class="preview-title">{{ template().name }}</h2>
+          <p class="preview-desc">{{ template().description }}</p>
+        </div>
+      </div>
+
+      <div class="preview-header-actions">
+        <!-- Zoom controls -->
+        <div class="zoom-group">
+          <button
+            class="zoom-btn"
+            (click)="zoomOut()"
+            [disabled]="!canZoomOut()"
+            matTooltip="Zoom out"
+          >
+            <mat-icon>zoom_out</mat-icon>
+          </button>
+          <span class="zoom-label">{{ zoomPercent }}</span>
+          <button
+            class="zoom-btn"
+            (click)="zoomIn()"
+            [disabled]="!canZoomIn()"
+            matTooltip="Zoom in"
+          >
+            <mat-icon>zoom_in</mat-icon>
+          </button>
+        </div>
+
+        <!-- Quick zoom presets -->
+        <div class="zoom-presets">
+          @for (level of zoomLevels; track level) {
+          <button class="zoom-preset" [class.active]="zoom() === level" (click)="setZoom(level)">
+            {{ (level * 100).toFixed(0) }}%
+          </button>
+          }
+        </div>
+
+        <div class="header-divider"></div>
+
+        <!-- Print -->
+        <button class="action-btn" (click)="print()" matTooltip="Print preview">
+          <mat-icon>print</mat-icon>
+        </button>
+
+        <!-- Fullscreen toggle -->
+        <button
+          class="action-btn"
+          (click)="toggleFullscreen()"
+          [matTooltip]="isFullscreen() ? 'Exit fullscreen' : 'Fullscreen'"
+        >
+          <mat-icon>{{ isFullscreen() ? 'fullscreen_exit' : 'fullscreen' }}</mat-icon>
+        </button>
+
+        <!-- Close -->
+        <button class="close-btn" (click)="close()" matTooltip="Close preview">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- DUMMY DATA NOTICE BANNER                                           -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div class="dummy-notice">
+      <mat-icon>info_outline</mat-icon>
+      <span>
+        This is a <strong>preview with sample data</strong>. Real student names, marks and school
+        info will appear when generated.
+      </span>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- IFRAME CANVAS                                                      -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div class="preview-canvas" #canvasRef>
+      @if (!iframeReady()) {
+      <div class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>Rendering template…</p>
+      </div>
+      }
+    
+      <div class="iframe-scaler-wrapper">
+        <div
+          class="iframe-scaler"
+          [style.transform]="'scale(' + zoom() + ')'"
+          [style.transformOrigin]="'top center'"
+          [style.height]="(zoom() * 900) + 'px'"
+          [style.margin]="scalerMargin()"
+        >
+          <iframe
+            #previewFrame
+            class="preview-iframe"
+            title="Template preview"
+            sandbox="allow-same-origin allow-scripts allow-modals"
+            scrolling="auto"
+          ></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- MODAL FOOTER                                                       -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div class="preview-footer">
+      <div class="preview-footer-meta">
+        <span class="meta-chip">
+          <mat-icon>style</mat-icon>
+          {{ template().key }}
+        </span>
+        <span class="meta-sep">·</span>
+        <span class="footer-note">Sample data shown for preview purposes</span>
+      </div>
+      <button class="footer-close-btn" (click)="close()">
+        <mat-icon>close</mat-icon>
+        Close Preview
+      </button>
+    </div>
+  </div>
+</div>

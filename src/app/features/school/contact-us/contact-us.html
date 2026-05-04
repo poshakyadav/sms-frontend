@@ -1,0 +1,229 @@
+<!-- contact-us.html -->
+<div class="contact-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-icon">
+      <mat-icon>support_agent</mat-icon>
+    </div>
+    <div class="header-text">
+      <h1 class="page-title">Contact Support</h1>
+      <p class="page-sub">
+        We're here to help. Send us a message and we'll respond within 1–2 business days.
+      </p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn" [class.active]="activeTab() === 'form'" (click)="activeTab.set('form')">
+      <mat-icon>edit_note</mat-icon>
+      Send Message
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'history'"
+      (click)="activeTab.set('history')"
+    >
+      <mat-icon>history</mat-icon>
+      Message History @if (history().length > 0) {
+      <span class="tab-badge">{{ history().length }}</span>
+      }
+    </button>
+  </div>
+
+  <!-- ══════ FORM TAB ══════ -->
+  @if (activeTab() === 'form') { @if (!canSubmit()) {
+  <div class="no-permission-block">
+    <mat-icon>lock_outline</mat-icon>
+    <h3>Permission Required</h3>
+    <p>Only the school owner or authorized staff can contact support.</p>
+  </div>
+  } @else if (submitted()) {
+  <!-- Success State -->
+  <div class="success-block">
+    <div class="success-icon-ring">
+      <mat-icon>mark_email_read</mat-icon>
+    </div>
+    <h2 class="success-title">Message Sent!</h2>
+    <p class="success-sub">
+      Your message has been received. We'll get back to you within
+      <strong>1–2 business days</strong>.
+    </p>
+    @if (referenceId()) {
+    <div class="ref-id-box">
+      <span class="ref-label">Reference ID</span>
+      <span class="ref-val">{{ referenceId() }}</span>
+    </div>
+    }
+    <div class="success-actions">
+      <button mat-flat-button class="primary-btn" (click)="resetForm()">
+        <mat-icon>add</mat-icon>
+        Send Another Message
+      </button>
+      <button mat-stroked-button class="outline-btn" (click)="activeTab.set('history')">
+        View History
+      </button>
+    </div>
+  </div>
+  } @else {
+  <!-- Form -->
+  <div class="form-card">
+    <form class="contact-form" (ngSubmit)="onSubmit()">
+      <!-- Category selection chips -->
+      <div class="form-group">
+        <label class="field-label">Category *</label>
+        <div class="category-chips">
+          @for (cat of categories; track cat.value) {
+          <button
+            type="button"
+            class="cat-chip"
+            [class.selected]="form.category === cat.value"
+            [style.--chip-color]="cat.color"
+            (click)="form.category = cat.value"
+          >
+            <mat-icon>{{ cat.icon }}</mat-icon>
+            {{ cat.label }}
+          </button>
+          }
+        </div>
+      </div>
+
+      <!-- Subject -->
+      <mat-form-field appearance="outline" class="field-full">
+        <mat-label>Subject *</mat-label>
+        <input
+          matInput
+          [(ngModel)]="form.subject"
+          name="subject"
+          placeholder="Brief description of your issue"
+          required
+          minlength="5"
+          maxlength="120"
+        />
+        <mat-hint align="end">{{ form.subject.length }}/120</mat-hint>
+      </mat-form-field>
+
+      <!-- Message -->
+      <mat-form-field appearance="outline" class="field-full">
+        <mat-label>Message *</mat-label>
+        <textarea
+          matInput
+          [(ngModel)]="form.message"
+          name="message"
+          placeholder="Describe your issue in detail. Include any relevant information that might help us assist you faster."
+          rows="6"
+          required
+          minlength="20"
+          maxlength="2000"
+        ></textarea>
+        <mat-hint align="end">{{ form.message.length }}/2000</mat-hint>
+      </mat-form-field>
+
+      <!-- Phone (optional) -->
+      <mat-form-field appearance="outline" class="field-full">
+        <mat-label>Phone Number (optional)</mat-label>
+        <mat-icon matPrefix style="color: var(--color-text-muted); margin-right: 4px"
+          >phone</mat-icon
+        >
+        <input
+          matInput
+          type="tel"
+          [(ngModel)]="form.ownerPhone"
+          name="ownerPhone"
+          placeholder="For urgent issues — we may call"
+          maxlength="15"
+        />
+        <mat-hint>We'll only call if your issue requires immediate attention.</mat-hint>
+      </mat-form-field>
+
+      <!-- Error -->
+      @if (errorMsg()) {
+      <div class="form-error">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ errorMsg() }}</span>
+      </div>
+      }
+
+      <!-- Submit -->
+      <div class="form-footer">
+        <p class="response-note">
+          <mat-icon>schedule</mat-icon>
+          Typical response time: <strong>1–2 business days</strong>
+        </p>
+        <button
+          type="submit"
+          mat-flat-button
+          class="primary-btn"
+          [disabled]="!isFormValid() || loading()"
+        >
+          @if (loading()) {
+          <mat-spinner diameter="18"></mat-spinner>
+          Sending… } @else {
+          <ng-container>
+            <mat-icon>send</mat-icon>
+            Send Message
+          </ng-container>
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+  } }
+  <!-- end form tab -->
+
+  <!-- ══════ HISTORY TAB ══════ -->
+  @if (activeTab() === 'history') {
+  <div class="history-section">
+    @if (historyLoading()) {
+    <div class="loading-state">
+      <mat-spinner diameter="36"></mat-spinner>
+      <span>Loading history…</span>
+    </div>
+    } @else if (history().length === 0) {
+    <div class="empty-state">
+      <mat-icon>inbox</mat-icon>
+      <h3>No messages yet</h3>
+      <p>Your support messages will appear here once you send them.</p>
+      <button mat-flat-button class="primary-btn" (click)="activeTab.set('form')">
+        <mat-icon>edit_note</mat-icon>
+        Send your first message
+      </button>
+    </div>
+    } @else {
+    <div class="history-list">
+      @for (msg of history(); track msg.id) {
+      <div class="history-item">
+        <div
+          class="history-cat-icon"
+          [style.background]="getCategoryConfig(msg.category)?.color + '18'"
+          [style.color]="getCategoryConfig(msg.category)?.color"
+        >
+          <mat-icon>{{ getCategoryConfig(msg.category)?.icon }}</mat-icon>
+        </div>
+        <div class="history-content">
+          <div class="history-top">
+            <span class="history-subject">{{ msg.subject }}</span>
+            <span
+              class="history-status"
+              [style.color]="getStatusConfig(msg.status).color"
+              [style.background]="getStatusConfig(msg.status).bg"
+            >
+              {{ getStatusConfig(msg.status).label }}
+            </span>
+          </div>
+          <div class="history-meta">
+            <span class="history-cat-label">{{ getCategoryConfig(msg.category)?.label }}</span>
+            <span class="history-dot">·</span>
+            <span class="history-date">{{ formatDate(msg.createdAt) }}</span>
+            <span class="history-dot">·</span>
+            <span class="history-ref">MSG-{{ msg.id.toString().padStart(6, '0') }}</span>
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+    }
+  </div>
+  }
+  <!-- end history tab -->
+</div>

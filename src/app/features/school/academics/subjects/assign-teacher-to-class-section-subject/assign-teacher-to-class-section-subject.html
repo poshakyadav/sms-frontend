@@ -1,0 +1,175 @@
+<div class="page-container">
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>Assign Teachers</h1>
+      @if (subjectDisplayName()) {
+      <p>{{ subjectDisplayName() }}</p>
+      } @else if (!loading() && !error()) {
+      <p>Loading subject details…</p>
+      }
+    </div>
+    <div class="header-actions">
+      @if (canManage() && !showAddForm() && !loading() && !error()) {
+      <button mat-raised-button color="primary" (click)="toggleAddForm()">
+        <mat-icon>person_add</mat-icon> Add Teacher
+      </button>
+      }
+      <!-- Back always goes to assign-class (step 2 of the subject flow) -->
+      <button mat-icon-button (click)="goBack()" matTooltip="Back to class-subject assignment">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Breadcrumb / flow context ────────────────────────────────────────── -->
+  <div class="breadcrumb-flow">
+    <span (click)="router.navigate(['/school/academics/subjects'])" class="crumb crumb-link"
+      >Subjects</span
+    >
+    <span class="crumb-sep">›</span>
+    <span (click)="goBack()" class="crumb crumb-link">Assign to Class</span>
+    <span class="crumb-sep">›</span>
+    <span class="crumb crumb-current">Assign Teachers</span>
+  </div>
+
+  <!-- ── Loading ────────────────────────────────────────────────────────── -->
+  @if (loading()) {
+  <div class="state-container">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading teacher assignments…</p>
+  </div>
+
+  <!-- ── Error ──────────────────────────────────────────────────────────── -->
+  } @else if (error()) {
+  <div class="state-container error">
+    <mat-icon class="state-icon">error_outline</mat-icon>
+    <h2>Something went wrong</h2>
+    <p>{{ error() }}</p>
+    <div style="display: flex; gap: 12px; margin-top: 8px">
+      <button mat-stroked-button (click)="loadData()"><mat-icon>refresh</mat-icon> Retry</button>
+      <button mat-raised-button color="primary" (click)="goBack()">
+        ← Back to Class Assignment
+      </button>
+    </div>
+  </div>
+
+  } @else {
+
+  <!-- ── Add teacher inline form ─────────────────────────────────────── -->
+  @if (showAddForm()) {
+  <div class="inline-form-card">
+    <h3>
+      <mat-icon>person_add</mat-icon>
+      Assign Teacher to {{ subjectDisplayName() }}
+    </h3>
+
+    @if (availableTeachers().length === 0) {
+    <p class="no-more-teachers">
+      <mat-icon>check_circle</mat-icon>
+      All available teachers have already been assigned to this subject.
+    </p>
+    } @else {
+    <div class="add-form-row">
+      <mat-form-field appearance="outline">
+        <mat-label>Select Teacher *</mat-label>
+        <mat-select [ngModel]="selectedTeacherId()" (ngModelChange)="selectedTeacherId.set($event)">
+          <mat-option [value]="null">— Choose a teacher —</mat-option>
+          @for (t of availableTeachers(); track t.id) {
+          <mat-option [value]="t.id">
+            {{ t.name }}
+            @if (t.qualification) {
+            <span class="capacity-badge">– {{ t.qualification }}</span>
+            }
+          </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Role</mat-label>
+        <mat-select [ngModel]="isPrimary()" (ngModelChange)="isPrimary.set($event)">
+          <mat-option [value]="true">Primary (Lead Teacher)</mat-option>
+          <mat-option [value]="false">Supporting</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div class="add-form-actions">
+        <button mat-stroked-button type="button" (click)="toggleAddForm()">Cancel</button>
+        <button
+          mat-raised-button
+          color="primary"
+          [disabled]="!selectedTeacherId() || assigning()"
+          (click)="assignTeacher()"
+        >
+          @if (assigning()) {
+          <mat-spinner diameter="18" style="display: inline-block; margin-right: 6px"></mat-spinner>
+          } Assign
+        </button>
+      </div>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- ── Assigned teachers table / empty state ───────────────────── -->
+  @if (assignedTeachers().length === 0) {
+  <div class="state-container">
+    <mat-icon class="state-icon">person_add</mat-icon>
+    <h2>No Teachers Assigned</h2>
+    <p>
+      Assign at least one teacher to <strong>{{ subjectDisplayName() }}</strong
+      >. Students need to know who to contact for this subject.
+    </p>
+    @if (canManage() && !showAddForm()) {
+    <button mat-raised-button color="primary" (click)="toggleAddForm()">
+      <mat-icon>person_add</mat-icon> Assign First Teacher
+    </button>
+    }
+  </div>
+  } @else {
+  <div class="table-card">
+    <table mat-table [dataSource]="assignedTeachers()">
+      <ng-container matColumnDef="teacherName">
+        <th mat-header-cell *matHeaderCellDef>Teacher</th>
+        <td mat-cell *matCellDef="let a">
+          <div class="teacher-cell">
+            <div class="teacher-avatar">
+              {{ a.teacherName.slice(0, 2).toUpperCase() }}
+            </div>
+            <strong>{{ a.teacherName }}</strong>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef>Email</th>
+        <td mat-cell *matCellDef="let a">{{ a.teacherEmail || '—' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="role">
+        <th mat-header-cell *matHeaderCellDef>Role</th>
+        <td mat-cell *matCellDef="let a">
+          <span class="badge" [class.active]="a.isPrimary" [class.inactive]="!a.isPrimary">
+            {{ a.isPrimary ? 'Primary' : 'Supporting' }}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let a">
+          @if (canManage()) {
+          <button mat-icon-button color="warn" (click)="unassign(a)" matTooltip="Remove teacher">
+            <mat-icon>person_remove</mat-icon>
+          </button>
+          }
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+  </div>
+  } }
+</div>

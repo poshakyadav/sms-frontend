@@ -1,0 +1,677 @@
+// ── Page Wrapper ─────────────────────────────────────────────────────────────
+.page-wrapper {
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+  min-height: calc(100vh - 64px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  @media (max-width: 768px) {
+    padding: 16px;
+    gap: 16px;
+  }
+}
+
+// ── Page Header ───────────────────────────────────────────────────────────────
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+
+  .header-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--color-border);
+    background: var(--color-bg-surface);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.18s ease;
+    flex-shrink: 0;
+    margin-top: 4px;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    &:hover {
+      background: var(--color-hover);
+      color: var(--color-primary);
+      border-color: var(--color-primary);
+    }
+  }
+
+  .header-text {
+    min-width: 0;
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    font-weight: 500;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+
+    .bc-sep {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+      opacity: 0.5;
+    }
+  }
+
+  .page-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--color-text-primary);
+    margin: 0 0 10px;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: -0.02em;
+
+    @media (max-width: 600px) {
+      font-size: 18px;
+    }
+  }
+
+  .exam-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .meta-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--color-bg-card);
+    border: 1.5px solid var(--color-border);
+    color: var(--color-text-secondary);
+
+    mat-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+    }
+
+    &.type {
+      background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+      border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+      color: var(--color-primary);
+    }
+
+    &.status-scheduled {
+      background: color-mix(in srgb, var(--color-info) 10%, transparent);
+      border-color: color-mix(in srgb, var(--color-info) 30%, transparent);
+      color: var(--color-info);
+    }
+
+    &.status-active {
+      background: color-mix(in srgb, var(--color-success) 10%, transparent);
+      border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
+      color: var(--color-success);
+    }
+
+    &.status-completed {
+      background: color-mix(in srgb, var(--color-secondary) 10%, transparent);
+      border-color: color-mix(in srgb, var(--color-secondary) 30%, transparent);
+      color: var(--color-secondary);
+    }
+  }
+
+  .header-right {
+    flex-shrink: 0;
+  }
+
+  .stat-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--color-bg-card);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 10px 20px;
+    box-shadow: var(--shadow-sm);
+
+    .stat-num {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--color-primary);
+      line-height: 1;
+    }
+
+    .stat-lbl {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 2px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+
+    .header-right {
+      align-self: flex-start;
+      margin-left: 54px;
+    }
+  }
+}
+
+// ── Info Banner ───────────────────────────────────────────────────────────────
+.info-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: color-mix(in srgb, var(--color-info) 8%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--color-info) 22%, transparent);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+
+  mat-icon {
+    color: var(--color-info);
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  strong {
+    color: var(--color-text-primary);
+  }
+}
+
+// ── State Containers ──────────────────────────────────────────────────────────
+.state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 80px 24px;
+  flex: 1;
+  text-align: center;
+
+  .loader-ring {
+    position: relative;
+  }
+
+  .state-icon-wrap {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    mat-icon {
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
+    }
+
+    &.error {
+      background: color-mix(in srgb, var(--color-error) 10%, transparent);
+      border: 2px solid color-mix(in srgb, var(--color-error) 25%, transparent);
+
+      mat-icon {
+        color: var(--color-error);
+      }
+    }
+
+    &.neutral {
+      background: var(--color-hover);
+      border: 2px solid var(--color-border);
+
+      mat-icon {
+        color: var(--color-text-muted);
+      }
+    }
+  }
+
+  .state-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin: 0;
+  }
+
+  .state-msg {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin: 0;
+    max-width: 360px;
+    line-height: 1.6;
+  }
+}
+
+// ── Toolbar ───────────────────────────────────────────────────────────────────
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+
+  .search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1;
+    max-width: 380px;
+    background: var(--color-bg-surface);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    transition: border-color 0.15s, box-shadow 0.15s;
+
+    &:focus-within {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      color: var(--color-text-muted);
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 40px 10px 40px;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--color-text-primary);
+      font-size: 14px;
+      font-family: inherit;
+
+      &::placeholder {
+        color: var(--color-text-muted);
+      }
+    }
+
+    .clear-btn {
+      position: absolute;
+      right: 6px;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: var(--color-hover);
+      border-radius: 50%;
+      cursor: pointer;
+      color: var(--color-text-muted);
+      transition: all 0.15s;
+
+      mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+
+      &:hover {
+        background: var(--color-active);
+        color: var(--color-primary);
+      }
+    }
+  }
+
+  .filter-indicator {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 480px) {
+    .search-box {
+      max-width: 100%;
+    }
+  }
+}
+
+// ── Table Card ────────────────────────────────────────────────────────────────
+.table-card {
+  background: var(--color-bg-card);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+
+  &.empty-filter {
+    border: none;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .no-results {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 60px 24px;
+    color: var(--color-text-muted);
+    text-align: center;
+
+    mat-icon {
+      font-size: 40px;
+      width: 40px;
+      height: 40px;
+      opacity: 0.4;
+    }
+
+    p {
+      font-size: 14px;
+      margin: 0;
+      color: var(--color-text-secondary);
+    }
+  }
+}
+
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+// ── Material Table — full dark-mode override ──────────────────────────────────
+// Angular Material injects its own --mat-table-background-color and row colors
+// via MDC tokens. We must override them at the component level so they respond
+// to our CSS variable scheme in both light and dark mode.
+.students-table {
+  width: 100%;
+  min-width: 640px;
+
+  // ── Force table bg to match our card bg (fixes white flash in dark mode) ──
+  background: var(--color-bg-card) !important;
+
+  // MDC token overrides — these are what Material actually reads
+  --mat-table-background-color: var(--color-bg-card);
+  --mat-table-header-headline-color: var(--color-text-muted);
+  --mat-table-row-item-label-text-color: var(--color-text-primary);
+
+  // ── Header row ────────────────────────────────────────────────────────────
+  .mat-mdc-header-row {
+    background: var(--color-bg-main) !important;
+    border-bottom: 2px solid var(--color-border) !important;
+  }
+
+  .mat-mdc-header-cell {
+    background: var(--color-bg-main) !important;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-text-muted) !important;
+    padding: 12px 16px;
+    border-bottom: none !important;
+  }
+
+  // ── Data rows ─────────────────────────────────────────────────────────────
+  .mat-mdc-row,
+  .student-row {
+    background: var(--color-bg-card) !important;
+    border-bottom: 1px solid var(--color-divider) !important;
+    transition: background 0.13s ease;
+
+    &:last-child {
+      border-bottom: none !important;
+    }
+
+    // Proper hover — override Material's ripple-based hover
+    &:hover {
+      background: var(--color-hover) !important;
+    }
+
+    // Remove Material's default focus/selected state bg bleed
+    &.mdc-data-table__row--selected,
+    &:focus {
+      background: var(--color-hover) !important;
+      outline: none;
+    }
+  }
+
+  // ── Cells ─────────────────────────────────────────────────────────────────
+  .mat-mdc-cell {
+    background: transparent !important;
+    padding: 14px 16px;
+    font-size: 14px;
+    color: var(--color-text-primary) !important;
+    border-bottom: none !important;
+    vertical-align: middle;
+  }
+
+  // ── Column widths ──────────────────────────────────────────────────────────
+  .col-index {
+    width: 56px;
+    text-align: center;
+  }
+
+  .col-email {
+    @media (max-width: 860px) {
+      display: none;
+    }
+  }
+
+  .col-roll {
+    width: 110px;
+  }
+
+  .col-action {
+    width: 152px;
+  }
+}
+
+// ── Student Cell ──────────────────────────────────────────────────────────────
+.student-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    // Use a semi-transparent primary tint so it looks correct in both modes
+    background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+    color: var(--color-primary);
+    font-size: 14px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1.5px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
+    letter-spacing: 0;
+    // Prevents the avatar from inheriting the dark cell background as solid fill
+    isolation: isolate;
+  }
+
+  .student-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .student-name {
+    font-weight: 600;
+    // Explicitly set — never inherit from Material's dark cell override
+    color: var(--color-text-primary);
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .student-email {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    // Only shown on narrow screens; wide screens use the dedicated email column
+    @media (min-width: 861px) {
+      display: none;
+    }
+  }
+}
+
+// ── Index Badge ───────────────────────────────────────────────────────────────
+// Was appearing as solid black in dark mode — now uses CSS vars
+.index-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: var(--color-hover);
+  border: 1px solid var(--color-border);
+}
+
+// ── Roll Badge ────────────────────────────────────────────────────────────────
+.roll-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
+  color: var(--color-secondary);
+  border: 1px solid color-mix(in srgb, var(--color-secondary) 28%, transparent);
+  letter-spacing: 0.03em;
+}
+
+// ── Muted text ────────────────────────────────────────────────────────────────
+.text-muted {
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+// ── Card Action Buttons ───────────────────────────────────────────────────────
+.card-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid transparent;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  white-space: nowrap;
+  font-family: inherit;
+
+  mat-icon {
+    font-size: 15px;
+    width: 15px;
+    height: 15px;
+  }
+
+  span {
+    @media (max-width: 760px) {
+      display: none;
+    }
+  }
+
+  &.admit {
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+    color: var(--color-primary);
+
+    &:hover {
+      background: var(--color-primary);
+      color: var(--color-on-primary);
+      border-color: var(--color-primary);
+      box-shadow: var(--shadow-sm);
+      transform: translateY(-1px);
+    }
+  }
+
+  &.report {
+    background: color-mix(in srgb, var(--color-success) 10%, transparent);
+    border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
+    color: var(--color-success);
+
+    &:hover {
+      background: var(--color-success);
+      color: #fff;
+      border-color: var(--color-success);
+      box-shadow: var(--shadow-sm);
+      transform: translateY(-1px);
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+}
+
+// ── Table Footer ──────────────────────────────────────────────────────────────
+.table-footer {
+  padding: 12px 16px;
+  border-top: 1.5px solid var(--color-border);
+  // Explicitly themed — avoids Material bleeding into the footer bg
+  background: var(--color-bg-main);
+
+  .footer-count {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+  }
+}

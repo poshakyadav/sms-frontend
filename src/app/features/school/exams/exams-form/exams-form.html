@@ -1,0 +1,257 @@
+<!-- src/app/features/school/exams/exams-form/exams-form.html -->
+
+<div class="form-page">
+  <!-- ── Page Header ─────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>{{ isEdit() ? 'Edit Exam' : 'Create New Exam' }}</h1>
+      <p>
+        {{
+          isEdit()
+            ? 'Update exam details and subject timetable'
+            : 'Define exam details and subject timetable'
+        }}
+      </p>
+    </div>
+    <button mat-stroked-button (click)="router.navigate(['/school/exams/list'])">
+      <mat-icon>arrow_back</mat-icon> Back to List
+    </button>
+  </div>
+
+  <!-- ── Form Card ───────────────────────────────────────────────────────── -->
+  <div class="form-card">
+    @if (loading()) {
+    <div class="loading-overlay">
+      <mat-spinner diameter="44"></mat-spinner>
+      <p>Loading exam details…</p>
+    </div>
+    } @else {
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <!-- ══ SECTION: Basic Details ═══════════════════════════════════════ -->
+      <div class="section-heading">
+        <mat-icon>info_outline</mat-icon>
+        Basic Details
+      </div>
+
+      <div class="form-grid">
+        <!-- Exam Name -->
+        <mat-form-field appearance="outline">
+          <mat-label>Exam Name</mat-label>
+          <input matInput formControlName="name" placeholder="e.g. Mid Term 2026" />
+          <mat-icon matSuffix>assignment</mat-icon>
+          @if (form.get('name')?.hasError('required') && form.get('name')?.touched) {
+          <mat-error>Exam name is required</mat-error>
+          } @if (form.get('name')?.hasError('minlength') && form.get('name')?.touched) {
+          <mat-error>At least 3 characters required</mat-error>
+          }
+        </mat-form-field>
+
+        <!-- Academic Year -->
+        <mat-form-field appearance="outline">
+          <mat-label>Academic Year</mat-label>
+          <mat-select formControlName="academicYearId">
+            @for (year of academicYears(); track year.id) {
+            <mat-option [value]="year.id">
+              {{ year.name }}@if (year.isCurrent) { &nbsp;(Current) }
+            </mat-option>
+            }
+          </mat-select>
+          <mat-icon matSuffix>calendar_today</mat-icon>
+          @if (form.get('academicYearId')?.hasError('required') &&
+          form.get('academicYearId')?.touched) {
+          <mat-error>Academic year is required</mat-error>
+          }
+        </mat-form-field>
+
+        <!-- Class · Section -->
+        <mat-form-field appearance="outline">
+          <mat-label>Class · Section</mat-label>
+          <mat-select formControlName="classSectionId">
+            @for (cs of classSections(); track cs.id) {
+            <mat-option [value]="cs.id">{{ cs.className }} &ndash; {{ cs.sectionName }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matSuffix>class</mat-icon>
+          @if (form.get('classSectionId')?.hasError('required') &&
+          form.get('classSectionId')?.touched) {
+          <mat-error>Class-section is required</mat-error>
+          }
+        </mat-form-field>
+
+        <!-- Exam Type — free-text + preset chips (spans full row) -->
+        <div class="type-field-wrap">
+          <mat-form-field appearance="outline" class="type-input">
+            <mat-label>Exam Type</mat-label>
+            <input
+              matInput
+              formControlName="type"
+              placeholder="e.g. Mid Term, Unit Test, Pre-Board…"
+              autocomplete="off"
+            />
+            <mat-icon matSuffix>category</mat-icon>
+            @if (form.get('type')?.hasError('required') && form.get('type')?.touched) {
+            <mat-error>Exam type is required</mat-error>
+            } @if (form.get('type')?.hasError('maxlength') && form.get('type')?.touched) {
+            <mat-error>Maximum 60 characters</mat-error>
+            }
+          </mat-form-field>
+
+          <div class="preset-chips">
+            <span class="preset-label">Quick select:</span>
+            @for (preset of presetExamTypes; track preset) {
+            <button
+              type="button"
+              class="preset-chip"
+              [class.active]="form.get('type')?.value === preset"
+              (click)="applyPreset(preset)"
+            >
+              {{ preset }}
+            </button>
+            }
+          </div>
+        </div>
+      </div>
+      <!-- /form-grid -->
+
+      <!-- Description -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Description (optional)</mat-label>
+        <textarea
+          matInput
+          formControlName="description"
+          rows="2"
+          placeholder="Add any notes or instructions for this exam"
+        ></textarea>
+        <mat-icon matSuffix>notes</mat-icon>
+      </mat-form-field>
+
+      <!-- ══ SECTION: Subject Timetable ════════════════════════════════════ -->
+      <div class="section-heading">
+        <mat-icon>schedule</mat-icon>
+        Subject Timetable
+      </div>
+
+      <div class="timetable-section" formArrayName="subjects">
+        <!-- Column headers -->
+        <div class="timetable-row-header">
+          <span>Subject</span>
+          <span>Paper / Subject Name <span class="header-hint">(optional)</span></span>
+          <span>Date</span>
+          <span>Start Time</span>
+          <span>End Time</span>
+          <span>Room</span>
+          <span>Max Marks</span>
+          <span></span>
+        </div>
+
+        @for (subject of subjectsArray.controls; track i; let i = $index) {
+        <div [formGroupName]="i" class="timetable-row">
+          <!-- Subject dropdown -->
+          <mat-form-field appearance="outline">
+            <mat-label>Subject</mat-label>
+            <mat-select formControlName="classSubjectId">
+              @for (subj of classSubjects(); track subj.id) {
+              <mat-option [value]="subj.id">{{ subj.subjectName }}</mat-option>
+              } @if (classSubjects().length === 0) {
+              <mat-option disabled>Select a class-section first</mat-option>
+              }
+            </mat-select>
+            @if (subject.get('classSubjectId')?.hasError('required') &&
+            subject.get('classSubjectId')?.touched) {
+            <mat-error>Required</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Optional paper label -->
+          <mat-form-field appearance="outline">
+            <mat-label>Paper / Subject Name</mat-label>
+            <input matInput formControlName="subjectLabel" placeholder="e.g. English Paper One" />
+            <mat-hint>Leave blank to use default</mat-hint>
+            @if (subject.get('subjectLabel')?.hasError('maxlength') &&
+            subject.get('subjectLabel')?.touched) {
+            <mat-error>Max 120 characters</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Date — datepicker toggle is the only suffix here; it's part of the field -->
+          <mat-form-field appearance="outline">
+            <mat-label>Date</mat-label>
+            <input matInput [matDatepicker]="dp" formControlName="date" />
+            <mat-datepicker-toggle matSuffix [for]="dp"></mat-datepicker-toggle>
+            <mat-datepicker #dp></mat-datepicker>
+            @if (subject.get('date')?.hasError('required') && subject.get('date')?.touched) {
+            <mat-error>Required</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Start Time — NO matSuffix icon (column too narrow) -->
+          <mat-form-field appearance="outline">
+            <mat-label>Start Time</mat-label>
+            <input matInput formControlName="startTime" placeholder="09:00" />
+          </mat-form-field>
+
+          <!-- End Time — NO matSuffix icon (column too narrow) -->
+          <mat-form-field appearance="outline">
+            <mat-label>End Time</mat-label>
+            <input matInput formControlName="endTime" placeholder="10:30" />
+          </mat-form-field>
+
+          <!-- Room — NO matSuffix icon (column too narrow) -->
+          <mat-form-field appearance="outline">
+            <mat-label>Room</mat-label>
+            <input matInput formControlName="roomNumber" placeholder="101" />
+          </mat-form-field>
+
+          <!-- Max Marks — NO matSuffix icon (column too narrow) -->
+          <mat-form-field appearance="outline">
+            <mat-label>Max Marks</mat-label>
+            <input matInput type="number" formControlName="maxMarks" min="1" />
+            @if (subject.get('maxMarks')?.hasError('required') && subject.get('maxMarks')?.touched)
+            {
+            <mat-error>Required</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Delete row -->
+          <button
+            type="button"
+            mat-icon-button
+            class="row-delete-btn"
+            (click)="removeSubjectRow(i)"
+            matTooltip="Remove row"
+          >
+            <mat-icon>delete_outline</mat-icon>
+          </button>
+        </div>
+        }
+
+        <button type="button" mat-button class="add-row-btn" (click)="addSubjectRow()">
+          <mat-icon>add_circle_outline</mat-icon> Add Subject Slot
+        </button>
+      </div>
+      <!-- /timetable-section -->
+
+      <!-- ══ Form Actions ══════════════════════════════════════════════════ -->
+      <div class="form-actions">
+        <button mat-button type="button" (click)="router.navigate(['/school/exams/list'])">
+          Cancel
+        </button>
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="form.invalid || submitting()"
+        >
+          @if (submitting()) {
+          <mat-spinner diameter="16" style="display: inline-block; margin-right: 6px"></mat-spinner>
+          }
+          {{ isEdit() ? 'Update Exam' : 'Create Exam' }}
+        </button>
+      </div>
+    </form>
+    }
+  </div>
+  <!-- /form-card -->
+</div>
+<!-- /form-page -->

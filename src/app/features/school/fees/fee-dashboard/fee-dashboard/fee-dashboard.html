@@ -1,0 +1,385 @@
+<div class="fd-page">
+  <!-- ── Page Header ──────────────────────────────────────────────────── -->
+  <header class="fd-header">
+    <div class="fd-header__text">
+      <h1 class="fd-header__title">Fees Dashboard</h1>
+      <p class="fd-header__sub">Real-time overview of fee collection & outstanding balances</p>
+    </div>
+    <div class="fd-header__actions">
+      <button mat-stroked-button (click)="quickViewStructures()" class="fd-action-btn">
+        <mat-icon>receipt_long</mat-icon>
+        <span>Fee Structures</span>
+      </button>
+      <button
+        mat-flat-button
+        color="primary"
+        (click)="quickRecordPayment()"
+        class="fd-action-btn fd-action-btn--primary"
+      >
+        <mat-icon>add_circle</mat-icon>
+        <span>Record Payment</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Filters ──────────────────────────────────────────────────────── -->
+  <div class="fd-filters">
+    <mat-form-field appearance="outline" class="fd-filters__field">
+      <mat-label>Academic Year</mat-label>
+      <mat-icon matPrefix>school</mat-icon>
+      <mat-select
+        [ngModel]="selectedAcademicYearId()"
+        (ngModelChange)="selectedAcademicYearId.set($event); onFilterChange()"
+      >
+        <mat-option [value]="null">All Academic Years</mat-option>
+        @for (year of academicYears(); track year.id) {
+        <mat-option [value]="year.id">
+          {{ year.name }}
+          @if (year.isCurrent) {
+          <span class="fd-current-badge">Current</span>
+          }
+        </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="fd-filters__field">
+      <mat-label>Class — Section</mat-label>
+      <mat-icon matPrefix>people</mat-icon>
+      <mat-select
+        [ngModel]="selectedClassSectionId()"
+        (ngModelChange)="selectedClassSectionId.set($event); onFilterChange()"
+      >
+        <mat-option [value]="null">All Class-Sections</mat-option>
+        @for (cs of classSections(); track cs.id) {
+        <mat-option [value]="cs.id">{{ cs.className }} — {{ cs.sectionName }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <div class="fd-filters__controls">
+      <button
+        mat-icon-button
+        matTooltip="Refresh dashboard"
+        (click)="onFilterChange()"
+        class="fd-refresh-btn"
+      >
+        <mat-icon>refresh</mat-icon>
+      </button>
+
+      @if (selectedAcademicYearId() || selectedClassSectionId()) {
+      <button mat-stroked-button (click)="clearFilters()" class="fd-clear-btn">
+        <mat-icon>close</mat-icon> Clear filters
+      </button>
+      }
+    </div>
+  </div>
+
+  <!-- ── Loading State ─────────────────────────────────────────────────── -->
+  @if (loading()) {
+  <div class="fd-loading">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p class="fd-loading__text">Loading dashboard…</p>
+  </div>
+  }
+
+  <!-- ── Error State ───────────────────────────────────────────────────── -->
+  @else if (error()) {
+  <div class="fd-error">
+    <div class="fd-error__icon">
+      <mat-icon>error_outline</mat-icon>
+    </div>
+    <h3 class="fd-error__title">Could not load dashboard</h3>
+    <p class="fd-error__msg">{{ error() }}</p>
+    <button mat-flat-button color="primary" (click)="onFilterChange()">
+      <mat-icon>refresh</mat-icon> Try again
+    </button>
+  </div>
+  }
+
+  <!-- ── Dashboard Content ─────────────────────────────────────────────── -->
+  @else if (dashboard()) {
+
+  <!-- KPI Cards -->
+  <section class="fd-kpi-grid" aria-label="Key metrics">
+    <div class="fd-kpi fd-kpi--blue">
+      <div class="fd-kpi__icon-wrap">
+        <mat-icon>account_balance_wallet</mat-icon>
+      </div>
+      <div class="fd-kpi__body">
+        <span class="fd-kpi__label">Total Assigned</span>
+        <span class="fd-kpi__value">₹{{ dashboard()!.totalAssigned | number }}</span>
+      </div>
+    </div>
+
+    <div class="fd-kpi fd-kpi--green">
+      <div class="fd-kpi__icon-wrap">
+        <mat-icon>check_circle</mat-icon>
+      </div>
+      <div class="fd-kpi__body">
+        <span class="fd-kpi__label">Total Collected</span>
+        <span class="fd-kpi__value">₹{{ dashboard()!.totalCollected | number }}</span>
+      </div>
+    </div>
+
+    <div class="fd-kpi fd-kpi--orange">
+      <div class="fd-kpi__icon-wrap">
+        <mat-icon>pending</mat-icon>
+      </div>
+      <div class="fd-kpi__body">
+        <span class="fd-kpi__label">Outstanding</span>
+        <span class="fd-kpi__value">₹{{ dashboard()!.totalOutstanding | number }}</span>
+      </div>
+    </div>
+
+    <div class="fd-kpi fd-kpi--red">
+      <div class="fd-kpi__icon-wrap">
+        <mat-icon>schedule</mat-icon>
+      </div>
+      <div class="fd-kpi__body">
+        <span class="fd-kpi__label">Overdue</span>
+        <span class="fd-kpi__value">₹{{ dashboard()!.totalOverdue | number }}</span>
+      </div>
+    </div>
+
+    <div class="fd-kpi fd-kpi--teal">
+      <div class="fd-kpi__icon-wrap">
+        <mat-icon>today</mat-icon>
+      </div>
+      <div class="fd-kpi__body">
+        <span class="fd-kpi__label">Collected Today</span>
+        <span class="fd-kpi__value">₹{{ dashboard()!.todayCollected | number }}</span>
+      </div>
+    </div>
+
+    <!-- Collection Rate — special wide card -->
+    <div class="fd-kpi fd-kpi--purple fd-kpi--rate">
+      <div class="fd-kpi__icon-wrap">
+        <mat-icon>donut_large</mat-icon>
+      </div>
+      <div class="fd-kpi__body">
+        <span class="fd-kpi__label">Collection Rate</span>
+        <span class="fd-kpi__value">{{ dashboard()!.collectionRate }}%</span>
+        <mat-progress-bar
+          mode="determinate"
+          [value]="dashboard()!.collectionRate"
+          class="fd-kpi__bar"
+        >
+        </mat-progress-bar>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Actions -->
+  <section class="fd-quick-actions" aria-label="Quick actions">
+    <button mat-stroked-button (click)="quickViewReport()">
+      <mat-icon>assessment</mat-icon> Full Report
+    </button>
+    <button mat-stroked-button (click)="quickViewStructures()">
+      <mat-icon>receipt_long</mat-icon> Fee Structures
+    </button>
+    <button mat-flat-button color="primary" (click)="quickRecordPayment()">
+      <mat-icon>add</mat-icon> Record Payment
+    </button>
+  </section>
+
+  <!-- ── Collection Trend Chart ────────────────────────────────────── -->
+  <mat-card class="fd-card fd-card--trend">
+    <div class="fd-card__header">
+      <div class="fd-card__header-left">
+        <mat-icon class="fd-card__icon">show_chart</mat-icon>
+        <h2 class="fd-card__title">Collection Trend</h2>
+        <span class="fd-card__subtitle">Last 30 days</span>
+      </div>
+      <span class="fd-filter-chip" *ngIf="selectedAcademicYearId()">
+        <mat-icon>school</mat-icon>{{ activeYearLabel() }}
+      </span>
+    </div>
+
+    @if (trendLoading()) {
+    <div class="fd-section-loading">
+      <mat-spinner diameter="32"></mat-spinner>
+    </div>
+    } @else if (trend().length === 0) {
+    <!-- Empty State: No Trend Data -->
+    <div class="fd-empty">
+      <div class="fd-empty__illustration fd-empty__illustration--chart">
+        <svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="8" y="60" width="12" height="12" rx="2" class="fd-empty__bar" />
+          <rect x="28" y="48" width="12" height="24" rx="2" class="fd-empty__bar" />
+          <rect x="48" y="54" width="12" height="18" rx="2" class="fd-empty__bar" />
+          <rect x="68" y="42" width="12" height="30" rx="2" class="fd-empty__bar" />
+          <rect x="88" y="36" width="12" height="36" rx="2" class="fd-empty__bar" />
+          <!-- Dashed line overlay -->
+          <line x1="8" y1="30" x2="112" y2="30" stroke-dasharray="4 4" class="fd-empty__line" />
+          <!-- Question marks -->
+          <text x="24" y="28" class="fd-empty__q">?</text>
+          <text x="56" y="26" class="fd-empty__q">?</text>
+          <text x="88" y="24" class="fd-empty__q">?</text>
+        </svg>
+      </div>
+      <h3 class="fd-empty__title">No trend data yet</h3>
+      <p class="fd-empty__desc">
+        Fee payments recorded during the last 30 days will appear here as a daily chart. Start by
+        recording a payment.
+      </p>
+      <button mat-flat-button color="primary" (click)="quickRecordPayment()">
+        <mat-icon>add</mat-icon> Record First Payment
+      </button>
+    </div>
+    } @else {
+    <app-fees-trend-chart [trend]="trend()"></app-fees-trend-chart>
+    }
+  </mat-card>
+
+  <!-- ── Class-Section Breakdown ───────────────────────────────────── -->
+  <mat-card class="fd-card fd-card--breakdown">
+    <div class="fd-card__header">
+      <div class="fd-card__header-left">
+        <mat-icon class="fd-card__icon">table_chart</mat-icon>
+        <h2 class="fd-card__title">Breakdown by Class-Section</h2>
+        @if (breakdown().length > 0) {
+        <span class="fd-badge">{{ breakdown().length }} sections</span>
+        }
+      </div>
+      <button mat-stroked-button (click)="quickViewReport()" class="fd-view-all-btn">
+        <mat-icon>open_in_new</mat-icon> Full Report
+      </button>
+    </div>
+
+    @if (breakdownLoading()) {
+    <div class="fd-section-loading">
+      <mat-spinner diameter="32"></mat-spinner>
+    </div>
+    } @else if (breakdown().length === 0) {
+    <!-- Empty State: No Breakdown Data -->
+    <div class="fd-empty">
+      <div class="fd-empty__illustration fd-empty__illustration--table">
+        <svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <!-- Table skeleton -->
+          <rect
+            x="8"
+            y="8"
+            width="104"
+            height="14"
+            rx="3"
+            class="fd-empty__row fd-empty__row--header"
+          />
+          <rect x="8" y="28" width="104" height="12" rx="3" class="fd-empty__row" />
+          <rect
+            x="8"
+            y="46"
+            width="104"
+            height="12"
+            rx="3"
+            class="fd-empty__row fd-empty__row--alt"
+          />
+          <rect x="8" y="64" width="104" height="12" rx="3" class="fd-empty__row" />
+          <!-- Dashed overlay to indicate empty -->
+          <rect
+            x="4"
+            y="4"
+            width="112"
+            height="76"
+            rx="4"
+            stroke-dasharray="5 4"
+            class="fd-empty__border"
+          />
+        </svg>
+      </div>
+      <h3 class="fd-empty__title">No fee structures found</h3>
+      <p class="fd-empty__desc">
+        Create fee structures for your class-sections to see a per-section breakdown here.
+      </p>
+      <button mat-flat-button color="primary" (click)="quickViewStructures()">
+        <mat-icon>add</mat-icon> Add Fee Structure
+      </button>
+    </div>
+    } @else {
+    <div class="fd-table-wrap">
+      <table mat-table [dataSource]="breakdown()" class="fd-table">
+        <ng-container matColumnDef="classSection">
+          <th mat-header-cell *matHeaderCellDef>Class — Section</th>
+          <td mat-cell *matCellDef="let item">
+            <div class="fd-table__class-cell">
+              <div class="fd-table__class-avatar">
+                {{ item.className.charAt(0) }}
+              </div>
+              <div class="fd-table__class-info">
+                <span class="fd-table__class-name">{{ item.className }}</span>
+                <span class="fd-table__section-name">{{ item.sectionName }}</span>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="assigned">
+          <th mat-header-cell *matHeaderCellDef>Assigned</th>
+          <td mat-cell *matCellDef="let item">
+            <span class="fd-table__amount">₹{{ item.totalAssigned | number }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="collected">
+          <th mat-header-cell *matHeaderCellDef>Collected</th>
+          <td mat-cell *matCellDef="let item">
+            <span class="fd-table__amount fd-table__amount--green">
+              ₹{{ item.totalCollected | number }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="outstanding">
+          <th mat-header-cell *matHeaderCellDef>Outstanding</th>
+          <td mat-cell *matCellDef="let item">
+            <span
+              class="fd-table__amount"
+              [class.fd-table__amount--orange]="getOutstanding(item) > 0"
+            >
+              ₹{{ getOutstanding(item) | number }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="rate">
+          <th mat-header-cell *matHeaderCellDef>Rate</th>
+          <td mat-cell *matCellDef="let item">
+            <div class="fd-table__rate-cell">
+              <div class="fd-table__rate-bar-wrap">
+                <div
+                  class="fd-table__rate-bar"
+                  [style.width.%]="getCollectionRate(item)"
+                  [class]="getRateClass(getCollectionRate(item))"
+                ></div>
+              </div>
+              <span class="fd-table__rate-label" [class]="getRateClass(getCollectionRate(item))">
+                {{ getCollectionRate(item) }}%
+              </span>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="breakdownColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: breakdownColumns" class="fd-table__row"></tr>
+      </table>
+    </div>
+    }
+  </mat-card>
+
+  }
+  <!-- ── No Dashboard State (no data at all) ──────────────────────── -->
+  @else if (!loading() && !error() && !dashboard()) {
+  <div class="fd-empty fd-empty--page">
+    <div class="fd-empty__illustration">
+      <mat-icon class="fd-empty__big-icon">account_balance</mat-icon>
+    </div>
+    <h3 class="fd-empty__title">No data available</h3>
+    <p class="fd-empty__desc">
+      Set up fee structures and enroll students to start tracking fee collection.
+    </p>
+    <button mat-flat-button color="primary" (click)="quickViewStructures()">
+      <mat-icon>add</mat-icon> Set Up Fee Structures
+    </button>
+  </div>
+  }
+</div>

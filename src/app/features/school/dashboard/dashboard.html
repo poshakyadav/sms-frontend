@@ -1,0 +1,498 @@
+<!-- dashboard.html
+-->
+<div class="dash-page">
+  <!-- ── Loading ──────────────────────────────────────────────────────── -->
+  @if (loading()) {
+  <div class="dash-loading">
+    <div class="skeleton-header"></div>
+    <div class="skeleton-stats">
+      @for (i of [1,2,3,4]; track i) {
+      <div class="skeleton-stat"></div>
+      }
+    </div>
+    <div class="skeleton-body">
+      <div class="skeleton-main"></div>
+      <div class="skeleton-side"></div>
+    </div>
+  </div>
+  }
+
+  <!-- ── Error ────────────────────────────────────────────────────────── -->
+  @else if (error()) {
+  <div class="dash-error">
+    <mat-icon class="error-icon">error_outline</mat-icon>
+    <h2>Could not load dashboard</h2>
+    <p>{{ error() }}</p>
+    <button mat-raised-button color="primary" (click)="load()">
+      <mat-icon>refresh</mat-icon> Try Again
+    </button>
+  </div>
+  }
+
+  <!-- ── Content ──────────────────────────────────────────────────────── -->
+  @else if (data()) {
+
+  <!-- Header -->
+  <header class="dash-header">
+    <div class="dash-header-left">
+      <div class="greeting-row">
+        <h1 class="greeting">
+          {{ greeting() }}@if (userName()) {, <span class="name">{{ userName() }}</span
+          >}
+        </h1>
+        <span class="persona-chip" [ngClass]="personaColorClass()">
+          {{ personaLabel() }}
+        </span>
+      </div>
+
+      @if (data()!.persona === 'PARENT' && data()!.stats['childName']) {
+      <p class="dash-subtitle">
+        Viewing <strong>{{ data()!.stats['childName'] }}</strong
+        >'s school dashboard.
+      </p>
+      } @else if (data()!.persona === 'PARENT') {
+      <p class="dash-subtitle">Select a child from the header to view their dashboard.</p>
+      } @else {
+      <p class="dash-subtitle">Here's what's happening in your school today.</p>
+      }
+    </div>
+
+    <div class="dash-header-right">
+      <span class="date-badge">
+        <mat-icon>calendar_today</mat-icon>
+        {{ now | date : 'EEE, MMM d, y' }}
+      </span>
+      <button mat-icon-button (click)="load()" matTooltip="Refresh">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </header>
+
+  <!-- Stats strip (non-PARENT personas only) -->
+  @if (statCards().length > 0 && data()!.persona !== 'PARENT') {
+  <section class="stats-strip">
+    @for (card of statCards(); track card.key) {
+    <div class="stat-card" [style.--accent]="'var(' + card.accentVar + ')'">
+      <div class="stat-icon-wrap">
+        <mat-icon>{{ card.icon }}</mat-icon>
+      </div>
+      <div class="stat-body">
+        <span class="stat-value">{{ card.value }}</span>
+        <span class="stat-label">{{ card.label }}</span>
+      </div>
+    </div>
+    }
+  </section>
+  }
+
+  <!-- Main grid -->
+  <div class="dash-grid">
+    <!-- Left: content column -->
+    <div class="dash-main">
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- PARENT PERSONA — fully redesigned                             -->
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      @if (data()!.persona === 'PARENT') { @let ps = data()!.stats;
+
+      <!-- ── No child selected state ──────────────────────────────── -->
+      @if (!ps['childName']) {
+      <div class="dash-card empty-card parent-no-child-card">
+        <mat-icon class="empty-icon">child_care</mat-icon>
+        <p class="empty-title">No child selected</p>
+        <p>Use the switcher in the top navigation bar to select a child.</p>
+      </div>
+      } @else {
+
+      <!-- ── Child Identity Card ───────────────────────────────────── -->
+      <div class="dash-card child-identity-card">
+        <div class="dash-card-header">
+          <mat-icon>child_care</mat-icon>
+          <h3>Child Profile</h3>
+        </div>
+        <div class="child-identity-body">
+          <!-- Avatar -->
+          <div class="child-avatar-wrap">
+            @if (ps['childAvatarUrl']) {
+            <img [src]="ps['childAvatarUrl']" [alt]="ps['childName']" class="child-avatar-img" />
+            } @else {
+            <div class="child-avatar-initials">
+              {{ getInitials(ps['childName']) }}
+            </div>
+            }
+          </div>
+          <!-- Details -->
+          <div class="child-details">
+            <h2 class="child-name">{{ ps['childName'] }}</h2>
+            <div class="child-meta-grid">
+              <div class="child-meta-item">
+                <mat-icon>class</mat-icon>
+                <span>
+                  @if (ps['myClass'] && ps['mySection']) {
+                  {{ ps['myClass'] }} – {{ ps['mySection'] }}
+                  } @else { Not enrolled }
+                </span>
+              </div>
+              @if (ps['rollNumber']) {
+              <div class="child-meta-item">
+                <mat-icon>tag</mat-icon>
+                <span>Roll No. {{ ps['rollNumber'] }}</span>
+              </div>
+              } @if (ps['childGender']) {
+              <div class="child-meta-item">
+                <mat-icon>person</mat-icon>
+                <span>{{ ps['childGender'] }}</span>
+              </div>
+              } @if (ps['childBloodGroup']) {
+              <div class="child-meta-item">
+                <mat-icon>water_drop</mat-icon>
+                <span>{{ ps['childBloodGroup'] }}</span>
+              </div>
+              } @if (ps['childAdmissionDate']) {
+              <div class="child-meta-item">
+                <mat-icon>event</mat-icon>
+                <span>Admitted {{ ps['childAdmissionDate'] | date : 'mediumDate' }}</span>
+              </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Attendance Card ───────────────────────────────────────── -->
+      @if (ps['totalDaysTracked'] !== undefined) {
+      <div class="dash-card parent-attendance-card">
+        <div class="dash-card-header">
+          <mat-icon>event_available</mat-icon>
+          <h3>Attendance</h3>
+          <a class="card-link" routerLink="/school/attendance/student/child">View details</a>
+        </div>
+        <div class="attendance-summary">
+          <!-- Percentage ring -->
+          <div class="attendance-ring-wrap">
+            <svg class="attendance-ring" viewBox="0 0 80 80">
+              <circle
+                cx="40"
+                cy="40"
+                r="32"
+                fill="none"
+                stroke="var(--color-divider)"
+                stroke-width="7"
+              />
+              <circle
+                cx="40"
+                cy="40"
+                r="32"
+                fill="none"
+                [attr.stroke]="getAttendanceRingColor(ps['attendancePercentage'])"
+                stroke-width="7"
+                stroke-linecap="round"
+                [attr.stroke-dasharray]="getAttendanceDash(ps['attendancePercentage'])"
+                stroke-dashoffset="0"
+                transform="rotate(-90 40 40)"
+              />
+            </svg>
+            <div class="ring-label">
+              <span
+                class="ring-pct"
+                [class.ring-good]="ps['attendancePercentage']! >= 75"
+                [class.ring-warn]="ps['attendancePercentage']! < 75"
+              >
+                {{ ps['attendancePercentage'] }}%
+              </span>
+            </div>
+          </div>
+          <!-- Breakdown -->
+          <div class="attendance-breakdown">
+            <div class="att-stat att-present">
+              <span class="att-count">{{ ps['presentDays'] ?? 0 }}</span>
+              <span class="att-label">Present</span>
+            </div>
+            <div class="att-divider"></div>
+            <div class="att-stat att-absent">
+              <span class="att-count">{{ ps['absentDays'] ?? 0 }}</span>
+              <span class="att-label">Absent</span>
+            </div>
+            <div class="att-divider"></div>
+            <div class="att-stat">
+              <span class="att-count">{{ ps['totalDaysTracked'] }}</span>
+              <span class="att-label">Total Days</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- ── Fee Summary Card ──────────────────────────────────────── -->
+      @if (ps['totalFeeDue'] !== undefined) {
+      <div class="dash-card parent-fee-card">
+        <div class="dash-card-header">
+          <mat-icon>account_balance_wallet</mat-icon>
+          <h3>Fee Summary</h3>
+          <a class="card-link" routerLink="/school/fees/report">View report</a>
+        </div>
+        <div class="fee-summary-body">
+          <div class="fee-stat">
+            <span class="fee-label">Total Due</span>
+            <span class="fee-value fee-total">₹{{ ps['totalFeeDue']! | number }}</span>
+          </div>
+          <div class="fee-divider-v"></div>
+          <div class="fee-stat">
+            <span class="fee-label">Paid</span>
+            <span class="fee-value fee-paid">₹{{ ps['feesCollected']! | number }}</span>
+          </div>
+          <div class="fee-divider-v"></div>
+          <div class="fee-stat">
+            <span class="fee-label">Pending</span>
+            <span
+              class="fee-value"
+              [class.fee-pending]="ps['feesPending']! > 0"
+              [class.fee-clear]="ps['feesPending']! === 0"
+            >
+              ₹{{ ps['feesPending']! | number }}
+            </span>
+          </div>
+        </div>
+        <!-- Progress bar -->
+        @if (ps['totalFeeDue']! > 0) {
+        <div class="fee-progress-wrap">
+          <div class="fee-progress-bar">
+            <div
+              class="fee-progress-fill"
+              [style.width.%]="getFeeProgress(ps['feesCollected'], ps['totalFeeDue'])"
+            ></div>
+          </div>
+          <span class="fee-progress-label">
+            {{ getFeeProgress(ps['feesCollected'], ps['totalFeeDue']) }}% paid
+          </span>
+        </div>
+        }
+      </div>
+      }
+
+      <!-- ── Pending Assignments Banner ─────────────────────────────── -->
+      @if ((ps['pendingAssignments'] ?? 0) > 0) {
+      <div class="dash-card pending-assignments-banner">
+        <div class="banner-icon-wrap">
+          <mat-icon>assignment_late</mat-icon>
+        </div>
+        <div class="banner-content">
+          <span class="banner-title">
+            {{ ps['pendingAssignments'] }} pending assignment{{
+              ps['pendingAssignments']! > 1 ? 's' : ''
+            }}
+          </span>
+          <span class="banner-sub">Your child has unsubmitted work</span>
+        </div>
+        <a class="banner-action" routerLink="/school/assignments/list">
+          View <mat-icon>arrow_forward</mat-icon>
+        </a>
+      </div>
+      }
+
+      <!-- ── Recent Grades ──────────────────────────────────────────── -->
+      @if (data()!.lists['recentGrades']?.length) {
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <mat-icon>grade</mat-icon>
+          <h3>Recent Exam Results</h3>
+          <a class="card-link" routerLink="/school/exams/report-card">Full report card</a>
+        </div>
+        <div class="grades-list">
+          @for (grade of data()!.lists['recentGrades']; track grade.examName) {
+          <div class="grade-row">
+            <div class="grade-info">
+              <span class="grade-exam">{{ grade.examName }}</span>
+              @if (grade.remarks) {
+              <span class="grade-remarks">{{ grade.remarks }}</span>
+              }
+            </div>
+            <div class="grade-right">
+              <span class="grade-marks">{{ grade.marksObtained }}</span>
+              @if (grade.grade) {
+              <span class="grade-letter">{{ grade.grade }}</span>
+              }
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+      }
+
+      <!-- ── Recent Notifications ───────────────────────────────────── -->
+      @if (data()!.lists['recentNotifications']?.length) {
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <mat-icon>notifications</mat-icon>
+          <h3>Recent Notifications</h3>
+          <a class="card-link" routerLink="/school/notifications">View all</a>
+        </div>
+        <div class="notif-list">
+          @for (n of data()!.lists['recentNotifications']; track n.id) {
+          <div class="notif-row">
+            <div class="notif-dot"></div>
+            <div class="notif-content">
+              <p class="notif-title">{{ n.title }}</p>
+              <p class="notif-msg">{{ n.message }}</p>
+            </div>
+            <span class="notif-date">{{ n.createdAt | date : 'MMM d' }}</span>
+          </div>
+          }
+        </div>
+      </div>
+      } @else {
+      <div class="dash-card empty-card">
+        <mat-icon class="empty-icon">notifications_none</mat-icon>
+        <p>No new notifications.</p>
+      </div>
+      } }
+      <!-- end @else (child selected) -->
+      }
+      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- END PARENT PERSONA                                            -->
+      <!-- ══════════════════════════════════════════════════════════════ -->
+
+      <!-- Student: My Info card -->
+      @if (data()!.persona === 'STUDENT' && data()!.stats) { @let stats = data()!.stats;
+      <div class="dash-card student-info-card">
+        <div class="dash-card-header">
+          <mat-icon>person</mat-icon>
+          <h3>My Academic Info</h3>
+        </div>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Class</span>
+            <span class="info-value">{{ stats['myClass'] || '—' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Section</span>
+            <span class="info-value">{{ stats['mySection'] || '—' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Roll No.</span>
+            <span class="info-value">{{ stats['rollNumber'] || '—' }}</span>
+          </div>
+          @if (stats['attendancePercentage'] !== undefined) {
+          <div class="info-item">
+            <span class="info-label">Attendance</span>
+            <span
+              class="info-value attendance-pct"
+              [class.good]="stats['attendancePercentage']! >= 75"
+              [class.warn]="stats['attendancePercentage']! < 75"
+            >
+              {{ stats['attendancePercentage'] }}%
+            </span>
+          </div>
+          }
+        </div>
+      </div>
+      }
+
+      <!-- Teacher: Assigned Classes -->
+      @if (data()!.persona === 'TEACHER' && data()!.lists['assignedClasses']?.length) {
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <mat-icon>class</mat-icon>
+          <h3>My Classes & Subjects</h3>
+          <span class="card-count">{{ data()!.lists['assignedClasses']!.length }}</span>
+        </div>
+        <div class="class-list">
+          @for (cls of data()!.lists['assignedClasses']; track cls.teacherAssignmentId) {
+          <div class="class-row">
+            <div class="class-avatar">{{ cls.className.charAt(0) }}</div>
+            <div class="class-info">
+              <span class="class-name">{{ cls.className }} – {{ cls.sectionName }}</span>
+              <span class="class-subject">{{ cls.subjectName }}</span>
+            </div>
+            @if (cls.isPrimary) {
+            <span class="primary-tag">Primary</span>
+            }
+          </div>
+          }
+        </div>
+      </div>
+      }
+
+      <!-- Student: Recent Grades -->
+      @if (data()!.persona === 'STUDENT' && data()!.lists['recentGrades']?.length) {
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <mat-icon>grade</mat-icon>
+          <h3>Recent Exam Results</h3>
+        </div>
+        <div class="grades-list">
+          @for (grade of data()!.lists['recentGrades']; track grade.examName) {
+          <div class="grade-row">
+            <div class="grade-info">
+              <span class="grade-exam">{{ grade.examName }}</span>
+              @if (grade.remarks) {
+              <span class="grade-remarks">{{ grade.remarks }}</span>
+              }
+            </div>
+            <div class="grade-right">
+              <span class="grade-marks">{{ grade.marksObtained }}</span>
+              @if (grade.grade) {
+              <span class="grade-letter">{{ grade.grade }}</span>
+              }
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+      }
+
+      <!-- Notifications (non-PARENT personas) -->
+      @if (data()!.persona !== 'PARENT') { @if (data()!.lists['recentNotifications']?.length) {
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <mat-icon>notifications</mat-icon>
+          <h3>Recent Notifications</h3>
+          <a class="card-link" routerLink="/school/notifications">View all</a>
+        </div>
+        <div class="notif-list">
+          @for (n of data()!.lists['recentNotifications']; track n.id) {
+          <div class="notif-row">
+            <div class="notif-dot"></div>
+            <div class="notif-content">
+              <p class="notif-title">{{ n.title }}</p>
+              <p class="notif-msg">{{ n.message }}</p>
+            </div>
+            <span class="notif-date">{{ n.createdAt | date : 'MMM d' }}</span>
+          </div>
+          }
+        </div>
+      </div>
+      } @else {
+      <div class="dash-card empty-card">
+        <mat-icon class="empty-icon">notifications_none</mat-icon>
+        <p>You're all caught up — no new notifications.</p>
+      </div>
+      } }
+    </div>
+    <!-- end dash-main -->
+
+    <!-- Right: quick links sidebar -->
+    @if (quickLinks().length > 0) {
+    <aside class="dash-sidebar">
+      <div class="dash-card quick-links-card">
+        <div class="dash-card-header">
+          <mat-icon>bolt</mat-icon>
+          <h3>Quick Actions</h3>
+        </div>
+        <div class="quick-links">
+          @for (link of quickLinks(); track link.key) {
+          <a class="quick-link" [routerLink]="link.route">
+            <div class="ql-icon-wrap">
+              <mat-icon>{{ link.icon }}</mat-icon>
+            </div>
+            <span class="ql-label">{{ link.label }}</span>
+            <mat-icon class="ql-arrow">chevron_right</mat-icon>
+          </a>
+          }
+        </div>
+      </div>
+    </aside>
+    }
+  </div>
+  <!-- end dash-grid -->
+  }
+</div>

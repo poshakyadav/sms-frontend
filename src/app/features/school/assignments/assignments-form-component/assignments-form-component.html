@@ -1,0 +1,185 @@
+<!-- assignments-form-component.html -->
+<div class="form-page">
+  <!-- ── Header ────────────────────────────────────────────────────── -->
+  <header>
+    <div>
+      <h1>{{ isEdit() ? 'Edit Assignment' : 'Create Assignment' }}</h1>
+      <p class="subtitle">
+        {{ isEdit() ? 'Update the details below' : 'Fill in the details to publish a new task' }}
+      </p>
+    </div>
+    <button mat-stroked-button type="button" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon> Back
+    </button>
+  </header>
+
+  <!-- ── Loading overlay ───────────────────────────────────────────── -->
+  @if (loading()) {
+  <div class="loading-overlay">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading…</p>
+  </div>
+  } @else {
+  <div class="form-card">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-layout" novalidate>
+      <!-- ── Section: Assignment Setup ── -->
+      <div class="section-label">Assignment Setup</div>
+
+      <div class="form-grid">
+        <!-- Teacher Assignment (Subject + Class-Section) -->
+        <mat-form-field appearance="outline">
+          <mat-label>Subject &amp; Class</mat-label>
+          <mat-select formControlName="teacherAssignmentId" required>
+            @if (teacherAssignments().length === 0) {
+            <mat-option disabled>No subjects assigned to you</mat-option>
+            } @for (opt of teacherAssignments(); track opt.id) {
+            <mat-option [value]="opt.id">
+              {{ opt.subjectName }} &bull; {{ opt.className }}-{{ opt.sectionName }}
+            </mat-option>
+            }
+          </mat-select>
+          @if (form.get('teacherAssignmentId')?.hasError('required') &&
+          form.get('teacherAssignmentId')?.touched) {
+          <mat-error>Subject is required</mat-error>
+          }
+        </mat-form-field>
+
+        <!-- Class Section -->
+        <mat-form-field appearance="outline">
+          <mat-label>Target Class Section</mat-label>
+          <mat-select formControlName="classSectionId" required>
+            @for (sec of classSections(); track sec.id) {
+            <mat-option [value]="sec.id">{{ sec.className }}-{{ sec.sectionName }}</mat-option>
+            }
+          </mat-select>
+          @if (form.get('classSectionId')?.hasError('required') &&
+          form.get('classSectionId')?.touched) {
+          <mat-error>Class section is required</mat-error>
+          }
+        </mat-form-field>
+
+        <!-- Type -->
+        <mat-form-field appearance="outline">
+          <mat-label>Task Type</mat-label>
+          <mat-select formControlName="type" required>
+            <mat-option value="CLASS_WORK">📚 Class Work</mat-option>
+            <mat-option value="HOME_WORK">🏠 Homework</mat-option>
+            <mat-option value="ASSIGNMENT">📝 Assignment (Graded)</mat-option>
+          </mat-select>
+          @if (form.get('type')?.hasError('required') && form.get('type')?.touched) {
+          <mat-error>Type is required</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <!-- ── Section: Content ── -->
+      <div class="section-label">Content</div>
+
+      <!-- Title -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Title</mat-label>
+        <input
+          matInput
+          formControlName="title"
+          required
+          placeholder="e.g., Chapter 5 Summary Worksheet"
+          maxlength="200"
+        />
+        @if (form.get('title')?.hasError('required') && form.get('title')?.touched) {
+        <mat-error>Title is required</mat-error>
+        } @if (form.get('title')?.hasError('minlength') && form.get('title')?.touched) {
+        <mat-error>Title must be at least 3 characters</mat-error>
+        }
+        <mat-hint align="end">{{ form.get('title')?.value?.length ?? 0 }}/200</mat-hint>
+      </mat-form-field>
+
+      <!-- Description -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Description / Instructions</mat-label>
+        <textarea
+          matInput
+          formControlName="description"
+          rows="5"
+          required
+          placeholder="Provide detailed instructions for students…"
+        ></textarea>
+        @if (form.get('description')?.hasError('required') && form.get('description')?.touched) {
+        <mat-error>Description is required</mat-error>
+        } @if (form.get('description')?.hasError('minlength') && form.get('description')?.touched) {
+        <mat-error>Description must be at least 10 characters</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- ── Section: Schedule & Marks ── -->
+      <div class="section-label">Schedule &amp; Marks</div>
+
+      <div class="form-grid">
+        <!-- Date field (conditional based on type) -->
+        @if (currentType === 'ASSIGNMENT') {
+        <mat-form-field appearance="outline">
+          <mat-label>Due Date</mat-label>
+          <input matInput [matDatepicker]="duePicker" formControlName="dueDate" />
+          <mat-datepicker-toggle matSuffix [for]="duePicker" />
+          <mat-datepicker #duePicker />
+          @if (form.get('dueDate')?.hasError('required') && form.get('dueDate')?.touched) {
+          <mat-error>Due date is required for assignments</mat-error>
+          }
+        </mat-form-field>
+        } @else {
+        <mat-form-field appearance="outline">
+          <mat-label>Target / Completion Date</mat-label>
+          <input matInput [matDatepicker]="targetPicker" formControlName="targetDate" />
+          <mat-datepicker-toggle matSuffix [for]="targetPicker" />
+          <mat-datepicker #targetPicker />
+          @if (form.get('targetDate')?.hasError('required') && form.get('targetDate')?.touched) {
+          <mat-error>Target date is required</mat-error>
+          }
+        </mat-form-field>
+        }
+
+        <!-- Max Marks — only for graded assignments -->
+        @if (currentType === 'ASSIGNMENT') {
+        <mat-form-field appearance="outline">
+          <mat-label>Maximum Marks</mat-label>
+          <input
+            matInput
+            type="number"
+            formControlName="maxMarks"
+            min="1"
+            max="9999"
+            placeholder="e.g., 100"
+          />
+          <mat-hint>Leave blank if not graded</mat-hint>
+          @if (form.get('maxMarks')?.hasError('min') && form.get('maxMarks')?.touched) {
+          <mat-error>Marks must be at least 1</mat-error>
+          }
+        </mat-form-field>
+        }
+      </div>
+
+      <!-- Mandatory toggle -->
+      <div class="checkbox-row">
+        <mat-checkbox formControlName="isMandatory" color="primary">
+          Mandatory for all students
+        </mat-checkbox>
+      </div>
+
+      <!-- ── Form Actions ── -->
+      <div class="form-actions">
+        <button mat-stroked-button type="button" (click)="goBack()">Cancel</button>
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="form.invalid || submitting()"
+        >
+          @if (submitting()) {
+          <mat-spinner diameter="18" style="display: inline-block; margin-right: 8px"></mat-spinner>
+          }
+          {{ isEdit() ? 'Update Assignment' : 'Publish Assignment' }}
+        </button>
+      </div>
+    </form>
+  </div>
+  }
+</div>

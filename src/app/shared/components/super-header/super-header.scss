@@ -1,0 +1,665 @@
+// super-header.scss
+
+:host {
+  display: block;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+
+// ── Theme tokens ──────────────────────────────────────────────────────────────
+:host {
+  // Dark (default)
+  --sh-bg: #0b0f1a;
+  --sh-border: rgba(0, 212, 255, 0.14);
+  --sh-shadow: 0 1px 0 rgba(0, 212, 255, 0.06), 0 4px 20px rgba(0, 0, 0, 0.5);
+  --sh-accent-line: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 212, 255, 0.7) 20%,
+    #00d4ff 50%,
+    rgba(0, 212, 255, 0.7) 80%,
+    transparent 100%
+  );
+  --sh-scanline: rgba(0, 212, 255, 0.01);
+  --sh-brand-title: #e8f4ff;
+  --sh-brand-sub: rgba(0, 212, 255, 0.65);
+  --sh-accent: #00d4ff;
+  --sh-accent-hover-bg: rgba(0, 212, 255, 0.08);
+  --sh-icon-color: rgba(180, 200, 220, 0.75);
+  --sh-notif-panel-bg: #0f1623;
+  --sh-notif-panel-border: rgba(0, 212, 255, 0.15);
+  --sh-notif-panel-shadow: 0 4px 6px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.6);
+  --sh-notif-title: #e0ecff;
+  --sh-notif-clear: rgba(0, 212, 255, 0.7);
+  --sh-notif-border: rgba(0, 212, 255, 0.1);
+  --sh-notif-item-border: rgba(255, 255, 255, 0.04);
+  --sh-notif-unread: rgba(0, 212, 255, 0.04);
+  --sh-notif-text: #b8c8d8;
+  --sh-notif-time: rgba(150, 170, 190, 0.5);
+  --sh-notif-footer-border: rgba(0, 212, 255, 0.08);
+  --sh-divider: rgba(255, 255, 255, 0.08);
+  --sh-chip-border: rgba(255, 255, 255, 0.07);
+  --sh-chip-bg: rgba(255, 255, 255, 0.03);
+  --sh-avatar-bg: rgba(0, 212, 255, 0.2);
+  --sh-avatar-border: rgba(0, 212, 255, 0.35);
+  --sh-avatar-color: #00d4ff;
+  --sh-user-name: #d0e4f8;
+  --sh-user-role: rgba(0, 212, 255, 0.65);
+  --sh-badge-border: #0b0f1a;
+  --sh-brand-badge-bg: rgba(0, 212, 255, 0.15);
+  --sh-brand-badge-border: rgba(0, 212, 255, 0.3);
+}
+
+:host-context([data-theme='light']) {
+  --sh-bg: #ffffff;
+  --sh-border: rgba(0, 80, 180, 0.12);
+  --sh-shadow: 0 1px 0 rgba(0, 80, 180, 0.06), 0 4px 20px rgba(0, 0, 0, 0.06);
+  --sh-accent-line: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 100, 200, 0.4) 20%,
+    rgba(0, 100, 200, 0.7) 50%,
+    rgba(0, 100, 200, 0.4) 80%,
+    transparent 100%
+  );
+  --sh-scanline: transparent;
+  --sh-brand-title: #0f172a;
+  --sh-brand-sub: rgba(0, 80, 180, 0.6);
+  --sh-accent: #1e40af;
+  --sh-accent-hover-bg: rgba(0, 80, 180, 0.08);
+  --sh-icon-color: #475569;
+  --sh-notif-panel-bg: #ffffff;
+  --sh-notif-panel-border: rgba(0, 80, 180, 0.12);
+  --sh-notif-panel-shadow: 0 4px 6px rgba(0, 0, 0, 0.08), 0 12px 32px rgba(0, 0, 0, 0.12);
+  --sh-notif-title: #0f172a;
+  --sh-notif-clear: #1e40af;
+  --sh-notif-border: #e2e8f0;
+  --sh-notif-item-border: #f1f5f9;
+  --sh-notif-unread: rgba(0, 80, 180, 0.04);
+  --sh-notif-text: #374151;
+  --sh-notif-time: #9ca3af;
+  --sh-notif-footer-border: #e2e8f0;
+  --sh-divider: #e2e8f0;
+  --sh-chip-border: #e2e8f0;
+  --sh-chip-bg: #f8fafc;
+  --sh-avatar-bg: rgba(0, 80, 180, 0.1);
+  --sh-avatar-border: rgba(0, 80, 180, 0.25);
+  --sh-avatar-color: #1e40af;
+  --sh-user-name: #0f172a;
+  --sh-user-role: rgba(0, 80, 180, 0.65);
+  --sh-badge-border: #ffffff;
+  --sh-brand-badge-bg: rgba(0, 80, 180, 0.1);
+  --sh-brand-badge-border: rgba(0, 80, 180, 0.2);
+}
+
+// ── Utility ───────────────────────────────────────────────────────────────────
+.desktop-only {
+  display: flex;
+}
+.mobile-only {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+  .mobile-only {
+    display: flex !important;
+  }
+}
+
+// ── Header shell ──────────────────────────────────────────────────────────────
+.super-header {
+  position: relative;
+  height: 60px;
+  background: var(--sh-bg);
+  border-bottom: 1px solid var(--sh-border);
+  box-shadow: var(--sh-shadow);
+  overflow: hidden;
+  transition: background 0.25s ease, border-color 0.25s ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--sh-accent-line);
+  }
+
+  @media (max-width: 768px) {
+    height: 54px;
+  }
+}
+
+.scanline {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    var(--sh-scanline) 2px,
+    var(--sh-scanline) 4px
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+// ── Inner ─────────────────────────────────────────────────────────────────────
+.header-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 20px;
+  gap: 10px;
+
+  @media (max-width: 768px) {
+    padding: 0 14px;
+    gap: 8px;
+  }
+}
+
+// ── Mobile hamburger ──────────────────────────────────────────────────────────
+.hamburger {
+  color: var(--sh-accent) !important;
+  opacity: 0.7;
+  margin-right: 2px;
+
+  &:hover {
+    opacity: 1;
+    background: var(--sh-accent-hover-bg) !important;
+  }
+}
+
+// ── Brand ─────────────────────────────────────────────────────────────────────
+.brand-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.brand-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--sh-brand-badge-bg);
+  border: 1px solid var(--sh-brand-badge-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.brand-icon {
+  font-size: 20px !important;
+  color: var(--sh-accent) !important;
+}
+
+.brand-text-wrap {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.brand-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--sh-brand-title);
+  font-family: 'Google Sans', 'Segoe UI', monospace;
+  text-transform: uppercase;
+}
+
+.brand-sub {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--sh-brand-sub);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+// ── Status pill ───────────────────────────────────────────────────────────────
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+
+  &.healthy {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #059669;
+  }
+  &.degraded {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.3);
+    color: #b45309;
+  }
+  &.outage {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #dc2626;
+  }
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  .healthy & {
+    background: #10b981;
+    animation: pulse-dot 2s infinite;
+  }
+  .degraded & {
+    background: #f59e0b;
+    animation: pulse-dot 1.5s infinite;
+  }
+  .outage & {
+    background: #ef4444;
+    animation: pulse-dot 1s infinite;
+  }
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.flex-spacer {
+  flex: 1;
+}
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+.actions-section {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.icon-btn {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 8px !important;
+  color: var(--sh-icon-color) !important;
+  transition: background 0.18s ease, color 0.18s ease !important;
+
+  &:hover {
+    background: var(--sh-accent-hover-bg) !important;
+    color: var(--sh-accent) !important;
+  }
+
+  mat-icon {
+    font-size: 20px !important;
+    width: 20px !important;
+    height: 20px !important;
+  }
+}
+
+.theme-btn mat-icon {
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+.theme-btn:hover mat-icon {
+  transform: rotate(20deg) scale(1.1);
+}
+
+// ── Notifications ─────────────────────────────────────────────────────────────
+// The wrapper is position:relative so the badge can be absolutely placed
+// at the top-right corner of the button without being clipped by
+// mat-icon-button's own overflow:hidden.
+.notif-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Badge lives on the WRAPPER, not inside the button.
+// This is the key fix — mat-icon-button clips its overflow, so any
+// position:absolute child inside it gets hidden or misplaced.
+.notif-badge {
+  position: absolute;
+  // Sit in the top-right quadrant of the 36px button
+  top: 0;
+  right: 0;
+  // Shift it up and right so it overlaps the button corner naturally
+  transform: translate(30%, -30%);
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  // Halo matches header bg so the badge appears to float cleanly
+  box-shadow: 0 0 0 1.5px var(--sh-badge-border);
+  pointer-events: none;
+  // Stays above the button
+  z-index: 2;
+  // Subtle pulse to draw attention
+  animation: badge-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+  0%,
+  100% {
+    transform: translate(30%, -30%) scale(1);
+  }
+  50% {
+    transform: translate(30%, -30%) scale(1.12);
+  }
+}
+
+// Bell animation on button hover
+.notif-btn:hover .bell-icon {
+  animation: bell-ring 0.5s ease;
+}
+
+.bell-icon {
+  transition: transform 0.3s ease;
+}
+
+@keyframes bell-ring {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  20% {
+    transform: rotate(14deg);
+  }
+  40% {
+    transform: rotate(-12deg);
+  }
+  60% {
+    transform: rotate(8deg);
+  }
+  80% {
+    transform: rotate(-4deg);
+  }
+}
+
+// ── Notification panel ────────────────────────────────────────────────────────
+.notif-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 360px;
+  background: var(--sh-notif-panel-bg);
+  border: 1px solid var(--sh-notif-panel-border);
+  border-radius: 14px;
+  box-shadow: var(--sh-notif-panel-shadow);
+  overflow: hidden;
+  animation: panel-in 0.2s cubic-bezier(0.34, 1.3, 0.64, 1);
+  transform-origin: top right;
+  z-index: 300;
+
+  @media (max-width: 480px) {
+    width: calc(100vw - 20px);
+    right: -10px;
+  }
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: scale(0.93) translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.notif-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--sh-notif-border);
+}
+
+.notif-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--sh-notif-title);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.clear-btn {
+  font-size: 11px !important;
+  color: var(--sh-notif-clear) !important;
+  padding: 0 6px !important;
+  min-width: unset !important;
+  height: 26px !important;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.notif-list {
+  max-height: 260px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 212, 255, 0.1) transparent;
+
+  &::-webkit-scrollbar {
+    width: 3px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 212, 255, 0.15);
+    border-radius: 3px;
+  }
+}
+
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.15s ease;
+  border-bottom: 1px solid var(--sh-notif-item-border);
+
+  &:last-child {
+    border-bottom: none;
+  }
+  &:hover {
+    background: rgba(0, 0, 0, 0.03);
+  }
+  &.unread {
+    background: var(--sh-notif-unread);
+  }
+}
+
+.severity-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+
+  &.info {
+    background: #00d4ff;
+  }
+  &.warning {
+    background: #f59e0b;
+  }
+  &.critical {
+    background: #ef4444;
+  }
+}
+
+.notif-icon-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &.info {
+    background: rgba(0, 212, 255, 0.12);
+  }
+  &.warning {
+    background: rgba(245, 158, 11, 0.12);
+  }
+  &.critical {
+    background: rgba(239, 68, 68, 0.12);
+  }
+}
+
+.notif-item-icon {
+  font-size: 17px !important;
+  width: 17px !important;
+  height: 17px !important;
+
+  .info & {
+    color: #00d4ff !important;
+  }
+  .warning & {
+    color: #fbbf24 !important;
+  }
+  .critical & {
+    color: #f87171 !important;
+  }
+}
+
+.notif-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-text {
+  margin: 0 0 3px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--sh-notif-text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.notif-time {
+  font-size: 10.5px;
+  color: var(--sh-notif-time);
+  font-family: monospace;
+}
+
+.notif-footer {
+  padding: 8px 16px;
+  border-top: 1px solid var(--sh-notif-footer-border);
+  text-align: center;
+}
+
+.view-all-btn {
+  font-size: 12px !important;
+  color: var(--sh-notif-clear) !important;
+  width: 100%;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+// ── Divider ───────────────────────────────────────────────────────────────────
+.header-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--sh-divider);
+  flex-shrink: 0;
+  margin: 0 4px;
+
+  @media (max-width: 480px) {
+    display: none !important;
+  }
+}
+
+// ── User chip ─────────────────────────────────────────────────────────────────
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px 4px 4px;
+  border-radius: 8px;
+  border: 1px solid var(--sh-chip-border);
+  background: var(--sh-chip-bg);
+  cursor: default;
+
+  @media (max-width: 480px) {
+    padding: 4px;
+    border: none;
+    background: transparent;
+  }
+}
+
+.user-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: var(--sh-avatar-bg);
+  border: 1px solid var(--sh-avatar-border);
+  color: var(--sh-avatar-color);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.user-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.user-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--sh-user-name);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+  font-family: 'Google Sans', 'Segoe UI', sans-serif;
+}
+
+.user-role {
+  font-size: 10px;
+  color: var(--sh-user-role);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}

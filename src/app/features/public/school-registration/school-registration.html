@@ -1,0 +1,327 @@
+<!-- school-registration.html -->
+<div class="reg-page">
+  <!-- ══════════════════════════════════════════════════════════
+         SUCCESS STATE
+         ══════════════════════════════════════════════════════════ -->
+  @if (submitted()) {
+  <div class="success-state">
+    <div class="success-card">
+      <div class="success-icon-wrap">
+        <div class="success-ripple"></div>
+        <div class="success-ripple delay-1"></div>
+        <mat-icon class="success-icon">check_circle</mat-icon>
+      </div>
+      <h1 class="success-title">Request Submitted!</h1>
+      <p class="success-sub">
+        Thank you for your interest in joining our School Management System. Our team will review
+        your request and contact you within
+        <strong>24–48 hours</strong>.
+      </p>
+      <div class="success-info">
+        <mat-icon>mail_outline</mat-icon>
+        <span>Check your inbox — we've sent you a confirmation email.</span>
+      </div>
+      <a routerLink="/login" mat-flat-button class="success-btn">
+        Go to Login
+        <mat-icon iconPositionEnd>arrow_forward</mat-icon>
+      </a>
+    </div>
+  </div>
+  } @else {
+
+  <!-- ══════════════════════════════════════════════════════════
+         HERO
+         ══════════════════════════════════════════════════════════ -->
+  <section class="hero">
+    <div class="hero-bg">
+      <div class="hero-orb orb-1"></div>
+      <div class="hero-orb orb-2"></div>
+      <div class="hero-grid"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge">
+        <mat-icon>verified</mat-icon>
+        Trusted School Management Platform
+      </div>
+      <h1 class="hero-title">
+        Manage your school<br />
+        <span class="hero-accent">the smart way</span>
+      </h1>
+      <p class="hero-desc">
+        A complete all-in-one platform for attendance, exams, fees, assignments, notifications, and
+        more — designed for Indian schools of all sizes.
+      </p>
+      <div class="hero-actions">
+        <button mat-flat-button class="hero-cta" (click)="openForm()">
+          <mat-icon>school</mat-icon>
+          Register Your School
+        </button>
+        <a routerLink="/login" mat-stroked-button class="hero-login"> Already registered? </a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-num">500+</span>
+          <span class="stat-label">Schools</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-num">1L+</span>
+          <span class="stat-label">Students</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-num">99%</span>
+          <span class="stat-label">Uptime</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+         FEATURES
+         ══════════════════════════════════════════════════════════ -->
+  <section class="features-section">
+    <div class="section-container">
+      <div class="section-label">Everything you need</div>
+      <h2 class="section-title">Built for modern schools</h2>
+      <div class="features-grid">
+        @for (f of features; track f.icon) {
+        <div class="feature-card">
+          <div class="feature-icon-wrap">
+            <mat-icon>{{ f.icon }}</mat-icon>
+          </div>
+          <h3 class="feature-title">{{ f.title }}</h3>
+          <p class="feature-desc">{{ f.desc }}</p>
+        </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+         HOW IT WORKS
+         ══════════════════════════════════════════════════════════ -->
+  <section class="steps-section">
+    <div class="section-container">
+      <div class="section-label">Simple process</div>
+      <h2 class="section-title">How it works</h2>
+      <div class="steps-row">
+        @for (s of steps; track s.num; let last = $last) {
+        <div class="step-item">
+          <div class="step-num">{{ s.num }}</div>
+          <h3 class="step-title">{{ s.title }}</h3>
+          <p class="step-desc">{{ s.desc }}</p>
+        </div>
+        @if (!last) {
+        <div class="step-connector">
+          <mat-icon>arrow_forward</mat-icon>
+        </div>
+        } }
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+         REGISTRATION FORM
+         ══════════════════════════════════════════════════════════ -->
+  <section class="form-section" id="reg-form">
+    <div class="section-container">
+      <div class="form-header">
+        <div class="section-label">Get started</div>
+        <h2 class="section-title">Request School Registration</h2>
+        <p class="form-subtitle">
+          Fill in the details below and our team will get in touch within 24–48 hours.
+        </p>
+      </div>
+
+      @if (!showForm()) {
+      <div class="form-cta-block">
+        <button mat-flat-button class="hero-cta" (click)="openForm()">
+          <mat-icon>edit_note</mat-icon>
+          Fill Registration Form
+        </button>
+      </div>
+      } @if (showForm()) {
+      <div class="reg-form-card">
+        <form class="reg-form" #f="ngForm" (ngSubmit)="onSubmit()">
+          <!-- School Details -->
+          <div class="form-section-label"><mat-icon>domain</mat-icon> School Details</div>
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="field-full">
+              <mat-label>School Name *</mat-label>
+              <input
+                matInput
+                [(ngModel)]="form.schoolName"
+                name="schoolName"
+                placeholder="e.g. St. Mary's High School"
+                required
+                maxlength="100"
+              />
+            </mat-form-field>
+          </div>
+          <div class="form-row two-col">
+            <mat-form-field appearance="outline">
+              <mat-label>School Type *</mat-label>
+              <mat-select [(ngModel)]="form.schoolType" name="schoolType" required>
+                @for (t of schoolTypes; track t.value) {
+                <mat-option [value]="t.value">{{ t.label }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Estimated Students (optional)</mat-label>
+              <input
+                matInput
+                type="number"
+                [(ngModel)]="form.estimatedStudents"
+                name="estimatedStudents"
+                placeholder="e.g. 500"
+                min="1"
+                max="50000"
+              />
+            </mat-form-field>
+          </div>
+          <div class="form-row two-col">
+            <mat-form-field appearance="outline">
+              <mat-label>City *</mat-label>
+              <input
+                matInput
+                [(ngModel)]="form.city"
+                name="city"
+                placeholder="e.g. Lucknow"
+                required
+                maxlength="60"
+              />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>State *</mat-label>
+              <mat-select [(ngModel)]="form.state" name="state" required>
+                @for (s of indianStates; track s) {
+                <mat-option [value]="s">{{ s }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <!-- Owner Details -->
+          <div class="form-section-label" style="margin-top: 8px">
+            <mat-icon>person</mat-icon> Owner / Contact Details
+          </div>
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="field-full">
+              <mat-label>Owner / Principal Name *</mat-label>
+              <input
+                matInput
+                [(ngModel)]="form.ownerName"
+                name="ownerName"
+                placeholder="Full name"
+                required
+                maxlength="80"
+              />
+            </mat-form-field>
+          </div>
+          <div class="form-row two-col">
+            <mat-form-field appearance="outline">
+              <mat-label>Email Address *</mat-label>
+              <input
+                matInput
+                type="email"
+                [(ngModel)]="form.ownerEmail"
+                name="ownerEmail"
+                placeholder="you@school.com"
+                required
+              />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Phone Number *</mat-label>
+              <input
+                matInput
+                type="tel"
+                [(ngModel)]="form.ownerPhone"
+                name="ownerPhone"
+                placeholder="10-digit mobile number"
+                required
+                maxlength="15"
+              />
+            </mat-form-field>
+          </div>
+
+          <!-- Message -->
+          <mat-form-field appearance="outline" class="field-full">
+            <mat-label>Message (optional)</mat-label>
+            <textarea
+              matInput
+              [(ngModel)]="form.message"
+              name="message"
+              placeholder="Tell us more about your school, specific needs, or any questions..."
+              rows="4"
+              maxlength="500"
+            ></textarea>
+            <mat-hint align="end">{{ form.message.length }}/500</mat-hint>
+          </mat-form-field>
+
+          <!-- Terms -->
+          <div class="terms-row">
+            <mat-checkbox [(ngModel)]="form.agreed" name="agreed" color="primary">
+              I agree to the <a href="#" class="terms-link">Terms & Conditions</a> and
+              <a href="#" class="terms-link">Privacy Policy</a>
+            </mat-checkbox>
+          </div>
+
+          <!-- Error -->
+          @if (errorMsg()) {
+          <div class="form-error" role="alert">
+            <mat-icon>error_outline</mat-icon>
+            <span>{{ errorMsg() }}</span>
+          </div>
+          }
+
+          <!-- Actions -->
+          <div class="form-actions">
+            <button
+              type="button"
+              mat-stroked-button
+              class="cancel-btn"
+              (click)="showForm.set(false)"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              mat-flat-button
+              class="submit-btn"
+              [disabled]="!isFormValid() || loading()"
+            >
+              @if (loading()) {
+              <mat-spinner diameter="20"></mat-spinner>
+              Submitting… } @else {
+              <ng-container>
+                <mat-icon>send</mat-icon>
+                Submit Request
+              </ng-container>
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+      }
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+         FOOTER CTA
+         ══════════════════════════════════════════════════════════ -->
+  <section class="footer-cta-section">
+    <div class="section-container">
+      <h2 class="footer-cta-title">Ready to transform your school?</h2>
+      <p class="footer-cta-sub">Join hundreds of schools already using our platform.</p>
+      <button mat-flat-button class="hero-cta" (click)="openForm()">
+        <mat-icon>school</mat-icon>
+        Get Started Free
+      </button>
+    </div>
+  </section>
+
+  }
+  <!-- end else (not submitted) -->
+</div>

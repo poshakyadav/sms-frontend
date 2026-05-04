@@ -1,0 +1,167 @@
+<div class="page">
+  <!-- ── Page header ──────────────────────────────────────────────────────── -->
+  <header class="page__header">
+    <div class="page__header-text">
+      <h1 class="page__title">Admin Users</h1>
+      <p class="page__subtitle">
+        Manage super-admin access, roles &amp; permissions @if (!loading() && hasUsers()) {
+        <span class="user-count-pill"
+          >{{ userCount() }} {{ userCount() === 1 ? 'user' : 'users' }}</span
+        >
+        }
+      </p>
+    </div>
+
+    <button
+      mat-flat-button
+      class="create-btn"
+      (click)="navigateCreate()"
+      *hasSuperPermission="'users.create'"
+    >
+      <mat-icon fontIcon="person_add"></mat-icon>
+      <span>New User</span>
+    </button>
+  </header>
+
+  <!-- ── Loading bar ───────────────────────────────────────────────────────── -->
+  @if (loading()) {
+  <mat-progress-bar mode="indeterminate" class="loading-bar"></mat-progress-bar>
+  }
+
+  <!-- ── Error state ───────────────────────────────────────────────────────── -->
+  @if (error() && !loading()) {
+  <div class="error-state">
+    <mat-icon class="error-state__icon" fontIcon="error_outline"></mat-icon>
+    <p class="error-state__msg">{{ error() }}</p>
+    <button mat-stroked-button class="retry-btn" (click)="fetchUsers()">
+      <mat-icon fontIcon="refresh"></mat-icon> Retry
+    </button>
+  </div>
+  }
+
+  <!-- ── Table card ────────────────────────────────────────────────────────── -->
+  @if (!error()) {
+  <div class="table-card">
+    <mat-table [dataSource]="users()" class="users-table" [trackBy]="trackByUserId">
+      <!-- User column -->
+      <ng-container matColumnDef="user">
+        <mat-header-cell *matHeaderCellDef>User</mat-header-cell>
+        <mat-cell *matCellDef="let u">
+          <div class="user-cell">
+            <div class="avatar" [class.avatar--self]="isSelf(u.id)">
+              {{ nameInitial(u.name) }}
+            </div>
+            <div class="user-cell__info">
+              <span class="user-cell__name">
+                {{ u.name }}
+                @if (isSelf(u.id)) {
+                <span class="self-badge">you</span>
+                }
+              </span>
+              <span class="user-cell__email">{{ u.email }}</span>
+            </div>
+          </div>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Roles column -->
+      <ng-container matColumnDef="roles">
+        <mat-header-cell *matHeaderCellDef>Roles</mat-header-cell>
+        <mat-cell *matCellDef="let u">
+          <div class="roles-cell">
+            @for (role of asRoleArray(u.roles); track role.id) {
+            <span class="role-badge" [ngClass]="getRoleBadgeClass(role.name)">
+              {{ role.name }}
+            </span>
+            } @empty {
+            <span class="empty-roles">No roles</span>
+            }
+          </div>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Status column -->
+      <ng-container matColumnDef="status">
+        <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+        <mat-cell *matCellDef="let u">
+          <span
+            class="status-dot"
+            [class.status-dot--active]="u.isActive"
+            [class.status-dot--inactive]="!u.isActive"
+          >
+            {{ u.isActive ? 'Active' : 'Inactive' }}
+          </span>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Created column -->
+      <ng-container matColumnDef="created">
+        <mat-header-cell *matHeaderCellDef>Created</mat-header-cell>
+        <mat-cell *matCellDef="let u" class="date-cell">
+          {{ u.createdAt | date : 'MMM d, y' }}
+        </mat-cell>
+      </ng-container>
+
+      <!-- Actions column -->
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef></mat-header-cell>
+        <mat-cell *matCellDef="let u">
+          <div class="actions-cell">
+            <button
+              mat-icon-button
+              class="action-btn action-btn--edit"
+              (click)="navigateEdit(u)"
+              matTooltip="Edit user"
+              matTooltipPosition="left"
+              *hasSuperPermission="['users.edit', 'roles.manage', 'permissions.manage']"
+            >
+              <mat-icon fontIcon="edit"></mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              class="action-btn action-btn--delete"
+              (click)="deleteUser(u)"
+              matTooltip="Delete user"
+              matTooltipPosition="left"
+              [disabled]="isSelf(u.id) || u.isDeletable === false"
+              *hasSuperPermission="'users.delete'"
+            >
+              <mat-icon fontIcon="delete_outline"></mat-icon>
+            </button>
+          </div>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns" class="table-row"></mat-row>
+
+      <!-- Empty / loading state -->
+      <tr class="mat-row no-data-row" *matNoDataRow>
+        <td class="mat-cell empty-state" [attr.colspan]="displayedColumns.length">
+          @if (loading()) {
+          <div class="empty-state__content">
+            <div class="skeleton-list">
+              @for (i of [1, 2, 3]; track i) {
+              <div class="skeleton-row">
+                <div class="skeleton skeleton--circle"></div>
+                <div class="skeleton-lines">
+                  <div class="skeleton skeleton--line skeleton--line-lg"></div>
+                  <div class="skeleton skeleton--line skeleton--line-sm"></div>
+                </div>
+              </div>
+              }
+            </div>
+          </div>
+          } @else {
+          <div class="empty-state__content">
+            <mat-icon class="empty-state__icon" fontIcon="people_outline"></mat-icon>
+            <p class="empty-state__title">No users found</p>
+            <p class="empty-state__hint">Create your first admin user to get started</p>
+          </div>
+          }
+        </td>
+      </tr>
+    </mat-table>
+  </div>
+  }
+</div>

@@ -1,0 +1,25 @@
+@use '../../../../shared/styles/exams-shared' as *;
+
+// Component-specific additions
+
+.student-name {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.roll-number {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+.saved-icon {
+  font-size: 1.1rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  color: var(--color-success);
+  opacity: 0.7;
+}
+
+.mat-mdc-row.dirty-row {
+  background: color-mix(in srgb, var(--color-warning) 6%, transparent) !important;
+}

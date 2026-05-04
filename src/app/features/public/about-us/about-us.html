@@ -1,0 +1,263 @@
+<!-- about-us.html -->
+<div class="about-page">
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- HERO                                                                    -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <section class="hero">
+    <div class="hero__bg-shapes">
+      <div class="shape shape--1"></div>
+      <div class="shape shape--2"></div>
+      <div class="shape shape--3"></div>
+    </div>
+    <div class="container">
+      <div class="hero__badge">About SMS</div>
+      <h1 class="hero__title">
+        Empowering Schools.<br />
+        <span class="hero__title--accent">Simplifying Education.</span>
+      </h1>
+      <p class="hero__subtitle">
+        SMS is a modern, privacy-first school management platform built for Indian educational
+        institutions — covering everything from admissions and attendance to fees, examinations, and
+        beyond.
+      </p>
+      <div class="hero__cta">
+        <a routerLink="/public/register" class="btn btn--primary">Get Started Free</a>
+        <a routerLink="/login" class="btn btn--ghost">Sign In</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- STATS / HIGHLIGHTS                                                      -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <section class="stats">
+    <div class="container">
+      <div class="stats__grid">
+        <div class="stat-card" *ngFor="let stat of stats">
+          <div class="stat-card__value">
+            {{ stat.value }}<span class="stat-card__suffix">{{ stat.suffix }}</span>
+          </div>
+          <div class="stat-card__label">{{ stat.label }}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- MISSION                                                                  -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <section class="mission">
+    <div class="container mission__layout">
+      <div class="mission__content">
+        <div class="section-badge">Our Mission</div>
+        <h2 class="section-title">
+          Technology should work <em>for</em> schools,<br />not against them.
+        </h2>
+        <p class="section-body">
+          Most school software was built for large enterprises, then awkwardly adapted for
+          education. We started from scratch — listening to principals, teachers, and administrators
+          across India to build something that actually fits how schools work.
+        </p>
+        <p class="section-body">
+          Our goal is simple: give every school — whether it has 80 students or 8,000 — access to
+          the same powerful management tools previously only available to well-funded institutions.
+        </p>
+      </div>
+      <div class="mission__visual">
+        <div class="mission__card mission__card--top">
+          <div class="mission__card-icon">🎓</div>
+          <div class="mission__card-text">
+            <strong>Student-Centric</strong>
+            <span>Every feature is designed around student success and safety</span>
+          </div>
+        </div>
+        <div class="mission__card mission__card--mid">
+          <div class="mission__card-icon">📊</div>
+          <div class="mission__card-text">
+            <strong>Data-Driven</strong>
+            <span>Actionable insights and reports for administrators and teachers</span>
+          </div>
+        </div>
+        <div class="mission__card mission__card--bot">
+          <div class="mission__card-icon">🌐</div>
+          <div class="mission__card-text">
+            <strong>Always Available</strong>
+            <span>Built for reliability — so your school never waits on us</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- VALUES                                                                   -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <section class="values">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-badge">What We Stand For</div>
+        <h2 class="section-title">Our Core Values</h2>
+        <p class="section-subtitle">Everything we build is guided by these principles.</p>
+      </div>
+      <div class="values__grid">
+        <div class="value-card" *ngFor="let value of values">
+          <div class="value-card__icon">{{ value.icon }}</div>
+          <h3 class="value-card__title">{{ value.title }}</h3>
+          <p class="value-card__desc">{{ value.description }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- DATA ISOLATION HIGHLIGHT                                                 -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <section class="isolation">
+    <div class="container">
+      <div class="isolation__card">
+        <div class="isolation__left">
+          <div class="section-badge section-badge--light">Security Architecture</div>
+          <h2 class="section-title section-title--light">
+            One school. One data store.<br />Total isolation.
+          </h2>
+          <p class="section-body section-body--light">
+            Unlike platforms that store all schools in a single shared database, SMS provisions a
+            <strong>dedicated, isolated data store</strong> for every school. Your students' data
+            never resides alongside another school's data — not even on the same logical layer.
+          </p>
+          <ul class="isolation__list">
+            <li>✅ Dedicated data store per school</li>
+            <li>✅ School-scoped authentication</li>
+            <li>✅ Role &amp; permission-based access control</li>
+            <li>✅ Encrypted at rest and in transit</li>
+          </ul>
+        </div>
+        <div class="isolation__diagram">
+          <div class="iso-node iso-node--center">
+            <span>SMS Platform</span>
+          </div>
+          <div class="iso-branches">
+            <div class="iso-branch">
+              <div class="iso-db">🏫 School A</div>
+            </div>
+            <div class="iso-branch">
+              <div class="iso-db">🏫 School B</div>
+            </div>
+            <div class="iso-branch">
+              <div class="iso-db">🏫 School C</div>
+            </div>
+          </div>
+          <p class="iso-caption">Each school has its own isolated data store</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- HOW WE'RE FUNDED (AD MODEL TRANSPARENCY)                                -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <section class="funding">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-badge">Transparency</div>
+        <h2 class="section-title">How SMS is Funded</h2>
+        <p class="section-subtitle">We believe in being upfront about how we keep the lights on.</p>
+      </div>
+      <div class="funding__grid">
+        <div class="funding-card funding-card--free">
+          <div class="funding-card__header">
+            <span class="funding-card__icon">🆓</span>
+            <h3>Free Plan</h3>
+            <span class="funding-card__badge">Ad-Supported</span>
+          </div>
+          <p class="funding-card__desc">
+            SMS is free to use. To sustain the platform, schools on the Free Plan will see
+            <strong>contextual, educational advertisements</strong> in non-sensitive areas of the
+            platform.
+          </p>
+          <ul class="funding-card__list">
+            <li>📚 Education &amp; career-focused ads only</li>
+            <li>🚫 No behavioural tracking or profiling</li>
+            <li>🚫 No student PII shared with advertisers</li>
+            <li>🏷️ All ads clearly labelled as "Advertisement"</li>
+            <li>🔒 Never shown on exams, results, or payment pages</li>
+          </ul>
+        </div>
+        <div class="funding-card funding-card--premium">
+          <div class="funding-card__header">
+            <span class="funding-card__icon">⭐</span>
+            <h3>Premium Plan</h3>
+            <span class="funding-card__badge funding-card__badge--premium">Ad-Free</span>
+          </div>
+          <p class="funding-card__desc">
+            Schools that prefer a completely clean, distraction-free experience for their students
+            and staff can upgrade to our <strong>Premium Plan</strong> — removing all advertisements
+            from the platform entirely.
+          </p>
+          <ul class="funding-card__list">
+            <li>✅ Zero advertisements for all users</li>
+            <li>✅ Same strong privacy protections</li>
+            <li>✅ Priority support</li>
+            <li>✅ GST-compliant invoicing</li>
+            <li>✅ Access to upcoming Premium features</li>
+          </ul>
+          <a routerLink="/school/contact-us" class="btn btn--primary btn--sm">
+            Contact Us to Upgrade
+          </a>
+        </div>
+      </div>
+      <p class="funding__legal-note">
+        Our advertising is contextual only — matched to the subject area of the page, never to any
+        user's personal profile or history. Full details are in our
+        <a routerLink="/public/privacy">Privacy Policy</a>.
+      </p>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- LEGAL COMPLIANCE STRIP                                                   -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <section class="compliance-strip">
+    <div class="container">
+      <div class="compliance-strip__inner">
+        <p class="compliance-strip__label">Designed &amp; operated in compliance with</p>
+        <div class="compliance-strip__badges">
+          <span class="comp-badge">🇮🇳 DPDP Act 2023</span>
+          <span class="comp-badge">📜 IT Act 2000</span>
+          <span class="comp-badge">🔐 OWASP Top 10</span>
+          <span class="comp-badge">🇪🇺 GDPR Principles</span>
+          <span class="comp-badge">🧒 Child Data Protection</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- CTA                                                                      -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <section class="cta-section">
+    <div class="container cta-section__inner">
+      <h2 class="cta-section__title">Ready to modernise your school?</h2>
+      <p class="cta-section__subtitle">
+        Register your school today. Free to start, simple to grow.
+      </p>
+      <a routerLink="/public/register" class="btn btn--primary btn--lg"> Register Your School → </a>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- PAGE FOOTER                                                               -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <footer class="page-footer">
+    <div class="container page-footer__inner">
+      <span class="page-footer__brand">SMS © {{ year }}</span>
+      <nav class="page-footer__links">
+        <a routerLink="/public/about">About</a>
+        <a routerLink="/public/privacy">Privacy Policy</a>
+        <a routerLink="/public/terms">Terms &amp; Conditions</a>
+        <a routerLink="/public/security">Security Policy</a>
+        <a routerLink="/school/contact-us">Contact Us</a>
+      </nav>
+    </div>
+  </footer>
+</div>

@@ -1,0 +1,743 @@
+// ============================================================
+// _fees-shared.scss
+// Single source of truth for ALL fees module styles.
+// Import in every fees component SCSS:
+//   @use '../../../../../shared/styles/fees-shared' as *;
+// (adjust relative path to match component depth)
+// ============================================================
+
+// ── Page shell ───────────────────────────────────────────────────────────────
+.fees-page,
+.fee-structures-page,
+.fee-form-page,
+.record-payment-page,
+.payments-history-page,
+.fee-report-page,
+.fee-dashboard-page,
+.student-ledger-page {
+  padding: 32px 28px;
+  max-width: 1280px;
+  margin: 0 auto;
+
+  @media (max-width: 768px) {
+    padding: 20px 16px;
+  }
+}
+
+// ── Page header ───────────────────────────────────────────────────────────────
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  .header-left {
+    h1 {
+      margin: 0 0 4px;
+      font-size: 1.875rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      letter-spacing: -0.02em;
+    }
+    p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--color-text-secondary);
+    }
+  }
+
+  // Legacy flat pattern (no .header-left wrapper)
+  h1 {
+    margin: 0 0 4px;
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .header-actions {
+      width: 100%;
+    }
+  }
+}
+
+// ── Back header ───────────────────────────────────────────────────────────────
+.back-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+
+  h1 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    letter-spacing: -0.02em;
+  }
+
+  .header-meta {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    margin-top: 2px;
+  }
+}
+
+// ── Summary / KPI stat cards ──────────────────────────────────────────────────
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+  padding: 22px 20px;
+
+  .stat-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-secondary);
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .stat-sub {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    margin-top: 4px;
+  }
+
+  .stat-icon {
+    float: right;
+    font-size: 32px;
+    height: 32px;
+    width: 32px;
+    opacity: 0.18;
+    color: var(--color-primary);
+    margin-top: -4px;
+  }
+
+  mat-progress-bar {
+    margin: 10px 0 4px;
+    border-radius: 4px;
+  }
+
+  // Variants
+  &.primary .stat-value {
+    color: var(--color-primary);
+  }
+  &.success .stat-value {
+    color: var(--color-success);
+  }
+  &.warning .stat-value {
+    color: var(--color-warning);
+  }
+  &.error .stat-value {
+    color: var(--color-error);
+  }
+  &.info .stat-value {
+    color: var(--color-info);
+  }
+}
+
+// ── Section card (filter / form / table wrapper) ──────────────────────────────
+.section-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+  margin-bottom: 24px;
+  overflow: hidden;
+
+  .section-card-header {
+    padding: 16px 24px 0;
+    border-bottom: 1px solid var(--color-divider);
+    padding-bottom: 14px;
+    margin-bottom: 0;
+
+    h3 {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    p {
+      margin: 2px 0 0;
+      font-size: 0.82rem;
+      color: var(--color-text-secondary);
+    }
+  }
+
+  .section-card-body {
+    padding: 20px 24px;
+  }
+
+  @media (max-width: 600px) {
+    .section-card-header {
+      padding: 14px 16px;
+    }
+    .section-card-body {
+      padding: 16px;
+    }
+  }
+}
+
+// ── Form card (create / edit forms) ──────────────────────────────────────────
+.form-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border);
+  padding: 36px;
+
+  @media (max-width: 600px) {
+    padding: 20px 16px;
+  }
+}
+
+// ── Form grid layouts ─────────────────────────────────────────────────────────
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 4px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.full-width,
+mat-form-field.full-width {
+  width: 100%;
+}
+
+.toggle-field {
+  display: flex;
+  align-items: center;
+  min-height: 56px; // match mat-form-field height
+  padding-top: 4px;
+}
+
+// ── Form section divider ──────────────────────────────────────────────────────
+.form-section {
+  margin-bottom: 28px;
+
+  .form-section-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-text-muted);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--color-divider);
+  }
+}
+
+// ── Form actions ──────────────────────────────────────────────────────────────
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-divider);
+
+  button {
+    min-width: 110px;
+  }
+}
+
+// ── Data table card ───────────────────────────────────────────────────────────
+.table-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+
+  table {
+    width: 100%;
+  }
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+// Mat-table overrides — all themed via CSS variables
+.mat-mdc-header-cell {
+  background: var(--color-hover) !important;
+  font-weight: 700 !important;
+  font-size: 0.72rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-text-secondary) !important;
+  padding: 14px 16px !important;
+}
+
+.mat-mdc-cell {
+  padding: 13px 16px !important;
+  color: var(--color-text-primary);
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--color-divider) !important;
+}
+
+.mat-mdc-row {
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--color-hover) !important;
+  }
+
+  &:last-child .mat-mdc-cell {
+    border-bottom: none !important;
+  }
+}
+
+// ── Amount / currency cell ────────────────────────────────────────────────────
+.amount-cell {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+
+  &.positive {
+    color: var(--color-error);
+  } // Balance due
+  &.paid {
+    color: var(--color-success);
+  } // Fully paid
+  &.neutral {
+    color: var(--color-text-secondary);
+  }
+}
+
+// ── Status badge chip ─────────────────────────────────────────────────────────
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+
+  &.paid {
+    background: color-mix(in srgb, var(--color-success) 14%, transparent);
+    color: var(--color-success);
+  }
+  &.due {
+    background: color-mix(in srgb, var(--color-warning) 14%, transparent);
+    color: var(--color-warning);
+  }
+  &.overdue {
+    background: color-mix(in srgb, var(--color-error) 14%, transparent);
+    color: var(--color-error);
+  }
+  &.mandatory {
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    color: var(--color-primary-dark);
+  }
+  &.optional {
+    background: color-mix(in srgb, var(--color-text-muted) 12%, transparent);
+    color: var(--color-text-secondary);
+  }
+}
+
+// Payment method badge
+.method-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+
+  &.CASH {
+    background: color-mix(in srgb, var(--color-success) 14%, transparent);
+    color: var(--color-success);
+  }
+  &.CHECK {
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    color: var(--color-primary);
+  }
+  &.BANK_TRANSFER {
+    background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
+    color: var(--color-secondary);
+  }
+}
+
+// ── Filter / controls card ────────────────────────────────────────────────────
+.controls-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+  padding: 20px 24px;
+  margin-bottom: 24px;
+
+  @media (max-width: 600px) {
+    padding: 16px;
+  }
+}
+
+.controls-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+
+  mat-form-field {
+    flex: 1;
+    min-width: 220px;
+  }
+}
+
+// ── Fee type chip ─────────────────────────────────────────────────────────────
+.fee-type-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary-dark);
+}
+
+// ── Progress bar collection rate ──────────────────────────────────────────────
+.collection-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  mat-progress-bar {
+    flex: 1;
+    border-radius: 4px;
+  }
+
+  .bar-label {
+    font-weight: 700;
+    font-size: 0.82rem;
+    min-width: 42px;
+    text-align: right;
+    color: var(--color-text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// ── Chart / trend area ────────────────────────────────────────────────────────
+.chart-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+  padding: 24px;
+  margin-bottom: 24px;
+
+  .chart-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-bottom: 20px;
+  }
+}
+
+// ── Ledger section ────────────────────────────────────────────────────────────
+.ledger-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+  margin-bottom: 20px;
+  overflow: hidden;
+
+  .ledger-header {
+    padding: 16px 20px;
+    background: var(--color-hover);
+    border-bottom: 1px solid var(--color-divider);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    h3 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    .ledger-meta {
+      font-size: 0.82rem;
+      color: var(--color-text-secondary);
+    }
+  }
+
+  .ledger-summary {
+    padding: 16px 20px;
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--color-divider);
+
+    .ledger-summary-item {
+      .label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: var(--color-text-muted);
+        margin-bottom: 2px;
+      }
+      .value {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: var(--color-text-primary);
+        font-variant-numeric: tabular-nums;
+
+        &.due {
+          color: var(--color-error);
+        }
+        &.paid {
+          color: var(--color-success);
+        }
+        &.balance {
+          color: var(--color-warning);
+        }
+      }
+    }
+  }
+}
+
+// ── Cell actions ──────────────────────────────────────────────────────────────
+.cell-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+// ── Loading / error / empty feedback states ───────────────────────────────────
+.state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 360px;
+  gap: 16px;
+  text-align: center;
+  padding: 40px 20px;
+
+  .state-icon {
+    font-size: 72px;
+    height: 72px;
+    width: 72px;
+    opacity: 0.45;
+    color: var(--color-text-muted);
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
+  p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    max-width: 380px;
+  }
+
+  &.error {
+    .state-icon {
+      color: var(--color-error);
+      opacity: 1;
+    }
+    h2 {
+      color: var(--color-error);
+    }
+  }
+}
+
+// ── Loading overlay ────────────────────────────────────────────────────────────
+.loading-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 260px;
+  gap: 16px;
+  color: var(--color-text-secondary);
+}
+
+// ── Receipt number pill ───────────────────────────────────────────────────────
+.receipt-number {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  background: var(--color-hover);
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.03em;
+}
+
+// ── Balance due row highlight ─────────────────────────────────────────────────
+.mat-mdc-row.row-overdue {
+  background: color-mix(in srgb, var(--color-error) 4%, transparent) !important;
+}
+
+.mat-mdc-row.row-paid {
+  background: color-mix(in srgb, var(--color-success) 3%, transparent) !important;
+}
+
+// ── Trend bar (simple bar chart) ──────────────────────────────────────────────
+.trend-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 120px;
+  padding: 8px 0;
+
+  .trend-bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    height: 100%;
+    justify-content: flex-end;
+
+    .bar {
+      width: 100%;
+      background: var(--color-primary);
+      border-radius: 4px 4px 0 0;
+      opacity: 0.85;
+      min-height: 2px;
+      transition: height 0.3s ease;
+    }
+
+    .bar-date {
+      font-size: 0.6rem;
+      color: var(--color-text-muted);
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      margin-top: 4px;
+    }
+  }
+}
+
+// ── Section divider label ─────────────────────────────────────────────────────
+.section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  margin-bottom: 12px;
+  margin-top: 8px;
+}
+
+// ── Inline payment form card ──────────────────────────────────────────────────
+.payment-inline-card {
+  background: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg-card));
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  margin-top: 24px;
+
+  h3 {
+    margin: 0 0 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+}
+
+// ── Export action bar ─────────────────────────────────────────────────────────
+.export-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+// ── Responsive helpers ────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .controls-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .form-actions {
+    justify-content: stretch;
+    button {
+      flex: 1;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .ledger-summary {
+    flex-direction: column;
+    gap: 12px;
+  }
+}

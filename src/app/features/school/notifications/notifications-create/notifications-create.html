@@ -1,0 +1,162 @@
+<!-- notifications-create.html -->
+<div class="form-page">
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <button mat-icon-button (click)="onCancel()" matTooltip="Back to notifications">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div>
+      <h1>Create Notification</h1>
+    </div>
+  </div>
+
+  <!-- ── Form ────────────────────────────────────────────────────────────── -->
+  <div class="form-card">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <!-- Section: Content -->
+      <div class="form-section">
+        <p class="form-section-title">
+          <mat-icon class="section-icon">edit_note</mat-icon>
+          Notification Content
+        </p>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Title</mat-label>
+          <input matInput formControlName="title" placeholder="e.g. School closed on Monday" />
+          <mat-hint align="end">{{ form.get('title')?.value?.length ?? 0 }}/100</mat-hint>
+          @if (form.get('title')?.invalid && form.get('title')?.touched) {
+          <mat-error>
+            @if (form.get('title')?.hasError('required')) { Title is required } @else if
+            (form.get('title')?.hasError('minlength')) { Min 3 characters }
+          </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Message</mat-label>
+          <textarea
+            matInput
+            formControlName="message"
+            rows="4"
+            placeholder="Write the full notification message here…"
+          ></textarea>
+          @if (form.get('message')?.invalid && form.get('message')?.touched) {
+          <mat-error>
+            @if (form.get('message')?.hasError('required')) { Message is required } @else if
+            (form.get('message')?.hasError('minlength')) { Min 10 characters }
+          </mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <!-- Section: Target Audience (visual picker) -->
+      <div class="form-section">
+        <p class="form-section-title">
+          <mat-icon class="section-icon">track_changes</mat-icon>
+          Target Audience
+        </p>
+
+        <div class="target-grid">
+          @for (opt of targetTypeOptions; track opt.value) {
+          <button
+            type="button"
+            class="target-option"
+            [class.selected]="selectedTarget === opt.value"
+            (click)="selectTargetType(opt.value)"
+            [matTooltip]="opt.description"
+          >
+            <mat-icon>{{ opt.icon }}</mat-icon>
+            <span class="target-label">{{ opt.label }}</span>
+          </button>
+          }
+        </div>
+
+        <!-- Dynamic: Class Section -->
+        @if (needsClassSection) {
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Class / Section</mat-label>
+          <mat-icon matPrefix>class</mat-icon>
+          <mat-select formControlName="classSectionId">
+            @for (cs of classSections(); track cs.id) {
+            <mat-option [value]="cs.id">
+              {{ cs.className }} — {{ cs.sectionName }}
+              @if (cs.currentStudents !== undefined) {
+              <span class="option-meta">({{ cs.currentStudents }} students)</span>
+              }
+            </mat-option>
+            }
+          </mat-select>
+          @if (form.get('classSectionId')?.invalid && form.get('classSectionId')?.touched) {
+          <mat-error>Class / Section is required</mat-error>
+          }
+        </mat-form-field>
+        }
+
+        <!-- Dynamic: Student -->
+        @if (needsStudent) {
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Student</mat-label>
+          <mat-icon matPrefix>person</mat-icon>
+          <mat-select formControlName="studentId">
+            @for (s of students(); track s.studentId) {
+            <mat-option [value]="s.studentId">
+              {{ s.studentName }}
+              <span class="option-meta">— {{ s.className }} {{ s.sectionName }}</span>
+            </mat-option>
+            }
+          </mat-select>
+          @if (form.get('studentId')?.invalid && form.get('studentId')?.touched) {
+          <mat-error>Student is required</mat-error>
+          }
+        </mat-form-field>
+        }
+      </div>
+
+      <!-- Section: Optional Fields -->
+      <div class="form-section">
+        <p class="form-section-title">
+          <mat-icon class="section-icon">tune</mat-icon>
+          Optional Details
+        </p>
+
+        <div class="two-col">
+          <mat-form-field appearance="outline">
+            <mat-label>Due Date</mat-label>
+            <input matInput [matDatepicker]="picker" formControlName="dueDate" />
+            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+            <mat-hint>Leave blank if no deadline</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Link (optional)</mat-label>
+            <mat-icon matPrefix>link</mat-icon>
+            <input matInput formControlName="link" placeholder="https://…" type="url" />
+            <mat-hint>Tapping the notification opens this URL</mat-hint>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- ── Actions ────────────────────────────────────────────────────── -->
+      <div class="form-actions">
+        <button mat-stroked-button type="button" (click)="onCancel()">Cancel</button>
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="form.invalid || isSubmitting()"
+        >
+          @if (isSubmitting()) {
+          <mat-spinner diameter="18"></mat-spinner>
+          <span>Sending…</span>
+          } @else {
+          <ng-container>
+            <mat-icon>send</mat-icon>
+            <span>Send Notification</span>
+          </ng-container>
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,685 @@
+<!-- security-policy.html -->
+<div class="legal-page security-page">
+  <!-- ── Hero ──────────────────────────────────────────────────────────────── -->
+  <section class="legal-hero security-hero">
+    <div class="container">
+      <div class="legal-hero__badge">Security</div>
+      <h1 class="legal-hero__title">Security Policy</h1>
+      <p class="legal-hero__meta">
+        Last updated: <strong>{{ lastUpdated }}</strong>
+      </p>
+      <p class="legal-hero__summary">
+        Protecting school and student data is our top priority. This document describes the security
+        principles, practices, and commitments we uphold across the SMS platform — without
+        disclosing specific implementation details that could create security risks.
+      </p>
+      <div class="security-badges">
+        <span class="sec-badge">🔐 Encrypted Transit</span>
+        <span class="sec-badge">🗃️ Data Isolation</span>
+        <span class="sec-badge">🔑 Secure Auth</span>
+        <span class="sec-badge">☁️ Edge Protection</span>
+        <span class="sec-badge">🔒 Hashed Credentials</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="legal-body container">
+    <!-- ── Sticky ToC ────────────────────────────────────────────────────────── -->
+    <aside class="toc">
+      <div class="toc__header">Contents</div>
+      <nav class="toc__nav">
+        <button
+          *ngFor="let sec of sections"
+          class="toc__item"
+          [class.toc__item--active]="activeSection === sec.id"
+          (click)="scrollTo(sec.id)"
+        >
+          <span class="toc__icon">{{ sec.icon }}</span>
+          <span class="toc__text">{{ sec.title }}</span>
+        </button>
+      </nav>
+    </aside>
+
+    <main class="legal-content">
+      <!-- ════════════════════════════════════════════════════════════════════ -->
+      <!-- 01  OVERVIEW                                                          -->
+      <!-- ════════════════════════════════════════════════════════════════════ -->
+      <section id="overview" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">01</span>
+          <h2>Security Overview</h2>
+        </div>
+        <p>
+          SMS was designed with security as a foundational principle, not an afterthought. Every
+          architectural and operational decision — from data storage to access management — is made
+          with the protection of school and student data as the primary concern.
+        </p>
+        <p>
+          We do not publicly disclose the specific technologies, vendors, or implementation details
+          of our infrastructure. This is a deliberate security practice — reducing the surface area
+          of information available to potential adversaries. This document describes our security
+          commitments in outcome-based terms.
+        </p>
+
+        <div class="security-pillars">
+          <div class="pillar">
+            <div class="pillar__icon">🏗️</div>
+            <div class="pillar__content">
+              <strong>Isolation by Design</strong>
+              <span
+                >Each school operates on a dedicated, isolated data store — no shared
+                databases</span
+              >
+            </div>
+          </div>
+          <div class="pillar">
+            <div class="pillar__icon">🔑</div>
+            <div class="pillar__content">
+              <strong>Zero Trust Authentication</strong>
+              <span>Every request is authenticated with short-lived, school-scoped tokens</span>
+            </div>
+          </div>
+          <div class="pillar">
+            <div class="pillar__icon">🛡️</div>
+            <div class="pillar__content">
+              <strong>Least-Privilege Access</strong>
+              <span>Fine-grained permissions ensure users access only what they need</span>
+            </div>
+          </div>
+          <div class="pillar">
+            <div class="pillar__icon">🔒</div>
+            <div class="pillar__content">
+              <strong>Encryption Everywhere</strong>
+              <span>All data is encrypted at rest and in transit — without exception</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════════ -->
+      <!-- 02  ARCHITECTURE                                                       -->
+      <!-- ════════════════════════════════════════════════════════════════════ -->
+      <section id="architecture" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">02</span>
+          <h2>Architecture &amp; Isolation</h2>
+        </div>
+
+        <h3 class="subsection-title">Per-School Data Isolation</h3>
+        <p>
+          Every school registered on SMS receives a <strong>dedicated, isolated data store</strong>.
+          This is our most fundamental security design decision:
+        </p>
+        <ul class="legal-list">
+          <li>
+            School A's data is physically and logically separated from School B's data at the
+            storage layer.
+          </li>
+          <li>
+            A security event affecting one school's data store cannot cascade to another school's
+            records by architectural design.
+          </li>
+          <li>
+            There is no shared data layer where a misconfigured query or permission error could
+            accidentally expose another school's information.
+          </li>
+          <li>
+            Access credentials for each school's data are unique and rotated as part of
+            provisioning.
+          </li>
+        </ul>
+
+        <div class="callout callout--success">
+          <span class="callout__icon">✅</span>
+          <p>
+            We implement multi-tenancy via <strong>complete data store isolation per school</strong>
+            — not shared databases with row-level access controls. This is the strongest available
+            approach for protecting sensitive educational data in a multi-school environment.
+          </p>
+        </div>
+
+        <h3 class="subsection-title">Cloud &amp; Edge Infrastructure</h3>
+        <p>
+          The SMS backend runs on enterprise-grade, globally distributed cloud infrastructure. This
+          architecture provides:
+        </p>
+        <ul class="legal-list">
+          <li>
+            No persistent server processes susceptible to long-running exploitation — requests are
+            handled in isolated, short-lived execution environments.
+          </li>
+          <li>
+            Automatic Distributed Denial of Service (DDoS) mitigation at the network edge, before
+            traffic reaches our application.
+          </li>
+          <li>Web Application Firewall (WAF) protection at the perimeter.</li>
+          <li>Regional failover and high availability managed at the infrastructure level.</li>
+        </ul>
+        <p>
+          We intentionally do not name our specific infrastructure providers in public documentation
+          to reduce the information available for social engineering and targeted attacks.
+        </p>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════════ -->
+      <!-- 03  DATA PROTECTION                                                    -->
+      <!-- ════════════════════════════════════════════════════════════════════ -->
+      <section id="data-protection" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">03</span>
+          <h2>Data Protection</h2>
+        </div>
+
+        <h3 class="subsection-title">Encryption at Rest</h3>
+        <ul class="legal-list">
+          <li>
+            All data stores — including school databases — are encrypted at the storage layer using
+            industry-standard encryption algorithms.
+          </li>
+          <li>
+            Application secrets, credentials, and cryptographic keys are managed using secure secret
+            management practices. They are never stored in source code, version control systems, or
+            application configuration files accessible at runtime.
+          </li>
+          <li>
+            Signing secrets used for authentication tokens are unique per deployment environment and
+            rotated on a defined schedule.
+          </li>
+        </ul>
+
+        <h3 class="subsection-title">Encryption in Transit</h3>
+        <ul class="legal-list">
+          <li>
+            All connections between users and SMS use HTTPS, enforcing industry-current TLS protocol
+            versions. Older, insecure protocol versions are rejected.
+          </li>
+          <li>HTTP Strict Transport Security (HSTS) is enabled on all domains and endpoints.</li>
+          <li>All internal service-to-service connections are also encrypted in transit.</li>
+          <li>
+            Cross-Origin Resource Sharing (CORS) is configured to permit requests only from
+            authorised, verified origins.
+          </li>
+        </ul>
+
+        <h3 class="subsection-title">Password &amp; Credential Security</h3>
+        <div class="tech-spec-box">
+          <div class="tech-spec">
+            <span class="tech-spec__label">Password Storage</span>
+            <span class="tech-spec__value">
+              Cryptographically hashed using a secure, adaptive algorithm. Never stored in readable
+              form.
+            </span>
+          </div>
+          <div class="tech-spec">
+            <span class="tech-spec__label">Plaintext Passwords</span>
+            <span class="tech-spec__value sec-red">Never stored, never logged</span>
+          </div>
+          <div class="tech-spec">
+            <span class="tech-spec__label">Password Resets</span>
+            <span class="tech-spec__value">Time-limited, single-use codes delivered via email</span>
+          </div>
+          <div class="tech-spec">
+            <span class="tech-spec__label">Session Invalidation</span>
+            <span class="tech-spec__value">Near-instant, on demand</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════════ -->
+      <!-- 04  AUTHENTICATION                                                     -->
+      <!-- ════════════════════════════════════════════════════════════════════ -->
+      <section id="auth" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">04</span>
+          <h2>Authentication &amp; Access Control</h2>
+        </div>
+
+        <h3 class="subsection-title">Token-Based Authentication</h3>
+        <div class="tech-spec-box">
+          <div class="tech-spec">
+            <span class="tech-spec__label">Access Tokens</span>
+            <span class="tech-spec__value">Short-lived, automatically expiring</span>
+          </div>
+          <div class="tech-spec">
+            <span class="tech-spec__label">Refresh Tokens</span>
+            <span class="tech-spec__value">
+              Longer-lived but rotating — each use issues a new token and invalidates the previous
+            </span>
+          </div>
+          <div class="tech-spec">
+            <span class="tech-spec__label">Token Scope</span>
+            <span class="tech-spec__value">
+              Strictly scoped to the school — cannot be used across different schools
+            </span>
+          </div>
+          <div class="tech-spec">
+            <span class="tech-spec__label">Refresh Token Storage</span>
+            <span class="tech-spec__value">Stored in hashed form — never in readable form</span>
+          </div>
+          <div class="tech-spec">
+            <span class="tech-spec__label">Theft Detection</span>
+            <span class="tech-spec__value">
+              Reuse of a previously rotated token triggers automatic session termination
+            </span>
+          </div>
+        </div>
+
+        <h3 class="subsection-title">Permission-Based Access Control</h3>
+        <p>
+          SMS implements fine-grained, permission-based access control enforced at both the server
+          (API) and client (UI) levels:
+        </p>
+        <ul class="legal-list">
+          <li>
+            Every page, feature, and API endpoint is protected by specific permission requirements.
+            Users without the required permission are denied access.
+          </li>
+          <li>
+            The School Owner holds full administrative access. All other users are restricted to the
+            permissions explicitly assigned to their role.
+          </li>
+          <li>
+            Permissions are re-validated from live data at each session refresh — not cached
+            indefinitely from the initial login.
+          </li>
+          <li>
+            Role and permission changes take effect within one access token lifetime — typically
+            within minutes.
+          </li>
+          <li>
+            The School Owner can immediately revoke any user's access by deactivating their account.
+          </li>
+        </ul>
+
+        <h3 class="subsection-title">Parent &amp; Guardian Access</h3>
+        <ul class="legal-list">
+          <li>
+            Parent and guardian accounts are strictly scoped to data linked to their own children
+            only — enforced server-side on every API request.
+          </li>
+          <li>
+            Attempts to access another student's data via API manipulation are rejected with an
+            access-denied response, regardless of the request's form.
+          </li>
+        </ul>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════════ -->
+      <!-- 05  NETWORK                                                            -->
+      <!-- ════════════════════════════════════════════════════════════════════ -->
+      <section id="network" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">05</span>
+          <h2>Network Security</h2>
+        </div>
+        <ul class="legal-list">
+          <li>
+            <strong>CORS:</strong> Strictly configured to permit requests only from verified,
+            authorised frontend origins. Wildcard or open-origin configurations are not used in
+            production environments.
+          </li>
+          <li>
+            <strong>Rate Limiting:</strong> Authentication endpoints, password reset flows, and
+            other sensitive operations are rate-limited to prevent brute-force attacks, credential
+            stuffing, and automated abuse.
+          </li>
+          <li>
+            <strong>DDoS Protection:</strong> Network-layer and application-layer DDoS mitigation is
+            active at the infrastructure level, protecting against volumetric and
+            application-targeted attacks.
+          </li>
+          <li>
+            <strong>Bot Management:</strong> Automated bot detection and management is applied
+            across authentication and sensitive API endpoints.
+          </li>
+          <li>
+            <strong>Security Response Headers:</strong> All HTTP responses include appropriate
+            security headers, including content-type protection, clickjacking prevention, and a
+            restrictive Content Security Policy (CSP).
+          </li>
+          <li>
+            <strong>HSTS:</strong> HTTP Strict Transport Security is enforced, requiring all
+            browsers to interact with the platform exclusively over HTTPS.
+          </li>
+        </ul>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════════ -->
+      <!-- 06  APPLICATION SECURITY                                               -->
+      <!-- ════════════════════════════════════════════════════════════════════ -->
+      <section id="application" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">06</span>
+          <h2>Application Security</h2>
+        </div>
+
+        <h3 class="subsection-title">Input Validation</h3>
+        <ul class="legal-list">
+          <li>
+            All data submitted to the platform via API is validated against strict, defined schemas
+            before processing. Inputs that do not conform are rejected with structured error
+            responses.
+          </li>
+          <li>
+            String inputs are sanitised, trimmed, normalised, and length-checked. This prevents
+            common injection patterns and data pollution.
+          </li>
+          <li>
+            Email addresses, school codes, and other structured fields are validated against
+            well-defined formats before acceptance.
+          </li>
+        </ul>
+
+        <h3 class="subsection-title">Injection Prevention</h3>
+        <ul class="legal-list">
+          <li>
+            All database interactions use parameterised, type-safe query construction. Raw SQL
+            strings are never assembled from user-supplied input, preventing SQL injection attacks
+            at the design level.
+          </li>
+          <li>
+            Strong type enforcement means that type mismatches between expected and received data
+            are caught before execution.
+          </li>
+        </ul>
+
+        <h3 class="subsection-title">Frontend Security</h3>
+        <ul class="legal-list">
+          <li>
+            Our web application framework provides built-in Cross-Site Scripting (XSS) protection by
+            automatically sanitising all data rendered in the user interface.
+          </li>
+          <li>
+            Navigation guards enforce authentication and permission checks on every page transition
+            within the application.
+          </li>
+          <li>
+            Session token storage is implemented in a manner that protects against common Cross-Site
+            Request Forgery (CSRF) attack vectors.
+          </li>
+          <li>
+            Authentication sessions are managed automatically, including graceful handling of token
+            expiry and renewal.
+          </li>
+        </ul>
+
+        <h3 class="subsection-title">Dependency &amp; Supply Chain Security</h3>
+        <ul class="legal-list">
+          <li>
+            Third-party software dependencies are regularly audited using automated security
+            scanning tools.
+          </li>
+          <li>
+            Critical security vulnerabilities in dependencies are patched within 48 hours of public
+            disclosure.
+          </li>
+          <li>
+            Production builds use pinned dependency versions to prevent supply-chain drift and
+            unexpected changes between deployments.
+          </li>
+        </ul>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════════ -->
+      <!-- 07  INCIDENT RESPONSE                                                  -->
+      <!-- ════════════════════════════════════════════════════════════════════ -->
+      <section id="incident" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">07</span>
+          <h2>Incident Response</h2>
+        </div>
+        <p>Our incident response process is structured around these phases:</p>
+
+        <div class="incident-timeline">
+          <div class="incident-step">
+            <div class="incident-step__badge">0 – 1 h</div>
+            <div class="incident-step__content">
+              <strong>Detection &amp; Triage</strong>
+              <p>
+                Incident identified via automated monitoring or responsible disclosure. Severity
+                classified (Critical / High / Medium / Low).
+              </p>
+            </div>
+          </div>
+          <div class="incident-step">
+            <div class="incident-step__badge">1 – 4 h</div>
+            <div class="incident-step__content">
+              <strong>Containment</strong>
+              <p>
+                Affected systems or sessions isolated. Potentially compromised tokens invalidated.
+                Affected access revoked.
+              </p>
+            </div>
+          </div>
+          <div class="incident-step">
+            <div class="incident-step__badge">4 – 24 h</div>
+            <div class="incident-step__content">
+              <strong>Investigation</strong>
+              <p>
+                Root cause analysis conducted. Scope of affected data identified and documented.
+                Evidence preserved.
+              </p>
+            </div>
+          </div>
+          <div class="incident-step">
+            <div class="incident-step__badge">Within 72 h</div>
+            <div class="incident-step__content">
+              <strong>Notification</strong>
+              <p>
+                Affected schools notified within 72 hours of confirmed discovery, as required by the
+                DPDP Act 2023. Regulatory reporting submitted where legally required.
+              </p>
+            </div>
+          </div>
+          <div class="incident-step">
+            <div class="incident-step__badge">Post-Incident</div>
+            <div class="incident-step__content">
+              <strong>Remediation &amp; Review</strong>
+              <p>
+                Root cause remediated. Security controls reviewed and strengthened. Post-incident
+                summary shared with affected schools upon request.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout--danger">
+          <span class="callout__icon">🚨</span>
+          <p>
+            <strong>Breach Notification:</strong> If your school's data is involved in a confirmed
+            security incident, we will notify the School Owner at the registered email address
+            within <strong>72 hours</strong> of becoming aware, as required by India's DPDP Act
+            2023.
+          </p>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════════ -->
+      <!-- 08  RESPONSIBLE DISCLOSURE                                              -->
+      <!-- ════════════════════════════════════════════════════════════════════ -->
+      <section id="disclosure" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">08</span>
+          <h2>Responsible Disclosure</h2>
+        </div>
+        <p>
+          We welcome reports from security researchers, ethical hackers, and users who discover
+          vulnerabilities in our platform. If you believe you have found a security issue:
+        </p>
+        <ul class="legal-list">
+          <li>
+            Report it to us privately at
+            <a href="mailto:security@sms.app">security@sms.app</a> with a clear description of the
+            vulnerability, steps to reproduce it, and your assessment of its potential impact.
+          </li>
+          <li>
+            Please do not publicly disclose the vulnerability until we have had a reasonable
+            opportunity to investigate and remediate — we ask for a standard 90-day window.
+          </li>
+          <li>
+            Do not exploit the vulnerability beyond what is minimally necessary to demonstrate its
+            existence.
+          </li>
+          <li>
+            Do not access, modify, delete, or exfiltrate data belonging to any school or user.
+          </li>
+          <li>
+            Do not conduct automated vulnerability scanning without prior written authorisation from
+            our security team.
+          </li>
+        </ul>
+        <div class="callout callout--success">
+          <span class="callout__icon">🏆</span>
+          <p>
+            <strong>Our commitment to good-faith researchers:</strong> We will acknowledge your
+            report within 48 hours, keep you informed of our progress, credit you in our security
+            acknowledgements if you wish, and we will not pursue legal action against researchers
+            who report vulnerabilities in good faith and within the bounds of this policy.
+          </p>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════════ -->
+      <!-- 09  COMPLIANCE                                                          -->
+      <!-- ════════════════════════════════════════════════════════════════════ -->
+      <section id="compliance" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">09</span>
+          <h2>Compliance Framework</h2>
+        </div>
+        <div class="compliance-grid">
+          <div class="compliance-item">
+            <div class="compliance-item__flag">🇮🇳</div>
+            <div class="compliance-item__content">
+              <strong>DPDP Act 2023</strong>
+              <span>
+                India's Digital Personal Data Protection Act — our primary compliance framework for
+                student and personal data processing. We operate as a Data Processor for schools,
+                which act as Data Fiduciaries.
+              </span>
+            </div>
+          </div>
+          <div class="compliance-item">
+            <div class="compliance-item__flag">🇮🇳</div>
+            <div class="compliance-item__content">
+              <strong>IT Act, 2000</strong>
+              <span>
+                We maintain reasonable security practices for protection of sensitive personal data
+                as required under Section 43A and associated rules.
+              </span>
+            </div>
+          </div>
+          <div class="compliance-item">
+            <div class="compliance-item__flag">🇪🇺</div>
+            <div class="compliance-item__content">
+              <strong>GDPR Principles</strong>
+              <span>
+                Data minimisation, purpose limitation, storage limitation, and integrity and
+                confidentiality principles applied as best practice, even where not directly
+                mandated.
+              </span>
+            </div>
+          </div>
+          <div class="compliance-item">
+            <div class="compliance-item__flag">🔐</div>
+            <div class="compliance-item__content">
+              <strong>OWASP Top 10</strong>
+              <span>
+                Our application security controls are designed to address all OWASP Top 10 risks —
+                including injection, broken authentication, and security misconfigurations.
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════════ -->
+      <!-- 10  SCHOOL RESPONSIBILITIES                                             -->
+      <!-- ════════════════════════════════════════════════════════════════════ -->
+      <section id="responsibilities" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">10</span>
+          <h2>School Security Responsibilities</h2>
+        </div>
+        <p>
+          Security is a shared responsibility. Our platform provides strong technical controls, but
+          the security of your school's environment depends on practices at your end too. We expect
+          schools to:
+        </p>
+        <ul class="legal-list">
+          <li>
+            <strong>Use Strong Passwords:</strong> Enforce strong, unique passwords for all staff
+            accounts. Avoid reusing passwords across multiple services.
+          </li>
+          <li>
+            <strong>Apply Least Privilege:</strong> Assign users only the minimum permissions they
+            need to perform their role. Review and revoke unnecessary access regularly.
+          </li>
+          <li>
+            <strong>Maintain Account Hygiene:</strong> Deactivate accounts of staff members who
+            leave the school or change roles promptly.
+          </li>
+          <li>
+            <strong>Secure Devices:</strong> Ensure all devices used to access SMS are protected
+            with passwords, screen locks, and up-to-date operating system security patches.
+          </li>
+          <li>
+            <strong>Recognise Phishing:</strong> Train staff to identify phishing attempts. We will
+            never ask for your password via email, phone, or chat. Any such request is fraudulent.
+          </li>
+          <li>
+            <strong>Report Suspicious Activity:</strong> Immediately report any suspected
+            unauthorised access, unusual behaviour, or security concern to
+            <a href="mailto:security@sms.app">security@sms.app</a>.
+          </li>
+          <li>
+            <strong>Obtain Required Consents:</strong> As the Data Fiduciary for your school
+            community, ensure appropriate parental or guardian consent has been obtained before
+            entering any student's personal data into the platform.
+          </li>
+        </ul>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════════════ -->
+      <!-- 11  CONTACT                                                             -->
+      <!-- ════════════════════════════════════════════════════════════════════ -->
+      <section id="contact" class="legal-section">
+        <div class="legal-section__header">
+          <span class="legal-section__num">11</span>
+          <h2>Security Contact</h2>
+        </div>
+        <p>
+          For security vulnerability reports, suspected incidents, or security-related questions:
+        </p>
+        <div class="contact-block">
+          <div class="contact-block__item">
+            <span class="contact-block__label">🔒 Security Team</span>
+            <a href="mailto:security@sms.app">security@sms.app</a>
+          </div>
+          <div class="contact-block__item">
+            <span class="contact-block__label">🛡️ Privacy &amp; Grievance</span>
+            <a href="mailto:privacy@sms.app">privacy@sms.app</a>
+          </div>
+          <div class="contact-block__item">
+            <span class="contact-block__label">⚖️ Legal</span>
+            <a href="mailto:legal@sms.app">legal@sms.app</a>
+          </div>
+          <div class="contact-block__item">
+            <span class="contact-block__label">💬 General Support</span>
+            <a href="mailto:support@sms.app">support@sms.app</a>
+          </div>
+        </div>
+        <p>
+          For encrypted communication regarding sensitive security matters, please contact us first
+          at <a href="mailto:security@sms.app">security@sms.app</a> to arrange a secure channel.
+        </p>
+      </section>
+
+      <!-- ── Footer nav ──────────────────────────────────────────────────────── -->
+      <div class="legal-footer-nav">
+        <a routerLink="/public/privacy" class="legal-footer-nav__link">← Privacy Policy</a>
+        <a routerLink="/public/about" class="legal-footer-nav__link">About SMS →</a>
+      </div>
+    </main>
+  </div>
+</div>

@@ -1,0 +1,160 @@
+<!-- features/super/schools-component/schools-component.html -->
+
+<div class="page">
+  <header class="page__header">
+    <div>
+      <h1 class="page__title">Schools</h1>
+      <p class="page__subtitle">View all registered schools and manage database assignments</p>
+    </div>
+    <div class="header-actions">
+      <ng-container *hasSuperPermission="'schools.manage'">
+        <button
+          mat-stroked-button
+          color="warn"
+          (click)="cleanupOrphanDbs()"
+          [disabled]="unassigning()"
+          matTooltip="Free databases not linked to any school"
+        >
+          <mat-icon>{{ unassigning() ? 'hourglass_empty' : 'cleaning_services' }}</mat-icon>
+          Clean orphan DBs
+        </button>
+      </ng-container>
+
+      <!-- Now points to the Invitations page instead of inline create -->
+      <ng-container *hasSuperPermission="'schools.invite'">
+        <button mat-flat-button color="primary" (click)="goToInvitations()">
+          <mat-icon>send</mat-icon>
+          Send Invitation
+        </button>
+      </ng-container>
+    </div>
+  </header>
+
+  <!-- Info banner linking to invitations -->
+  <div class="info-banner" *hasSuperPermission="'schools.invite'">
+    <mat-icon>info_outline</mat-icon>
+    <span>
+      To invite a new school, use the
+      <a (click)="goToInvitations()" class="info-banner__link">Invitations</a>
+      page. Schools appear here once they receive an invitation.
+    </span>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card mat-elevation-z1">
+    <mat-progress-bar
+      *ngIf="loading()"
+      mode="indeterminate"
+      color="primary"
+      class="loading-bar"
+    ></mat-progress-bar>
+
+    <mat-table [dataSource]="schools()">
+      <!-- School info column -->
+      <ng-container matColumnDef="school">
+        <mat-header-cell *matHeaderCellDef>School</mat-header-cell>
+        <mat-cell *matCellDef="let s">
+          <div class="school-cell">
+            <div class="school-avatar">{{ nameInitial(s.name) }}</div>
+            <div class="school-cell__info">
+              <span class="school-cell__name">{{ s.name }}</span>
+              <span class="school-cell__addr">{{ s.addressLineOne }}</span>
+            </div>
+          </div>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Contact column -->
+      <ng-container matColumnDef="contact">
+        <mat-header-cell *matHeaderCellDef>Contact</mat-header-cell>
+        <mat-cell *matCellDef="let s">
+          <div class="contact-cell">
+            <span class="contact-cell__email">{{ s.email }}</span>
+            <span class="contact-cell__phone">{{ s.phone }}</span>
+          </div>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Unique code column -->
+      <ng-container matColumnDef="code">
+        <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
+        <mat-cell *matCellDef="let s">
+          <code class="code-badge">{{ s.uniqueCode || '—' }}</code>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Onboarding status column (NEW) -->
+      <ng-container matColumnDef="status">
+        <mat-header-cell *matHeaderCellDef>Onboarding</mat-header-cell>
+        <mat-cell *matCellDef="let s">
+          <span class="onboarding-status" [ngClass]="getStatusInfo(s.onboardingStatus).cls">
+            {{ getStatusInfo(s.onboardingStatus).label }}
+          </span>
+        </mat-cell>
+      </ng-container>
+
+      <!-- DB status column -->
+      <ng-container matColumnDef="db">
+        <mat-header-cell *matHeaderCellDef>Database</mat-header-cell>
+        <mat-cell *matCellDef="let s">
+          @if (s.tursoDbId) {
+          <div class="db-status db-status--assigned">
+            <span class="db-status__dot"></span>
+            DB #{{ s.tursoDbId }}
+          </div>
+          } @else {
+          <div class="db-status db-status--pending">
+            <span class="db-status__dot"></span>
+            Not assigned
+          </div>
+          }
+        </mat-cell>
+      </ng-container>
+
+      <!-- Actions column -->
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef></mat-header-cell>
+        <mat-cell *matCellDef="let s">
+          <div class="actions-cell">
+            <!-- Only show unassign if DB is assigned -->
+            @if (s.tursoDbId) {
+            <ng-container *hasSuperPermission="'schools.manage'">
+              <button
+                mat-icon-button
+                color="warn"
+                (click)="unassignDb(s)"
+                matTooltip="Unassign database (use with caution)"
+              >
+                <mat-icon>link_off</mat-icon>
+              </button>
+            </ng-container>
+            }
+          </div>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns" class="table-row"></mat-row>
+
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell empty-state" [attr.colspan]="displayedColumns.length">
+          <div class="empty-state__content">
+            <mat-icon>corporate_fare</mat-icon>
+            <p>
+              {{ loading() ? 'Loading...' : 'No schools yet — send an invitation to get started' }}
+            </p>
+            <button
+              mat-flat-button
+              color="primary"
+              (click)="goToInvitations()"
+              *hasSuperPermission="'schools.invite'"
+            >
+              <mat-icon>send</mat-icon>
+              Send first invitation
+            </button>
+          </div>
+        </td>
+      </tr>
+    </mat-table>
+  </div>
+</div>

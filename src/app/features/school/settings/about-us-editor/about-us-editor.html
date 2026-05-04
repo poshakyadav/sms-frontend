@@ -1,0 +1,802 @@
+<!-- about-us-editor.html -->
+<!-- ─────────────────────────────────────────────────────────────────────────
+  About Us Editor
+  Route:      /school/settings/about-us
+  Permission: settings.manage
+  Component:  AboutUsEditor
+
+  Sections (nav sidebar):
+    overview · identity · principal · values · achievements · facilities · gallery · social
+
+  Arrays use formArrayName + [formGroupName]="i" (for FormGroups)
+  and     formArrayName + [formControlName]="i"  (for primitive FormControls).
+  ───────────────────────────────────────────────────────────────────────── -->
+
+<div class="editor-page">
+  <!-- ══ PAGE HEADER ══════════════════════════════════════════════════════ -->
+  <div class="page-header">
+    <div class="header-inner">
+      <div class="header-left">
+        <div class="page-icon">
+          <mat-icon>auto_stories</mat-icon>
+        </div>
+        <div>
+          <h1 class="page-title">About Us Editor</h1>
+          <p class="page-subtitle">Craft your school's story, values, and achievements</p>
+        </div>
+      </div>
+
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a routerLink="/school/dashboard" class="bc-link">Dashboard</a>
+        <mat-icon class="bc-sep">chevron_right</mat-icon>
+        <a routerLink="/school/settings/theme" class="bc-link">Settings</a>
+        <mat-icon class="bc-sep">chevron_right</mat-icon>
+        <span class="bc-curr">About Us</span>
+      </nav>
+    </div>
+  </div>
+
+  <!-- ══ LOADING ══════════════════════════════════════════════════════════ -->
+  <div class="center-state" *ngIf="loading()">
+    <mat-spinner diameter="44"></mat-spinner>
+    <p>Loading editor…</p>
+  </div>
+
+  <!-- ══ ERROR ════════════════════════════════════════════════════════════ -->
+  <div class="center-state" *ngIf="!loading() && error()">
+    <div class="state-box">
+      <mat-icon class="err-icon">error_outline</mat-icon>
+      <h3>Could not load</h3>
+      <p>{{ error() }}</p>
+      <button mat-flat-button class="retry-btn" (click)="load()">
+        <mat-icon>refresh</mat-icon>
+        Retry
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ EDITOR ══════════════════════════════════════════════════════════ -->
+  <div class="editor-body" *ngIf="!loading() && !error()">
+    <!-- Sticky action bar -->
+    <div class="action-bar">
+      <span class="action-bar-info">
+        <mat-icon>info_outline</mat-icon>
+        Changes are visible to all school users on the About Us page
+      </span>
+      <div class="action-bar-btns">
+        <a
+          routerLink="/school/about-us"
+          class="preview-link"
+          target="_blank"
+          matTooltip="Open live About Us page in new tab"
+        >
+          <mat-icon>open_in_new</mat-icon>
+          <span>Preview</span>
+        </a>
+        <button
+          class="btn-reset"
+          mat-stroked-button
+          (click)="onReset()"
+          [disabled]="saving() || form.pristine"
+        >
+          <mat-icon>undo</mat-icon>
+          Reset
+        </button>
+        <button
+          class="btn-save"
+          mat-flat-button
+          (click)="onSave()"
+          [disabled]="saving() || form.invalid"
+        >
+          <mat-spinner *ngIf="saving()" diameter="16"></mat-spinner>
+          <mat-icon *ngIf="!saving()">save</mat-icon>
+          {{ saving() ? 'Saving…' : 'Save All' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="editor-layout">
+      <!-- ── Sidebar section nav ─────────────────────────────────────── -->
+      <nav class="section-nav" aria-label="Editor sections">
+        <button
+          *ngFor="let s of sections"
+          type="button"
+          class="nav-item"
+          [class.active]="activeSection() === s.key"
+          (click)="setSection(s.key)"
+          [attr.aria-current]="activeSection() === s.key ? 'page' : null"
+        >
+          <mat-icon>{{ s.icon }}</mat-icon>
+          <span>{{ s.label }}</span>
+        </button>
+      </nav>
+
+      <!-- ── Form panels ─────────────────────────────────────────────── -->
+      <form [formGroup]="form" novalidate class="panels-wrap">
+        <!-- ════════════════════════════════════════════════════════════
+              PANEL: OVERVIEW
+              Fields: description, mission, vision
+              ════════════════════════════════════════════════════════════ -->
+        <div class="panel" [class.panel--active]="activeSection() === 'overview'">
+          <div class="panel-hd">
+            <div class="ph-icon ph-blue"><mat-icon>info_outline</mat-icon></div>
+            <div>
+              <h2>Overview</h2>
+              <p>Introduction, mission, and vision shown prominently on the About Us page</p>
+            </div>
+          </div>
+
+          <div class="fields">
+            <!-- Description -->
+            <div class="field full">
+              <label class="field-label" for="description">
+                School Introduction / Description
+                <span class="char-badge">{{ charCount('description', 5000) }}</span>
+              </label>
+              <textarea
+                id="description"
+                class="form-textarea"
+                formControlName="description"
+                rows="4"
+                placeholder="A brief overview of the school shown to everyone who visits the About Us page…"
+              ></textarea>
+              <span class="field-hint">Displayed as the hero subtitle on the About Us page</span>
+              <span class="field-error" *ngIf="getError('description')">
+                {{ getError('description') }}
+              </span>
+            </div>
+
+            <!-- Mission -->
+            <div class="field full">
+              <label class="field-label" for="mission">
+                Mission Statement
+                <span class="char-badge">{{ charCount('mission', 2000) }}</span>
+              </label>
+              <textarea
+                id="mission"
+                class="form-textarea"
+                formControlName="mission"
+                rows="3"
+                placeholder="Our mission is to nurture every student's potential through…"
+              ></textarea>
+              <span class="field-error" *ngIf="getError('mission')">
+                {{ getError('mission') }}
+              </span>
+            </div>
+
+            <!-- Vision -->
+            <div class="field full">
+              <label class="field-label" for="vision">
+                Vision Statement
+                <span class="char-badge">{{ charCount('vision', 2000) }}</span>
+              </label>
+              <textarea
+                id="vision"
+                class="form-textarea"
+                formControlName="vision"
+                rows="3"
+                placeholder="We envision a future where every graduate is…"
+              ></textarea>
+              <span class="field-error" *ngIf="getError('vision')">
+                {{ getError('vision') }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════════
+              PANEL: IDENTITY
+              Fields: foundedYear, foundedBy, history,
+                      affiliationBoard, affiliationNumber, accreditation,
+                      totalStudents, totalTeachers, totalStaff, campusAreaAcres
+              ════════════════════════════════════════════════════════════ -->
+        <div class="panel" [class.panel--active]="activeSection() === 'identity'">
+          <div class="panel-hd">
+            <div class="ph-icon ph-amber"><mat-icon>history_edu</mat-icon></div>
+            <div>
+              <h2>School Identity</h2>
+              <p>Founding details, affiliation, accreditation, and key statistics</p>
+            </div>
+          </div>
+
+          <div class="fields">
+            <div class="field half">
+              <label class="field-label" for="foundedYear">Founded Year</label>
+              <input
+                id="foundedYear"
+                class="form-input"
+                type="number"
+                formControlName="foundedYear"
+                placeholder="e.g. 1998"
+                min="1800"
+                max="2100"
+              />
+              <span class="field-error" *ngIf="getError('foundedYear')">
+                {{ getError('foundedYear') }}
+              </span>
+            </div>
+
+            <div class="field half">
+              <label class="field-label" for="foundedBy">Founded By</label>
+              <input
+                id="foundedBy"
+                class="form-input"
+                type="text"
+                formControlName="foundedBy"
+                placeholder="e.g. Late Shri Ram Prasad"
+              />
+              <span class="field-error" *ngIf="getError('foundedBy')">
+                {{ getError('foundedBy') }}
+              </span>
+            </div>
+
+            <div class="field full">
+              <label class="field-label" for="history">
+                School History
+                <span class="char-badge">{{ charCount('history', 10000) }}</span>
+              </label>
+              <textarea
+                id="history"
+                class="form-textarea"
+                formControlName="history"
+                rows="5"
+                placeholder="Our school was established in… Over the decades…"
+              ></textarea>
+              <span class="field-error" *ngIf="getError('history')">
+                {{ getError('history') }}
+              </span>
+            </div>
+
+            <div class="field half">
+              <label class="field-label" for="affiliationBoard">Affiliation Board</label>
+              <input
+                id="affiliationBoard"
+                class="form-input"
+                type="text"
+                formControlName="affiliationBoard"
+                placeholder="e.g. CBSE, ICSE, State Board"
+              />
+              <span class="field-error" *ngIf="getError('affiliationBoard')">
+                {{ getError('affiliationBoard') }}
+              </span>
+            </div>
+
+            <div class="field half">
+              <label class="field-label" for="affiliationNumber">Affiliation Number</label>
+              <input
+                id="affiliationNumber"
+                class="form-input"
+                type="text"
+                formControlName="affiliationNumber"
+                placeholder="e.g. 2730561"
+              />
+              <span class="field-error" *ngIf="getError('affiliationNumber')">
+                {{ getError('affiliationNumber') }}
+              </span>
+            </div>
+
+            <div class="field full">
+              <label class="field-label" for="accreditation">Accreditation / Recognition</label>
+              <input
+                id="accreditation"
+                class="form-input"
+                type="text"
+                formControlName="accreditation"
+                placeholder="e.g. NAAC A+, ISO 9001:2015"
+              />
+              <span class="field-error" *ngIf="getError('accreditation')">
+                {{ getError('accreditation') }}
+              </span>
+            </div>
+
+            <!-- Stats divider -->
+            <div class="section-divider">
+              <span>Key Statistics <em>(shown in the stats bar)</em></span>
+            </div>
+
+            <div class="field half">
+              <label class="field-label" for="totalStudents">Total Students</label>
+              <input
+                id="totalStudents"
+                class="form-input"
+                type="number"
+                formControlName="totalStudents"
+                placeholder="e.g. 2500"
+                min="0"
+              />
+              <span class="field-error" *ngIf="getError('totalStudents')">
+                {{ getError('totalStudents') }}
+              </span>
+            </div>
+
+            <div class="field half">
+              <label class="field-label" for="totalTeachers">Total Teachers</label>
+              <input
+                id="totalTeachers"
+                class="form-input"
+                type="number"
+                formControlName="totalTeachers"
+                placeholder="e.g. 120"
+                min="0"
+              />
+              <span class="field-error" *ngIf="getError('totalTeachers')">
+                {{ getError('totalTeachers') }}
+              </span>
+            </div>
+
+            <div class="field half">
+              <label class="field-label" for="totalStaff">Total Staff</label>
+              <input
+                id="totalStaff"
+                class="form-input"
+                type="number"
+                formControlName="totalStaff"
+                placeholder="e.g. 45"
+                min="0"
+              />
+              <span class="field-error" *ngIf="getError('totalStaff')">
+                {{ getError('totalStaff') }}
+              </span>
+            </div>
+
+            <div class="field half">
+              <label class="field-label" for="campusAreaAcres">Campus Area (Acres)</label>
+              <input
+                id="campusAreaAcres"
+                class="form-input"
+                type="text"
+                formControlName="campusAreaAcres"
+                placeholder="e.g. 12.5"
+              />
+              <span class="field-error" *ngIf="getError('campusAreaAcres')">
+                {{ getError('campusAreaAcres') }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════════
+              PANEL: PRINCIPAL
+              Fields: principalName, principalAvatarUrl, principalMessage
+              ════════════════════════════════════════════════════════════ -->
+        <div class="panel" [class.panel--active]="activeSection() === 'principal'">
+          <div class="panel-hd">
+            <div class="ph-icon ph-teal"><mat-icon>person</mat-icon></div>
+            <div>
+              <h2>Principal / Head of School</h2>
+              <p>Name, photo, and personal message shown in the sidebar</p>
+            </div>
+          </div>
+
+          <div class="fields">
+            <div class="field full">
+              <label class="field-label" for="principalName">Principal's Full Name</label>
+              <input
+                id="principalName"
+                class="form-input"
+                type="text"
+                formControlName="principalName"
+                placeholder="e.g. Dr. Priya Sharma"
+              />
+              <span class="field-error" *ngIf="getError('principalName')">
+                {{ getError('principalName') }}
+              </span>
+            </div>
+
+            <div class="field full">
+              <label class="field-label" for="principalAvatarUrl"> Photo URL </label>
+              <input
+                id="principalAvatarUrl"
+                class="form-input"
+                type="url"
+                formControlName="principalAvatarUrl"
+                placeholder="https://cdn.yourschool.in/principal.jpg"
+              />
+              <span class="field-hint">Direct link to the principal's photo (optional)</span>
+            </div>
+
+            <div class="field full">
+              <label class="field-label" for="principalMessage">
+                Principal's Message
+                <span class="char-badge">{{ charCount('principalMessage', 3000) }}</span>
+              </label>
+              <textarea
+                id="principalMessage"
+                class="form-textarea"
+                formControlName="principalMessage"
+                rows="6"
+                placeholder="Dear students and parents, it is my privilege to lead this institution…"
+              ></textarea>
+              <span class="field-hint">Shown in quotes on the About Us page sidebar</span>
+              <span class="field-error" *ngIf="getError('principalMessage')">
+                {{ getError('principalMessage') }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════════
+              PANEL: CORE VALUES
+              FormArray: coreValues  → FormGroup[]  { title, description }
+              ════════════════════════════════════════════════════════════ -->
+        <div class="panel" [class.panel--active]="activeSection() === 'values'">
+          <div class="panel-hd">
+            <div class="ph-icon ph-indigo"><mat-icon>diamond</mat-icon></div>
+            <div>
+              <h2>Core Values</h2>
+              <p>Up to 10 values that define your school's character</p>
+            </div>
+          </div>
+
+          <div class="array-section" formArrayName="coreValues">
+            <div class="array-empty" *ngIf="coreValueControls.length === 0">
+              <mat-icon>diamond</mat-icon>
+              <p>No core values added yet. Click <strong>Add Core Value</strong> to begin.</p>
+            </div>
+
+            <div
+              class="array-item"
+              *ngFor="let ctrl of coreValueControls; let i = index"
+              [formGroupName]="i"
+            >
+              <div class="array-item-hd">
+                <div class="item-num">{{ i + 1 }}</div>
+                <span class="item-label">Value {{ i + 1 }}</span>
+                <button
+                  type="button"
+                  class="remove-btn"
+                  (click)="removeCoreValue(i)"
+                  matTooltip="Remove this value"
+                  aria-label="Remove value"
+                >
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
+              </div>
+
+              <div class="fields array-fields">
+                <div class="field half">
+                  <label class="field-label"> Title <span class="req-star">*</span> </label>
+                  <input
+                    class="form-input"
+                    type="text"
+                    formControlName="title"
+                    placeholder="e.g. Integrity"
+                  />
+                  <span
+                    class="field-error"
+                    *ngIf="ctrl.get('title')?.touched && ctrl.get('title')?.hasError('required')"
+                  >
+                    Title is required
+                  </span>
+                </div>
+                <div class="field half">
+                  <label class="field-label">Description</label>
+                  <input
+                    class="form-input"
+                    type="text"
+                    formControlName="description"
+                    placeholder="Brief explanation…"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="add-btn"
+              (click)="addCoreValue()"
+              [disabled]="coreValueControls.length >= 10"
+            >
+              <mat-icon>add</mat-icon>
+              Add Core Value
+            </button>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════════
+              PANEL: ACHIEVEMENTS (Milestones)
+              FormArray: achievements → FormGroup[]  { year, title, description }
+              ════════════════════════════════════════════════════════════ -->
+        <div class="panel" [class.panel--active]="activeSection() === 'achievements'">
+          <div class="panel-hd">
+            <div class="ph-icon ph-gold"><mat-icon>emoji_events</mat-icon></div>
+            <div>
+              <h2>Achievements &amp; Milestones</h2>
+              <p>Key milestones displayed in a timeline — up to 30 entries</p>
+            </div>
+          </div>
+
+          <div class="array-section" formArrayName="achievements">
+            <div class="array-empty" *ngIf="achievementControls.length === 0">
+              <mat-icon>emoji_events</mat-icon>
+              <p>No milestones added yet. Click <strong>Add Milestone</strong> to begin.</p>
+            </div>
+
+            <div
+              class="array-item"
+              *ngFor="let ctrl of achievementControls; let i = index"
+              [formGroupName]="i"
+            >
+              <div class="array-item-hd">
+                <div class="item-num">{{ i + 1 }}</div>
+                <span class="item-label">Milestone {{ i + 1 }}</span>
+                <button
+                  type="button"
+                  class="remove-btn"
+                  (click)="removeAchievement(i)"
+                  matTooltip="Remove this milestone"
+                  aria-label="Remove milestone"
+                >
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
+              </div>
+
+              <div class="fields array-fields">
+                <div class="field third">
+                  <label class="field-label">Year</label>
+                  <input
+                    class="form-input"
+                    type="number"
+                    formControlName="year"
+                    placeholder="e.g. 2018"
+                    min="1800"
+                    max="2100"
+                  />
+                </div>
+                <div class="field two-thirds">
+                  <label class="field-label"> Title <span class="req-star">*</span> </label>
+                  <input
+                    class="form-input"
+                    type="text"
+                    formControlName="title"
+                    placeholder="e.g. Won State Science Olympiad"
+                  />
+                  <span
+                    class="field-error"
+                    *ngIf="ctrl.get('title')?.touched && ctrl.get('title')?.hasError('required')"
+                  >
+                    Title is required
+                  </span>
+                </div>
+                <div class="field full">
+                  <label class="field-label"
+                    >Description <em class="optional">(optional)</em></label
+                  >
+                  <input
+                    class="form-input"
+                    type="text"
+                    formControlName="description"
+                    placeholder="Brief detail about this achievement…"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="add-btn"
+              (click)="addAchievement()"
+              [disabled]="achievementControls.length >= 30"
+            >
+              <mat-icon>add</mat-icon>
+              Add Milestone
+            </button>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════════
+              PANEL: FACILITIES
+              FormArray: facilities → AbstractControl[] (primitive strings)
+              ════════════════════════════════════════════════════════════ -->
+        <div class="panel" [class.panel--active]="activeSection() === 'facilities'">
+          <div class="panel-hd">
+            <div class="ph-icon ph-green"><mat-icon>apartment</mat-icon></div>
+            <div>
+              <h2>Facilities</h2>
+              <p>List up to 50 facilities your school offers</p>
+            </div>
+          </div>
+
+          <div class="array-section" formArrayName="facilities">
+            <div class="array-empty" *ngIf="facilityControls.length === 0">
+              <mat-icon>apartment</mat-icon>
+              <p>
+                No facilities listed yet. Use quick-add below or click
+                <strong>Add Facility</strong>.
+              </p>
+            </div>
+
+            <!-- Facility rows (primitive FormControl) -->
+            <div
+              class="facility-row"
+              *ngFor="let ctrl of facilityControls; let i = index; trackBy: trackByIndex"
+            >
+              <input
+                class="form-input"
+                type="text"
+                [formControlName]="i"
+                placeholder="e.g. Science Laboratory"
+                [attr.aria-label]="'Facility ' + (i + 1)"
+              />
+              <button
+                type="button"
+                class="remove-btn-sm"
+                (click)="removeFacility(i)"
+                matTooltip="Remove"
+                aria-label="Remove facility"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+
+            <!-- Quick-add chips -->
+            <div class="quick-add-wrap">
+              <span class="quick-add-label">Quick add:</span>
+              <div class="quick-chips">
+                <button
+                  type="button"
+                  class="quick-chip"
+                  *ngFor="let f of quickFacilities"
+                  (click)="addFacility(f)"
+                  [disabled]="facilityControls.length >= 50"
+                >
+                  {{ f }}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="add-btn"
+              (click)="addFacility()"
+              [disabled]="facilityControls.length >= 50"
+            >
+              <mat-icon>add</mat-icon>
+              Add Facility
+            </button>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════════
+              PANEL: GALLERY
+              FormArray: galleryUrls → AbstractControl[] (primitive URL strings)
+              ════════════════════════════════════════════════════════════ -->
+        <div class="panel" [class.panel--active]="activeSection() === 'gallery'">
+          <div class="panel-hd">
+            <div class="ph-icon ph-purple"><mat-icon>photo_library</mat-icon></div>
+            <div>
+              <h2>Photo Gallery</h2>
+              <p>Up to 20 image URLs — displayed as a slideshow on the About Us page</p>
+            </div>
+          </div>
+
+          <div class="array-section" formArrayName="galleryUrls">
+            <div class="array-empty" *ngIf="galleryControls.length === 0">
+              <mat-icon>photo_library</mat-icon>
+              <p>No gallery images added yet. Click <strong>Add Image URL</strong> to begin.</p>
+            </div>
+
+            <!-- Gallery URL rows (primitive FormControl) -->
+            <div
+              class="gallery-row"
+              *ngFor="let ctrl of galleryControls; let i = index; trackBy: trackByIndex"
+            >
+              <span class="gallery-num">{{ i + 1 }}</span>
+              <input
+                class="form-input"
+                type="url"
+                [formControlName]="i"
+                placeholder="https://cdn.yourschool.in/photo.jpg"
+                [attr.aria-label]="'Gallery image ' + (i + 1)"
+              />
+              <button
+                type="button"
+                class="remove-btn-sm"
+                (click)="removeGalleryUrl(i)"
+                matTooltip="Remove"
+                aria-label="Remove image"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              class="add-btn"
+              (click)="addGalleryUrl()"
+              [disabled]="galleryControls.length >= 20"
+            >
+              <mat-icon>add</mat-icon>
+              Add Image URL
+            </button>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════════
+              PANEL: SOCIAL MEDIA
+              Fields: facebookUrl, twitterUrl, instagramUrl, youtubeUrl, linkedinUrl
+              ════════════════════════════════════════════════════════════ -->
+        <div class="panel" [class.panel--active]="activeSection() === 'social'">
+          <div class="panel-hd">
+            <div class="ph-icon ph-pink"><mat-icon>share</mat-icon></div>
+            <div>
+              <h2>Social Media Links</h2>
+              <p>Follow buttons displayed on the About Us sidebar — leave blank to hide</p>
+            </div>
+          </div>
+
+          <div class="fields social-fields">
+            <div class="field full social-field">
+              <label class="field-label social-label social-fb">
+                <span class="s-letter">f</span>
+                Facebook
+              </label>
+              <input
+                class="form-input"
+                type="url"
+                formControlName="facebookUrl"
+                placeholder="https://facebook.com/yourschool"
+              />
+            </div>
+
+            <div class="field full social-field">
+              <label class="field-label social-label social-tw">
+                <mat-icon>close</mat-icon>
+                Twitter / X
+              </label>
+              <input
+                class="form-input"
+                type="url"
+                formControlName="twitterUrl"
+                placeholder="https://twitter.com/yourschool"
+              />
+            </div>
+
+            <div class="field full social-field">
+              <label class="field-label social-label social-ig">
+                <mat-icon>photo_camera</mat-icon>
+                Instagram
+              </label>
+              <input
+                class="form-input"
+                type="url"
+                formControlName="instagramUrl"
+                placeholder="https://instagram.com/yourschool"
+              />
+            </div>
+
+            <div class="field full social-field">
+              <label class="field-label social-label social-yt">
+                <mat-icon>smart_display</mat-icon>
+                YouTube
+              </label>
+              <input
+                class="form-input"
+                type="url"
+                formControlName="youtubeUrl"
+                placeholder="https://youtube.com/@yourschool"
+              />
+            </div>
+
+            <div class="field full social-field">
+              <label class="field-label social-label social-li">
+                <mat-icon>business</mat-icon>
+                LinkedIn
+              </label>
+              <input
+                class="form-input"
+                type="url"
+                formControlName="linkedinUrl"
+                placeholder="https://linkedin.com/school/yourschool"
+              />
+            </div>
+          </div>
+        </div>
+      </form>
+      <!-- /form -->
+    </div>
+    <!-- /editor-layout -->
+  </div>
+  <!-- /editor-body -->
+</div>
+<!-- /editor-page -->

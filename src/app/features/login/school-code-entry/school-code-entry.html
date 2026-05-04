@@ -1,0 +1,146 @@
+<div class="auth-page">
+  <!-- ══════════════════════════════════════════════════════════════════
+       LEFT PANEL — decorative, hidden on mobile
+       ══════════════════════════════════════════════════════════════════ -->
+  <aside class="auth-panel">
+    <!-- Background orbs -->
+    <div class="auth-panel-orbs">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
+
+    <div class="auth-panel-content">
+      <!-- App logo mark -->
+      <div class="auth-panel-logo">
+        <span class="material-icons">school</span>
+      </div>
+
+      <h1 class="auth-panel-heading">
+        Your school,<br />
+        <span>fully connected.</span>
+      </h1>
+
+      <p class="auth-panel-sub">
+        A complete school management platform — attendance, exams, fees, and more — all in one
+        place.
+      </p>
+
+      <!-- Feature list -->
+      <div class="auth-panel-features">
+        @for (f of features; track f) {
+        <div class="auth-panel-feature">
+          <div class="feature-dot"></div>
+          {{ f }}
+        </div>
+        }
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       RIGHT PANEL — the form
+       ══════════════════════════════════════════════════════════════════ -->
+  <main class="auth-form-panel">
+    <div class="auth-card">
+      <!-- Mobile-only top bar -->
+      <div class="auth-mobile-bar">
+        <div class="mobile-logo">
+          <span class="material-icons">school</span>
+        </div>
+        <span class="mobile-app-name">School Portal</span>
+      </div>
+
+      <!-- Header -->
+      <div class="auth-card-header">
+        <div class="auth-logo-icon">
+          <span class="material-icons">domain</span>
+        </div>
+        <h2 class="auth-card-title">Find your school</h2>
+        <p class="auth-card-subtitle">
+          Enter the school code provided by your administrator to continue.
+        </p>
+      </div>
+
+      <!-- Form body -->
+      <div class="auth-card-body">
+        <form class="auth-form" (ngSubmit)="onSubmit()" [attr.aria-busy]="loading()">
+          <mat-form-field appearance="outline" class="field-full">
+            <mat-label>School Code</mat-label>
+            <mat-icon matPrefix class="field-prefix-icon">tag</mat-icon>
+            <input
+              matInput
+              [ngModel]="schoolCode()"
+              (input)="onInput($event)"
+              [ngModelOptions]="{ standalone: true }"
+              placeholder="e.g. SCH-001 or ABC123"
+              autocomplete="off"
+              spellcheck="false"
+              [disabled]="loading()"
+              (keyup.enter)="onSubmit()"
+              aria-label="School Code"
+              maxlength="50"
+            />
+            @if (schoolCode().trim()) {
+            <mat-icon matSuffix class="code-check-icon">
+              {{ schoolCode().trim().length >= 3 ? 'check_circle' : 'radio_button_unchecked' }}
+            </mat-icon>
+            }
+          </mat-form-field>
+
+          <!-- Error -->
+          @if (error()) {
+          <div class="auth-error" role="alert" aria-live="polite">
+            <mat-icon class="error-icon">error_outline</mat-icon>
+            <span>{{ error() }}</span>
+          </div>
+          }
+
+          <!-- Submit -->
+          <button
+            mat-flat-button
+            color="primary"
+            type="submit"
+            class="auth-submit-btn"
+            [disabled]="loading() || schoolCode().trim().length < 3"
+          >
+            @if (loading()) {
+            <span class="btn-spinner">
+              <mat-spinner diameter="20"></mat-spinner>
+              Validating…
+            </span>
+            } @else {
+            <ng-container>
+              Continue
+              <mat-icon iconPositionEnd>arrow_forward</mat-icon>
+            </ng-container>
+            }
+          </button>
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <!-- <div class="auth-card-footer">
+        <span class="auth-footer-hint">First time here?</span>
+        <a routerLink="/public/register" class="auth-footer-link">
+          Register your school
+          <mat-icon style="font-size: 14px; height: 14px; width: 14px">open_in_new</mat-icon>
+        </a>
+      </div> -->
+
+      <div class="auth-card-footer">
+        <a routerLink="/public/register" class="auth-footer-link">
+          Register your school
+          <mat-icon style="font-size: 14px; height: 14px; width: 14px">open_in_new</mat-icon>
+        </a>
+
+        <div class="auth-footer-legal">
+          <a routerLink="/public/about" class="auth-footer-legal-link">About us</a>
+          <span class="auth-footer-sep">·</span>
+          <a routerLink="/public/security" class="auth-footer-legal-link">Security</a>
+        </div>
+      </div>
+      
+    </div>
+  </main>
+</div>

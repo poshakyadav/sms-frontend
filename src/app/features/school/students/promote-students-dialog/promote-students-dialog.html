@@ -1,0 +1,262 @@
+<!-- promote-students-dialog.html -->
+<div class="dialog-shell">
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <div class="dialog-header">
+    <div class="dialog-header-icon">
+      <mat-icon>upgrade</mat-icon>
+    </div>
+    <div class="dialog-header-text">
+      <h2>Promote Student{{ studentCount() > 1 ? 's' : '' }}</h2>
+      <p>
+        {{ studentCount() === 1 ? data.studentNames[0] : studentCount() + ' students selected' }}
+      </p>
+    </div>
+    @if (step() !== 3) {
+    <button mat-icon-button class="close-btn" (click)="closeCancel()" matTooltip="Cancel">
+      <mat-icon>close</mat-icon>
+    </button>
+    }
+  </div>
+
+  <!-- ── Step Indicator ─────────────────────────────────────────────────── -->
+  @if (step() !== 3) {
+  <div class="step-indicator">
+    <div class="step-dot" [class.active]="step() >= 1" [class.done]="step() > 1">
+      @if (step() > 1) { <mat-icon>check</mat-icon> } @else { 1 }
+    </div>
+    <div class="step-line" [class.done]="step() > 1"></div>
+    <div class="step-dot" [class.active]="step() >= 2" [class.done]="step() > 2">
+      @if (step() > 2) { <mat-icon>check</mat-icon> } @else { 2 }
+    </div>
+  </div>
+  }
+
+  <!-- ────────────────────────────────────────────────────────────────────── -->
+  <!-- STEP 1: Choose promotion mode                                          -->
+  <!-- ────────────────────────────────────────────────────────────────────── -->
+  @if (step() === 1) {
+  <div class="dialog-body">
+    <!-- Current class info -->
+    <div class="from-card">
+      <span class="from-label">Moving from</span>
+      <span class="from-value">
+        <mat-icon>class</mat-icon>
+        {{ data.currentClassName }} — {{ data.currentSectionName }}
+      </span>
+    </div>
+
+    <!-- Student chips (max 5 shown) -->
+    @if (data.studentNames.length > 0) {
+    <div class="student-chips">
+      @for (name of data.studentNames.slice(0, 5); track name) {
+      <span class="student-chip">{{ name }}</span>
+      } @if (data.studentNames.length > 5) {
+      <span class="student-chip more">+{{ data.studentNames.length - 5 }} more</span>
+      }
+    </div>
+    }
+
+    <div class="section-title">Choose Promotion Method</div>
+
+    <!-- Mode Options -->
+    <div class="mode-options">
+      <!-- Option A: Use Mapping -->
+      <div class="mode-card" [class.selected]="mode() === 'mapping'" (click)="mode.set('mapping')">
+        <div class="mode-card-radio">
+          <div class="radio-dot" [class.on]="mode() === 'mapping'"></div>
+        </div>
+        <div class="mode-card-icon mapping">
+          <mat-icon>account_tree</mat-icon>
+        </div>
+        <div class="mode-card-content">
+          <strong>Use Configured Mapping</strong>
+          <p>
+            Each student moves to their mapped next class-section (e.g. Class 5-A → Class 6-A).
+            Based on your promotion mappings configuration.
+          </p>
+          <span class="mode-tag">Recommended</span>
+        </div>
+      </div>
+
+      <!-- Option B: Specific Class -->
+      <div
+        class="mode-card"
+        [class.selected]="mode() === 'specific'"
+        (click)="mode.set('specific')"
+      >
+        <div class="mode-card-radio">
+          <div class="radio-dot" [class.on]="mode() === 'specific'"></div>
+        </div>
+        <div class="mode-card-icon specific">
+          <mat-icon>edit_location_alt</mat-icon>
+        </div>
+        <div class="mode-card-content">
+          <strong>Choose a Specific Class</strong>
+          <p>
+            Manually select the target class-section for
+            {{ studentCount() > 1 ? 'all selected students' : 'this student' }}. Useful for special
+            cases or demotions.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Target selector (shown only in 'specific' mode) -->
+    @if (mode() === 'specific') {
+    <div class="target-selector">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Select Target Class &amp; Section</mat-label>
+        <mat-icon matPrefix>school</mat-icon>
+        <mat-select [ngModel]="selectedTargetId()" (ngModelChange)="selectedTargetId.set($event)">
+          @for (cs of availableClassSections(); track cs.id) {
+          <mat-option [value]="cs.id">
+            {{ cs.className }} — {{ cs.sectionName }}
+            @if (cs.capacity) {
+            <span class="option-meta">(cap: {{ cs.capacity }})</span>
+            }
+          </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+    }
+  </div>
+
+  <!-- Step 1 Actions -->
+  <div class="dialog-actions">
+    <button mat-button (click)="closeCancel()">Cancel</button>
+    <button
+      mat-raised-button
+      color="primary"
+      [disabled]="!canProceedToStep2()"
+      (click)="goToStep2()"
+    >
+      Review &amp; Confirm
+      <mat-icon iconSuffix>arrow_forward</mat-icon>
+    </button>
+  </div>
+  }
+
+  <!-- ────────────────────────────────────────────────────────────────────── -->
+  <!-- STEP 2: Confirm                                                        -->
+  <!-- ────────────────────────────────────────────────────────────────────── -->
+  @if (step() === 2) {
+  <div class="dialog-body">
+    <div class="confirm-summary">
+      <div class="confirm-row">
+        <span class="confirm-label">Students</span>
+        <span class="confirm-value"
+          >{{ studentCount() }} student{{ studentCount() > 1 ? 's' : '' }}</span
+        >
+      </div>
+      <div class="confirm-row">
+        <span class="confirm-label">From</span>
+        <span class="confirm-value"
+          >{{ data.currentClassName }} — {{ data.currentSectionName }}</span
+        >
+      </div>
+      <div class="confirm-row">
+        <span class="confirm-label">To</span>
+        <span class="confirm-value to">
+          @if (mode() === 'mapping') {
+          <mat-icon>account_tree</mat-icon>
+          Next class per configured mappings } @else {
+          <mat-icon>school</mat-icon>
+          {{ selectedTargetName() }}
+          }
+        </span>
+      </div>
+    </div>
+
+    @if (studentCount() > 1) {
+    <div class="students-preview">
+      <div class="preview-label">Students being promoted</div>
+      <div class="preview-chips">
+        @for (name of data.studentNames.slice(0, 8); track name) {
+        <span class="student-chip">{{ name }}</span>
+        } @if (data.studentNames.length > 8) {
+        <span class="student-chip more">+{{ data.studentNames.length - 8 }} more</span>
+        }
+      </div>
+    </div>
+    }
+
+    <div class="warning-box">
+      <mat-icon>warning_amber</mat-icon>
+      <div>
+        <strong>Heads up</strong>
+        <p>
+          Each student's current enrollment will be deactivated and a new enrollment created. New
+          roll numbers will be auto-assigned. This action can be reversed manually if needed.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2 Actions -->
+  <div class="dialog-actions">
+    <button mat-button (click)="goBack()" [disabled]="promoting()">
+      <mat-icon>arrow_back</mat-icon> Back
+    </button>
+    <button mat-raised-button color="accent" [disabled]="promoting()" (click)="promote()">
+      @if (promoting()) {
+      <mat-spinner diameter="18" color="accent"></mat-spinner>
+      Promoting… } @else {
+      <ng-container>
+        <mat-icon>upgrade</mat-icon>
+        Promote {{ studentCount() }} Student{{ studentCount() > 1 ? 's' : '' }}
+      </ng-container>
+      }
+    </button>
+  </div>
+  }
+
+  <!-- ────────────────────────────────────────────────────────────────────── -->
+  <!-- STEP 3: Result                                                         -->
+  <!-- ────────────────────────────────────────────────────────────────────── -->
+  @if (step() === 3 && promoteResult(); as result) {
+  <div class="dialog-body result-body">
+    <!-- Summary Banner -->
+    <div
+      class="result-banner"
+      [class.all-success]="result.failCount === 0"
+      [class.partial]="result.failCount > 0 && result.successCount > 0"
+      [class.all-fail]="result.successCount === 0"
+    >
+      <mat-icon>
+        {{
+          result.failCount === 0 ? 'check_circle' : result.successCount === 0 ? 'cancel' : 'info'
+        }}
+      </mat-icon>
+      <div>
+        <strong>{{ result.message }}</strong>
+      </div>
+    </div>
+
+    <!-- Per-student results -->
+    <div class="result-list">
+      @for (r of result.results; track r.studentId) {
+      <div class="result-item" [class.ok]="r.success" [class.fail]="!r.success">
+        <mat-icon>{{ r.success ? 'check_circle' : 'error' }}</mat-icon>
+        <div class="result-item-content">
+          <strong>{{ r.studentName }}</strong>
+          @if (r.success) {
+          <span class="result-detail">{{ r.oldClassSection }} → {{ r.newClassSection }}</span>
+          } @else {
+          <span class="result-error">{{ r.error }}</span>
+          }
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+
+  <!-- Step 3 Actions -->
+  <div class="dialog-actions">
+    <button mat-raised-button color="primary" (click)="closeSuccess()">
+      <mat-icon>done</mat-icon>
+      Done
+    </button>
+  </div>
+  }
+</div>

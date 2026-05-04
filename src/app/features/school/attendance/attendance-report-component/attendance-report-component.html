@@ -1,0 +1,391 @@
+<div class="report-page">
+  <!-- ══════════════════════════════════════════════════════════════════════
+       PAGE HEADER
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div class="page-header">
+    <div class="header-left">
+      <div class="header-eyebrow">
+        <mat-icon class="eyebrow-icon">analytics</mat-icon>
+        <span>Attendance Module</span>
+      </div>
+      <h1>Attendance Report</h1>
+      <p class="header-subtitle">Monthly summary by class-section or individual student</p>
+    </div>
+
+    @if (report().length > 0) {
+    <div class="header-badge">
+      <span class="badge-label">Average</span>
+      <span class="badge-value" [class]="getPctClass(averageAttendance())">
+        {{ averageAttendance() }}%
+      </span>
+    </div>
+    }
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       FILTER PANEL
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div class="filter-panel">
+    <div class="filter-panel-header">
+      <div class="filter-panel-title">
+        <mat-icon>tune</mat-icon>
+        <span>Report Filters</span>
+      </div>
+      <span class="filter-required-note">Class-Section, Month &amp; Year are required</span>
+    </div>
+
+    <form [formGroup]="form" class="filter-grid">
+      <!-- Class Section -->
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Class — Section</mat-label>
+        <mat-select formControlName="classSectionId">
+          <mat-option [value]="null">
+            <span class="option-all">All Sections</span>
+          </mat-option>
+          @if (loadingMeta()) {
+          <mat-option disabled>Loading…</mat-option>
+          } @else { @for (cs of classSections(); track cs.id) {
+          <mat-option [value]="cs.id">
+            {{ cs.className }} — {{ cs.sectionName }}
+            <span class="option-meta">({{ cs.currentStudents ?? 0 }}/{{ cs.capacity }})</span>
+          </mat-option>
+          } }
+        </mat-select>
+        @if (form.get('classSectionId')?.invalid && form.get('classSectionId')?.touched) {
+          <mat-error>Please select a class-section</mat-error>
+        }
+        <mat-icon matPrefix>class</mat-icon>
+      </mat-form-field>
+
+      <!-- Month -->
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Month <span class="required-star">*</span></mat-label>
+        <mat-select formControlName="month" required>
+          @for (m of months; track m) {
+          <mat-option [value]="m">{{ getMonthName(m) }}</mat-option>
+          }
+        </mat-select>
+        <mat-icon matPrefix>calendar_month</mat-icon>
+        @if (form.get('month')?.invalid && form.get('month')?.touched) {
+        <mat-error>Month is required</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Year -->
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Year <span class="required-star">*</span></mat-label>
+        <input matInput type="number" formControlName="year" min="2000" max="2100" required />
+        <mat-icon matPrefix>event_note</mat-icon>
+        @if (form.get('year')?.invalid && form.get('year')?.touched) {
+        <mat-error>Valid year required</mat-error>
+        }
+      </mat-form-field>
+    </form>
+
+    <!-- Actions -->
+    <div class="filter-actions">
+      <button mat-stroked-button class="btn-clear" (click)="clearFilters()" [disabled]="loading()">
+        <mat-icon>restart_alt</mat-icon>
+        Reset
+      </button>
+      <button
+        mat-raised-button
+        class="btn-generate"
+        (click)="generateReport()"
+        [disabled]="loading() || form.invalid"
+      >
+        @if (loading()) {
+        <mat-spinner diameter="18"></mat-spinner>
+        <span>Generating…</span>
+        } @else {
+        <ng-container>
+          <mat-icon>bar_chart</mat-icon>
+          <span>Generate Report</span>
+        </ng-container>
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       LOADING STATE
+       ══════════════════════════════════════════════════════════════════════ -->
+  @if (loading()) {
+  <div class="state-container">
+    <div class="state-spinner-wrap">
+      <mat-spinner diameter="48"></mat-spinner>
+    </div>
+    <h2>Generating Report</h2>
+    <p>
+      Crunching attendance data for {{ getMonthName(form.value.month!) }} {{ form.value.year }}…
+    </p>
+  </div>
+  }
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       ERROR STATE
+       ══════════════════════════════════════════════════════════════════════ -->
+  @else if (error()) {
+  <div class="state-container state-error">
+    <div class="state-icon-wrap error">
+      <mat-icon>error_outline</mat-icon>
+    </div>
+    <h2>Report Generation Failed</h2>
+    <p>{{ error() }}</p>
+    <button mat-raised-button class="btn-generate" (click)="generateReport()">
+      <mat-icon>refresh</mat-icon> Retry
+    </button>
+  </div>
+  }
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       INITIAL / NO DATA STATE
+       ══════════════════════════════════════════════════════════════════════ -->
+  @else if (!hasGenerated()) {
+  <div class="state-container state-initial">
+    <div class="state-icon-wrap">
+      <mat-icon>insert_chart_outlined</mat-icon>
+    </div>
+    <h2>Ready to Generate</h2>
+    <p>
+      Select a <strong>class-section</strong>, month, and year, then click <strong>Generate Report</strong>.
+    </p>
+  </div>
+  } @else if (report().length === 0) {
+  <div class="state-container">
+    <div class="state-icon-wrap">
+      <mat-icon>search_off</mat-icon>
+    </div>
+    <h2>No Records Found</h2>
+    <p>No attendance data exists for the selected filters. Try a different month or section.</p>
+  </div>
+  }
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       RESULTS
+       ══════════════════════════════════════════════════════════════════════ -->
+  @else {
+
+  <!-- ── Summary cards ──────────────────────────────────────────────────── -->
+  <div class="summary-strip">
+    <div class="summary-card">
+      <div class="sc-icon-wrap neutral">
+        <mat-icon>groups</mat-icon>
+      </div>
+      <div class="sc-content">
+        <span class="sc-label">Total Students</span>
+        <span class="sc-value">{{ report().length }}</span>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="sc-icon-wrap good">
+        <mat-icon>trending_up</mat-icon>
+      </div>
+      <div class="sc-content">
+        <span class="sc-label">Average Attendance</span>
+        <div class="sc-with-bar">
+          <span class="sc-value" [class]="getPctClass(averageAttendance())">
+            {{ averageAttendance() }}%
+          </span>
+          <mat-progress-bar
+            mode="determinate"
+            [value]="averageAttendance()"
+            [color]="getPctColor(averageAttendance())"
+          ></mat-progress-bar>
+        </div>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="sc-icon-wrap good">
+        <mat-icon>check_circle_outline</mat-icon>
+      </div>
+      <div class="sc-content">
+        <span class="sc-label">Above 75%</span>
+        <span class="sc-value pct-good">{{ aboveThreshold() }}</span>
+        <span class="sc-sub">students on track</span>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="sc-icon-wrap warn">
+        <mat-icon>warning_amber</mat-icon>
+      </div>
+      <div class="sc-content">
+        <span class="sc-label">Below 75%</span>
+        <span class="sc-value pct-warn">{{ belowThreshold() }}</span>
+        <span class="sc-sub">need attention</span>
+      </div>
+    </div>
+
+    @if (criticalCount() > 0) {
+    <div class="summary-card critical-card">
+      <div class="sc-icon-wrap bad">
+        <mat-icon>report_problem</mat-icon>
+      </div>
+      <div class="sc-content">
+        <span class="sc-label">Critical (&lt;60%)</span>
+        <span class="sc-value pct-bad">{{ criticalCount() }}</span>
+        <span class="sc-sub">urgent action needed</span>
+      </div>
+    </div>
+    }
+  </div>
+
+  <!-- ── Context bar ─────────────────────────────────────────────────────── -->
+  <div class="context-bar">
+    <div class="context-chips">
+      <span class="context-chip">
+        <mat-icon>calendar_month</mat-icon>
+        {{ getMonthName(form.value.month!) }} {{ form.value.year }}
+      </span>
+      <span class="context-chip">
+        <mat-icon>class</mat-icon>
+        {{ selectedSectionLabel() }}
+      </span>
+      <!-- @if (form.value.studentId) {
+      <span class="context-chip accent">
+        <mat-icon>person</mat-icon>
+        Individual Student
+      </span>
+      } -->
+    </div>
+
+    <div class="export-actions">
+      <button mat-stroked-button (click)="exportCSV()" matTooltip="Export as CSV">
+        <mat-icon>table_view</mat-icon>
+        <span class="export-label">CSV</span>
+      </button>
+      <button mat-raised-button class="btn-pdf" (click)="exportPDF()" matTooltip="Export as PDF">
+        <mat-icon>picture_as_pdf</mat-icon>
+        <span class="export-label">PDF</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Data Table ──────────────────────────────────────────────────────── -->
+  <div class="table-card">
+    <div class="table-scroll">
+      <table mat-table [dataSource]="report()" matSort (matSortChange)="sortData($event)">
+        <!-- Rank # -->
+        <ng-container matColumnDef="rank">
+          <th mat-header-cell *matHeaderCellDef class="col-rank">#</th>
+          <td mat-cell *matCellDef="let r; let i = index" class="col-rank">
+            <span class="rank-badge">{{ i + 1 }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Roll No -->
+        <ng-container matColumnDef="rollNumber">
+          <th mat-header-cell *matHeaderCellDef>Roll</th>
+          <td mat-cell *matCellDef="let r">
+            @if (r.rollNumber) {
+            <span class="roll-chip">{{ r.rollNumber }}</span>
+            } @else {
+            <span class="text-muted">—</span>
+            }
+          </td>
+        </ng-container>
+
+        <!-- Student Name -->
+        <ng-container matColumnDef="studentName">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Student</th>
+          <td mat-cell *matCellDef="let r">
+            <div class="student-cell">
+              <div class="student-avatar" [class]="getPctClass(r.attendancePercentage)">
+                {{ r.studentName.charAt(0).toUpperCase() }}
+              </div>
+              <span class="student-name">{{ r.studentName }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Total Days -->
+        <ng-container matColumnDef="totalDays">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Days</th>
+          <td mat-cell *matCellDef="let r">
+            <span class="num-cell">{{ r.totalDays }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Present -->
+        <ng-container matColumnDef="present">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Present</th>
+          <td mat-cell *matCellDef="let r">
+            <span class="status-chip PRESENT">
+              <span class="chip-dot"></span>
+              {{ r.present }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Absent -->
+        <ng-container matColumnDef="absent">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Absent</th>
+          <td mat-cell *matCellDef="let r">
+            <span class="status-chip ABSENT">
+              <span class="chip-dot"></span>
+              {{ r.absent }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Late -->
+        <ng-container matColumnDef="late">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Late</th>
+          <td mat-cell *matCellDef="let r">
+            <span class="status-chip LATE">
+              <span class="chip-dot"></span>
+              {{ r.late }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Half Day -->
+        <ng-container matColumnDef="halfDay">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Half Day</th>
+          <td mat-cell *matCellDef="let r">
+            <span class="status-chip HALF_DAY">
+              <span class="chip-dot"></span>
+              {{ r.halfDay }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Attendance % -->
+        <ng-container matColumnDef="attendancePercentage">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Attendance %</th>
+          <td mat-cell *matCellDef="let r">
+            <div class="pct-cell">
+              <div class="pct-bar-track">
+                <div
+                  class="pct-bar-fill"
+                  [class]="getPctClass(r.attendancePercentage)"
+                  [style.width.%]="r.attendancePercentage"
+                ></div>
+              </div>
+              <span class="pct-label" [class]="getPctClass(r.attendancePercentage)">
+                {{ r.attendancePercentage | number : '1.0-1' }}%
+              </span>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns" [class]="getRowClass(row)"></tr>
+      </table>
+    </div>
+
+    <!-- Table footer with total row -->
+    <div class="table-footer">
+      <span class="table-count">{{ report().length }} students</span>
+      <span class="table-totals">
+        Total Present: <strong>{{ totalPresent() }}</strong> &nbsp;·&nbsp; Total Absent:
+        <strong>{{ totalAbsent() }}</strong>
+      </span>
+    </div>
+  </div>
+
+  }
+</div>

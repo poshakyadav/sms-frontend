@@ -1,0 +1,19 @@
+.unauthorized-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  padding: 16px;
+}
+
+.unauthorized-card {
+  max-width: 400px;
+  text-align: center;
+}
+
+.icon {
+  font-size: 48px;
+  height: 48px;
+  width: 48px;
+  color: #f44336; // Red for error
+}

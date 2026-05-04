@@ -1,0 +1,344 @@
+<!-- fee-report.html — full replacement -->
+
+<div class="fee-report-page">
+  <!-- ══════════════════════════════════════════════════════════════════════
+       PAGE HEADER
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>Fee Collection Report</h1>
+      <p>Select a class-section to view payment status for all enrolled students</p>
+    </div>
+    <div class="header-actions">
+      @if (selectedClassSectionId()) {
+      <button
+        mat-stroked-button
+        (click)="loadReport()"
+        [disabled]="reportLoading()"
+        class="refresh-btn"
+      >
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+      }
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       FILTERS CARD
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div class="controls-card">
+    @if (filtersLoading()) {
+    <div class="filters-loading">
+      <mat-spinner diameter="18"></mat-spinner>
+      <span>Loading filters…</span>
+    </div>
+    } @else {
+    <div class="controls-row">
+      <!-- Class-Section selector (primary filter) -->
+      <mat-form-field appearance="outline" class="filter-field filter-field--primary">
+        <mat-label>Class — Section</mat-label>
+        <mat-select
+          [ngModel]="selectedClassSectionId()"
+          (ngModelChange)="onClassSectionChange($event)"
+        >
+          <mat-option [value]="null">— Select a class-section —</mat-option>
+          @for (cs of classSections(); track cs.id) {
+          <mat-option [value]="cs.id">
+            {{ cs.className }} – {{ cs.sectionName }}
+            @if (cs.currentStudents != null) {
+            <span class="option-count">({{ cs.currentStudents }})</span>
+            }
+          </mat-option>
+          }
+        </mat-select>
+        <mat-icon matPrefix>class</mat-icon>
+      </mat-form-field>
+
+      <!-- Academic year selector -->
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Academic Year</mat-label>
+        <mat-select
+          [ngModel]="selectedAcademicYearId()"
+          (ngModelChange)="onAcademicYearChange($event)"
+        >
+          <mat-option [value]="null">All years</mat-option>
+          @for (y of academicYears(); track y.id) {
+          <mat-option [value]="y.id">
+            {{ y.name }}
+            @if (y.isCurrent) { <span class="option-current">• Current</span> }
+          </mat-option>
+          }
+        </mat-select>
+        <mat-icon matPrefix>calendar_today</mat-icon>
+      </mat-form-field>
+
+      <!-- Overdue toggle -->
+      <div class="filter-toggle">
+        <mat-slide-toggle
+          [ngModel]="overdueOnly()"
+          (ngModelChange)="onOverdueToggle($event)"
+          color="warn"
+          [disabled]="!selectedClassSectionId()"
+        >
+          Outstanding only
+        </mat-slide-toggle>
+      </div>
+    </div>
+    }
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       REPORT LOADING
+       ══════════════════════════════════════════════════════════════════════ -->
+  @if (reportLoading()) {
+  <div class="state-container">
+    <mat-spinner diameter="44"></mat-spinner>
+    <p>
+      Generating report for <strong>{{ selectedClassSectionLabel() }}</strong
+      >…
+    </p>
+  </div>
+  }
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       ERROR
+       ══════════════════════════════════════════════════════════════════════ -->
+  @else if (error()) {
+  <div class="state-container error">
+    <mat-icon class="state-icon">error_outline</mat-icon>
+    <h2>Failed to Generate Report</h2>
+    <p>{{ error() }}</p>
+    <button mat-raised-button color="primary" (click)="loadReport()">Retry</button>
+  </div>
+  }
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       PROMPT — no class-section selected yet
+       ══════════════════════════════════════════════════════════════════════ -->
+  @else if (!selectedClassSectionId()) {
+  <div class="state-container state-prompt">
+    <div class="prompt-icon-wrap">
+      <mat-icon class="prompt-icon">assessment</mat-icon>
+    </div>
+    <h2>Select a class-section</h2>
+    <p>Choose a class and section from the filter above to generate the fee collection report.</p>
+  </div>
+  }
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       EMPTY (class-section selected but 0 results)
+       ══════════════════════════════════════════════════════════════════════ -->
+  @else if (hasQueried() && report().length === 0) {
+  <div class="state-container">
+    <mat-icon class="state-icon">inbox</mat-icon>
+    <h2>No records found</h2>
+    <p>
+      @if (overdueOnly()) { No students in <strong>{{ selectedClassSectionLabel() }}</strong> have
+      outstanding fees. } @else { No active enrolled students found in
+      <strong>{{ selectedClassSectionLabel() }}</strong
+      >. }
+    </p>
+  </div>
+  }
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       RESULTS
+       ══════════════════════════════════════════════════════════════════════ -->
+  @else if (report().length > 0) {
+
+  <!-- Context strip -->
+  <div class="report-context">
+    <div class="context-label">
+      <mat-icon>class</mat-icon>
+      {{ selectedClassSectionLabel() }}
+      @if (report()[0]?.academicYearName) {
+      <span class="context-year">• {{ report()[0].academicYearName }}</span>
+      }
+    </div>
+    <div class="context-meta">
+      {{ report().length }} students @if (overdueOnly()) {
+      <span class="context-filtered">(filtered: outstanding only)</span>
+      }
+    </div>
+  </div>
+
+  <!-- KPI summary strip -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total students</div>
+      <div class="stat-value">{{ report().length }}</div>
+      <div class="stat-sub">enrolled in this section</div>
+    </div>
+
+    <div class="stat-card primary">
+      <div class="stat-label">Total assigned</div>
+      <div class="stat-value">₹{{ totalDue() | number }}</div>
+      <div class="stat-sub">fee structures × students</div>
+    </div>
+
+    <div class="stat-card success">
+      <div class="stat-label">Total collected</div>
+      <div class="stat-value">₹{{ totalPaid() | number }}</div>
+      <div class="stat-sub">{{ paidCount() }} student(s) fully paid</div>
+    </div>
+
+    <div class="stat-card" [class.error]="totalBalance() > 0" [class.success]="totalBalance() <= 0">
+      <div class="stat-label">Outstanding</div>
+      <div class="stat-value">₹{{ totalBalance() | number }}</div>
+      <div class="stat-sub">{{ overdueCount() }} student(s) with balance due</div>
+    </div>
+
+    <div class="stat-card info">
+      <div class="stat-label">Collection rate</div>
+      <div class="stat-value">{{ collectionRate() }}%</div>
+      <div class="stat-sub progress-wrap">
+        <div class="mini-bar">
+          <div class="mini-bar-fill" [style.width.%]="collectionRate()"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data table -->
+  <div class="table-card">
+    <div class="table-header-row">
+      <span class="table-title">Student breakdown</span>
+      <span class="table-hint">Click a row to view full ledger</span>
+    </div>
+    <div class="table-scroll">
+      <table mat-table [dataSource]="report()" class="report-table">
+        <!-- Roll Number -->
+        <ng-container matColumnDef="rollNumber">
+          <th mat-header-cell *matHeaderCellDef>Roll no.</th>
+          <td mat-cell *matCellDef="let item">
+            @if (item.rollNumber) {
+            <span class="roll-pill">{{ item.rollNumber }}</span>
+            } @else {
+            <span class="text-muted">—</span>
+            }
+          </td>
+        </ng-container>
+
+        <!-- Student Name -->
+        <ng-container matColumnDef="studentName">
+          <th mat-header-cell *matHeaderCellDef>Student</th>
+          <td mat-cell *matCellDef="let item">
+            <div class="student-cell">
+              <div class="student-avatar">
+                {{ (item.studentName + '').charAt(0).toUpperCase() }}
+              </div>
+
+              <div class="student-info">
+                <span class="student-name">{{ item.studentName }}</span>
+                <span class="student-id">#{{ item.studentId }}</span>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Class-Section -->
+        <ng-container matColumnDef="classSection">
+          <th mat-header-cell *matHeaderCellDef>Class / Section</th>
+          <td mat-cell *matCellDef="let item">
+            <span class="class-chip">{{ item.className }} – {{ item.sectionName }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Total Due -->
+        <ng-container matColumnDef="totalDue">
+          <th mat-header-cell *matHeaderCellDef>Assigned</th>
+          <td mat-cell *matCellDef="let item">
+            <span class="amount-cell">₹{{ item.totalDue | number }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Total Paid -->
+        <ng-container matColumnDef="totalPaid">
+          <th mat-header-cell *matHeaderCellDef>Paid</th>
+          <td mat-cell *matCellDef="let item">
+            <span class="amount-cell paid">₹{{ item.totalPaid | number }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Balance -->
+        <ng-container matColumnDef="balance">
+          <th mat-header-cell *matHeaderCellDef>Balance due</th>
+          <td mat-cell *matCellDef="let item">
+            <span
+              class="amount-cell"
+              [class.positive]="item.balance > 0"
+              [class.paid]="item.balance <= 0"
+            >
+              ₹{{ item.balance | number }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Status -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let item">
+            <span
+              class="status-badge"
+              [class.paid]="item.balance <= 0"
+              [class.due]="item.balance > 0"
+            >
+              {{ getStatus(item.balance) }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Actions -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let item">
+            <div class="cell-actions">
+              <button
+                mat-icon-button
+                (click)="viewLedger(item.studentId); $event.stopPropagation()"
+                matTooltip="View full ledger"
+                class="action-btn"
+              >
+                <mat-icon>account_balance_wallet</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                (click)="viewPaymentHistory(item.enrollmentId); $event.stopPropagation()"
+                matTooltip="Payment history"
+                class="action-btn"
+              >
+                <mat-icon>receipt_long</mat-icon>
+              </button>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: displayedColumns"
+          [class.row-overdue]="row.balance > 0"
+          [class.row-paid]="row.balance <= 0"
+          (click)="viewLedger(row.studentId)"
+          class="clickable-row"
+        ></tr>
+      </table>
+    </div>
+
+    <!-- Table footer totals -->
+    <div class="table-footer">
+      <span class="footer-label">{{ report().length }} students</span>
+      <span class="footer-spacer"></span>
+      <span class="footer-total">
+        Total: ₹{{ totalDue() | number }} assigned &nbsp;•&nbsp; ₹{{ totalPaid() | number }}
+        collected &nbsp;•&nbsp;
+        <strong [class.footer-due]="totalBalance() > 0" [class.footer-paid]="totalBalance() <= 0">
+          ₹{{ totalBalance() | number }} outstanding
+        </strong>
+      </span>
+    </div>
+  </div>
+
+  }
+</div>

@@ -1,0 +1,193 @@
+<div class="attendance-page">
+  <!-- ── Header ─────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>Mark Attendance</h1>
+      @if (dateDisplay()) {
+      <p class="date-subtitle">{{ dateDisplay() }}</p>
+      }
+    </div>
+    <div class="header-actions">
+      <button mat-icon-button (click)="loadStudents()" matTooltip="Refresh students">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Controls card ──────────────────────────────────────────────── -->
+  <div class="controls-card">
+    <form [formGroup]="form" class="controls-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Class — Section</mat-label>
+        <mat-select formControlName="classSectionId">
+          @for (cs of classSections(); track cs.id) {
+          <mat-option [value]="cs.id">
+            {{ cs.className }} – {{ cs.sectionName }}
+            <span class="capacity-note">({{ cs.currentStudents ?? 0 }}/{{ cs.capacity }})</span>
+          </mat-option>
+          }
+        </mat-select>
+        <mat-icon matPrefix>class</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Date</mat-label>
+        <input matInput [matDatepicker]="picker" formControlName="date" />
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+        <mat-icon matPrefix>calendar_today</mat-icon>
+      </mat-form-field>
+    </form>
+  </div>
+
+  <!-- ── Loading ────────────────────────────────────────────────────── -->
+  @if (loading()) {
+  <div class="state-container">
+    <mat-spinner diameter="44"></mat-spinner>
+    <p>Loading students…</p>
+  </div>
+  }
+
+  <!-- ── No students ────────────────────────────────────────────────── -->
+  @else if (!form.value.classSectionId) {
+  <div class="state-container">
+    <mat-icon class="state-icon">school</mat-icon>
+    <h2>Select a Class-Section</h2>
+    <p>Choose a class-section and date to begin marking attendance.</p>
+  </div>
+  } @else if (students().length === 0) {
+  <div class="state-container">
+    <mat-icon class="state-icon">group_off</mat-icon>
+    <h2>No Students Found</h2>
+    <p>No active enrollments found for the selected class-section.</p>
+  </div>
+  }
+
+  <!-- ── Main content ────────────────────────────────────────────────── -->
+  @else {
+
+  <!-- Summary strip -->
+  <div class="summary-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total</div>
+      <div class="stat-value">{{ students().length }}</div>
+    </div>
+    <div class="stat-card success">
+      <div class="stat-label">Present</div>
+      <div class="stat-value">{{ presentCount() }}</div>
+    </div>
+    <div class="stat-card error">
+      <div class="stat-label">Absent</div>
+      <div class="stat-value">{{ absentCount() }}</div>
+    </div>
+    <div class="stat-card warn">
+      <div class="stat-label">Late / Half Day</div>
+      <div class="stat-value">{{ lateCount() }}</div>
+    </div>
+  </div>
+
+  <!-- Bulk actions -->
+  <div class="bulk-actions">
+    <span class="bulk-label">Set All:</span>
+    <button mat-stroked-button (click)="setAll('PRESENT')">
+      <mat-icon>check_circle</mat-icon> Present
+    </button>
+    <button mat-stroked-button color="warn" (click)="setAll('ABSENT')">
+      <mat-icon>cancel</mat-icon> Absent
+    </button>
+    <button mat-stroked-button (click)="setAll('LATE')"><mat-icon>schedule</mat-icon> Late</button>
+    @if (hasChanges()) {
+    <button
+      mat-stroked-button
+      (click)="resetChanges()"
+      matTooltip="Discard unsaved changes"
+      style="margin-left: auto"
+    >
+      <mat-icon>undo</mat-icon> Reset
+    </button>
+    }
+  </div>
+
+  <!-- Attendance table -->
+  <div class="table-card">
+    <div class="table-scroll">
+      <table mat-table [dataSource]="students()">
+        <!-- Roll No -->
+        <ng-container matColumnDef="rollNumber">
+          <th mat-header-cell *matHeaderCellDef>Roll No</th>
+          <td mat-cell *matCellDef="let s">{{ s.rollNumber || '—' }}</td>
+        </ng-container>
+
+        <!-- Name -->
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Student Name</th>
+          <td mat-cell *matCellDef="let s">
+            <strong>{{ s.name }}</strong>
+          </td>
+        </ng-container>
+
+        <!-- Status -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status <span class="required-star">*</span></th>
+          <td mat-cell *matCellDef="let s">
+            <mat-form-field appearance="outline" class="status-select">
+              <mat-select [(value)]="s.status" (selectionChange)="updateStatus(s.id, $event.value)">
+                @for (opt of statusOptions; track opt) {
+                <mat-option [value]="opt">
+                  {{ statusLabels[opt] }}
+                </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </td>
+        </ng-container>
+
+        <!-- Notes -->
+        <ng-container matColumnDef="notes">
+          <th mat-header-cell *matHeaderCellDef>Notes</th>
+          <td mat-cell *matCellDef="let s">
+            <mat-form-field appearance="outline" class="notes-field">
+              <input
+                matInput
+                [(ngModel)]="s.notes"
+                (input)="updateNotes(s.id, $event.target.value)"
+                placeholder="Optional…"
+              />
+            </mat-form-field>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: displayedColumns"
+          [class.row-absent]="row.status === 'ABSENT'"
+          [class.row-late]="row.status === 'LATE' || row.status === 'HALF_DAY'"
+        ></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Submit footer -->
+  <div class="submit-footer">
+    @if (hasChanges()) {
+    <span class="unsaved-hint"> <mat-icon>info</mat-icon> You have unsaved changes </span>
+    }
+    <button
+      mat-raised-button
+      color="primary"
+      [disabled]="!isValid() || submitting()"
+      (click)="submit()"
+    >
+      @if (submitting()) {
+      <mat-spinner diameter="18" style="display: inline-block; margin-right: 8px"></mat-spinner>
+      Saving… } @else {
+      <ng-container>
+        <mat-icon>save</mat-icon>
+        Save Attendance
+      </ng-container>
+      }
+    </button>
+  </div>
+  }
+</div>

@@ -1,0 +1,264 @@
+@use '../../../../../shared/styles/academics-shared' as *;
+
+.bulk-page {
+  max-width: 1020px;
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+// ── Scope Block ────────────────────────────────────────────────────────────────
+.scope-block {
+  margin-bottom: 24px;
+}
+
+.scope-hint {
+  margin: 0 0 16px;
+  font-size: 0.83rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.scope-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.scope-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.16s ease;
+  background: var(--color-bg-card);
+
+  &:hover {
+    border-color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 3%, var(--color-bg-card));
+  }
+
+  &.selected {
+    border-color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 6%, var(--color-bg-card));
+  }
+}
+
+.radio-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  flex-shrink: 0;
+  margin-top: 3px;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.on {
+    border-color: var(--color-primary);
+    &::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--color-primary);
+    }
+  }
+}
+
+.scope-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+
+  &.global {
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    mat-icon {
+      color: var(--color-primary);
+    }
+  }
+
+  &.year {
+    background: color-mix(in srgb, var(--color-secondary, #0ea5e9) 12%, transparent);
+    mat-icon {
+      color: var(--color-secondary, #0ea5e9);
+    }
+  }
+}
+
+.scope-card-content {
+  flex: 1;
+  strong {
+    display: block;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 4px;
+  }
+  p {
+    margin: 0 0 6px;
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+  }
+}
+
+.tag {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 9999px;
+
+  &.recommended {
+    background: color-mix(in srgb, var(--color-success) 14%, transparent);
+    color: var(--color-success);
+  }
+}
+
+// ── Year Selector ──────────────────────────────────────────────────────────────
+.year-selector {
+  mat-form-field {
+    min-width: 280px;
+  }
+  animation: fadeSlideDown 0.18s ease;
+
+  @keyframes fadeSlideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+// ── Active Scope Row ──────────────────────────────────────────────────────────
+.active-scope-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 0.83rem;
+  color: var(--color-text-secondary);
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--color-success) 7%, var(--color-bg-card));
+  border: 1px solid color-mix(in srgb, var(--color-success) 20%, transparent);
+  border-radius: var(--radius-sm);
+
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+    color: var(--color-success);
+    flex-shrink: 0;
+  }
+
+  strong {
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+}
+
+// ── Rows List ──────────────────────────────────────────────────────────────────
+.rows-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.mapping-row {
+  display: grid;
+  grid-template-columns: 32px 1fr auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: border-color 0.15s ease;
+
+  &.has-error {
+    border-color: var(--color-error);
+    background: color-mix(in srgb, var(--color-error) 3%, var(--color-bg-card));
+  }
+
+  @media (max-width: 700px) {
+    grid-template-columns: 1fr;
+    .row-num,
+    .arrow-col {
+      display: none;
+    }
+  }
+}
+
+.row-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.arrow-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 20px; // align with mat-form-field
+
+  mat-icon {
+    color: var(--color-text-muted);
+    font-size: 20px;
+  }
+}
+
+// ── Add Row Button ─────────────────────────────────────────────────────────────
+.add-row-btn {
+  margin-bottom: 28px;
+  width: 100%;
+  border-style: dashed !important;
+  color: var(--color-primary);
+  border-color: color-mix(in srgb, var(--color-primary) 35%, transparent) !important;
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-primary) 6%, transparent) !important;
+  }
+}
+
+mat-divider {
+  margin: 8px 0 0;
+}

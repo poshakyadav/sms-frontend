@@ -1,0 +1,271 @@
+<div class="page-container">
+  <!-- ── Page Header ─────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>Assign Subjects to Class-Section</h1>
+      @if (selectedClassSectionName()) {
+      <p>
+        Managing: <strong>{{ selectedClassSectionName() }}</strong>
+      </p>
+      } @else {
+      <p>Select a class-section below to manage its subject assignments</p>
+      }
+    </div>
+    <div class="header-actions">
+      @if (selectedClassSectionId() && canManage() && !showAddForm()) {
+      <button mat-raised-button color="primary" (click)="toggleAddForm()">
+        <mat-icon>add</mat-icon> Add Subject
+      </button>
+      }
+      <button
+        mat-icon-button
+        (click)="router.navigate(['/school/academics/subjects'])"
+        matTooltip="Back to subjects"
+      >
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Workflow guidance ─────────────────────────────────────────────────── -->
+  <div class="flow-steps">
+    <div class="step" [class.step-active]="!selectedClassSectionId()">
+      <div class="step-number">1</div>
+      <div class="step-text">
+        <strong>Select a Class-Section</strong>
+        <span>Choose which class-section to manage</span>
+      </div>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step" [class.step-active]="!!selectedClassSectionId() && showAddForm()">
+      <div class="step-number">2</div>
+      <div class="step-text">
+        <strong>Assign Subjects</strong>
+        <span>Add subjects to this class-section</span>
+      </div>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step">
+      <div class="step-number">3</div>
+      <div class="step-text">
+        <strong>Assign Teachers</strong>
+        <span
+          >Click <mat-icon style="font-size: 16px; vertical-align: middle">person_add</mat-icon> on
+          any assigned subject</span
+        >
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Step 1: Loading dropdowns ─────────────────────────────────────────── -->
+  @if (loadingDropdowns()) {
+  <div class="state-container">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading class-sections and subjects…</p>
+  </div>
+
+  } @else if (dropdownError()) {
+  <div class="state-container error">
+    <mat-icon class="state-icon">error_outline</mat-icon>
+    <h2>Failed to load data</h2>
+    <p>{{ dropdownError() }}</p>
+  </div>
+
+  } @else {
+
+  <!-- ── Class-Section Picker ─────────────────────────────────────────────── -->
+  <div class="picker-card">
+    <div class="picker-label">
+      <mat-icon>class</mat-icon>
+      Select Class-Section
+    </div>
+    <mat-form-field appearance="outline" class="picker-field">
+      <mat-label>Class-Section *</mat-label>
+      <mat-select
+        [ngModel]="selectedClassSectionId()"
+        (ngModelChange)="onClassSectionChange($event)"
+      >
+        <mat-option [value]="null">— Choose a class-section —</mat-option>
+        @for (cs of allClassSections(); track cs.id) {
+        <mat-option [value]="cs.id">
+          {{ cs.className }} – {{ cs.sectionName }}
+          @if (cs.capacity) {
+          <span class="capacity-badge">(cap: {{ cs.capacity }})</span>
+          }
+        </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    @if (allClassSections().length === 0) {
+    <p class="picker-hint">
+      No class-sections found.
+      <a (click)="router.navigate(['/school/academics/class-sections/new'])" class="link">
+        Create one first →
+      </a>
+    </p>
+    }
+  </div>
+
+  <!-- ── Step 2 & 3: Only shown once a class-section is selected ────────── -->
+  @if (selectedClassSectionId()) {
+
+  <!-- ── Inline add-subject form ───────────────────────────────────────── -->
+  @if (showAddForm()) {
+  <div class="inline-form-card">
+    <h3>
+      <mat-icon>add_circle_outline</mat-icon>
+      Add Subject to {{ selectedClassSectionName() }}
+    </h3>
+
+    @if (availableSubjects().length === 0) {
+    <p class="no-more-subjects">
+      <mat-icon>check_circle</mat-icon>
+      All available subjects have already been assigned to this class-section.
+    </p>
+    } @else {
+    <div class="add-form-row">
+      <mat-form-field appearance="outline">
+        <mat-label>Subject *</mat-label>
+        <mat-select [ngModel]="selectedSubjectId()" (ngModelChange)="selectedSubjectId.set($event)">
+          <mat-option [value]="null">— Select subject —</mat-option>
+          @for (s of availableSubjects(); track s.id) {
+          <mat-option [value]="s.id">
+            {{ s.name }}
+            @if (s.code) {
+            <span class="capacity-badge">({{ s.code }})</span>
+            }
+          </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Type</mat-label>
+        <mat-select [ngModel]="isMandatory()" (ngModelChange)="isMandatory.set($event)">
+          <mat-option [value]="true">Mandatory (required)</mat-option>
+          <mat-option [value]="false">Optional (elective)</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div class="add-form-actions">
+        <button mat-stroked-button type="button" (click)="toggleAddForm()">Cancel</button>
+        <button
+          mat-raised-button
+          color="primary"
+          [disabled]="!selectedSubjectId() || addingSubject()"
+          (click)="assignSubject()"
+        >
+          @if (addingSubject()) {
+          <mat-spinner diameter="18" style="display: inline-block; margin-right: 6px"></mat-spinner>
+          } Assign
+        </button>
+      </div>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- ── Assigned Subjects Table ────────────────────────────────────────── -->
+  @if (loadingAssignments()) {
+  <div class="state-container">
+    <mat-spinner diameter="44"></mat-spinner>
+    <p>Loading assigned subjects…</p>
+  </div>
+
+  } @else if (assignmentError()) {
+  <div class="state-container error">
+    <mat-icon class="state-icon">error_outline</mat-icon>
+    <h2>Could not load assignments</h2>
+    <p>{{ assignmentError() }}</p>
+    <button mat-raised-button color="primary" (click)="refreshAssignments()">Retry</button>
+  </div>
+
+  } @else if (assignedSubjects().length === 0) {
+  <div class="state-container">
+    <mat-icon class="state-icon">assignment</mat-icon>
+    <h2>No Subjects Assigned</h2>
+    <p>
+      No subjects have been assigned to <strong>{{ selectedClassSectionName() }}</strong> yet. Click
+      "Add Subject" above to begin.
+    </p>
+    @if (canManage() && !showAddForm()) {
+    <button mat-raised-button color="primary" (click)="toggleAddForm()">
+      <mat-icon>add</mat-icon> Add First Subject
+    </button>
+    }
+  </div>
+
+  } @else {
+
+  <!-- Teacher assignment guidance -->
+  @if (canAssignTeacher()) {
+  <div class="teacher-hint">
+    <mat-icon>lightbulb_outline</mat-icon>
+    Click <strong>Assign Teachers</strong> on any subject row to assign which teacher teaches it.
+  </div>
+  }
+
+  <div class="table-card">
+    <table mat-table [dataSource]="assignedSubjects()">
+      <ng-container matColumnDef="subjectName">
+        <th mat-header-cell *matHeaderCellDef>Subject</th>
+        <td mat-cell *matCellDef="let s">
+          <strong>{{ s.subjectName }}</strong>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="code">
+        <th mat-header-cell *matHeaderCellDef>Code</th>
+        <td mat-cell *matCellDef="let s">
+          @if (s.subjectCode) {
+          <span class="badge active">{{ s.subjectCode }}</span>
+          } @else { — }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="mandatory">
+        <th mat-header-cell *matHeaderCellDef>Type</th>
+        <td mat-cell *matCellDef="let s">
+          <span class="badge" [class.active]="s.isMandatory" [class.inactive]="!s.isMandatory">
+            {{ s.isMandatory ? 'Mandatory' : 'Optional' }}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let s">
+          <div class="cell-actions">
+            @if (canAssignTeacher()) {
+            <!--
+                      Pass the class_subjects.id (s.id) — this is the junction-table row ID,
+                      which the teacher-assignment page uses to load teachers for this subject.
+                    -->
+            <button
+              mat-icon-button
+              (click)="assignTeachers(s)"
+              matTooltip="Assign teachers to this subject"
+            >
+              <mat-icon>person_add</mat-icon>
+            </button>
+            } @if (canManage()) {
+            <button
+              mat-icon-button
+              color="warn"
+              (click)="unassign(s)"
+              matTooltip="Remove subject from class-section"
+            >
+              <mat-icon>link_off</mat-icon>
+            </button>
+            }
+          </div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+  </div>
+  } } }
+</div>

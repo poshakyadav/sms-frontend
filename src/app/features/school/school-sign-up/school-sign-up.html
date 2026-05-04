@@ -1,0 +1,454 @@
+<!-- features/school/school-sign-up/school-sign-up.html -->
+
+<div class="su-root">
+  <!-- Ambient background -->
+  <div class="su-bg" aria-hidden="true">
+    <div class="su-bg__mesh"></div>
+    <div class="su-bg__orb su-bg__orb--a"></div>
+    <div class="su-bg__orb su-bg__orb--b"></div>
+    <div class="su-bg__orb su-bg__orb--c"></div>
+  </div>
+
+  <!-- Page wrapper: side panel + card -->
+  <div class="su-layout">
+    <!-- ── Left brand panel (hidden on mobile) ────────────────────────────── -->
+    <aside class="su-brand" aria-hidden="true">
+      <div class="su-brand__inner">
+        <div class="su-brand__logo">
+          <span class="su-brand__logo-icon">🎓</span>
+        </div>
+        <h2 class="su-brand__headline">Set up your school in minutes</h2>
+        <p class="su-brand__body">
+          Join thousands of schools managing attendance, fees, academics, and more — all in one
+          place.
+        </p>
+
+        <ul class="su-brand__list">
+          <li class="su-brand__item">
+            <span class="su-brand__item-icon">✓</span>
+            <span>Student & staff management</span>
+          </li>
+          <li class="su-brand__item">
+            <span class="su-brand__item-icon">✓</span>
+            <span>Fees & payment tracking</span>
+          </li>
+          <li class="su-brand__item">
+            <span class="su-brand__item-icon">✓</span>
+            <span>Exams, grades & report cards</span>
+          </li>
+          <li class="su-brand__item">
+            <span class="su-brand__item-icon">✓</span>
+            <span>Attendance with one tap</span>
+          </li>
+          <li class="su-brand__item">
+            <span class="su-brand__item-icon">✓</span>
+            <span>Parent notifications & portal</span>
+          </li>
+        </ul>
+
+        <div class="su-brand__trust">
+          <div class="su-brand__trust-avatars">
+            <span>👩‍🏫</span><span>👨‍💼</span><span>👩‍🎓</span><span>👨‍🏫</span>
+          </div>
+          <p class="su-brand__trust-text">Trusted by school administrators across India</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── Right form card ─────────────────────────────────────────────────── -->
+    <main class="su-card">
+      <!-- Mobile logo -->
+      <div class="su-card__mobile-logo" aria-hidden="true">
+        <span class="su-card__mobile-logo-icon">🎓</span>
+        <span class="su-card__mobile-logo-text">School Management System</span>
+      </div>
+
+      <!-- ── VALIDATING STATE ─────────────────────────────────────────────── -->
+      @if (validating()) {
+      <div class="su-state su-state--loading">
+        <div class="su-spinner su-spinner--lg"></div>
+        <p class="su-state__title">Validating your invitation…</p>
+        <p class="su-state__sub">Just a moment while we check your link.</p>
+      </div>
+      }
+
+      <!-- ── INVALID TOKEN STATE ─────────────────────────────────────────── -->
+      @if (!validating() && tokenInvalid()) {
+      <div class="su-state su-state--error">
+        <div class="su-state__icon">⚠️</div>
+        <h2 class="su-state__title">Invalid Invitation</h2>
+        <p class="su-state__body">{{ tokenError() }}</p>
+        <p class="su-state__sub">Contact our support team to request a new invitation link.</p>
+      </div>
+      }
+
+      <!-- ── MAIN FORM ───────────────────────────────────────────────────── -->
+      @if (!validating() && !tokenInvalid() && invitation()) {
+
+      <!-- Header -->
+      <div class="su-card__header">
+        <h1 class="su-card__title">
+          @if (isEditMode()) { Update Registration } @else { School Registration }
+        </h1>
+        <p class="su-card__subtitle">
+          @if (isEditMode()) { Update your details. Your password must be re-entered to save
+          changes. } @else { Complete both steps below to activate your school account. }
+        </p>
+      </div>
+
+      <!-- Edit mode notice -->
+      @if (isEditMode()) {
+      <div class="su-notice su-notice--info">
+        <span class="su-notice__icon">✏️</span>
+        <div class="su-notice__body">
+          <strong class="su-notice__title">Editing Registration</strong>
+          <span class="su-notice__text">Changes will overwrite your previous submission.</span>
+        </div>
+        <button class="su-notice__action" type="button" (click)="cancelEdit()">
+          ← Back to Payment
+        </button>
+      </div>
+      }
+
+      <!-- Invitation banner (new registrations only) -->
+      @if (!isEditMode()) {
+      <div class="su-invite-banner">
+        <div class="su-invite-banner__left">
+          <span class="su-invite-banner__icon">✉️</span>
+          <div>
+            <span class="su-invite-banner__label">Invited school</span>
+            <span class="su-invite-banner__name">{{ invitation()!.schoolName }}</span>
+          </div>
+        </div>
+        <span class="su-badge su-badge--amber">Expires in {{ expiresIn }}</span>
+      </div>
+
+      <!-- Fee notice -->
+      @if (paymentConfig()?.isFeeEnabled) {
+      <div class="su-fee-banner">
+        <span class="su-fee-banner__label">
+          <span class="su-fee-banner__icon">💳</span>
+          One-time setup fee due after registration
+        </span>
+        <span class="su-fee-banner__amount">{{ feeFormatted }}</span>
+      </div>
+      } }
+
+      <!-- Step indicator -->
+      <div class="su-steps" role="tablist">
+        <div
+          class="su-step"
+          [class.su-step--active]="currentStep() === 1"
+          [class.su-step--done]="currentStep() > 1"
+        >
+          <div class="su-step__bubble">@if (currentStep() > 1) { ✓ } @else { 1 }</div>
+          <span class="su-step__label">Your Account</span>
+        </div>
+        <div class="su-step__connector" [class.su-step__connector--done]="currentStep() > 1"></div>
+        <div class="su-step" [class.su-step--active]="currentStep() === 2">
+          <div class="su-step__bubble">2</div>
+          <span class="su-step__label">School Details</span>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <form [formGroup]="signupForm" (ngSubmit)="signup()" novalidate>
+        <!-- ══ STEP 1: Owner Info ══════════════════════════════════════ -->
+        @if (currentStep() === 1) {
+        <div class="su-form-step" role="tabpanel">
+          <h2 class="su-form-step__title">Your Account</h2>
+          <p class="su-form-step__desc">
+            @if (isEditMode()) { Update your login credentials. Password is required to save
+            changes. } @else { These will be your school owner login credentials. }
+          </p>
+
+          <!-- Full Name -->
+          <div class="su-field" [class.su-field--error]="fieldInvalid('ownerName')">
+            <label class="su-field__label" for="ownerName">
+              Full Name <span class="su-req" aria-label="required">*</span>
+            </label>
+            <input
+              id="ownerName"
+              class="su-field__input"
+              formControlName="ownerName"
+              placeholder="e.g. Rajesh Kumar"
+              autocomplete="name"
+              type="text"
+            />
+            @if (fieldInvalid('ownerName')) {
+            <span class="su-field__error" role="alert">Minimum 2 characters required</span>
+            }
+          </div>
+
+          <!-- Email -->
+          <div class="su-field" [class.su-field--error]="fieldInvalid('ownerEmail')">
+            <label class="su-field__label" for="ownerEmail">
+              Email Address <span class="su-req" aria-label="required">*</span>
+            </label>
+            <input
+              id="ownerEmail"
+              class="su-field__input"
+              formControlName="ownerEmail"
+              type="email"
+              placeholder="owner@school.com"
+              autocomplete="email"
+            />
+            @if (fieldInvalid('ownerEmail')) {
+            <span class="su-field__error" role="alert">Valid email required</span>
+            }
+          </div>
+
+          <!-- Password -->
+          <div class="su-field" [class.su-field--error]="fieldInvalid('ownerPassword')">
+            <label class="su-field__label" for="ownerPassword">
+              @if (isEditMode()) { New Password } @else { Password }
+              <span class="su-req" aria-label="required">*</span>
+            </label>
+            <div class="su-field__password-wrap">
+              <input
+                id="ownerPassword"
+                class="su-field__input"
+                formControlName="ownerPassword"
+                [type]="showPassword() ? 'text' : 'password'"
+                [placeholder]="
+                  isEditMode() ? 'Enter new password (min. 8 chars)' : 'Min. 8 characters'
+                "
+                autocomplete="new-password"
+              />
+              <button
+                type="button"
+                class="su-field__eye"
+                (click)="togglePassword()"
+                [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+              >
+                @if (showPassword()) { 🙈 } @else { 👁 }
+              </button>
+            </div>
+            @if (fieldInvalid('ownerPassword')) {
+            <span class="su-field__error" role="alert">Minimum 8 characters required</span>
+            } @if (isEditMode()) {
+            <span class="su-field__hint"
+              >⚠️ Entering a new password will update your login credentials.</span
+            >
+            }
+          </div>
+
+          <!-- Phone row -->
+          <div class="su-field-row">
+            <div class="su-field">
+              <label class="su-field__label" for="ownerPhone">Phone</label>
+              <input
+                id="ownerPhone"
+                class="su-field__input"
+                formControlName="ownerPhone"
+                placeholder="+91 98765 43210"
+                type="tel"
+                autocomplete="tel"
+              />
+            </div>
+            <div class="su-field">
+              <label class="su-field__label" for="ownerAltPhone">Alternate Phone</label>
+              <input
+                id="ownerAltPhone"
+                class="su-field__input"
+                formControlName="ownerAlternatePhone"
+                placeholder="Optional"
+                type="tel"
+              />
+            </div>
+          </div>
+
+          <!-- Step 1 actions -->
+          <div class="su-step-actions">
+            @if (isEditMode()) {
+            <button type="button" class="su-btn su-btn--ghost" (click)="cancelEdit()">
+              ← Cancel
+            </button>
+            }
+            <button
+              type="button"
+              class="su-btn su-btn--primary"
+              [class.su-btn--full]="!isEditMode()"
+              (click)="nextStep()"
+            >
+              Continue to School Details
+              <span class="su-btn__arrow">→</span>
+            </button>
+          </div>
+        </div>
+        }
+
+        <!-- ══ STEP 2: School Info ═════════════════════════════════════ -->
+        @if (currentStep() === 2) {
+        <div class="su-form-step" role="tabpanel">
+          <h2 class="su-form-step__title">School Information</h2>
+          <p class="su-form-step__desc">Confirm and fill in your school's details.</p>
+
+          <!-- School Name -->
+          <div class="su-field" [class.su-field--error]="fieldInvalid('schoolName')">
+            <label class="su-field__label" for="schoolName">
+              School Name <span class="su-req" aria-label="required">*</span>
+            </label>
+            <input
+              id="schoolName"
+              class="su-field__input"
+              formControlName="schoolName"
+              placeholder="e.g. Sunrise Public School"
+              type="text"
+            />
+            @if (fieldInvalid('schoolName')) {
+            <span class="su-field__error" role="alert">Minimum 3 characters required</span>
+            }
+          </div>
+
+          <!-- Address Line 1 -->
+          <div class="su-field" [class.su-field--error]="fieldInvalid('addressLineOne')">
+            <label class="su-field__label" for="address1">
+              Address Line 1 <span class="su-req" aria-label="required">*</span>
+            </label>
+            <input
+              id="address1"
+              class="su-field__input"
+              formControlName="addressLineOne"
+              placeholder="Street / Area"
+              type="text"
+              autocomplete="address-line1"
+            />
+            @if (fieldInvalid('addressLineOne')) {
+            <span class="su-field__error" role="alert">Address is required</span>
+            }
+          </div>
+
+          <!-- Address Line 2 -->
+          <div class="su-field">
+            <label class="su-field__label" for="address2">Address Line 2</label>
+            <input
+              id="address2"
+              class="su-field__input"
+              formControlName="addressLineTwo"
+              placeholder="Landmark / City / PIN (optional)"
+              type="text"
+              autocomplete="address-line2"
+            />
+          </div>
+
+          <!-- Phone row -->
+          <div class="su-field-row">
+            <div class="su-field">
+              <label class="su-field__label" for="schoolPhone">School Phone</label>
+              <input
+                id="schoolPhone"
+                class="su-field__input"
+                formControlName="phone"
+                placeholder="School contact"
+                type="tel"
+              />
+            </div>
+            <div class="su-field">
+              <label class="su-field__label" for="schoolAltPhone">Alternate Phone</label>
+              <input
+                id="schoolAltPhone"
+                class="su-field__input"
+                formControlName="alternatePhone"
+                placeholder="Optional"
+                type="tel"
+              />
+            </div>
+          </div>
+
+          <!-- Email & Website row -->
+          <div class="su-field-row">
+            <div class="su-field">
+              <label class="su-field__label" for="schoolEmail">School Email</label>
+              <input
+                id="schoolEmail"
+                class="su-field__input"
+                formControlName="schoolEmail"
+                type="email"
+                placeholder="info@school.com"
+                autocomplete="email"
+              />
+            </div>
+            <div class="su-field">
+              <label class="su-field__label" for="schoolWebsite">Website</label>
+              <input
+                id="schoolWebsite"
+                class="su-field__input"
+                formControlName="schoolWebsite"
+                placeholder="https://school.com"
+                type="url"
+              />
+            </div>
+          </div>
+
+          <!-- Global error -->
+          @if (error()) {
+          <div class="su-alert su-alert--error" role="alert">
+            <span class="su-alert__icon">⚠️</span>
+            <span>{{ error() }}</span>
+          </div>
+          }
+
+          <!-- Terms & Conditions -->
+          <div
+            class="su-terms"
+            [class.su-terms--error]="signupForm.get('termsAccepted')?.touched && !step2TermsValid"
+          >
+            <label class="su-terms__label">
+              <div class="su-terms__checkbox-wrap">
+                <input
+                  type="checkbox"
+                  formControlName="termsAccepted"
+                  class="su-terms__checkbox"
+                  id="termsAccepted"
+                />
+                <span class="su-terms__custom-check" aria-hidden="true">✓</span>
+              </div>
+              <span class="su-terms__text">
+                I agree to the
+                <a href="/public/terms" target="_blank" rel="noopener" class="su-terms__link"
+                  >Terms &amp; Conditions</a
+                >
+                and
+                <a href="/public/privacy" target="_blank" rel="noopener" class="su-terms__link"
+                  >Privacy Policy</a
+                >.
+              </span>
+            </label>
+            @if (signupForm.get('termsAccepted')?.touched && !step2TermsValid) {
+            <span class="su-field__error" role="alert"
+              >You must accept the Terms &amp; Conditions to register.</span
+            >
+            }
+          </div>
+
+          <!-- Step 2 actions -->
+          <div class="su-form-actions">
+            <button type="button" class="su-btn su-btn--ghost" (click)="prevStep()">← Back</button>
+            <button
+              type="submit"
+              class="su-btn su-btn--primary su-btn--submit"
+              [disabled]="
+                loading() ||
+                signupForm.get('schoolName')!.invalid ||
+                signupForm.get('addressLineOne')!.invalid ||
+                !step2TermsValid
+              "
+            >
+              @if (loading()) {
+              <span class="su-spinner su-spinner--sm"></span>
+              <span>Registering…</span>
+              } @else {
+              <span>@if (isEditMode()) { Save Changes } @else { Register School }</span>
+              <span class="su-btn__arrow">→</span>
+              }
+            </button>
+          </div>
+        </div>
+        }
+      </form>
+
+      }<!-- end main form -->
+    </main>
+  </div>
+</div>

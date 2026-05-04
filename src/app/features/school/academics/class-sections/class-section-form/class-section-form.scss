@@ -1,0 +1,150 @@
+// class-section-form.scss
+// Class-Section Form — production-grade, themed SCSS
+
+.form-page {
+  padding: 28px 32px;
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  @media (max-width: 768px) {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+
+    @media (max-width: 480px) {
+      flex-direction: column-reverse;
+      align-items: flex-start;
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 1.625rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+    }
+  }
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+// ── State containers (loading / not-found) ─────────────────────────────────
+
+.state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 14px;
+  padding: 56px 24px;
+  background: var(--color-bg-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+
+  h2 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--color-text-secondary);
+  }
+
+  &.error {
+    border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
+    background: color-mix(in srgb, var(--color-error) 3%, var(--color-bg-surface));
+
+    .state-icon {
+      color: var(--color-error) !important;
+    }
+  }
+}
+
+.state-icon {
+  font-size: 48px !important;
+  width: 48px !important;
+  height: 48px !important;
+  color: var(--color-text-muted) !important;
+}
+
+// ── Form card ──────────────────────────────────────────────────────────────
+
+.form-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 28px;
+
+  @media (max-width: 480px) {
+    padding: 18px;
+    border-radius: var(--radius-md);
+  }
+}
+
+// ── Responsive grid form ───────────────────────────────────────────────────
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+
+  // Full-width fields
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+// ── Capacity badge hint inside mat-option ──────────────────────────────────
+
+.capacity-badge {
+  margin-left: 6px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+// ── Form actions (grid-column: 1 / -1 set inline) ─────────────────────────
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-divider);
+  margin-top: 4px;
+
+  @media (max-width: 400px) {
+    flex-direction: column;
+    align-items: stretch;
+
+    button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}

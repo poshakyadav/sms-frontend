@@ -1,0 +1,92 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-left">
+      <h1>Classes</h1>
+      <p>Manage grade levels and their display order</p>
+    </div>
+    <div class="header-actions">
+      @if (canManage()) {
+      <!--
+          FIX: Use [routerLink] array binding (canonical Angular form).
+          Plain routerLink="..." works for static strings, but [routerLink]="[...]"
+          is the idiomatic form and avoids potential edge cases with string parsing.
+        -->
+      <button mat-raised-button color="primary" [routerLink]="['/school/academics/classes/new']">
+        <mat-icon>add</mat-icon> New Class
+      </button>
+      }
+      <button mat-icon-button (click)="loadClasses()" matTooltip="Refresh">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  @if (loading()) {
+  <div class="state-container">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading classes…</p>
+  </div>
+  } @else if (error()) {
+  <div class="state-container error">
+    <mat-icon class="state-icon">error_outline</mat-icon>
+    <h2>Could not load classes</h2>
+    <p>{{ error() }}</p>
+    <button mat-raised-button color="primary" (click)="loadClasses()">Retry</button>
+  </div>
+  } @else if (classes().length === 0) {
+  <div class="state-container">
+    <mat-icon class="state-icon">school</mat-icon>
+    <h2>No Classes Yet</h2>
+    <p>Add your first class to get started.</p>
+    @if (canManage()) {
+    <button mat-raised-button color="primary" [routerLink]="['/school/academics/classes/new']">
+      <mat-icon>add</mat-icon> Add First Class
+    </button>
+    }
+  </div>
+  } @else {
+  <div class="table-card">
+    <table mat-table [dataSource]="classes()" [trackBy]="trackById">
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Class Name</th>
+        <td mat-cell *matCellDef="let c">
+          <strong>{{ c.name }}</strong>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="level">
+        <th mat-header-cell *matHeaderCellDef>Level</th>
+        <td mat-cell *matCellDef="let c">
+          <span class="badge active">
+            {{ c.level === 0 ? 'Nursery' : 'Level ' + c.level }}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="sort_order">
+        <th mat-header-cell *matHeaderCellDef>Sort Order</th>
+        <td mat-cell *matCellDef="let c">{{ c.sort_order }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let c">
+          @if (canManage()) {
+          <div class="cell-actions">
+            <button mat-icon-button (click)="edit(c)" matTooltip="Edit class">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="delete(c)" matTooltip="Delete class">
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </div>
+          }
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+  </div>
+  }
+</div>

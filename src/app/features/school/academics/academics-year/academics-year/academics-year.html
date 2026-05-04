@@ -1,0 +1,221 @@
+<!-- academics-year.html -->
+<div class="page-container">
+  <!-- ── Header ─────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>Academic Years</h1>
+      <p>Manage and switch academic sessions for your school</p>
+    </div>
+    <div class="header-actions">
+      @if (canCreate()) {
+      <button mat-raised-button color="primary" routerLink="/school/academics/years/new">
+        <mat-icon>add</mat-icon> New Academic Year
+      </button>
+      }
+      <button mat-icon-button (click)="loadYears()" matTooltip="Refresh">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Active Year Banner ──────────────────────────────────────────── -->
+  @if (!loading() && !error() && currentYear()) {
+  <div class="active-year-banner">
+    <div class="active-year-indicator">
+      <span class="pulse-dot"></span>
+      <span class="active-label">Active Year</span>
+    </div>
+    <div class="active-year-info">
+      <strong>{{ currentYear()!.name }}</strong>
+      <span class="active-year-dates">
+        {{ currentYear()!.startDate | date : 'mediumDate' }} —
+        {{ currentYear()!.endDate | date : 'mediumDate' }}
+      </span>
+    </div>
+    <div class="active-year-note">
+      <mat-icon>info_outline</mat-icon>
+      All new records (enrollments, fees, attendance, exams) are saved under this year
+    </div>
+  </div>
+  }
+
+  <!-- ── How It Works Guide ──────────────────────────────────────────── -->
+  @if (!loading() && !error() && years().length > 1) {
+  <div class="guide-banner">
+    <div class="guide-icon">
+      <mat-icon>lightbulb_outline</mat-icon>
+    </div>
+    <div class="guide-content">
+      <strong>How Academic Year Switching Works</strong>
+      <ul class="guide-list">
+        <li>
+          <mat-icon class="guide-item-icon">check_circle_outline</mat-icon>
+          Only <strong>one year is active</strong> at a time — it's used for all new enrollments,
+          fees, attendance, and exams.
+        </li>
+        <li>
+          <mat-icon class="guide-item-icon">check_circle_outline</mat-icon>
+          <strong>Switching is safe</strong> — all historical data in the previous year stays intact
+          and can still be viewed.
+        </li>
+        <li>
+          <mat-icon class="guide-item-icon">check_circle_outline</mat-icon>
+          To start a new session, create the year first, then <strong>activate</strong> it when
+          you're ready.
+        </li>
+        <li>
+          <mat-icon class="guide-item-icon">warning_amber</mat-icon>
+          Students already enrolled in the previous year are
+          <strong>not automatically moved</strong> — use the promotion tools in the Students module.
+        </li>
+      </ul>
+    </div>
+  </div>
+  }
+
+  <!-- ── Info Banner (for single year — onboarding hint) ────────────── -->
+  @if (!loading() && !error() && years().length === 1) {
+  <div class="info-banner">
+    <mat-icon>info_outline</mat-icon>
+    <div>
+      <strong>Student Promotion</strong>
+      To promote students to the next class, go to
+      <a routerLink="/school/students">Students</a>, select a class-section, then use the promote
+      action on individual students or a selected group.
+    </div>
+  </div>
+  }
+
+  <!-- ── Loading ────────────────────────────────────────────────────── -->
+  @if (loading()) {
+  <div class="state-container">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading academic years…</p>
+  </div>
+  }
+
+  <!-- ── Error ──────────────────────────────────────────────────────── -->
+  @else if (error()) {
+  <div class="state-container error">
+    <mat-icon class="state-icon">error_outline</mat-icon>
+    <h2>Something went wrong</h2>
+    <p>{{ error() }}</p>
+    <button mat-raised-button color="primary" (click)="loadYears()">Try Again</button>
+  </div>
+  }
+
+  <!-- ── Empty ──────────────────────────────────────────────────────── -->
+  @else if (years().length === 0) {
+  <div class="state-container">
+    <mat-icon class="state-icon">calendar_today</mat-icon>
+    <h2>No Academic Years</h2>
+    <p>Create your first academic year to start enrolling students.</p>
+    @if (canCreate()) {
+    <button mat-raised-button color="primary" routerLink="/school/academics/years/new">
+      <mat-icon>add</mat-icon> Create First Year
+    </button>
+    }
+  </div>
+  }
+
+  <!-- ── Table ──────────────────────────────────────────────────────── -->
+  @else {
+  <div class="table-card">
+    <table mat-table [dataSource]="years()">
+      <!-- Name -->
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Year</th>
+        <td mat-cell *matCellDef="let y">
+          <div class="year-name-cell">
+            <strong>{{ y.name }}</strong>
+            @if (y.isCurrent) {
+            <span class="current-tag">Current</span>
+            }
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Start Date -->
+      <ng-container matColumnDef="startDate">
+        <th mat-header-cell *matHeaderCellDef>Start Date</th>
+        <td mat-cell *matCellDef="let y">{{ y.startDate | date : 'mediumDate' }}</td>
+      </ng-container>
+
+      <!-- End Date -->
+      <ng-container matColumnDef="endDate">
+        <th mat-header-cell *matHeaderCellDef>End Date</th>
+        <td mat-cell *matCellDef="let y">{{ y.endDate | date : 'mediumDate' }}</td>
+      </ng-container>
+
+      <!-- Status -->
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let y">
+          <div class="status-cell">
+            @if (y.isCurrent) {
+            <span class="status-badge active">
+              <span class="status-dot"></span>
+              Active
+            </span>
+            } @else {
+            <span class="status-badge inactive"> Inactive </span>
+            }
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Actions -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let y">
+          <div class="cell-actions">
+            <!-- Activate button — only shown for inactive years -->
+            @if (canActivate() && !y.isCurrent) {
+            <button
+              mat-stroked-button
+              color="primary"
+              class="activate-btn"
+              (click)="activate(y)"
+              [disabled]="activatingId() !== null"
+              matTooltip="Make this the current academic year"
+            >
+              @if (activatingId() === y.id) {
+              <mat-spinner
+                diameter="14"
+                style="display: inline-block; margin-right: 6px"
+              ></mat-spinner>
+              } @else {
+              <mat-icon>play_circle_outline</mat-icon>
+              } Activate
+            </button>
+            }
+
+            <!-- Active indicator for current year -->
+            @if (y.isCurrent) {
+            <span class="active-indicator" matTooltip="This is the current active year">
+              <mat-icon>check_circle</mat-icon>
+              Active
+            </span>
+            } @if (canEdit()) {
+            <button mat-icon-button (click)="edit(y)" matTooltip="Edit year">
+              <mat-icon>edit</mat-icon>
+            </button>
+            } @if (canDelete() && !y.isCurrent) {
+            <button mat-icon-button color="warn" (click)="delete(y.id)" matTooltip="Delete year">
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+            }
+          </div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr
+        mat-row
+        *matRowDef="let row; columns: displayedColumns"
+        [class.active-row]="row.isCurrent"
+      ></tr>
+    </table>
+  </div>
+  }
+</div>

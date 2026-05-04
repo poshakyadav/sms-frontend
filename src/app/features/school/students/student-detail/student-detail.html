@@ -1,0 +1,249 @@
+<!-- student-detail.html -->
+<div class="page-container">
+  <!-- ── Loading ──────────────────────────────────────────────────────── -->
+  @if (loading()) {
+  <div class="state-container">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading student profile…</p>
+  </div>
+  }
+
+  <!-- ── Error ────────────────────────────────────────────────────────── -->
+  @else if (error()) {
+  <div class="state-container error">
+    <mat-icon class="state-icon">error_outline</mat-icon>
+    <h2>Something went wrong</h2>
+    <p>{{ error() }}</p>
+    <button mat-raised-button color="primary" (click)="goBack()">Back to Students</button>
+  </div>
+  }
+
+  <!-- ── Content ──────────────────────────────────────────────────────── -->
+  @else if (student()) {
+  <!-- Back button -->
+  <button mat-button (click)="goBack()" class="back-btn">
+    <mat-icon>arrow_back</mat-icon> Back to Students
+  </button>
+
+  <!-- ── Hero card ───────────────────────────────────────────────────── -->
+  <div class="profile-hero">
+    <div class="avatar-section">
+      @if (student()!.avatarUrl) {
+      <img class="avatar-circle" [src]="student()!.avatarUrl" [alt]="student()!.name" />
+      } @else {
+      <div class="avatar-placeholder">
+        <span class="avatar-initials-lg">{{ getInitials(student()!.name) }}</span>
+      </div>
+      }
+    </div>
+
+    <div class="hero-info">
+      <h2 class="hero-name">{{ student()!.name }}</h2>
+      <p class="hero-email"><mat-icon>email</mat-icon>{{ student()!.email }}</p>
+
+      <div class="hero-meta">
+        @if (student()!.rollNumber) {
+        <span class="meta-item">
+          <mat-icon>badge</mat-icon> Roll: {{ student()!.rollNumber }}
+        </span>
+        } @if (student()!.gender) {
+        <span class="meta-item"> <mat-icon>person</mat-icon> {{ student()!.gender }} </span>
+        } @if (student()!.bloodGroup) {
+        <span class="meta-item blood">
+          <mat-icon>water_drop</mat-icon> {{ student()!.bloodGroup }}
+        </span>
+        } @if (student()!.phone) {
+        <span class="meta-item"> <mat-icon>phone</mat-icon> {{ student()!.phone }} </span>
+        }
+      </div>
+    </div>
+
+    <div class="hero-status">
+      <span
+        class="badge"
+        [class.active]="student()!.isActive"
+        [class.inactive]="!student()!.isActive"
+      >
+        {{ student()!.isActive ? 'Active' : 'Inactive' }}
+      </span>
+    </div>
+  </div>
+
+  <!-- ── Detail grid ─────────────────────────────────────────────────── -->
+  <div class="detail-grid">
+    <!-- Personal Info -->
+    <div class="detail-card">
+      <div class="detail-card-header">
+        <mat-icon>person</mat-icon>
+        <h3>Personal Information</h3>
+      </div>
+      <div class="detail-card-body">
+        <div class="field-list">
+          <div class="field-row">
+            <span class="field-label">Date of Birth</span>
+            <span class="field-value">{{
+              (student()!.dateOfBirth | date : 'mediumDate') || '—'
+            }}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Gender</span>
+            <span class="field-value">{{ student()!.gender || '—' }}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Blood Group</span>
+            <span class="field-value">{{ student()!.bloodGroup || '—' }}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Phone</span>
+            <span class="field-value">{{ student()!.phone || '—' }}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Alt. Phone</span>
+            <span class="field-value">{{ student()!.alternatePhone || '—' }}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Joined</span>
+            <span class="field-value">{{
+              (student()!.createdAt | date : 'mediumDate') || '—'
+            }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Academic Info -->
+    <div class="detail-card">
+      <div class="detail-card-header">
+        <mat-icon>school</mat-icon>
+        <h3>Academic Information</h3>
+      </div>
+      <div class="detail-card-body">
+        <div class="field-list">
+          <div class="field-row">
+            <span class="field-label">Roll Number</span>
+            <span class="field-value">{{ student()!.rollNumber || '—' }}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Admission Date</span>
+            <span class="field-value">{{
+              (student()!.admissionDate | date : 'mediumDate') || '—'
+            }}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Previous School</span>
+            <span class="field-value">{{ student()!.previousSchool || '—' }}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Medical Info</span>
+            <span class="field-value">{{ student()!.medicalInfo || '—' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Address -->
+    <div class="detail-card">
+      <div class="detail-card-header">
+        <mat-icon>location_on</mat-icon>
+        <h3>Address</h3>
+      </div>
+      <div class="detail-card-body">
+        <div class="field-list">
+          <div class="field-row">
+            <span class="field-label">Line 1</span>
+            <span class="field-value">{{ student()!.addressLineOne || '—' }}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Line 2</span>
+            <span class="field-value">{{ student()!.addressLineTwo || '—' }}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">City</span>
+            <span class="field-value">{{ student()!.city || '—' }}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">State</span>
+            <span class="field-value">{{ student()!.state || '—' }}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Postal Code</span>
+            <span class="field-value">{{ student()!.postalCode || '—' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Parents -->
+    <div class="detail-card">
+      <div class="detail-card-header">
+        <mat-icon>family_restroom</mat-icon>
+        <h3>Parents / Guardians ({{ student()!.parents.length }})</h3>
+      </div>
+      <div class="detail-card-body no-pad">
+        @if (!student()!.parents.length) {
+        <p class="empty-inner">No parents linked.</p>
+        } @else { @for (parent of student()!.parents; track parent.parentId) {
+        <div class="parent-row">
+          <div class="parent-info">
+            <span class="parent-name">{{ parent.parentName }}</span>
+            <span class="parent-rel">{{ parent.relationship }}</span>
+            @if (parent.isPrimary) {
+            <span class="badge primary-parent">Primary</span>
+            }
+          </div>
+          <div class="parent-contact">
+            <span>{{ parent.parentEmail }}</span>
+            @if (parent.parentPhone) {
+            <span>{{ parent.parentPhone }}</span>
+            }
+          </div>
+        </div>
+        } }
+      </div>
+    </div>
+
+    <!-- Enrollments -->
+    <div class="detail-card full-width">
+      <div class="detail-card-header">
+        <mat-icon>class</mat-icon>
+        <!-- Use .length directly — enrollments is always an array, never null/undefined -->
+        <h3>Enrollments ({{ student()!.enrollments.length }})</h3>
+      </div>
+      <div class="detail-card-body no-pad overflow-x">
+        @if (!student()!.enrollments.length) {
+        <p class="empty-inner">No enrollments found.</p>
+        } @else {
+        <table mat-table [dataSource]="student()!.enrollments">
+          <ng-container matColumnDef="class">
+            <th mat-header-cell *matHeaderCellDef>Class / Section</th>
+            <td mat-cell *matCellDef="let e">
+              <strong>{{ e.className }}</strong> — {{ e.sectionName }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="rollNumber">
+            <th mat-header-cell *matHeaderCellDef>Roll No.</th>
+            <td mat-cell *matCellDef="let e">{{ e.rollNumber || '—' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="enrollmentDate">
+            <th mat-header-cell *matHeaderCellDef>Enrolled On</th>
+            <td mat-cell *matCellDef="let e">
+              {{ (e.enrollmentDate | date : 'mediumDate') || '—' }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let e">
+              <span class="badge" [class.active]="e.isActive" [class.inactive]="!e.isActive">
+                {{ e.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="enrollmentColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: enrollmentColumns"></tr>
+        </table>
+        }
+      </div>
+    </div>
+  </div>
+  }
+</div>

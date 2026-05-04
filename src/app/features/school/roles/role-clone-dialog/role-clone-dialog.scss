@@ -1,0 +1,270 @@
+// role-clone-dialog.scss
+// Production-grade styles for the Role Clone dialog
+// Full theming via CSS custom properties from global styles.scss
+
+.rcd-shell {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+// ── Header ───────────────────────────────────────────────────────────────────
+
+.rcd-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 18px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  gap: 12px;
+  background: var(--color-bg-surface);
+}
+
+.rcd-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.rcd-header-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.28);
+
+  mat-icon {
+    color: #fff;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.rcd-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 2px;
+  letter-spacing: -0.2px;
+}
+
+.rcd-subtitle {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+
+  strong {
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+}
+
+.rcd-close {
+  color: var(--color-text-muted) !important;
+  flex-shrink: 0;
+
+  &:hover {
+    background: var(--color-hover) !important;
+    color: var(--color-text-primary) !important;
+  }
+}
+
+// ── Body ─────────────────────────────────────────────────────────────────────
+
+.rcd-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+// ── Info Banner ───────────────────────────────────────────────────────────────
+
+.rcd-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--color-active);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--color-primary);
+
+  .rcd-banner-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: var(--color-primary);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .rcd-banner-content {
+    min-width: 0;
+
+    .rcd-banner-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      margin: 0 0 3px;
+    }
+
+    .rcd-banner-desc {
+      font-size: 0.78rem;
+      color: var(--color-text-secondary);
+      margin: 0;
+      line-height: 1.5;
+    }
+  }
+}
+
+// ── Category Inheritance Notice ───────────────────────────────────────────────
+
+.rcd-category-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  border-radius: var(--radius-md);
+  border: 2px solid;
+  cursor: default;
+  transition: none;
+
+  .rcd-cat-icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+
+  .rcd-cat-text {
+    flex: 1;
+    min-width: 0;
+
+    .rcd-cat-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+
+    .rcd-cat-hint {
+      display: block;
+      font-size: 0.75rem;
+      line-height: 1.4;
+      opacity: 0.8;
+
+      strong {
+        font-weight: 700;
+      }
+    }
+  }
+
+  .rcd-cat-lock {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    opacity: 0.55;
+    flex-shrink: 0;
+  }
+
+  &.rcd-category-notice--staff {
+    background: rgba(37, 99, 235, 0.07);
+    border-color: rgba(37, 99, 235, 0.3);
+    color: #2563eb;
+  }
+
+  &.rcd-category-notice--student {
+    background: rgba(5, 150, 105, 0.07);
+    border-color: rgba(5, 150, 105, 0.3);
+    color: #059669;
+  }
+
+  &.rcd-category-notice--parent {
+    background: rgba(217, 119, 6, 0.07);
+    border-color: rgba(217, 119, 6, 0.3);
+    color: #d97706;
+  }
+}
+
+// ── Form ─────────────────────────────────────────────────────────────────────
+
+.rcd-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .rcd-field {
+    width: 100%;
+  }
+}
+
+.rcd-optional {
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+// ── Footer ────────────────────────────────────────────────────────────────────
+
+.rcd-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--color-border);
+  flex-shrink: 0;
+  background: var(--color-bg-surface);
+}
+
+.rcd-btn-cancel {
+  color: var(--color-text-secondary) !important;
+  border-color: var(--color-border) !important;
+  border-radius: var(--radius-sm) !important;
+  font-weight: 500 !important;
+  height: 40px !important;
+
+  &:hover:not(:disabled) {
+    background: var(--color-hover) !important;
+    border-color: var(--color-text-muted) !important;
+  }
+}
+
+.rcd-btn-clone {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+  color: #fff !important;
+  border-radius: var(--radius-sm) !important;
+  font-weight: 600 !important;
+  height: 40px !important;
+  min-width: 120px !important;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3) !important;
+  transition: box-shadow 0.2s ease, transform 0.15s ease !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4) !important;
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.5 !important;
+  }
+}
+
+.rcd-btn-spinner {
+  .mat-mdc-progress-spinner circle {
+    stroke: rgba(255, 255, 255, 0.85);
+  }
+}

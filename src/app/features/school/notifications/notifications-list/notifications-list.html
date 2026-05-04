@@ -1,0 +1,198 @@
+<!-- notifications-list.html -->
+<div class="page-container">
+  <!-- ── Page Header ─────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="header-left">
+      <div class="header-icon-wrap">
+        <mat-icon>notifications</mat-icon>
+      </div>
+      <div>
+        <h1>Notifications</h1>
+        <p>
+          @if (notificationService.unreadCount() > 0) {
+          {{ notificationService.unreadCount() }} unread notification{{
+            notificationService.unreadCount() === 1 ? '' : 's'
+          }}
+          } @else { You're all caught up! }
+        </p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      @if (unreadFiltered() > 0) {
+      <button mat-stroked-button (click)="markAllAsRead()" matTooltip="Mark all as read">
+        <mat-icon>done_all</mat-icon>
+        Mark all read
+      </button>
+      }
+      <button mat-icon-button (click)="retry()" matTooltip="Refresh">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Filter Toolbar ────────────────────────────────────────────────── -->
+  <div class="filter-toolbar">
+    <!-- Search -->
+    <div class="search-wrap">
+      <mat-icon class="search-icon">search</mat-icon>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="Search notifications…"
+        [value]="searchTerm()"
+        (input)="onSearch($event)"
+      />
+      @if (searchTerm()) {
+      <button class="search-clear" (click)="searchTerm.set('')" mat-icon-button>
+        <mat-icon>close</mat-icon>
+      </button>
+      }
+    </div>
+
+    <!-- Filter pills -->
+    <div class="filter-pills">
+      <button class="filter-pill" [class.active]="filter() === 'all'" (click)="setFilter('all')">
+        All
+        <span class="pill-count">{{ notifications().length }}</span>
+      </button>
+      <button
+        class="filter-pill"
+        [class.active]="filter() === 'unread'"
+        (click)="setFilter('unread')"
+      >
+        Unread @if (notificationService.unreadCount() > 0) {
+        <span class="pill-count unread">{{ notificationService.unreadCount() }}</span>
+        }
+      </button>
+      <button class="filter-pill" [class.active]="filter() === 'read'" (click)="setFilter('read')">
+        Read
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Loading Skeletons ──────────────────────────────────────────────── -->
+  @if (loading() && notifications().length === 0) {
+  <div class="skeleton-list">
+    @for (_ of skeletons; track $index) {
+    <div class="skeleton-card">
+      <div class="skeleton-avatar"></div>
+      <div class="skeleton-lines">
+        <div class="skeleton-line w-60"></div>
+        <div class="skeleton-line w-90"></div>
+        <div class="skeleton-line w-30"></div>
+      </div>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- ── Error State ────────────────────────────────────────────────────── -->
+  @if (error() && !loading()) {
+  <div class="state-container error">
+    <mat-icon class="state-icon">error_outline</mat-icon>
+    <h2>Failed to load notifications</h2>
+    <p>{{ error() }}</p>
+    <button mat-raised-button color="primary" (click)="retry()">
+      <mat-icon>refresh</mat-icon> Try Again
+    </button>
+  </div>
+  }
+
+  <!-- ── Empty State ────────────────────────────────────────────────────── -->
+  @if (!loading() && !error() && filteredNotifications().length === 0) {
+  <div class="state-container">
+    <div class="empty-icon-wrap">
+      <mat-icon class="state-icon">notifications_none</mat-icon>
+    </div>
+    <h2>
+      @if (searchTerm()) { No results found } @else if (filter() === 'unread') { No unread
+      notifications } @else { You're all caught up! }
+    </h2>
+    <p>
+      @if (searchTerm()) { Try a different search term } @else { Check back later for new
+      notifications }
+    </p>
+  </div>
+  }
+
+  <!-- ── Notification List ──────────────────────────────────────────────── -->
+  @if (!loading() && filteredNotifications().length > 0) {
+  <div class="notifications-list">
+    @for (n of filteredNotifications(); track n.id) {
+    <div
+      class="notification-card"
+      [class.unread]="!n.isRead"
+      (click)="markAsRead(n)"
+      role="button"
+      tabindex="0"
+      (keydown.enter)="markAsRead(n)"
+    >
+      <!-- Icon -->
+      <div class="notif-icon-wrap" [class.unread-icon]="!n.isRead">
+        <mat-icon>{{ n.link ? 'link' : 'notifications' }}</mat-icon>
+      </div>
+
+      <!-- Body -->
+      <div class="notif-body">
+        <div class="notif-title-row">
+          <span class="notif-title">{{ n.title }}</span>
+          @if (!n.isRead) {
+          <span class="unread-dot" aria-label="Unread"></span>
+          }
+        </div>
+
+        <p class="notif-message">{{ n.message }}</p>
+
+        <div class="notif-meta">
+          <span class="notif-time">
+            <mat-icon class="meta-icon">schedule</mat-icon>
+            {{ getTimeAgo(n.createdAt) }}
+          </span>
+
+          @if (n.dueDate) {
+          <span class="badge due">
+            <mat-icon class="badge-icon">event</mat-icon>
+            Due {{ n.dueDate | date : 'shortDate' }}
+          </span>
+          } @if (n.link) {
+          <span class="badge has-link">
+            <mat-icon class="badge-icon">open_in_new</mat-icon>
+            Has link
+          </span>
+          }
+        </div>
+      </div>
+
+      <!-- Admin action -->
+      @if (canSend()) {
+      <div class="notif-actions">
+        <button
+          mat-icon-button
+          matTooltip="View delivery report"
+          (click)="viewReport(n.id, $event)"
+          class="report-btn"
+        >
+          <mat-icon>bar_chart</mat-icon>
+        </button>
+      </div>
+      }
+    </div>
+    }
+  </div>
+  }
+</div>
+
+<!-- ── Create FAB (Admin only) ─────────────────────────────────────────── -->
+@if (canSend()) {
+<button
+  mat-fab
+  color="primary"
+  class="fab-create"
+  (click)="createNewNotification()"
+  matTooltip="Create notification"
+  matTooltipPosition="left"
+>
+  <mat-icon>add</mat-icon>
+</button>
+}

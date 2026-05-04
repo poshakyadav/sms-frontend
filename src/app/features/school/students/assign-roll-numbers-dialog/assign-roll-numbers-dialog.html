@@ -1,0 +1,221 @@
+<!-- assign-roll-numbers-dialog.html -->
+
+<div class="dialog-shell" [class.success-state]="success()">
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <div class="dialog-header">
+    <div class="header-icon" [class.success-icon]="success()">
+      @if (success()) {
+      <mat-icon>task_alt</mat-icon>
+      } @else {
+      <mat-icon>format_list_numbered</mat-icon>
+      }
+    </div>
+    <div class="header-text">
+      <h2 class="dialog-title">
+        {{ success() ? 'Roll Numbers Assigned!' : 'Assign Roll Numbers' }}
+      </h2>
+      <p class="dialog-subtitle">
+        @if (success()) { All {{ result()?.count }} students in
+        <strong>{{ data.className }} — {{ data.sectionName }}</strong>
+        have been assigned roll numbers. } @else {
+        <strong>{{ data.className }} — {{ data.sectionName }}</strong>
+        · {{ data.studentCount }} student{{ data.studentCount !== 1 ? 's' : '' }}
+        }
+      </p>
+    </div>
+    <button
+      mat-icon-button
+      class="close-btn"
+      (click)="close()"
+      [disabled]="loading()"
+      matTooltip="Close"
+    >
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- ── Success State ───────────────────────────────────────────────────── -->
+  @if (success()) {
+  <div class="success-body">
+    <div class="success-illustration">
+      <div class="success-ring ring-1"></div>
+      <div class="success-ring ring-2"></div>
+      <div class="success-checkmark">
+        <mat-icon>check</mat-icon>
+      </div>
+    </div>
+
+    <div class="success-details">
+      <div class="success-stat">
+        <span class="stat-number">{{ result()?.count }}</span>
+        <span class="stat-label">Students Updated</span>
+      </div>
+      <div class="success-divider"></div>
+      <div class="success-stat">
+        <mat-icon class="stat-icon">sort_by_alpha</mat-icon>
+        <span class="stat-label">
+          {{ result()?.orderBy === 'name' ? 'Alphabetical order' : 'Admission date order' }}
+        </span>
+      </div>
+    </div>
+
+    <p class="success-note">
+      <mat-icon>info_outline</mat-icon>
+      Roll numbers start from <strong>001</strong> and increment sequentially. Students who are
+      later enrolled will continue from the last assigned number.
+    </p>
+
+    <button mat-raised-button color="primary" class="done-btn" (click)="close()">
+      <mat-icon>check_circle</mat-icon>
+      Done
+    </button>
+  </div>
+
+  } @else {
+
+  <!-- ── Main Form Body ──────────────────────────────────────────────────── -->
+  <div class="dialog-body">
+    <!-- ── Context Banner ───────────────────────────────────────────────── -->
+    @if (data.hasExistingRollNumbers) {
+    <div class="warning-banner">
+      <mat-icon>warning_amber</mat-icon>
+      <div class="warning-text">
+        <strong>Existing roll numbers will be overwritten.</strong>
+        All students in this class-section will receive new roll numbers based on the order you
+        select below.
+      </div>
+    </div>
+    } @else {
+    <div class="info-banner">
+      <mat-icon>lightbulb_outline</mat-icon>
+      <div class="info-text">
+        Roll numbers will be assigned sequentially starting from
+        <strong>001</strong>. Students without roll numbers will receive them based on the sort
+        order you choose.
+      </div>
+    </div>
+    }
+
+    <!-- ── Order Selection ──────────────────────────────────────────────── -->
+    <div class="section-label">
+      <mat-icon>swap_vert</mat-icon>
+      <span>Choose sort order</span>
+    </div>
+
+    <div class="order-options">
+      <!-- Alphabetical -->
+      <button
+        class="order-card"
+        [class.selected]="orderBy() === 'name'"
+        (click)="setOrderBy('name')"
+        type="button"
+      >
+        <div class="order-card-radio">
+          <div class="radio-outer" [class.active]="orderBy() === 'name'">
+            @if (orderBy() === 'name') {
+            <div class="radio-inner"></div>
+            }
+          </div>
+        </div>
+        <div class="order-card-content">
+          <div class="order-card-icon">
+            <mat-icon>sort_by_alpha</mat-icon>
+          </div>
+          <div class="order-card-info">
+            <span class="order-card-title">Alphabetical</span>
+            <span class="order-card-desc">Sort by student name A → Z</span>
+          </div>
+        </div>
+        @if (orderBy() === 'name') {
+        <div class="selected-badge">
+          <mat-icon>check</mat-icon>
+        </div>
+        }
+      </button>
+
+      <!-- Admission Date -->
+      <button
+        class="order-card"
+        [class.selected]="orderBy() === 'admissionDate'"
+        (click)="setOrderBy('admissionDate')"
+        type="button"
+      >
+        <div class="order-card-radio">
+          <div class="radio-outer" [class.active]="orderBy() === 'admissionDate'">
+            @if (orderBy() === 'admissionDate') {
+            <div class="radio-inner"></div>
+            }
+          </div>
+        </div>
+        <div class="order-card-content">
+          <div class="order-card-icon">
+            <mat-icon>calendar_month</mat-icon>
+          </div>
+          <div class="order-card-info">
+            <span class="order-card-title">Admission Date</span>
+            <span class="order-card-desc">Oldest admitted student gets 001</span>
+          </div>
+        </div>
+        @if (orderBy() === 'admissionDate') {
+        <div class="selected-badge">
+          <mat-icon>check</mat-icon>
+        </div>
+        }
+      </button>
+    </div>
+
+    <!-- ── Live Preview ──────────────────────────────────────────────────── -->
+    <div class="preview-section">
+      <div class="preview-label">
+        <mat-icon>preview</mat-icon>
+        <span>Preview — how roll numbers will be assigned</span>
+      </div>
+
+      <div class="preview-table">
+        <div class="preview-header">
+          <span class="col-roll">Roll No.</span>
+          <span class="col-name">Student Name</span>
+        </div>
+        @for (ex of exampleRolls(); track ex.roll) {
+        <div class="preview-row">
+          <span class="col-roll">
+            <span class="roll-pill">{{ ex.roll }}</span>
+          </span>
+          <span class="col-name preview-name">{{ ex.name }}</span>
+        </div>
+        }
+        <div class="preview-row muted">
+          <span class="col-roll">
+            <span class="roll-pill muted">···</span>
+          </span>
+          <span class="col-name preview-name muted">and so on…</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Footer ─────────────────────────────────────────────────────────── -->
+  <div class="dialog-footer">
+    <button mat-button class="cancel-btn" (click)="close()" [disabled]="loading()">Cancel</button>
+
+    <button
+      mat-raised-button
+      color="primary"
+      class="assign-btn"
+      (click)="assign()"
+      [disabled]="loading()"
+    >
+      @if (loading()) {
+      <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+      <span>Assigning…</span>
+      } @else {
+      <ng-container>
+        <mat-icon>format_list_numbered</mat-icon>
+        <span>Assign Roll Numbers</span>
+      </ng-container>
+      }
+    </button>
+  </div>
+
+  }
+</div>

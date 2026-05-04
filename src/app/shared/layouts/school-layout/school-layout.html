@@ -1,0 +1,18 @@
+<!-- School Portal Layout: Header + Sidebar + Content -->
+<div class="school-layout-root">
+  <!-- ── Sticky Top Header (passes hamburger event down) ── -->
+  <app-school-header class="school-layout-header" (hamburgerClick)="openMobileSidebar()" />
+
+  <!-- ── Body: Sidebar + Main ── -->
+  <div class="school-layout-body">
+    <!-- Sidebar (desktop persistent, mobile overlay) -->
+    <app-school-sidebar class="school-layout-sidebar" />
+
+    <!-- Page Content -->
+    <main class="school-main-content">
+      <router-outlet />
+    </main>
+  </div>
+
+  <!-- ── Future: School Footer ── -->
+</div>

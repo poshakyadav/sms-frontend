@@ -1,0 +1,878 @@
+// parent-student-link.scss
+// Full CSS-variable theming — adapts to any school theme automatically
+
+// ── Page Container ─────────────────────────────────────────────────────────────
+.psl-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 20px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+// ── Skeleton loader (matches dashboard pattern) ───────────────────────────────
+@keyframes pslShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+%skeleton-base {
+  background: linear-gradient(
+    90deg,
+    var(--color-hover) 25%,
+    var(--color-divider) 50%,
+    var(--color-hover) 75%
+  );
+  background-size: 200% 100%;
+  animation: pslShimmer 1.4s infinite;
+  border-radius: var(--radius-md);
+}
+
+.psl-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.skeleton-hero {
+  @extend %skeleton-base;
+  height: 104px;
+  border-radius: var(--radius-lg);
+}
+
+.skeleton-tabs {
+  @extend %skeleton-base;
+  height: 52px;
+  width: 420px;
+  max-width: 100%;
+  border-radius: var(--radius-md);
+}
+
+.skeleton-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.skeleton-step-header {
+  @extend %skeleton-base;
+  height: 56px;
+  border-radius: var(--radius-md);
+}
+
+.skeleton-search {
+  @extend %skeleton-base;
+  height: 48px;
+  border-radius: var(--radius-md);
+}
+
+.skeleton-empty {
+  @extend %skeleton-base;
+  height: 180px;
+  border-radius: var(--radius-lg);
+}
+
+// ── Hero Header ───────────────────────────────────────────────────────────────
+.psl-hero {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-primary) 10%, var(--color-bg-surface)),
+    color-mix(in srgb, var(--color-secondary, var(--color-primary)) 6%, var(--color-bg-surface))
+  );
+  border: 1px solid var(--color-border);
+  border-left: 5px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  padding: 28px 32px;
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: -40px;
+    top: -40px;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+    pointer-events: none;
+  }
+}
+
+.psl-hero-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.psl-hero-icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    color: var(--color-primary);
+  }
+}
+
+.psl-hero-title {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+}
+
+.psl-hero-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+// ── Workflow Tabs ─────────────────────────────────────────────────────────────
+.psl-tabs-wrap {
+  position: sticky;
+  top: 64px;
+  z-index: 10;
+  background: var(--color-bg-main);
+  padding: 4px 0 8px;
+}
+
+.psl-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 5px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  width: fit-content;
+}
+
+.psl-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.87rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover:not(.active) {
+    background: var(--color-hover);
+    color: var(--color-text-primary);
+  }
+
+  &.active {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    font-weight: 700;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 35%, transparent);
+  }
+
+  @media (max-width: 520px) {
+    padding: 9px 14px;
+    font-size: 0.82rem;
+
+    span {
+      display: none;
+    }
+  }
+}
+
+// ── Panel (tab content wrapper) ───────────────────────────────────────────────
+.psl-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+// ── Step Block ────────────────────────────────────────────────────────────────
+.psl-step {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+
+  &.psl-step-manager {
+    border-color: color-mix(in srgb, var(--color-primary) 25%, var(--color-border));
+    background: color-mix(in srgb, var(--color-primary) 2%, var(--color-bg-surface));
+  }
+}
+
+.psl-step-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.psl-step-header-row {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.psl-step-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.psl-step-title {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.psl-step-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+}
+
+// ── Profile Quick Link ─────────────────────────────────────────────────────────
+.psl-profile-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  background: transparent;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 15px;
+    width: 15px;
+    height: 15px;
+  }
+
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  }
+}
+
+// ── Search Input ──────────────────────────────────────────────────────────────
+.psl-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  background: var(--color-bg-card);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 10%, transparent);
+  }
+
+  &.has-value .psl-search-icon {
+    color: var(--color-primary);
+  }
+}
+
+.psl-search-icon {
+  font-size: 20px !important;
+  width: 20px !important;
+  height: 20px !important;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.psl-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.92rem;
+  color: var(--color-text-primary);
+  font-family: inherit;
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+}
+
+.psl-search-spinner {
+  flex-shrink: 0;
+}
+
+.psl-clear-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: color 0.15s, background 0.15s;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    color: var(--color-error);
+    background: rgba(239, 68, 68, 0.08);
+  }
+}
+
+// ── Search Results List ───────────────────────────────────────────────────────
+.psl-results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 320px;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 4px;
+  }
+}
+
+.psl-result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  font-family: inherit;
+  transition: all 0.15s;
+
+  &:hover {
+    background: var(--color-hover);
+    border-color: var(--color-primary);
+    transform: translateX(3px);
+  }
+
+  &:hover .psl-result-arrow {
+    color: var(--color-primary);
+    transform: translateX(3px);
+  }
+}
+
+.psl-result-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.02em;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.psl-result-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.psl-result-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.psl-result-meta {
+  font-size: 0.77rem;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.psl-result-class {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.72rem;
+  color: var(--color-primary);
+  font-weight: 500;
+
+  mat-icon {
+    font-size: 12px;
+    width: 12px;
+    height: 12px;
+  }
+}
+
+.psl-result-roll {
+  color: var(--color-text-secondary);
+  font-weight: 400;
+}
+
+.psl-result-children-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+  border-radius: 9999px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 13px;
+    width: 13px;
+    height: 13px;
+  }
+}
+
+.psl-result-arrow {
+  font-size: 20px !important;
+  width: 20px !important;
+  height: 20px !important;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  transition: color 0.15s, transform 0.15s;
+}
+
+// ── No Results ────────────────────────────────────────────────────────────────
+.psl-no-results {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  background: var(--color-hover);
+  border-radius: var(--radius-sm);
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+}
+
+// ── Selected Student Card ────────────────────────────────────────────────────
+.psl-selected-student-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: color-mix(in srgb, var(--color-primary) 5%, var(--color-bg-card));
+  border: 1.5px solid color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
+  border-radius: var(--radius-md);
+  flex-wrap: wrap;
+}
+
+.psl-sscard-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.psl-sscard-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.psl-sscard-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.psl-sscard-email {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.psl-sscard-class {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.77rem;
+  color: var(--color-primary);
+  font-weight: 500;
+
+  mat-icon {
+    font-size: 13px;
+    width: 13px;
+    height: 13px;
+  }
+}
+
+.psl-sscard-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  border-radius: 9999px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
+}
+
+// ── Parent Card (by-parent tab) ───────────────────────────────────────────────
+.psl-parent-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  background: var(--color-bg-card);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  flex-wrap: wrap;
+}
+
+.psl-parent-card-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.psl-parent-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.psl-parent-card-name {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.psl-parent-card-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+}
+
+.psl-parent-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+
+  mat-icon {
+    font-size: 14px !important;
+    width: 14px !important;
+    height: 14px !important;
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+  }
+}
+
+.psl-parent-children-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  color: var(--color-success);
+  border-radius: var(--radius-md);
+  font-size: 0.82rem;
+  font-weight: 700;
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+// ── Info Note ─────────────────────────────────────────────────────────────────
+.psl-info-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  background: color-mix(in srgb, var(--color-info) 6%, var(--color-bg-card));
+  border: 1px solid color-mix(in srgb, var(--color-info) 20%, var(--color-border));
+  border-radius: var(--radius-sm);
+  font-size: 0.83rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+
+  mat-icon {
+    font-size: 18px !important;
+    width: 18px !important;
+    height: 18px !important;
+    color: var(--color-info);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  strong {
+    color: var(--color-text-primary);
+  }
+}
+
+// ── Empty State ───────────────────────────────────────────────────────────────
+.psl-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 56px 24px;
+  text-align: center;
+  background: var(--color-bg-surface);
+  border: 1.5px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+
+  h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.87rem;
+    color: var(--color-text-secondary);
+    max-width: 340px;
+    line-height: 1.6;
+  }
+}
+
+.psl-empty-icon-wrap {
+  width: 68px;
+  height: 68px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  mat-icon {
+    font-size: 34px;
+    width: 34px;
+    height: 34px;
+    color: var(--color-primary);
+    opacity: 0.6;
+  }
+}
+
+// ── Dark mode ─────────────────────────────────────────────────────────────────
+[data-theme='dark'] {
+  .psl-step,
+  .psl-selected-student-card,
+  .psl-parent-card,
+  .psl-result-item {
+    background: #1e2433;
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .psl-step.psl-step-manager {
+    background: color-mix(in srgb, var(--color-primary) 4%, #1e2433);
+  }
+
+  .psl-hero {
+    background: color-mix(in srgb, var(--color-primary) 8%, #1a2035);
+    border-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .psl-empty-state {
+    background: #1e2433;
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .psl-tabs {
+    background: #1e2433;
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .psl-tabs-wrap {
+    background: var(--color-bg-main);
+  }
+
+  .psl-search-wrap {
+    background: #161b27;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .psl-results-list .psl-result-item {
+    background: #1e2433;
+    border-color: rgba(255, 255, 255, 0.07);
+  }
+
+  .skeleton-hero,
+  .skeleton-tabs,
+  .skeleton-step-header,
+  .skeleton-search,
+  .skeleton-empty {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.04) 25%,
+      rgba(255, 255, 255, 0.08) 50%,
+      rgba(255, 255, 255, 0.04) 75%
+    );
+    background-size: 200% 100%;
+    animation: pslShimmer 1.4s infinite;
+  }
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+@media (max-width: 640px) {
+  .psl-page {
+    padding: 16px 14px 40px;
+    gap: 20px;
+  }
+
+  .psl-hero {
+    padding: 20px;
+  }
+
+  .psl-hero-title {
+    font-size: 1.25rem;
+  }
+
+  .psl-step {
+    padding: 18px 16px;
+  }
+
+  .psl-tabs {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .psl-tab {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .psl-parent-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

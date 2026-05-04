@@ -1,0 +1,11 @@
+@use '../../../../../shared/styles/fees-shared' as *;
+
+// ── Inline loading row (spinner + label side by side) ─────────────────────────
+// Used inside the controls-card and the payment panel while fetching data.
+.inline-loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}

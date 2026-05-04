@@ -1,0 +1,84 @@
+<div class="form-page">
+  <header>
+    <div>
+      <h1>{{ isEdit() ? 'Edit' : 'New' }} Academic Year</h1>
+      <p class="subtitle">Define the session name and start/end dates</p>
+    </div>
+    <button mat-stroked-button (click)="router.navigate(['/school/academics/years'])">
+      <mat-icon>arrow_back</mat-icon> Back
+    </button>
+  </header>
+
+  <div class="form-card">
+    @if (loading()) {
+    <div class="loading-overlay">
+      <mat-spinner diameter="44"></mat-spinner>
+      <p>Loading…</p>
+    </div>
+    } @else {
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-layout">
+      <!-- Year name -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Year Name</mat-label>
+        <input matInput formControlName="name" placeholder="2025-2026" />
+        <mat-hint>Format: YYYY-YYYY</mat-hint>
+        @if (form.get('name')?.errors?.['required'] && form.get('name')?.touched) {
+        <mat-error>Year name is required</mat-error>
+        } @if (form.get('name')?.errors?.['pattern'] && form.get('name')?.touched) {
+        <mat-error>Format must be YYYY-YYYY (e.g. 2025-2026)</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Dates -->
+      <div class="date-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Start Date</mat-label>
+          <input
+            matInput
+            [matDatepicker]="startPicker"
+            formControlName="startDate"
+            (dateChange)="onStartDateChange($event.value)"
+          />
+          <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+          <mat-datepicker #startPicker></mat-datepicker>
+          @if (form.get('startDate')?.errors?.['required'] && form.get('startDate')?.touched) {
+          <mat-error>Start date is required</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>End Date</mat-label>
+          <input matInput [matDatepicker]="endPicker" formControlName="endDate" />
+          <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+          <mat-datepicker #endPicker></mat-datepicker>
+          @if (form.get('endDate')?.errors?.['required'] && form.get('endDate')?.touched) {
+          <mat-error>End date is required</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="router.navigate(['/school/academics/years'])"
+        >
+          Cancel
+        </button>
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="form.invalid || submitting()"
+        >
+          @if (submitting()) {
+          <mat-spinner diameter="18" style="display: inline-block; margin-right: 8px"></mat-spinner>
+          }
+          {{ isEdit() ? 'Update Year' : 'Create Year' }}
+        </button>
+      </div>
+    </form>
+    }
+  </div>
+</div>

@@ -1,0 +1,686 @@
+// src/app/features/super/super-login/super-login.scss
+
+// ── Design tokens ─────────────────────────────────────────────────────────────
+$bg-start: #667eea;
+$bg-end: #764ba2;
+$card-bg: rgba(255, 255, 255, 0.97);
+$primary: #4f46e5;
+$primary-h: #4338ca;
+$text: #1f2937;
+$muted: #6b7280;
+$dim: #9ca3af;
+$border: #e5e7eb;
+$danger: #dc2626;
+$success: #16a34a;
+$orange: #ea580c;
+$violet: #7c3aed;
+$green: #15803d;
+
+// ── Layout ────────────────────────────────────────────────────────────────────
+
+.auth-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, $bg-start 0%, $bg-end 100%);
+  padding: 24px 16px;
+}
+
+// ── Card ──────────────────────────────────────────────────────────────────────
+
+.login-card {
+  background: $card-bg;
+  backdrop-filter: blur(12px);
+  border-radius: 1.5rem;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.4) inset;
+  width: 100%;
+  max-width: 400px;
+  overflow: hidden;
+  animation: cardIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+// ── View block (inner padding wrapper, animates between views) ─────────────────
+
+.view-block {
+  padding: 2.25rem 2.25rem 2rem;
+  animation: viewIn 0.3s ease both;
+}
+
+@keyframes viewIn {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+// ── Back button ───────────────────────────────────────────────────────────────
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: none;
+  border: none;
+  color: $muted;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 1.25rem;
+  transition: color 0.2s;
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  &:hover {
+    color: $text;
+  }
+}
+
+// ── Card header ───────────────────────────────────────────────────────────────
+
+.card-header {
+  text-align: center;
+  margin-bottom: 1.75rem;
+
+  &.compact {
+    margin-bottom: 1.5rem;
+  }
+
+  h2 {
+    color: $text;
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0.75rem 0 0.375rem;
+  }
+
+  p {
+    color: $muted;
+    font-size: 0.875rem;
+    line-height: 1.55;
+    margin: 0;
+  }
+}
+
+.header-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  background: linear-gradient(135deg, rgba($primary, 0.15), rgba($primary, 0.05));
+  border: 1px solid rgba($primary, 0.2);
+
+  svg {
+    width: 24px;
+    height: 24px;
+    stroke: $primary;
+  }
+
+  &.accent-orange {
+    background: linear-gradient(135deg, rgba($orange, 0.12), rgba($orange, 0.04));
+    border-color: rgba($orange, 0.2);
+    svg {
+      stroke: $orange;
+    }
+  }
+  &.accent-violet {
+    background: linear-gradient(135deg, rgba($violet, 0.12), rgba($violet, 0.04));
+    border-color: rgba($violet, 0.2);
+    svg {
+      stroke: $violet;
+    }
+  }
+  &.accent-green {
+    background: linear-gradient(135deg, rgba($green, 0.12), rgba($green, 0.04));
+    border-color: rgba($green, 0.2);
+    svg {
+      stroke: $green;
+    }
+  }
+}
+
+// ── Setup banner ──────────────────────────────────────────────────────────────
+
+.setup-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  margin-bottom: 1.25rem;
+  animation: viewIn 0.3s ease both;
+
+  .setup-banner-icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .setup-banner-body {
+    flex: 1;
+    strong {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #92400e;
+    }
+    span {
+      font-size: 0.72rem;
+      color: #b45309;
+    }
+  }
+
+  .setup-banner-btn {
+    background: #f59e0b;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+    &:hover {
+      background: #d97706;
+    }
+  }
+}
+
+// ── Fields ────────────────────────────────────────────────────────────────────
+
+.field-group {
+  margin-bottom: 1.125rem;
+
+  label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: $text;
+    margin-bottom: 0.375rem;
+  }
+}
+
+.label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.375rem;
+
+  label {
+    margin-bottom: 0;
+  }
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: $primary;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+  &:hover {
+    color: $primary-h;
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .fi {
+    position: absolute;
+    left: 0.875rem;
+    width: 15px;
+    height: 15px;
+    stroke: $dim;
+    pointer-events: none;
+    transition: stroke 0.2s;
+  }
+
+  input {
+    width: 100%;
+    background: #f9fafb;
+    border: 1.5px solid $border;
+    border-radius: 0.625rem;
+    color: $text;
+    font-size: 0.9375rem;
+    padding: 0.7rem 2.75rem 0.7rem 2.625rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+
+    &::placeholder {
+      color: $dim;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: $primary;
+      box-shadow: 0 0 0 3px rgba($primary, 0.12);
+      background: #fff;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &:focus-within .fi {
+    stroke: $primary;
+  }
+
+  &.mismatch input {
+    border-color: $danger;
+    box-shadow: 0 0 0 3px rgba($danger, 0.1);
+  }
+}
+
+.vis-toggle {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.2rem;
+  color: $dim;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+  &:hover {
+    color: $muted;
+  }
+}
+
+.field-err {
+  color: $danger;
+  font-size: 0.75rem;
+  margin: 0.3rem 0 0;
+}
+
+// ── Email highlight ───────────────────────────────────────────────────────────
+
+.email-highlight {
+  color: $primary;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+// ── OTP grid ──────────────────────────────────────────────────────────────────
+
+.otp-grid {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin: 0.25rem 0 1.25rem;
+}
+
+.otp-box {
+  width: 48px;
+  height: 56px;
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  color: $text;
+  background: #f9fafb;
+  border: 1.5px solid $border;
+  border-radius: 0.625rem;
+  caret-color: $primary;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: $primary;
+    box-shadow: 0 0 0 3px rgba($primary, 0.12);
+    background: #fff;
+  }
+
+  &.filled {
+    border-color: rgba($primary, 0.4);
+    background: rgba($primary, 0.04);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// ── Resend row ────────────────────────────────────────────────────────────────
+
+.resend-row {
+  text-align: center;
+  font-size: 0.8125rem;
+  color: $muted;
+  margin-top: 1rem;
+}
+
+.resend-timer {
+  color: $dim;
+  font-size: 0.8rem;
+  margin-left: 0.25rem;
+}
+
+// ── Verifying row ─────────────────────────────────────────────────────────────
+
+.verifying-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: $muted;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+// ── Password strength ─────────────────────────────────────────────────────────
+
+.strength-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-top: 0.5rem;
+}
+
+.strength-bar {
+  display: flex;
+  gap: 3px;
+  flex: 1;
+
+  .seg {
+    height: 3px;
+    flex: 1;
+    background: #e5e7eb;
+    border-radius: 2px;
+    transition: background 0.25s;
+  }
+}
+
+.strength-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  min-width: 64px;
+  text-align: right;
+  transition: color 0.25s;
+}
+
+// ── Requirements list ─────────────────────────────────────────────────────────
+
+.req-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem 0.5rem;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.72rem;
+    color: $dim;
+    transition: color 0.2s;
+
+    svg {
+      width: 11px;
+      height: 11px;
+      flex-shrink: 0;
+      stroke: $dim;
+      transition: stroke 0.2s;
+    }
+
+    &.met {
+      color: $success;
+      svg {
+        stroke: $success;
+      }
+    }
+  }
+}
+
+// ── Error message ─────────────────────────────────────────────────────────────
+
+.error-msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  color: $danger;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  margin-bottom: 0.875rem;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+}
+
+// ── Primary button ────────────────────────────────────────────────────────────
+
+.primary-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #6366f1, $primary);
+  color: white;
+  border: none;
+  border-radius: 0.625rem;
+  padding: 0.8rem 1.25rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 4px 14px rgba($primary, 0.35);
+  margin-top: 0.5rem;
+  letter-spacing: 0.01em;
+
+  svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba($primary, 0.4);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.99);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+}
+
+// ── Spinner ───────────────────────────────────────────────────────────────────
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(white, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.65s linear infinite;
+  flex-shrink: 0;
+
+  &.sm {
+    width: 14px;
+    height: 14px;
+    border-color: rgba($primary, 0.25);
+    border-top-color: $primary;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ── Card footer ───────────────────────────────────────────────────────────────
+
+.card-footer {
+  text-align: center;
+  margin-top: 1.5rem;
+  color: $dim;
+  font-size: 0.75rem;
+}
+
+// ── Success view ──────────────────────────────────────────────────────────────
+
+.success-view {
+  text-align: center;
+  padding-top: 2rem;
+  padding-bottom: 2.25rem;
+
+  h2 {
+    color: $text;
+    font-size: 1.625rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 1rem 0 0.625rem;
+  }
+
+  p {
+    color: $muted;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    margin: 0 0 2rem;
+  }
+}
+
+.success-icon {
+  width: 68px;
+  height: 68px;
+  background: linear-gradient(135deg, rgba($success, 0.14), rgba($success, 0.04));
+  border: 1.5px solid rgba($success, 0.25);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  box-shadow: 0 0 28px rgba($success, 0.15);
+  animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+
+  svg {
+    width: 30px;
+    height: 30px;
+    stroke: $success;
+    filter: drop-shadow(0 0 4px rgba($success, 0.4));
+  }
+}
+
+@keyframes popIn {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+
+@media (max-width: 460px) {
+  .view-block {
+    padding: 1.75rem 1.25rem 1.5rem;
+  }
+
+  .otp-box {
+    width: 40px;
+    height: 50px;
+    font-size: 1.2rem;
+  }
+  .otp-grid {
+    gap: 0.375rem;
+  }
+
+  .req-list {
+    grid-template-columns: 1fr;
+  }
+
+  .card-header h2 {
+    font-size: 1.5rem;
+  }
+}
+
+@keyframes view-enter-kf {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes view-leave-kf {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+.view-enter {
+  animation: view-enter-kf 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.view-leave {
+  animation: view-leave-kf 200ms ease-in both;
+}

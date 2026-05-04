@@ -1,0 +1,183 @@
+<div class="fee-form-page">
+  <!-- ── Header ─────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>{{ isEdit() ? 'Edit' : 'New' }} Fee Structure</h1>
+      <p>
+        {{
+          isEdit()
+            ? 'Update fee details for this class-section'
+            : 'Define a new fee for a class-section'
+        }}
+      </p>
+    </div>
+    <div class="header-actions">
+      <button mat-stroked-button (click)="router.navigate(['/school/fees/structures'])">
+        <mat-icon>arrow_back</mat-icon> Back
+      </button>
+    </div>
+  </div>
+
+  @if (pageLoading()) {
+  <div class="loading-overlay">
+    <mat-spinner diameter="44"></mat-spinner>
+    <p>Loading…</p>
+  </div>
+  } @else {
+
+  <div class="form-card">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <!-- ── Section: Academic Context ────────────────────────────── -->
+      <div class="form-section">
+        <div class="form-section-title">Academic Context</div>
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Academic Year</mat-label>
+            <mat-select formControlName="academicYearId" required>
+              @for (year of academicYears(); track year.id) {
+              <mat-option [value]="year.id">
+                {{ year.name }}
+                @if (year.isCurrent) {
+                <span class="current-badge"> (Current)</span>
+                }
+              </mat-option>
+              }
+            </mat-select>
+            <mat-icon matPrefix>calendar_today</mat-icon>
+            <mat-error>Academic year is required</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Class — Section</mat-label>
+            <mat-select formControlName="classSectionId" required>
+              @for (cs of classSections(); track cs.id) {
+              <mat-option [value]="cs.id"> {{ cs.className }} – {{ cs.sectionName }} </mat-option>
+              }
+            </mat-select>
+            <mat-icon matPrefix>class</mat-icon>
+            <mat-error>Class-section is required</mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- ── Section: Fee Details ──────────────────────────────────── -->
+      <div class="form-section">
+        <div class="form-section-title">Fee Details</div>
+
+        <!-- Row 1: Fee Type (full-width so chips have room below) -->
+        <div class="fee-type-row">
+          <mat-form-field appearance="outline" class="fee-type-field">
+            <mat-label>Fee Type</mat-label>
+            <input
+              matInput
+              formControlName="feeType"
+              placeholder="e.g. Tuition, Sports, Lab…"
+              required
+              autocomplete="off"
+            />
+            <mat-icon matPrefix>label</mat-icon>
+            <mat-hint>Enter any fee type name or use a quick-fill below</mat-hint>
+            <mat-error>Fee type is required (min 3 characters)</mat-error>
+          </mat-form-field>
+
+          <!-- Quick-fill suggestion chips — placed OUTSIDE the form-field -->
+          <div class="fee-type-suggestions">
+            <span class="suggestions-label">Quick fill:</span>
+            @for (suggestion of feeTypeSuggestions; track suggestion) {
+            <button
+              type="button"
+              class="chip"
+              (click)="setFeeType(suggestion)"
+              [class.chip--active]="form.get('feeType')?.value === suggestion"
+            >
+              {{ suggestion }}
+            </button>
+            }
+          </div>
+        </div>
+
+        <!-- Row 2: Amount + Due Date -->
+        <div class="form-grid form-grid--two-col">
+          <!-- Amount — always a compact number field, never looks like textarea -->
+          <mat-form-field appearance="outline">
+            <mat-label>Amount (₹)</mat-label>
+            <input
+              matInput
+              type="number"
+              inputmode="numeric"
+              formControlName="amount"
+              placeholder="0"
+              required
+              min="1"
+              step="1"
+            />
+            <span matTextPrefix>₹&nbsp;</span>
+            <mat-hint>Enter amount in Rupees</mat-hint>
+            <mat-error>Enter a valid amount (min ₹1)</mat-error>
+          </mat-form-field>
+
+          <!-- Due Date — DD/MM/YYYY format via IndianDateAdapter -->
+          <mat-form-field appearance="outline">
+            <mat-label>Due Date</mat-label>
+            <input
+              matInput
+              [matDatepicker]="dueDatePicker"
+              formControlName="dueDate"
+              placeholder="DD/MM/YYYY"
+              readonly
+            />
+            <mat-datepicker-toggle matIconSuffix [for]="dueDatePicker"></mat-datepicker-toggle>
+            <mat-datepicker #dueDatePicker></mat-datepicker>
+            <mat-hint>Optional — leave blank for no due date</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <!-- Row 3: Mandatory toggle -->
+        <div class="toggle-row">
+          <mat-slide-toggle formControlName="isMandatory" color="primary">
+            Mandatory for all students in this class-section
+          </mat-slide-toggle>
+        </div>
+      </div>
+
+      <!-- ── Description ──────────────────────────────────────────── -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Description (optional)</mat-label>
+        <textarea
+          matInput
+          formControlName="description"
+          rows="3"
+          placeholder="Add any notes about this fee…"
+        ></textarea>
+        <mat-hint>Internal note — not shown to students</mat-hint>
+      </mat-form-field>
+
+      <!-- ── Actions ──────────────────────────────────────────────── -->
+      <div class="form-actions">
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="router.navigate(['/school/fees/structures'])"
+        >
+          Cancel
+        </button>
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="form.invalid || submitting()"
+        >
+          @if (submitting()) {
+          <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+          Saving… } @else {
+          <ng-container>
+            <mat-icon>save</mat-icon>
+            {{ isEdit() ? 'Update Structure' : 'Create Structure' }}
+          </ng-container>
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+  }
+</div>

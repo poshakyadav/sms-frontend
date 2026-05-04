@@ -1,0 +1,320 @@
+<!-- student-assignments.html -->
+<div class="sa-page">
+  <!-- ══ Hero Header ═══════════════════════════════════════════════════════ -->
+  <div class="sa-hero">
+    <div class="sa-hero__bg"></div>
+    <div class="sa-hero__content">
+      <div class="sa-hero__title-row">
+        <div class="sa-hero__icon-wrap">
+          <mat-icon>school</mat-icon>
+        </div>
+        <div>
+          <h1 class="sa-hero__title">My Assignments</h1>
+          <p class="sa-hero__sub">Track your tasks, deadlines &amp; progress</p>
+        </div>
+      </div>
+
+      <!-- Stats Strip -->
+      <div class="sa-stats">
+        <div class="sa-stat" [class.sa-stat--warn]="stats().overdue > 0">
+          <span class="sa-stat__val">{{ stats().overdue }}</span>
+          <span class="sa-stat__lbl">Overdue</span>
+        </div>
+        <div class="sa-stat sa-stat--accent">
+          <span class="sa-stat__val">{{ stats().pending }}</span>
+          <span class="sa-stat__lbl">Pending</span>
+        </div>
+        <div class="sa-stat sa-stat--success">
+          <span class="sa-stat__val">{{ stats().done }}</span>
+          <span class="sa-stat__lbl">Submitted</span>
+        </div>
+        <div class="sa-stat">
+          <span class="sa-stat__val">{{ stats().homework }}</span>
+          <span class="sa-stat__lbl">Homework</span>
+        </div>
+        <div class="sa-stat">
+          <span class="sa-stat__val">{{ stats().classwork }}</span>
+          <span class="sa-stat__lbl">Classwork</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Controls ══════════════════════════════════════════════════════════ -->
+  <div class="sa-controls">
+    <!-- Type chips -->
+    <div class="sa-chips">
+      <button
+        class="sa-chip"
+        [class.sa-chip--active]="activeType() === 'ALL'"
+        (click)="setTypeFilter('ALL')"
+      >
+        <mat-icon>all_inclusive</mat-icon> All
+        <span class="sa-chip__count">{{ stats().total }}</span>
+      </button>
+      <button
+        class="sa-chip sa-chip--assignment"
+        [class.sa-chip--active]="activeType() === 'ASSIGNMENT'"
+        (click)="setTypeFilter('ASSIGNMENT')"
+      >
+        <mat-icon>assignment</mat-icon> Assignments
+        <span class="sa-chip__count">{{ stats().assignments }}</span>
+      </button>
+      <button
+        class="sa-chip sa-chip--homework"
+        [class.sa-chip--active]="activeType() === 'HOME_WORK'"
+        (click)="setTypeFilter('HOME_WORK')"
+      >
+        <mat-icon>home</mat-icon> Homework
+        <span class="sa-chip__count">{{ stats().homework }}</span>
+      </button>
+      <button
+        class="sa-chip sa-chip--classwork"
+        [class.sa-chip--active]="activeType() === 'CLASS_WORK'"
+        (click)="setTypeFilter('CLASS_WORK')"
+      >
+        <mat-icon>class</mat-icon> Classwork
+        <span class="sa-chip__count">{{ stats().classwork }}</span>
+      </button>
+    </div>
+
+    <!-- Status filter (only shown when ASSIGNMENT filter is active) -->
+    @if (activeType() === 'ASSIGNMENT' || activeType() === 'ALL') {
+    <div class="sa-status-chips">
+      <button
+        class="sa-status-chip"
+        [class.active]="activeStatus() === 'ALL'"
+        (click)="setStatusFilter('ALL')"
+      >
+        All Status
+      </button>
+      <button
+        class="sa-status-chip sa-status-chip--pending"
+        [class.active]="activeStatus() === 'PENDING'"
+        (click)="setStatusFilter('PENDING')"
+      >
+        Pending @if (stats().pending > 0) { <span class="dot dot--pending"></span> }
+      </button>
+      <button
+        class="sa-status-chip sa-status-chip--done"
+        [class.active]="activeStatus() === 'DONE'"
+        (click)="setStatusFilter('DONE')"
+      >
+        Submitted
+      </button>
+    </div>
+    }
+
+    <!-- Date range + refresh -->
+    <div class="sa-filter-row" [formGroup]="filterForm">
+      <mat-form-field appearance="outline" class="sa-date-field">
+        <mat-label>From</mat-label>
+        <input matInput [matDatepicker]="fromPicker" formControlName="dateFrom" />
+        <mat-datepicker-toggle matSuffix [for]="fromPicker" />
+        <mat-datepicker #fromPicker />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="sa-date-field">
+        <mat-label>To</mat-label>
+        <input matInput [matDatepicker]="toPicker" formControlName="dateTo" />
+        <mat-datepicker-toggle matSuffix [for]="toPicker" />
+        <mat-datepicker #toPicker />
+      </mat-form-field>
+
+      <button mat-icon-button (click)="clearFilters()" matTooltip="Clear filters">
+        <mat-icon>filter_alt_off</mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        (click)="loadAssignments()"
+        matTooltip="Refresh"
+        [disabled]="loading()"
+      >
+        <mat-icon [class.spin]="loading()">refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ Loading ════════════════════════════════════════════════════════════ -->
+  @if (loading()) {
+  <div class="sa-state">
+    <div class="sa-spinner-wrap">
+      <mat-spinner diameter="44"></mat-spinner>
+    </div>
+    <p>Loading your assignments…</p>
+  </div>
+  }
+
+  <!-- ══ Error ══════════════════════════════════════════════════════════════ -->
+  @else if (error()) {
+  <div class="sa-state sa-state--error">
+    <mat-icon>cloud_off</mat-icon>
+    <h3>Couldn't load assignments</h3>
+    <p>{{ error() }}</p>
+    <button mat-raised-button (click)="loadAssignments()">
+      <mat-icon>refresh</mat-icon> Try Again
+    </button>
+  </div>
+  }
+
+  <!-- ══ Empty ══════════════════════════════════════════════════════════════ -->
+  @else if (filteredAssignments().length === 0) {
+  <div class="sa-state sa-state--empty">
+    <div class="sa-empty-illo">
+      <mat-icon>check_circle</mat-icon>
+    </div>
+    <h3>
+      @if (activeType() === 'ALL' && activeStatus() === 'ALL') { No assignments yet! } @else {
+      Nothing matches your filters }
+    </h3>
+    <p>
+      @if (activeStatus() === 'DONE') { You haven't submitted anything yet. } @else if
+      (activeStatus() === 'PENDING') { You're all caught up! Great work. } @else { Check back later
+      or clear your filters. }
+    </p>
+    @if (activeType() !== 'ALL' || activeStatus() !== 'ALL') {
+    <button mat-stroked-button (click)="clearFilters()">
+      <mat-icon>filter_alt_off</mat-icon> Clear Filters
+    </button>
+    }
+  </div>
+  }
+
+  <!-- ══ Timeline ═══════════════════════════════════════════════════════════ -->
+  @else {
+  <div class="sa-timeline">
+    @for (group of groupedAssignments(); track trackByDate($index, group)) {
+    <div class="sa-group">
+      <!-- Date header -->
+      <div class="sa-group__header">
+        <div
+          class="sa-group__date-pill"
+          [class.today]="group.isToday"
+          [class.tomorrow]="group.isTomorrow"
+          [class.overdue]="group.isOverdue"
+        >
+          @if (group.isToday) { <mat-icon>today</mat-icon> } @else if (group.isOverdue) {
+          <mat-icon>warning</mat-icon> }
+          {{ group.label }}
+        </div>
+        <div class="sa-group__line"></div>
+        <span class="sa-group__count">{{ group.items.length }}</span>
+      </div>
+
+      <!-- Cards -->
+      <div class="sa-cards">
+        @for (task of group.items; track trackById($index, task)) {
+        <div
+          class="sa-card"
+          [class.sa-card--assignment]="task.type === 'ASSIGNMENT'"
+          [class.sa-card--homework]="task.type === 'HOME_WORK'"
+          [class.sa-card--classwork]="task.type === 'CLASS_WORK'"
+          [class.sa-card--done]="task.studentStatus === 'MARKED_AS_DONE'"
+          [class.sa-card--overdue]="isOverdue(task)"
+        >
+          <!-- Card left accent -->
+          <div class="sa-card__accent"></div>
+
+          <!-- Card body -->
+          <div class="sa-card__body">
+            <div class="sa-card__top">
+              <div class="sa-card__meta">
+                <span class="sa-type-badge" [class]="getTypeConfig(task.type).cssClass">
+                  <mat-icon>{{ getTypeConfig(task.type).icon }}</mat-icon>
+                  {{ getTypeConfig(task.type).label }}
+                </span>
+                @if (task.isMandatory && task.type === 'ASSIGNMENT') {
+                <span class="sa-mandatory-badge">Required</span>
+                } @if (isOverdue(task)) {
+                <span class="sa-overdue-badge"> <mat-icon>schedule</mat-icon> Overdue </span>
+                }
+              </div>
+
+              <!-- Status for assignments -->
+              @if (task.type === 'ASSIGNMENT') {
+              <div class="sa-status-pill" [class.done]="task.studentStatus === 'MARKED_AS_DONE'">
+                @if (task.studentStatus === 'MARKED_AS_DONE') {
+                <mat-icon>check_circle</mat-icon> Submitted } @else {
+                <mat-icon>radio_button_unchecked</mat-icon> Pending }
+              </div>
+              }
+            </div>
+
+            <h3 class="sa-card__title">{{ task.title }}</h3>
+            <p class="sa-card__desc">{{ task.description }}</p>
+
+            <div class="sa-card__details">
+              <span class="sa-detail">
+                <mat-icon>menu_book</mat-icon>
+                {{ task.subjectName }}
+              </span>
+              <span class="sa-detail">
+                <mat-icon>class</mat-icon>
+                {{ task.className }}-{{ task.sectionName }}
+              </span>
+              <span class="sa-detail">
+                <mat-icon>person</mat-icon>
+                {{ task.teacherName }}
+              </span>
+              @if (task.maxMarks) {
+              <span class="sa-detail sa-detail--marks">
+                <mat-icon>stars</mat-icon>
+                {{ task.maxMarks }} marks
+              </span>
+              }
+            </div>
+
+            <!-- Grading result (if graded) -->
+            @if (task.teacherStatus === 'GRADED' && task.marksObtained !== null &&
+            task.marksObtained !== undefined) {
+            <div class="sa-grade-bar">
+              <div class="sa-grade-bar__inner">
+                <div
+                  class="sa-grade-bar__fill"
+                  [style.width.%]="task.maxMarks ? (task.marksObtained / task.maxMarks) * 100 : 0"
+                ></div>
+              </div>
+              <span class="sa-grade-label">
+                {{ task.marksObtained }}{{ task.maxMarks ? '/' + task.maxMarks : '' }} scored
+              </span>
+            </div>
+            }
+          </div>
+
+          <!-- Card footer -->
+          @if (task.type === 'ASSIGNMENT' && task.studentStatus !== 'MARKED_AS_DONE') {
+          <div class="sa-card__footer">
+            <button
+              class="sa-submit-btn"
+              [class.loading]="submittingId() === task.id"
+              [disabled]="submittingId() !== null"
+              (click)="markDone(task)"
+            >
+              @if (submittingId() === task.id) {
+              <mat-spinner diameter="16"></mat-spinner>
+              <span>Submitting…</span>
+              } @else {
+              <mat-icon>check_circle_outline</mat-icon>
+              <span>Mark as Done</span>
+              }
+            </button>
+          </div>
+          } @else if (task.type === 'ASSIGNMENT' && task.studentStatus === 'MARKED_AS_DONE') {
+          <div class="sa-card__footer sa-card__footer--done">
+            <mat-icon>verified</mat-icon>
+            <span>Submitted</span>
+            @if (task.teacherStatus === 'GRADED') {
+            <span class="sa-graded-tag">· Graded</span>
+            } @else if (task.teacherStatus === 'RECEIVED') {
+            <span class="sa-received-tag">· Received by teacher</span>
+            }
+          </div>
+          }
+        </div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+  }
+</div>

@@ -1,0 +1,145 @@
+<!-- school-contact-info.html -->
+<!-- School Contact Information page — reads from localStorage schoolInfo -->
+
+<div class="contact-page">
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         HERO SECTION
+    ══════════════════════════════════════════════════════════════════════ -->
+    <header class="contact-hero">
+  
+      <!-- Decorative grid dots pattern (CSS-rendered) -->
+      <div class="hero-grid-bg" aria-hidden="true"></div>
+      <!-- Radial glow -->
+      <div class="hero-glow" aria-hidden="true"></div>
+  
+      <div class="hero-inner">
+        <!-- School Logo / Avatar -->
+        <div class="school-logo-wrap">
+          @if (logoUrl()) {
+            <img
+              class="school-logo-img"
+              [src]="logoUrl()!"
+              [alt]="schoolName()"
+              (error)="onLogoError()"
+            />
+          } @else {
+            <span class="school-logo-initials">{{ logoInitials() }}</span>
+          }
+          <div class="logo-pulse-ring" aria-hidden="true"></div>
+        </div>
+  
+        <!-- School name + tagline -->
+        <div class="hero-text">
+          <h1 class="school-title">{{ schoolName() }}</h1>
+          @if (tagline()) {
+            <p class="school-tagline">"{{ tagline() }}"</p>
+          }
+          <div class="hero-badge">
+            <mat-icon class="badge-icon">contacts</mat-icon>
+            <span>Contact Information</span>
+          </div>
+        </div>
+      </div>
+  
+    </header>
+  
+    <!-- ══════════════════════════════════════════════════════════════════════
+         CONTACT CARDS
+    ══════════════════════════════════════════════════════════════════════ -->
+    <main class="contact-body">
+  
+      @if (!hasDetails()) {
+        <!-- Empty state -->
+        <div class="empty-state">
+          <div class="empty-icon-wrap">
+            <mat-icon class="empty-icon">contacts</mat-icon>
+          </div>
+          <h2 class="empty-title">No contact details available</h2>
+          <p class="empty-sub">
+            The school administrator hasn't added contact information yet.
+            @if (roleLabel() === 'School Owner') {
+              <a class="empty-link" routerLink="/school/settings/info">Add it in School Settings →</a>
+            }
+          </p>
+        </div>
+      } @else {
+  
+        <div class="section-heading">
+          <span class="section-line"></span>
+          <span class="section-label">Get in touch</span>
+          <span class="section-line"></span>
+        </div>
+  
+        <!-- Contact cards grid -->
+        <div class="cards-grid">
+          @for (item of contactItems(); track item.key) {
+            <div class="contact-card {{ item.accentClass }}" [attr.data-key]="item.key">
+  
+              <!-- Decorative corner accent -->
+              <div class="card-corner" aria-hidden="true"></div>
+  
+              <!-- Icon -->
+              <div class="card-icon-wrap">
+                <mat-icon class="card-icon">{{ item.icon }}</mat-icon>
+              </div>
+  
+              <!-- Content -->
+              <div class="card-content">
+                <span class="card-label">{{ item.label }}</span>
+  
+                @if (item.hrefPrefix) {
+                  <a
+                    class="card-value card-value-link"
+                    [href]="item.hrefPrefix + item.value"
+                    [matTooltip]="item.actionLabel || ''"
+                    matTooltipPosition="above"
+                    matRipple
+                    matRippleColor="rgba(var(--card-accent-rgb), 0.1)"
+                  >
+                    {{ item.value }}
+                  </a>
+                } @else {
+                  <span class="card-value">{{ item.value }}</span>
+                }
+              </div>
+  
+              <!-- Copy button -->
+              <button
+                class="copy-btn"
+                [class.copied]="copied() === item.key"
+                [matTooltip]="copied() === item.key ? 'Copied!' : 'Copy'"
+                matTooltipPosition="above"
+                (click)="copyToClipboard(item)"
+                [attr.aria-label]="'Copy ' + item.label"
+                matRipple
+                matRippleColor="rgba(var(--card-accent-rgb), 0.12)"
+              >
+                <mat-icon>{{ copied() === item.key ? 'check' : 'content_copy' }}</mat-icon>
+              </button>
+  
+            </div>
+          }
+        </div>
+  
+        <!-- Helpful note -->
+        <p class="contact-note">
+          <mat-icon class="note-icon">info_outline</mat-icon>
+          Tap any phone number or email to open it in your device's default app.
+        </p>
+  
+      }
+  
+    </main>
+  
+    <!-- ══════════════════════════════════════════════════════════════════════
+         BACK LINK
+    ══════════════════════════════════════════════════════════════════════ -->
+    <footer class="contact-footer">
+      <a class="back-link" routerLink="/school/settings" matRipple>
+        <mat-icon>arrow_back</mat-icon>
+        <span>Back to Settings</span>
+      </a>
+    </footer>
+  
+  </div>

@@ -1,0 +1,207 @@
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SCHOOL SIDEBAR — PBAC-filtered, theme-aware, responsive overlay
+     FIXES:
+       1. Sub-item active state: uses exactMatch flag so "All Students"
+          and "Bulk Upload" are never both highlighted simultaneously.
+       2. Footer user-row: clicking avatar/name navigates to profile page.
+════════════════════════════════════════════════════════════════════════ -->
+
+<!-- Mobile backdrop -->
+<div
+  class="mobile-backdrop"
+  [class.visible]="mobileOpen()"
+  (click)="closeMobile()"
+  aria-hidden="true"
+></div>
+
+<!-- ── Logout Confirmation Modal ─────────────────────────────────────────── -->
+<div
+  class="logout-modal-overlay"
+  [class.visible]="logoutModalOpen()"
+  (click)="cancelLogout()"
+  aria-modal="true"
+  role="dialog"
+  aria-labelledby="school-logout-modal-title"
+>
+  <div class="logout-modal" (click)="$event.stopPropagation()">
+    <div class="logout-modal-accent" aria-hidden="true"></div>
+
+    <div class="logout-modal-icon-wrap" aria-hidden="true">
+      <div class="logout-modal-icon-ring"></div>
+      <mat-icon class="logout-modal-icon">logout</mat-icon>
+    </div>
+
+    <h3 class="logout-modal-title" id="school-logout-modal-title">Sign Out?</h3>
+    <p class="logout-modal-body">
+      You are about to end your current session.<br />
+      Any unsaved changes will be lost.
+    </p>
+
+    <div class="logout-modal-actions">
+      <button class="modal-btn cancel-btn" (click)="cancelLogout()" type="button">
+        <mat-icon>close</mat-icon>
+        <span>Stay</span>
+      </button>
+      <button class="modal-btn confirm-btn" (click)="confirmLogout()" type="button">
+        <mat-icon>logout</mat-icon>
+        <span>Sign Out</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Sidebar shell -->
+<aside
+  class="sidebar"
+  [class.collapsed]="isCollapsed()"
+  [class.mobile-open]="mobileOpen()"
+  role="navigation"
+  aria-label="School navigation"
+>
+  <!-- ── Brand / Header ──────────────────────────────────────────────────── -->
+  <div class="sidebar-brand">
+    <div class="brand-logo">
+      <mat-icon class="brand-icon">school</mat-icon>
+    </div>
+
+    <div class="brand-info" *ngIf="!isCollapsed() || mobileOpen()">
+      <span class="brand-title">EduFlow</span>
+      <span class="brand-school" *ngIf="schoolCode()">{{ schoolCode() }}</span>
+    </div>
+  </div>
+
+  <!-- ── Scrollable Navigation ──────────────────────────────────────────── -->
+  <nav class="sidebar-nav" role="menubar">
+    <ng-container *ngFor="let group of filteredGroups()">
+      <div class="nav-group-label" *ngIf="group.groupLabel && (!isCollapsed() || mobileOpen())">
+        {{ group.groupLabel }}
+      </div>
+
+      <div
+        class="nav-group-divider"
+        *ngIf="group.groupLabel && isCollapsed() && !mobileOpen()"
+      ></div>
+
+      <ng-container *ngFor="let item of group.items">
+        <!-- ── Leaf item (no children) ── -->
+        <ng-container *ngIf="!item.children || item.children.length === 0">
+          <a
+            class="nav-item"
+            [class.active]="isItemActive(item)"
+            [routerLink]="item.route"
+            matRipple
+            matRippleColor="rgba(var(--sb-accent-rgb, 99,102,241), 0.1)"
+            [matTooltip]="isCollapsed() && !mobileOpen() ? item.label : ''"
+            matTooltipPosition="right"
+            role="menuitem"
+          >
+            <span class="nav-icon-wrap">
+              <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+            </span>
+            <span class="nav-label" *ngIf="!isCollapsed() || mobileOpen()">{{ item.label }}</span>
+            <span class="active-bar" *ngIf="isItemActive(item)"></span>
+          </a>
+        </ng-container>
+
+        <!-- ── Parent item (has children) ── -->
+        <ng-container *ngIf="item.children && item.children.length > 0">
+          <button
+            class="nav-item nav-parent"
+            [class.active]="isItemActive(item)"
+            [class.expanded]="isExpanded(item.label)"
+            (click)="toggleExpand(item)"
+            matRipple
+            matRippleColor="rgba(var(--sb-accent-rgb, 99,102,241), 0.1)"
+            [matTooltip]="isCollapsed() && !mobileOpen() ? item.label : ''"
+            matTooltipPosition="right"
+            role="menuitem"
+            [attr.aria-expanded]="isExpanded(item.label)"
+          >
+            <span class="nav-icon-wrap">
+              <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+            </span>
+            <span class="nav-label" *ngIf="!isCollapsed() || mobileOpen()">{{ item.label }}</span>
+            <mat-icon class="expand-arrow" *ngIf="!isCollapsed() || mobileOpen()">
+              {{ isExpanded(item.label) ? 'expand_less' : 'expand_more' }}
+            </mat-icon>
+            <span class="active-bar" *ngIf="isItemActive(item)"></span>
+          </button>
+
+          <div
+            class="sub-menu"
+            [class.open]="isExpanded(item.label) && (!isCollapsed() || mobileOpen())"
+            role="menu"
+          >
+            <div class="sub-menu-inner">
+              <a
+                *ngFor="let child of item.children"
+                class="sub-item"
+                [class.active]="isChildActive(child)"
+                [routerLink]="child.route"
+                matRipple
+                matRippleColor="rgba(var(--sb-accent-rgb, 99,102,241), 0.08)"
+                role="menuitem"
+              >
+                <mat-icon class="sub-icon">{{ child.icon }}</mat-icon>
+                <span class="sub-label">{{ child.label }}</span>
+                <span class="sub-active-dot" *ngIf="isChildActive(child)"></span>
+              </a>
+            </div>
+          </div>
+        </ng-container>
+      </ng-container>
+    </ng-container>
+  </nav>
+
+  <!-- ── Footer: User + Logout ──────────────────────────────────────────── -->
+  <div class="sidebar-footer">
+    <!--
+      FIX: user-row is now a button that navigates to the profile page.
+      On collapsed desktop, only the avatar is shown — it still navigates.
+      tooltip shows "My Profile" when collapsed so the action is discoverable.
+    -->
+    <button
+      class="user-row"
+      [class.collapsed]="isCollapsed() && !mobileOpen()"
+      (click)="goToProfile()"
+      [matTooltip]="isCollapsed() && !mobileOpen() ? 'My Profile' : ''"
+      matTooltipPosition="right"
+      aria-label="Go to My Profile"
+    >
+      <div class="user-avatar">{{ userInitials() }}</div>
+      <div class="user-meta" *ngIf="!isCollapsed() || mobileOpen()">
+        <span class="user-name">{{ userName() }}</span>
+        <span class="user-school">{{ schoolCode() }}</span>
+      </div>
+      <!-- Profile arrow shown only when expanded -->
+      <mat-icon
+        class="user-profile-arrow"
+        *ngIf="!isCollapsed() || mobileOpen()"
+        aria-hidden="true"
+      >
+        chevron_right
+      </mat-icon>
+    </button>
+
+    <button
+      class="logout-btn"
+      (click)="openLogoutModal()"
+      [matTooltip]="isCollapsed() && !mobileOpen() ? 'Sign out' : ''"
+      matTooltipPosition="right"
+      aria-label="Sign out"
+    >
+      <mat-icon>logout</mat-icon>
+      <span *ngIf="!isCollapsed() || mobileOpen()">Sign Out</span>
+    </button>
+  </div>
+
+  <button
+    class="collapse-btn desktop-only"
+    (click)="toggleCollapse()"
+    [matTooltip]="isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+    matTooltipPosition="right"
+    [attr.aria-label]="isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+  >
+    <mat-icon>{{ isCollapsed() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+  </button>
+</aside>

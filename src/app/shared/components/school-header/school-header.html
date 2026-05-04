@@ -1,0 +1,156 @@
+<header class="school-header">
+  <div class="header-inner">
+    <!-- ═══ Mobile Hamburger ═══ -->
+    <button
+      class="icon-btn hamburger-btn mobile-only"
+      mat-icon-button
+      (click)="onHamburgerClick()"
+      aria-label="Open navigation"
+    >
+      <mat-icon>menu</mat-icon>
+    </button>
+
+    <!-- ═══ Brand: Logo + School Name ═══ -->
+    <div class="brand-section">
+      <div class="logo-wrap" matRipple [matRippleCentered]="true">
+        <ng-container *ngIf="schoolInfo()?.logoUrl; else initialsBlock">
+          <img
+            [src]="schoolInfo()!.logoUrl!"
+            [alt]="schoolInfo()!.name"
+            class="school-logo-img"
+            (error)="onLogoError()"
+          />
+        </ng-container>
+        <ng-template #initialsBlock>
+          <span class="logo-initials">{{ logoInitials() }}</span>
+        </ng-template>
+      </div>
+
+      <div class="school-name-block desktop-only">
+        <span class="school-name" [matTooltip]="headerTooltip()" matTooltipPosition="below">
+          {{ displayName() }}
+        </span>
+        <span class="school-tagline" *ngIf="schoolInfo()?.tagline">
+          {{ schoolInfo()!.tagline }}
+        </span>
+      </div>
+    </div>
+
+    <div class="flex-spacer"></div>
+
+    <!-- ═══ Actions ═══ -->
+    <div class="actions-row">
+      <!-- Dark Mode Toggle -->
+      <button
+        class="icon-btn theme-toggle"
+        mat-icon-button
+        (click)="toggleDarkMode()"
+        [matTooltip]="isDarkMode() ? 'Light mode' : 'Dark mode'"
+        matTooltipPosition="below"
+        aria-label="Toggle theme"
+      >
+        <mat-icon>{{ isDarkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+      </button>
+
+      <!-- Notifications Bell -->
+      <app-bell-notifications />
+
+      <!--
+        Parent Child Switcher
+        Renders only for STUDENT_PARENT role. On mobile, it renders as a
+        compact icon-only variant — full label only on larger screens.
+      -->
+      <app-parent-child-switcher />
+
+      <!-- Divider — desktop only -->
+      <div class="header-divider desktop-only"></div>
+
+      <!-- User Menu -->
+      <div class="user-menu-wrapper">
+        <button class="user-chip" (click)="toggleUserMenu()" aria-label="User menu">
+          <div class="user-avatar">{{ userInitials() }}</div>
+          <div class="user-meta desktop-only">
+            <span class="user-display-name">{{ userName() }}</span>
+            <span class="user-role-label">{{ roleLabel() }}</span>
+          </div>
+          <mat-icon class="chevron desktop-only" [class.open]="userMenuOpen()">
+            expand_more
+          </mat-icon>
+        </button>
+
+        <!-- Dropdown -->
+        <div class="user-dropdown" *ngIf="userMenuOpen()">
+          <a
+            class="dropdown-header dropdown-header-link"
+            routerLink="/school/profile/me"
+            (click)="userMenuOpen.set(false)"
+            aria-label="Go to My Profile"
+          >
+            <div class="dropdown-avatar">{{ userInitials() }}</div>
+            <div class="dropdown-info">
+              <span class="dropdown-name">{{ userName() }}</span>
+              <span class="dropdown-role">{{ roleLabel() }}</span>
+            </div>
+            <mat-icon class="dropdown-profile-arrow">arrow_forward</mat-icon>
+          </a>
+
+          <div class="dropdown-divider"></div>
+
+          <a class="dropdown-item" routerLink="/school/settings" (click)="userMenuOpen.set(false)">
+            <mat-icon>tune</mat-icon>
+            Settings
+          </a>
+
+          <div class="dropdown-divider"></div>
+
+          <!-- Sign out now opens confirmation modal -->
+          <button class="dropdown-item danger" (click)="openLogoutModal()">
+            <mat-icon>logout</mat-icon>
+            Sign Out
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     LOGOUT CONFIRMATION MODAL
+     Fixed portal, sits above everything (z-index: 1300)
+══════════════════════════════════════════════════════════════════════════ -->
+<div
+  class="logout-modal-overlay"
+  [class.visible]="logoutModalOpen()"
+  (click)="cancelLogout()"
+  aria-modal="true"
+  role="dialog"
+  aria-labelledby="header-logout-modal-title"
+>
+  <div class="logout-modal" (click)="$event.stopPropagation()">
+    <!-- Top accent bar -->
+    <div class="logout-modal-accent" aria-hidden="true"></div>
+
+    <!-- Icon -->
+    <div class="logout-modal-icon-wrap" aria-hidden="true">
+      <div class="logout-modal-icon-ring"></div>
+      <mat-icon class="logout-modal-icon">logout</mat-icon>
+    </div>
+
+    <h3 class="logout-modal-title" id="header-logout-modal-title">Sign Out?</h3>
+    <p class="logout-modal-body">
+      You are about to end your current session.<br />
+      Any unsaved changes will be lost.
+    </p>
+
+    <div class="logout-modal-actions">
+      <button class="modal-btn cancel-btn" (click)="cancelLogout()" type="button">
+        <mat-icon>close</mat-icon>
+        <span>Stay</span>
+      </button>
+      <button class="modal-btn confirm-btn" (click)="confirmLogout()" type="button">
+        <mat-icon>logout</mat-icon>
+        <span>Sign Out</span>
+      </button>
+    </div>
+  </div>
+</div>

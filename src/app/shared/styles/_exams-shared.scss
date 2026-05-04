@@ -1,0 +1,535 @@
+// ============================================================
+// _exams-shared.scss
+// Single source of truth for ALL exams module styles.
+// Import this in every exams component SCSS:
+//   @use '../../../../../shared/styles/exams-shared' as *;
+// (adjust relative path per component depth)
+// ============================================================
+
+// ── Page shell ───────────────────────────────────────────────────────────────
+.page-container {
+  padding: 32px 28px;
+  max-width: 1320px;
+  margin: 0 auto;
+
+  @media (max-width: 768px) {
+    padding: 20px 16px;
+  }
+}
+
+// ── Page header ───────────────────────────────────────────────────────────────
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  .header-left {
+    h1 {
+      margin: 0 0 4px;
+      font-size: 1.875rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      letter-spacing: -0.02em;
+    }
+    p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--color-text-secondary);
+    }
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    margin: 4px 0 0;
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .header-actions {
+      width: 100%;
+    }
+  }
+}
+
+// ── Feedback states ────────────────────────────────────────────────────────────
+.state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 380px;
+  gap: 16px;
+  text-align: center;
+  padding: 40px 20px;
+
+  .state-icon {
+    font-size: 72px;
+    height: 72px;
+    width: 72px;
+    opacity: 0.5;
+    color: var(--color-text-muted);
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
+  p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+  }
+
+  &.error {
+    .state-icon {
+      color: var(--color-error);
+      opacity: 1;
+    }
+    h2 {
+      color: var(--color-error);
+    }
+  }
+}
+
+// ── Data table card ────────────────────────────────────────────────────────────
+.table-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+
+  table {
+    width: 100%;
+  }
+}
+
+.mat-mdc-header-cell {
+  background: var(--color-hover) !important;
+  font-weight: 700 !important;
+  font-size: 0.78rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary) !important;
+  padding: 14px 16px !important;
+}
+
+.mat-mdc-cell {
+  padding: 14px 16px !important;
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--color-divider) !important;
+}
+
+.mat-mdc-row {
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--color-hover) !important;
+  }
+
+  &:last-child .mat-mdc-cell {
+    border-bottom: none !important;
+  }
+}
+
+// ── Exam type badge ────────────────────────────────────────────────────────────
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+
+  &.mid-term {
+    background: color-mix(in srgb, var(--color-info) 12%, transparent);
+    color: var(--color-info);
+  }
+  &.final {
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    color: var(--color-primary-dark);
+  }
+  &.quiz {
+    background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
+    color: var(--color-secondary);
+  }
+  &.active {
+    background: color-mix(in srgb, var(--color-success) 14%, transparent);
+    color: var(--color-success);
+  }
+  &.inactive {
+    background: color-mix(in srgb, var(--color-text-muted) 14%, transparent);
+    color: var(--color-text-muted);
+  }
+}
+
+// ── Form page ─────────────────────────────────────────────────────────────────
+.form-page {
+  max-width: 940px;
+  margin: 32px auto;
+  padding: 0 24px;
+
+  @media (max-width: 600px) {
+    padding: 0 16px;
+    margin: 20px auto;
+  }
+}
+
+// ── Form card ─────────────────────────────────────────────────────────────────
+.form-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border);
+  padding: 36px;
+
+  @media (max-width: 600px) {
+    padding: 24px 18px;
+  }
+}
+
+// ── Form layout helpers ────────────────────────────────────────────────────────
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 4px;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.full-width,
+mat-form-field.full-width {
+  width: 100%;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-divider);
+
+  button {
+    min-width: 120px;
+  }
+}
+
+// ── Loading overlay ────────────────────────────────────────────────────────────
+.loading-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 260px;
+  gap: 16px;
+  color: var(--color-text-secondary);
+}
+
+// ── Cell actions ───────────────────────────────────────────────────────────────
+.cell-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+// ── Section heading inside form ────────────────────────────────────────────────
+.section-heading {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 28px 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--color-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  mat-icon {
+    font-size: 1.1rem;
+    width: 1.1rem;
+    height: 1.1rem;
+    color: var(--color-primary);
+  }
+}
+
+// ── Timetable row ─────────────────────────────────────────────────────────────
+.timetable-section {
+  margin-top: 8px;
+}
+
+.timetable-row {
+  display: grid;
+  grid-template-columns: 2fr 1.4fr 1fr 1fr 1fr 0.9fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 16px;
+  margin-bottom: 12px;
+  background: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg-main));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.2s;
+
+  &:hover {
+    border-color: var(--color-primary-light);
+  }
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.timetable-row-header {
+  display: grid;
+  grid-template-columns: 2fr 1.4fr 1fr 1fr 1fr 0.9fr auto;
+  gap: 14px;
+  padding: 0 16px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-text-muted);
+
+  @media (max-width: 900px) {
+    display: none;
+  }
+}
+
+.add-row-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 2px dashed var(--color-primary-light);
+  border-radius: var(--radius-sm);
+  padding: 10px 20px;
+  width: 100%;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+    border-color: var(--color-primary);
+  }
+}
+
+// ── Marks entry specifics ──────────────────────────────────────────────────────
+.marks-input {
+  width: 90px;
+  padding: 6px 10px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  text-align: center;
+  color: var(--color-text-primary);
+  background: var(--color-bg-surface);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
+  }
+}
+
+.grade-input {
+  width: 72px;
+  padding: 6px 10px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  text-align: center;
+  color: var(--color-text-primary);
+  background: var(--color-bg-surface);
+  transition: border-color 0.2s;
+  outline: none;
+
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
+  }
+}
+
+.remarks-input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+  background: var(--color-bg-surface);
+  transition: border-color 0.2s;
+  outline: none;
+
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
+  }
+}
+
+// ── Print page specifics ───────────────────────────────────────────────────────
+.print-container {
+  padding: 32px;
+  background: var(--color-bg-surface);
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.print-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-border);
+
+  @media print {
+    display: none;
+  }
+}
+
+// ── Template manager specifics ─────────────────────────────────────────────────
+.split-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  margin-top: 24px;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.editor-pane,
+.preview-pane {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  padding: 24px;
+}
+
+.preview-pane {
+  h3 {
+    margin: 0 0 16px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+  }
+}
+
+.preview-frame {
+  border: 2px dashed var(--color-border);
+  background: white;
+  min-height: 600px;
+  padding: 24px;
+  border-radius: var(--radius-sm);
+  overflow: auto;
+}
+
+// ── Stat / info card strip ─────────────────────────────────────────────────────
+.stats-strip {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+.stat-card {
+  flex: 1;
+  min-width: 140px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .stat-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+  }
+
+  .stat-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+    line-height: 1;
+  }
+
+  .stat-sub {
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
+  }
+
+  &.primary {
+    border-color: var(--color-primary-light);
+    background: color-mix(in srgb, var(--color-primary) 6%, var(--color-bg-card));
+    .stat-value {
+      color: var(--color-primary-dark);
+    }
+  }
+}
+
+// ── Changes indicator ──────────────────────────────────────────────────────────
+.unsaved-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: color-mix(in srgb, var(--color-warning) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 35%, transparent);
+  border-radius: var(--radius-sm);
+  color: color-mix(in srgb, var(--color-warning) 80%, #000);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+
+  mat-icon {
+    font-size: 1rem;
+    width: 1rem;
+    height: 1rem;
+  }
+}

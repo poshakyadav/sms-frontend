@@ -1,0 +1,151 @@
+<div class="settings-page">
+  <!-- ── Header ─────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>Appearance</h1>
+      <p>Choose a theme for your school portal</p>
+    </div>
+    <div class="header-actions">
+      <!-- Dark mode toggle -->
+      <button
+        mat-stroked-button
+        (click)="toggleDarkMode()"
+        [matTooltip]="isDarkMode() ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+      >
+        <mat-icon>{{ isDarkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+        {{ isDarkMode() ? 'Light Mode' : 'Dark Mode' }}
+      </button>
+      <button mat-icon-button (click)="loadThemes()" matTooltip="Refresh">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Loading ────────────────────────────────────────────────────── -->
+  @if (loading()) {
+  <div class="state-container">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading themes…</p>
+  </div>
+  }
+
+  <!-- ── Error ──────────────────────────────────────────────────────── -->
+  @else if (error()) {
+  <div class="state-container error">
+    <mat-icon class="state-icon">error_outline</mat-icon>
+    <h2>Could not load themes</h2>
+    <p>{{ error() }}</p>
+    <button mat-raised-button color="primary" (click)="loadThemes()">Retry</button>
+  </div>
+  } @else {
+
+  <!-- ── Predefined themes ────────────────────────────────────────── -->
+  <section class="theme-section">
+    <h2 class="section-heading">Predefined Themes</h2>
+    <p class="section-subtitle">
+      {{ predefinedThemes().length }} built-in themes — click any card to activate
+    </p>
+
+    <div class="themes-grid">
+      @for (theme of predefinedThemes(); track theme.id) {
+      <div
+        class="theme-card"
+        [class.is-active]="isActive(theme)"
+        [class.is-activating]="activatingId() === theme.id"
+        (click)="canManage() && activateTheme(theme)"
+        [style.cursor]="canManage() ? 'pointer' : 'default'"
+        role="button"
+        [attr.aria-label]="'Activate theme ' + theme.themeName"
+        [attr.aria-pressed]="isActive(theme)"
+      >
+        <!-- Preview strip — shows theme CSS vars if they were pre-loaded -->
+        <div class="theme-preview" [attr.data-theme-name]="theme.themeName">
+          <div class="preview-bar primary-bar"></div>
+          <div class="preview-bar secondary-bar"></div>
+          <div class="preview-bar bg-bar"></div>
+        </div>
+
+        <div class="theme-info">
+          <span class="theme-name">{{ theme.themeName }}</span>
+
+          @if (isActive(theme)) {
+          <span class="active-badge"> <mat-icon>check_circle</mat-icon> Active </span>
+          }
+        </div>
+
+        <!-- Activating spinner -->
+        @if (activatingId() === theme.id) {
+        <div class="activating-overlay">
+          <mat-spinner diameter="28"></mat-spinner>
+        </div>
+        }
+      </div>
+      }
+    </div>
+  </section>
+
+  <!-- ── Custom themes ────────────────────────────────────────────── -->
+  @if (customThemes().length > 0) {
+  <section class="theme-section">
+    <h2 class="section-heading">Custom Themes</h2>
+    <p class="section-subtitle">Themes created specifically for your school</p>
+
+    <div class="themes-grid">
+      @for (theme of customThemes(); track theme.id) {
+      <div
+        class="theme-card"
+        [class.is-active]="isActive(theme)"
+        [class.is-activating]="activatingId() === theme.id"
+        (click)="canManage() && activateTheme(theme)"
+        [style.cursor]="canManage() ? 'pointer' : 'default'"
+      >
+        <div class="theme-preview custom-preview">
+          <div class="preview-bar primary-bar"></div>
+          <div class="preview-bar secondary-bar"></div>
+          <div class="preview-bar bg-bar"></div>
+        </div>
+
+        <div class="theme-info">
+          <span class="theme-name">{{ theme.themeName }}</span>
+          <span class="custom-label">Custom</span>
+
+          @if (isActive(theme)) {
+          <span class="active-badge"> <mat-icon>check_circle</mat-icon> Active </span>
+          }
+        </div>
+
+        <!-- Delete (only if not active) -->
+        @if (canManage() && !isActive(theme)) {
+        <button
+          mat-icon-button
+          color="warn"
+          class="delete-btn"
+          (click)="$event.stopPropagation(); deleteCustomTheme(theme)"
+          matTooltip="Delete custom theme"
+          [disabled]="deletingId() === theme.id"
+        >
+          @if (deletingId() === theme.id) {
+          <mat-spinner diameter="18"></mat-spinner>
+          } @else {
+          <mat-icon>delete_outline</mat-icon>
+          }
+        </button>
+        } @if (activatingId() === theme.id) {
+        <div class="activating-overlay">
+          <mat-spinner diameter="28"></mat-spinner>
+        </div>
+        }
+      </div>
+      }
+    </div>
+  </section>
+  }
+
+  <!-- ── No manage permission notice ─────────────────────────────── -->
+  @if (!canManage()) {
+  <div class="read-only-notice">
+    <mat-icon>info_outline</mat-icon>
+    <p>Only the School Owner can change the active theme.</p>
+  </div>
+  } }
+</div>

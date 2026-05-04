@@ -1,0 +1,769 @@
+/* user-form.scss — shared styles for create & edit user pages */
+
+/* ── Page shell ─────────────────────────────────────────────────────────────── */
+.form-page {
+  padding: 2rem 2.5rem 3rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.form-page__nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.back-btn {
+  color: var(--st-text-secondary) !important;
+  &:hover {
+    color: var(--st-primary) !important;
+    background: var(--st-primary-bg) !important;
+  }
+}
+
+.form-page__breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.875rem;
+}
+
+.breadcrumb-parent {
+  color: var(--st-text-secondary);
+  cursor: pointer;
+  &:hover {
+    color: var(--st-primary);
+    text-decoration: underline;
+  }
+}
+
+.breadcrumb-sep {
+  font-size: 16px !important;
+  width: 16px !important;
+  height: 16px !important;
+  color: var(--st-border-strong) !important;
+}
+
+.breadcrumb-current {
+  color: var(--st-text-primary);
+  font-weight: 600;
+}
+
+/* ── Two-column layout ──────────────────────────────────────────────────────── */
+.form-page__body {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 2.5rem;
+  align-items: start;
+}
+
+/* ── Aside (left panel) ─────────────────────────────────────────────────────── */
+.form-page__aside {
+  position: sticky;
+  top: 80px;
+}
+
+.aside__icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--st-primary-bg);
+  color: var(--st-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  mat-icon {
+    font-size: 26px !important;
+    width: 26px !important;
+    height: 26px !important;
+  }
+}
+
+.aside__icon--edit {
+  background: var(--st-amber-bg);
+  color: var(--st-amber);
+}
+
+.aside__title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--st-text-primary);
+  margin: 0 0 0.5rem;
+  line-height: 1.25;
+}
+
+.aside__subtitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--st-text-secondary);
+  margin: 0 0 0.25rem;
+}
+
+.aside__desc {
+  font-size: 0.875rem;
+  color: var(--st-text-secondary);
+  line-height: 1.6;
+  margin: 0 0 1.5rem;
+}
+
+/* ── Role legend ────────────────────────────────────────────────────────────── */
+.role-legend {
+  background: var(--st-bg-subtle);
+  border: 1px solid var(--st-border);
+  border-radius: var(--st-radius-md);
+  padding: 1rem;
+}
+
+.role-legend__title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--st-text-muted);
+  margin: 0 0 0.75rem;
+}
+
+.role-legend__item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 0.875rem;
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  p {
+    font-size: 0.78rem;
+    color: var(--st-text-secondary);
+    margin: 0;
+    line-height: 1.5;
+  }
+}
+
+.role-legend__item--warn {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+  background: var(--st-amber-bg);
+  border: 1px solid var(--st-amber-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+
+  p {
+    color: var(--st-amber-text);
+    font-size: 0.78rem;
+  }
+}
+
+.legend-warn-icon {
+  font-size: 16px !important;
+  width: 16px !important;
+  height: 16px !important;
+  color: var(--st-amber) !important;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ── Main form card ─────────────────────────────────────────────────────────── */
+.card {
+  background: var(--st-bg-surface);
+  border: 1px solid var(--st-border);
+  border-radius: var(--st-radius-lg);
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: var(--st-shadow-sm);
+}
+
+.card__section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--st-text-muted);
+  margin: 0;
+}
+
+.card__divider {
+  height: 1px;
+  background: var(--st-border);
+  margin: 0.25rem 0;
+}
+
+/* ── Tab bar (edit mode) ────────────────────────────────────────────────────── */
+.tab-bar {
+  display: flex;
+  border-bottom: 1px solid var(--st-border);
+  margin: -1.75rem -1.75rem 1.25rem;
+  padding: 0 1.75rem;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.875rem 1rem;
+  border: none;
+  background: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--st-text-secondary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all 0.15s;
+  font-family: inherit;
+
+  mat-icon {
+    font-size: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  &:hover {
+    color: var(--st-text-primary);
+  }
+  &--active {
+    color: var(--st-primary);
+    border-bottom-color: var(--st-primary);
+    font-weight: 600;
+  }
+}
+
+/* ── Field groups ───────────────────────────────────────────────────────────── */
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--st-text-primary);
+  letter-spacing: 0.01em;
+}
+
+.field-input-wrap {
+  display: flex;
+  align-items: center;
+  background: var(--st-bg-subtle);
+  border: 1px solid var(--st-border);
+  border-radius: 10px;
+  padding: 0 12px;
+  height: 46px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus-within {
+    border-color: var(--st-primary);
+    box-shadow: 0 0 0 3px var(--st-primary-bg);
+  }
+
+  &--error {
+    border-color: var(--st-red) !important;
+    box-shadow: 0 0 0 3px var(--st-red-bg) !important;
+  }
+}
+
+.field-icon {
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+  color: var(--st-text-muted) !important;
+  flex-shrink: 0;
+  margin-right: 10px;
+}
+
+.field-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--st-text-primary);
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  min-width: 0;
+
+  &::placeholder {
+    color: var(--st-text-muted);
+  }
+}
+
+.field-toggle-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--st-text-muted);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+  &:hover {
+    color: var(--st-primary);
+  }
+
+  mat-icon {
+    font-size: 18px !important;
+    width: 18px !important;
+    height: 18px !important;
+  }
+}
+
+.field-error {
+  font-size: 0.78rem;
+  color: var(--st-red-text);
+  font-weight: 500;
+}
+
+.field-hint {
+  font-size: 0.78rem;
+  color: var(--st-text-muted);
+}
+
+/* ── Toggle row (isActive) ──────────────────────────────────────────────────── */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1rem;
+  background: var(--st-bg-subtle);
+  border-radius: 10px;
+  border: 1px solid var(--st-border);
+}
+
+.toggle-label {
+  font-size: 0.875rem;
+  color: var(--st-text-primary);
+  font-weight: 500;
+}
+
+.toggle-hint {
+  font-size: 0.78rem;
+  color: var(--st-text-muted);
+  margin-top: 2px;
+}
+
+/* ── Roles grid (create mode) ───────────────────────────────────────────────── */
+.roles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.role-card {
+  display: block;
+  cursor: pointer;
+  border-radius: 10px;
+  border: 1px solid var(--st-border);
+  background: var(--st-bg-subtle);
+  transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    border-color: var(--st-primary);
+    background: var(--st-bg-hover);
+  }
+
+  &--selected {
+    border-color: var(--st-primary) !important;
+    background: var(--st-primary-bg) !important;
+
+    .role-card__check-indicator {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  &__check {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &__body {
+    padding: 12px 14px;
+    position: relative;
+  }
+
+  &__desc {
+    font-size: 0.78rem;
+    color: var(--st-text-secondary);
+    margin: 6px 0 0;
+    line-height: 1.4;
+  }
+
+  &__check-indicator {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    opacity: 0;
+    transform: scale(0.7);
+    transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+    color: var(--st-primary);
+
+    mat-icon {
+      font-size: 18px !important;
+      width: 18px !important;
+      height: 18px !important;
+    }
+  }
+}
+
+/* ── Role badges ────────────────────────────────────────────────────────────── */
+.role-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+
+  &.badge--superadmin {
+    background: var(--st-purple-bg);
+    color: var(--st-purple-text);
+    border: 1px solid var(--st-purple-border);
+  }
+  &.badge--manager {
+    background: var(--st-blue-bg);
+    color: var(--st-blue-text);
+    border: 1px solid var(--st-blue-border);
+  }
+  &.badge--user {
+    background: var(--st-green-bg);
+    color: var(--st-green-text);
+    border: 1px solid var(--st-green-border);
+  }
+}
+
+/* ── Info banner (tab-info equivalent) ─────────────────────────────────────── */
+.info-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--st-blue-bg);
+  border: 1px solid var(--st-blue-border);
+  border-radius: 10px;
+  padding: 0.875rem 1rem;
+  font-size: 0.82rem;
+  color: var(--st-blue-text);
+  line-height: 1.5;
+
+  mat-icon {
+    font-size: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  em {
+    font-weight: 600;
+    font-style: normal;
+  }
+}
+
+.warn-banner {
+  @extend .info-banner;
+  background: var(--st-amber-bg);
+  border-color: var(--st-amber-border);
+  color: var(--st-amber-text);
+}
+
+/* ── Permissions grid ───────────────────────────────────────────────────────── */
+.perm-module {
+  margin-bottom: 1.25rem;
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.perm-module__title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--st-text-muted);
+  margin: 0 0 0.5rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--st-border);
+}
+
+.perm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 6px;
+}
+
+.perm-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--st-border);
+  border-radius: 8px;
+  background: var(--st-bg-subtle);
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &--active {
+    background: var(--st-primary-bg);
+    border-color: var(--st-primary);
+
+    .perm-item__name {
+      color: var(--st-primary-text);
+    }
+  }
+
+  &__name {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--st-text-primary);
+    flex: 1;
+  }
+
+  &__slug {
+    font-size: 0.68rem;
+    font-family: monospace;
+    color: var(--st-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 110px;
+  }
+}
+
+.perm-check {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: var(--st-primary);
+}
+
+/* ── Card footer ────────────────────────────────────────────────────────────── */
+.card__footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+  margin-top: 0.25rem;
+  border-top: 1px solid var(--st-border);
+}
+
+.cancel-btn {
+  color: var(--st-text-secondary) !important;
+  &:hover {
+    color: var(--st-text-primary) !important;
+    background: var(--st-bg-hover) !important;
+  }
+}
+
+.submit-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 140px;
+
+  mat-icon {
+    font-size: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+  }
+}
+
+.submit-btn {
+    /* Solid indigo background that works in both light and dark themes */
+    background-color: var(--st-primary) !important;
+    color: #ffffff !important;
+    border: none !important;
+   
+    /* Hover: slightly lighter */
+    &:hover:not([disabled]) {
+      filter: brightness(1.12);
+    }
+   
+    /* Disabled state */
+    &[disabled] {
+      opacity: 0.5 !important;
+      cursor: not-allowed;
+    }
+   
+    mat-icon {
+      color: #ffffff !important;
+      font-size: 16px !important;
+      width: 16px !important;
+      height: 16px !important;
+    }
+   
+    mat-spinner circle {
+      stroke: #ffffff !important;
+    }
+  }
+
+/* ── Loading skeleton ───────────────────────────────────────────────────────── */
+.loading-card {
+  pointer-events: none;
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--st-bg-subtle) 25%,
+    var(--st-bg-hover) 50%,
+    var(--st-bg-subtle) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+
+  &--title {
+    height: 22px;
+    width: 50%;
+    margin-bottom: 0.5rem;
+  }
+  &--field {
+    height: 46px;
+    margin-bottom: 0.75rem;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ── Avatar in user info (edit page) ───────────────────────────────────────── */
+.user-info-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 1rem 1.25rem;
+  background: var(--st-bg-subtle);
+  border-radius: var(--st-radius-md);
+  border: 1px solid var(--st-border);
+  margin-bottom: 0.25rem;
+}
+
+.user-info__avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: var(--st-blue-bg);
+  color: var(--st-blue-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.user-info__name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--st-text-primary);
+}
+
+.user-info__email {
+  font-size: 0.82rem;
+  color: var(--st-text-muted);
+  margin-top: 2px;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .form-page {
+    padding: 1.5rem;
+  }
+  .form-page__body {
+    grid-template-columns: 1fr;
+  }
+  .form-page__aside {
+    position: static;
+  }
+}
+
+@media (max-width: 580px) {
+  .form-page {
+    padding: 1rem;
+  }
+  .field-row {
+    grid-template-columns: 1fr;
+  }
+  .perm-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Aside tabs (edit page, desktop) ──────────────────────────────────────── */
+.aside__tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 1.25rem;
+}
+
+.aside__tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.625rem 0.875rem;
+  border: none;
+  background: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--st-text-secondary);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.15s;
+  font-family: inherit;
+  text-align: left;
+
+  mat-icon {
+    font-size: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  &:hover {
+    background: var(--st-bg-hover);
+    color: var(--st-text-primary);
+  }
+
+  &--active {
+    background: var(--st-primary-bg);
+    color: var(--st-primary);
+    font-weight: 600;
+  }
+}
+
+/* Mobile tabs: show inside card, hide aside tabs */
+.mobile-tabs {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .aside__tabs {
+    display: none;
+  }
+  .mobile-tabs {
+    display: flex !important;
+  }
+}

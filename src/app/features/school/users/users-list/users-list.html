@@ -1,0 +1,487 @@
+<!-- users-list/users-list.html -->
+<div class="page-container">
+  <!-- ══════════════════════════════════════════════════════════════════════
+       PAGE HEADER
+  ══════════════════════════════════════════════════════════════════════ -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>User Management</h1>
+      <p>Manage students, teachers, parents and staff accounts</p>
+    </div>
+    <div class="header-actions">
+      @if (canCreate()) {
+      <button mat-raised-button color="primary" (click)="createUser()" class="btn-create">
+        <mat-icon>person_add</mat-icon>
+        Add New User
+      </button>
+      }
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       CATEGORY TABS
+  ══════════════════════════════════════════════════════════════════════ -->
+  <div class="tab-bar">
+    @for (tab of tabs; track tab.id) {
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === tab.id"
+      [attr.data-color]="tab.color"
+      (click)="switchTab(tab.id)"
+    >
+      <mat-icon class="tab-icon">{{ tab.icon }}</mat-icon>
+      <span class="tab-label">{{ tab.label }}</span>
+      @if (activeTab() === tab.id && dataSource.data.length > 0) {
+      <span class="tab-count">{{ dataSource.filteredData.length }}</span>
+      }
+    </button>
+    }
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       TOOLBAR — search + load trigger
+  ══════════════════════════════════════════════════════════════════════ -->
+  <div class="toolbar">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search {{ activeTabInfo.label | lowercase }}…</mat-label>
+      <mat-icon matPrefix>search</mat-icon>
+      <input
+        matInput
+        (keyup)="applyFilter($event)"
+        [placeholder]="'Name, email, phone — filtered to ' + activeTabInfo.label"
+      />
+    </mat-form-field>
+
+    <div class="toolbar-right">
+      @if (isTabLoaded() && !loading()) {
+      <span class="result-count">
+        {{ dataSource.filteredData.length }}
+        {{ activeTabInfo.label | lowercase }}{{ dataSource.filteredData.length !== 1 ? 's' : '' }}
+      </span>
+      }
+      <button mat-stroked-button (click)="loadCurrentTab()" [disabled]="loading()" class="btn-load">
+        @if (loading()) {
+        <mat-spinner diameter="16" class="inline-spinner"></mat-spinner>
+        Loading… } @else if (isTabLoaded()) {
+        <ng-container>
+          <mat-icon>refresh</mat-icon>
+          Refresh
+        </ng-container>
+        } @else {
+        <ng-container>
+          <mat-icon>download</mat-icon>
+          Load {{ activeTabInfo.label }}
+        </ng-container>
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       ERROR STATE
+  ══════════════════════════════════════════════════════════════════════ -->
+  @if (error()) {
+  <div class="state-container error">
+    <mat-icon class="state-icon">error_outline</mat-icon>
+    <h2>Failed to load {{ activeTabInfo.label | lowercase }}</h2>
+    <p>{{ error() }}</p>
+    <button mat-raised-button color="primary" (click)="loadCurrentTab()">Try Again</button>
+  </div>
+  }
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       NOT-YET-LOADED STATE (initial prompt)
+  ══════════════════════════════════════════════════════════════════════ -->
+  @else if (!isTabLoaded() && !loading()) {
+  <div class="state-container prompt">
+    <div class="prompt-icon-wrapper" [attr.data-color]="activeTabInfo.color">
+      <mat-icon class="prompt-icon">{{ activeTabInfo.icon }}</mat-icon>
+    </div>
+    <h2>{{ activeTabInfo.label }}</h2>
+    <p class="prompt-desc">{{ activeTabInfo.description }}</p>
+    <p class="prompt-hint">
+      Click the button below to fetch {{ activeTabInfo.label | lowercase }} from the server.
+    </p>
+    <button mat-raised-button color="primary" (click)="loadCurrentTab()" class="btn-load-prompt">
+      <mat-icon>download</mat-icon>
+      Load {{ activeTabInfo.label }}
+    </button>
+  </div>
+  }
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       TABLE (only shown when tab is loaded)
+  ══════════════════════════════════════════════════════════════════════ -->
+  @else {
+  <div class="table-card">
+    <!-- Loading overlay -->
+    @if (loading()) {
+    <div class="loading-shade">
+      <mat-spinner diameter="44"></mat-spinner>
+    </div>
+    }
+
+    <div class="table-overflow">
+      <table mat-table [dataSource]="dataSource" matSort>
+        <!-- ── User (name + email + avatar) ── -->
+        <ng-container matColumnDef="user">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="name">User</th>
+          <td mat-cell *matCellDef="let user">
+            <div class="user-cell">
+              <div class="user-avatar" [attr.data-tab]="activeTab()">
+                {{ getInitials(user.name) }}
+              </div>
+              <div class="user-details">
+                <span class="user-name">{{ user.name }}</span>
+                <span class="user-email">{{ user.email }}</span>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- ── Roles ── -->
+        <ng-container matColumnDef="roles">
+          <th mat-header-cell *matHeaderCellDef>Roles</th>
+          <td mat-cell *matCellDef="let user">
+            <div class="roles-cell">
+              @for (role of user.roles; track role.id; let i = $index) { @if (i < 2) {
+              <span
+                class="role-badge"
+                [ngClass]="getRoleBadgeClass(role.name)"
+                [class.primary-role-indicator]="role.name === user.primaryRole"
+              >
+                {{ role.name.replace('_', ' ') | titlecase }}
+                @if (role.name === user.primaryRole) {
+                <span class="primary-marker" title="Primary Role">★</span>
+                }
+              </span>
+              } } @if (user.roles.length > 2) {
+              <span
+                class="more-badge"
+                [matTooltip]="getExtraRolesTooltip(user)"
+              >
+                +{{ user.roles.length - 2 }}
+              </span>
+              } @if (user.roles.length === 0) {
+              <span class="no-role-text">No role assigned</span>
+              }
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- ── Phone ── -->
+        <ng-container matColumnDef="phone">
+          <th mat-header-cell *matHeaderCellDef>Phone</th>
+          <td mat-cell *matCellDef="let user" class="phone-cell">
+            {{ user.phone || '—' }}
+          </td>
+        </ng-container>
+
+        <!-- ── Status ── -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let user">
+            <span class="status-badge" [ngClass]="user.isActive ? 'active' : 'inactive'">
+              <span class="status-dot" [ngClass]="user.isActive ? 'active' : 'inactive'"></span>
+              {{ user.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- ── Actions ── -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let user">
+            <div class="cell-actions">
+              @if (canEdit()) {
+              <button mat-icon-button (click)="editUser(user)" matTooltip="Edit user">
+                <mat-icon>edit</mat-icon>
+              </button>
+              } @if (canEdit() && user.id !== currentUserId()) {
+              <button
+                mat-icon-button
+                (click)="openDeactivateDialog(user)"
+                [matTooltip]="user.isActive ? 'Deactivate user' : 'Activate user'"
+                [color]="user.isActive ? 'warn' : 'primary'"
+              >
+                <mat-icon>{{ user.isActive ? 'person_off' : 'how_to_reg' }}</mat-icon>
+              </button>
+              } @if (canDelete() && user.id !== currentUserId()) {
+              <button
+                mat-icon-button
+                color="warn"
+                (click)="openDeleteDialog(user)"
+                matTooltip="Delete user"
+              >
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+              }
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+
+        <!-- No data row -->
+        <tr class="mat-mdc-row" *matNoDataRow>
+          <td class="mat-mdc-cell no-data-cell" [attr.colspan]="displayedColumns.length">
+            @if (dataSource.data.length === 0 && !loading()) { No
+            {{ activeTabInfo.label | lowercase }} found. @if (canCreate()) { Click "Add New User" to
+            create the first one. } } @else { No {{ activeTabInfo.label | lowercase }} match your
+            search. }
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]" showFirstLastButtons />
+  </div>
+  }
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     DEACTIVATE CONFIRMATION DIALOG (custom overlay)
+════════════════════════════════════════════════════════════════════════════ -->
+@if (showDeactivateDialog()) {
+<div class="dialog-backdrop" (click)="closeDeactivateDialog()">
+  <div class="custom-dialog deactivate-dialog" (click)="$event.stopPropagation()">
+    <div class="dialog-header">
+      <div
+        class="dialog-icon-wrap"
+        [class]="pendingActionUser()?.isActive ? 'icon-warn' : 'icon-success'"
+      >
+        <mat-icon>{{ pendingActionUser()?.isActive ? 'person_off' : 'how_to_reg' }}</mat-icon>
+      </div>
+      <div class="dialog-titles">
+        <h2>{{ pendingActionUser()?.isActive ? 'Deactivate' : 'Activate' }} User Account</h2>
+        <p class="dialog-subtitle">{{ pendingActionUser()?.name }}</p>
+      </div>
+    </div>
+
+    <div class="dialog-body">
+      @if (pendingActionUser()?.isActive) {
+      <!-- Deactivating -->
+      <div class="impact-section">
+        <h3 class="impact-heading">What happens when you deactivate?</h3>
+        <ul class="impact-list">
+          <li class="impact-item info">
+            <mat-icon>lock</mat-icon>
+            <span
+              >The user will immediately lose access to the portal. Their session will be
+              invalidated.</span
+            >
+          </li>
+          <li class="impact-item info">
+            <mat-icon>history</mat-icon>
+            <span
+              >All historical data (attendance, fees, marks) is preserved and remains accessible to
+              staff.</span
+            >
+          </li>
+          <li class="impact-item success">
+            <mat-icon>undo</mat-icon>
+            <span>This is reversible. You can reactivate the account at any time.</span>
+          </li>
+          <li class="impact-item warning">
+            <mat-icon>notifications_off</mat-icon>
+            <span
+              >The user will stop receiving notifications and cannot log in until reactivated.</span
+            >
+          </li>
+        </ul>
+      </div>
+      <div class="dialog-confirm-text">
+        Are you sure you want to <strong>deactivate</strong> the account for
+        <strong>{{ pendingActionUser()?.name }}</strong
+        >?
+      </div>
+      } @else {
+      <!-- Activating -->
+      <div class="impact-section">
+        <h3 class="impact-heading">What happens when you activate?</h3>
+        <ul class="impact-list">
+          <li class="impact-item success">
+            <mat-icon>login</mat-icon>
+            <span
+              >The user will immediately regain access to the portal with their existing
+              credentials.</span
+            >
+          </li>
+          <li class="impact-item info">
+            <mat-icon>restore</mat-icon>
+            <span>All their data and permissions will be restored exactly as before.</span>
+          </li>
+        </ul>
+      </div>
+      <div class="dialog-confirm-text">
+        Are you sure you want to <strong>activate</strong> the account for
+        <strong>{{ pendingActionUser()?.name }}</strong
+        >?
+      </div>
+      }
+    </div>
+
+    <div class="dialog-footer">
+      <button mat-stroked-button (click)="closeDeactivateDialog()">Cancel</button>
+      <button
+        mat-raised-button
+        [color]="pendingActionUser()?.isActive ? 'warn' : 'primary'"
+        (click)="confirmToggleStatus()"
+      >
+        <mat-icon>{{ pendingActionUser()?.isActive ? 'person_off' : 'how_to_reg' }}</mat-icon>
+        {{ pendingActionUser()?.isActive ? 'Deactivate' : 'Activate' }} Account
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     DELETE CONFIRMATION DIALOG (custom overlay with impact check)
+════════════════════════════════════════════════════════════════════════════ -->
+@if (showDeleteDialog()) {
+<div class="dialog-backdrop" (click)="closeDeleteDialog()">
+  <div class="custom-dialog delete-dialog" (click)="$event.stopPropagation()">
+    <div class="dialog-header danger-header">
+      <div class="dialog-icon-wrap icon-danger">
+        <mat-icon>delete_forever</mat-icon>
+      </div>
+      <div class="dialog-titles">
+        <h2>Delete User Account</h2>
+        <p class="dialog-subtitle">{{ pendingActionUser()?.name }}</p>
+      </div>
+    </div>
+
+    <div class="dialog-body">
+      <!-- Loading state while fetching impact -->
+      @if (deletionCheckLoading()) {
+      <div class="check-loading">
+        <mat-spinner diameter="36"></mat-spinner>
+        <p>Analysing account data & dependencies…</p>
+      </div>
+      }
+
+      <!-- Impact check result -->
+      @else if (deletionCheckResult(); as result) {
+
+      <!-- Blocking reason (cannot delete) -->
+      @if (!result.canDelete) {
+      <div class="blocking-banner">
+        <mat-icon>block</mat-icon>
+        <div>
+          <strong>Deletion Blocked</strong>
+          <p>{{ result.blockingReason }}</p>
+        </div>
+      </div>
+      }
+
+      <!-- Data summary cards -->
+      @if (hasSummaryData(result)) {
+      <h3 class="impact-heading">Linked Data Summary</h3>
+      <div class="summary-grid">
+        @if (result.summary.enrollments > 0) {
+        <div class="summary-card" [class.danger]="result.summary.enrollments > 0">
+          <mat-icon>class</mat-icon>
+          <span class="summary-count">{{ result.summary.enrollments }}</span>
+          <span class="summary-label">Enrollment(s)</span>
+        </div>
+        } @if (result.summary.attendanceRecords > 0) {
+        <div class="summary-card warning">
+          <mat-icon>event_available</mat-icon>
+          <span class="summary-count">{{ result.summary.attendanceRecords }}</span>
+          <span class="summary-label">Attendance Records</span>
+        </div>
+        } @if (result.summary.feePayments > 0) {
+        <div class="summary-card warning">
+          <mat-icon>payments</mat-icon>
+          <span class="summary-count">{{ result.summary.feePayments }}</span>
+          <span class="summary-label">Fee Payment(s)</span>
+        </div>
+        } @if (result.summary.examMarks > 0) {
+        <div class="summary-card warning">
+          <mat-icon>grade</mat-icon>
+          <span class="summary-count">{{ result.summary.examMarks }}</span>
+          <span class="summary-label">Exam Mark(s)</span>
+        </div>
+        } @if (result.summary.assignments > 0) {
+        <div class="summary-card warning">
+          <mat-icon>assignment</mat-icon>
+          <span class="summary-count">{{ result.summary.assignments }}</span>
+          <span class="summary-label">Assignment(s)</span>
+        </div>
+        } @if (result.summary.submissions > 0) {
+        <div class="summary-card warning">
+          <mat-icon>assignment_turned_in</mat-icon>
+          <span class="summary-count">{{ result.summary.submissions }}</span>
+          <span class="summary-label">Submission(s)</span>
+        </div>
+        } @if (result.summary.linkedChildren > 0) {
+        <div class="summary-card info">
+          <mat-icon>child_care</mat-icon>
+          <span class="summary-count">{{ result.summary.linkedChildren }}</span>
+          <span class="summary-label">Linked Child(ren)</span>
+        </div>
+        } @if (result.summary.linkedParents > 0) {
+        <div class="summary-card info">
+          <mat-icon>family_restroom</mat-icon>
+          <span class="summary-count">{{ result.summary.linkedParents }}</span>
+          <span class="summary-label">Linked Parent(s)</span>
+        </div>
+        }
+      </div>
+      }
+
+      <!-- Warnings list -->
+      @if (result.warnings.length > 0) {
+      <h3 class="impact-heading" style="margin-top: 20px">Impact Details</h3>
+      <ul class="impact-list">
+        @for (warn of result.warnings; track $index) {
+        <li class="impact-item" [ngClass]="warn.severity">
+          <mat-icon>{{ getWarningSeverityIcon(warn.severity) }}</mat-icon>
+          <span>{{ warn.message }}</span>
+        </li>
+        }
+      </ul>
+      }
+
+      <!-- Final confirmation text -->
+      @if (result.canDelete) {
+      <div class="dialog-confirm-text danger-text">
+        Type <strong>DELETE</strong> to confirm you understand this action is permanent and
+        irreversible. All listed data will be removed from the system.
+      </div>
+      } }
+    </div>
+
+    <div class="dialog-footer">
+      <button mat-stroked-button (click)="closeDeleteDialog()" [disabled]="loadingDelete()">
+        Cancel
+      </button>
+      @if (deletionCheckResult()?.canDelete) {
+      <button
+        mat-raised-button
+        color="warn"
+        (click)="confirmDelete()"
+        [disabled]="loadingDelete()"
+        class="btn-delete-confirm"
+      >
+        @if (loadingDelete()) {
+        <mat-spinner diameter="18" class="inline-spinner"></mat-spinner>
+        Deleting… } @else {
+        <ng-container>
+          <mat-icon>delete_forever</mat-icon>
+          Permanently Delete
+        </ng-container>
+        }
+      </button>
+      } @else if (!deletionCheckLoading()) {
+      <button mat-raised-button color="primary" (click)="closeDeleteDialog()">
+        <mat-icon>person_off</mat-icon>
+        Deactivate Instead
+      </button>
+      }
+    </div>
+  </div>
+</div>
+}

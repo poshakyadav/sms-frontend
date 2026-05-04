@@ -1,0 +1,306 @@
+<div class="page-container">
+  <!-- ── Page Header ──────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="header-left">
+      <div class="header-eyebrow">
+        <mat-icon class="eyebrow-icon">school</mat-icon>
+        <span>Academics</span>
+        <mat-icon class="sep-icon">chevron_right</mat-icon>
+        <span>Exams</span>
+      </div>
+      <h1 class="page-title">Exams &amp; Assessments</h1>
+      <p class="page-subtitle">Manage exam events, statuses, publication and marks</p>
+    </div>
+    <div class="header-actions">
+      @if (canTemplates()) {
+      <button
+        mat-stroked-button
+        class="action-btn secondary-btn"
+        routerLink="/school/exams/templates"
+        matTooltip="Manage card templates"
+      >
+        <mat-icon>description</mat-icon>
+        <span>Templates</span>
+      </button>
+      } @if (canCreate()) {
+      <button mat-raised-button class="action-btn primary-btn" (click)="createNew()">
+        <mat-icon>add</mat-icon>
+        <span>New Exam</span>
+      </button>
+      }
+      <button mat-icon-button class="refresh-btn" (click)="loadExams()" matTooltip="Refresh list">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Stats Strip ───────────────────────────────────────────────────────── -->
+  @if (!loading() && !error() && exams().length > 0) {
+  <div class="stats-strip">
+    <div class="stat-card total">
+      <div class="stat-inner">
+        <mat-icon>assignment</mat-icon>
+        <div class="stat-text">
+          <span class="stat-value">{{ totalExams() }}</span>
+          <span class="stat-label">Total</span>
+        </div>
+      </div>
+    </div>
+    <div class="stat-card scheduled">
+      <div class="stat-inner">
+        <mat-icon>event</mat-icon>
+        <div class="stat-text">
+          <span class="stat-value">{{ scheduledCount() }}</span>
+          <span class="stat-label">Scheduled</span>
+        </div>
+      </div>
+    </div>
+    <div class="stat-card active-stat">
+      <div class="stat-inner">
+        <mat-icon>play_circle</mat-icon>
+        <div class="stat-text">
+          <span class="stat-value">{{ activeCount() }}</span>
+          <span class="stat-label">Active</span>
+        </div>
+      </div>
+    </div>
+    <div class="stat-card completed-stat">
+      <div class="stat-inner">
+        <mat-icon>check_circle</mat-icon>
+        <div class="stat-text">
+          <span class="stat-value">{{ completedCount() }}</span>
+          <span class="stat-label">Completed</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- ── Loading ───────────────────────────────────────────────────────────── -->
+  @if (loading()) {
+  <div class="state-container">
+    <mat-spinner diameter="44"></mat-spinner>
+    <p class="state-msg">Loading exams…</p>
+  </div>
+  }
+
+  <!-- ── Error ─────────────────────────────────────────────────────────────── -->
+  @else if (error()) {
+  <div class="state-container">
+    <div class="state-icon-wrap error">
+      <mat-icon>error_outline</mat-icon>
+    </div>
+    <h2 class="state-title">Something went wrong</h2>
+    <p class="state-msg">{{ error() }}</p>
+    <button mat-raised-button color="primary" (click)="loadExams()">
+      <mat-icon>refresh</mat-icon> Try Again
+    </button>
+  </div>
+  }
+
+  <!-- ── Empty ─────────────────────────────────────────────────────────────── -->
+  @else if (exams().length === 0) {
+  <div class="state-container">
+    <div class="state-icon-wrap neutral">
+      <mat-icon>assignment</mat-icon>
+    </div>
+    <h2 class="state-title">No Exams Yet</h2>
+    <p class="state-msg">Create your first exam event to get started.</p>
+    @if (canCreate()) {
+    <button mat-raised-button color="primary" (click)="createNew()">
+      <mat-icon>add</mat-icon> Create First Exam
+    </button>
+    }
+  </div>
+  }
+
+  <!-- ── Table ─────────────────────────────────────────────────────────────── -->
+  @else {
+  <div class="table-card">
+    <div class="table-scroll">
+      <table mat-table [dataSource]="exams()" class="exams-table">
+        <!-- Exam Name -->
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Exam Name</th>
+          <td mat-cell *matCellDef="let e">
+            <div class="exam-name-cell">
+              <span class="exam-name">{{ e.name }}</span>
+              @if (e.description) {
+              <span class="exam-desc">{{ e.description }}</span>
+              }
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Class · Section -->
+        <ng-container matColumnDef="classSection">
+          <th mat-header-cell *matHeaderCellDef>Class</th>
+          <td mat-cell *matCellDef="let e">
+            <span class="class-pill">
+              <mat-icon>class</mat-icon>
+              {{ e.className }}&nbsp;&ndash;&nbsp;{{ e.sectionName }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Type -->
+        <ng-container matColumnDef="type">
+          <th mat-header-cell *matHeaderCellDef>Type</th>
+          <td mat-cell *matCellDef="let e">
+            <span class="type-badge" [ngClass]="examTypeBadgeClass(e.type)">{{ e.type }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Status -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let e">
+            <div class="status-cell">
+              <span class="status-badge" [ngClass]="statusClass(e.status)">
+                <mat-icon class="status-icon">{{ statusIcon(e.status) }}</mat-icon>
+                {{ e.status }}
+              </span>
+              @if (canManageStatus() && nextStatuses(e.status).length > 0) {
+              <div class="status-actions">
+                @for (next of nextStatuses(e.status); track next.value) {
+                <button
+                  mat-icon-button
+                  class="status-mini-btn"
+                  [disabled]="actionInProgress() === e.id"
+                  (click)="updateStatus(e, next.value)"
+                  [matTooltip]="next.label"
+                >
+                  <mat-icon>{{ statusIcon(next.value) }}</mat-icon>
+                </button>
+                }
+              </div>
+              }
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Cards Publication -->
+        <ng-container matColumnDef="cards">
+          <th mat-header-cell *matHeaderCellDef>Publication</th>
+          <td mat-cell *matCellDef="let e">
+            <div class="cards-cell">
+              <!-- Admit Card toggle -->
+              <div class="pub-item" [class.is-published]="e.admitCardPublished">
+                <mat-icon class="pub-icon">badge</mat-icon>
+                <span class="pub-label">Admit</span>
+                <span class="pub-dot" [class.on]="e.admitCardPublished"></span>
+                @if (canPublishAdmit()) {
+                <button
+                  mat-icon-button
+                  class="pub-action-btn"
+                  [disabled]="actionInProgress() === e.id"
+                  (click)="togglePublish(e, 'ADMIT_CARD')"
+                  [matTooltip]="
+                    e.admitCardPublished ? 'Unpublish admit card' : 'Publish admit card'
+                  "
+                >
+                  <mat-icon>{{ e.admitCardPublished ? 'visibility_off' : 'publish' }}</mat-icon>
+                </button>
+                }
+              </div>
+
+              <!-- Report Card toggle -->
+              <div class="pub-item" [class.is-published]="e.reportCardPublished">
+                <mat-icon class="pub-icon">summarize</mat-icon>
+                <span class="pub-label">Report</span>
+                <span class="pub-dot" [class.on]="e.reportCardPublished"></span>
+                @if (canPublishReport()) {
+                <button
+                  mat-icon-button
+                  class="pub-action-btn"
+                  [disabled]="actionInProgress() === e.id"
+                  (click)="togglePublish(e, 'REPORT_CARD')"
+                  [matTooltip]="
+                    e.reportCardPublished ? 'Unpublish report card' : 'Publish report card'
+                  "
+                >
+                  <mat-icon>{{ e.reportCardPublished ? 'visibility_off' : 'publish' }}</mat-icon>
+                </button>
+                }
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Subjects -->
+        <ng-container matColumnDef="subjects">
+          <th mat-header-cell *matHeaderCellDef>Subjects</th>
+          <td mat-cell *matCellDef="let e">
+            <span class="subject-chip">
+              <mat-icon>menu_book</mat-icon>
+              {{ e.timetable?.length ?? 0 }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- View Cards -->
+        <ng-container matColumnDef="viewCards">
+          <th mat-header-cell *matHeaderCellDef>Student Cards</th>
+          <td mat-cell *matCellDef="let e">
+            <button
+              class="view-cards-btn"
+              (click)="viewCards(e.id)"
+              matTooltip="View admit & report cards for all students"
+            >
+              <mat-icon>recent_actors</mat-icon>
+              <span>View Cards</span>
+            </button>
+          </td>
+        </ng-container>
+
+        <!-- Actions -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let e">
+            <div class="row-actions">
+              @if (canMarks()) {
+              <button
+                mat-icon-button
+                class="row-action-btn marks"
+                (click)="enterMarks(e.id)"
+                matTooltip="Enter Marks"
+              >
+                <mat-icon>grading</mat-icon>
+              </button>
+              } @if (canEdit()) {
+              <button
+                mat-icon-button
+                class="row-action-btn edit"
+                (click)="edit(e.id)"
+                matTooltip="Edit Exam"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+              } @if (canDelete()) {
+              <button
+                mat-icon-button
+                class="row-action-btn delete"
+                (click)="delete(e)"
+                matTooltip="Delete Exam"
+              >
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+              }
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns" class="exam-row"></tr>
+      </table>
+    </div>
+
+    <div class="table-footer">
+      <span class="footer-count">
+        <mat-icon>assignment</mat-icon>
+        {{ exams().length }} exam{{ exams().length !== 1 ? 's' : '' }} total
+      </span>
+    </div>
+  </div>
+  }
+</div>

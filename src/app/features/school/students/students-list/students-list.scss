@@ -1,0 +1,376 @@
+// students-list.scss
+
+@use '../../../../shared/styles/students-shared' as *;
+
+// ── Selector Card ──────────────────────────────────────────────────────────
+.selector-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 20px 24px;
+  margin-bottom: 28px;
+}
+
+.selector-card-inner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.selector-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  mat-icon {
+    color: var(--color-primary);
+    font-size: 22px;
+  }
+}
+
+.selector-content {
+  flex: 1;
+  min-width: 160px;
+}
+
+.selector-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 2px;
+}
+
+.selector-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.selector-field {
+  flex-shrink: 0;
+  min-width: 280px;
+
+  @media (max-width: 640px) {
+    width: 100%;
+  }
+}
+
+.cs-select {
+  width: 100%;
+}
+
+.selector-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.option-count {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin-left: 4px;
+}
+
+// ── Empty Pick State ───────────────────────────────────────────────────────
+.empty-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 340px;
+  gap: 16px;
+  text-align: center;
+  padding: 60px 20px;
+
+  .empty-pick-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    mat-icon {
+      font-size: 40px;
+      height: 40px;
+      width: 40px;
+      color: var(--color-primary);
+    }
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    max-width: 420px;
+    line-height: 1.6;
+  }
+}
+
+// ── Bulk Action Bar ────────────────────────────────────────────────────────
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-bg-card));
+  border: 1.5px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+  border-radius: var(--radius-md);
+  padding: 14px 20px;
+  margin-bottom: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
+  animation: slideDown 0.2s ease;
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+.bulk-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+  font-weight: 500;
+
+  mat-icon {
+    color: var(--color-primary);
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+  }
+  strong {
+    font-size: 1rem;
+    color: var(--color-primary);
+  }
+}
+
+.bulk-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.clear-btn {
+  font-size: 0.8rem;
+  color: var(--color-text-muted) !important;
+  padding: 0 8px;
+  height: 28px;
+}
+
+// ── Stats Strip ────────────────────────────────────────────────────────────
+.stats-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+
+  .stat-card {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    box-shadow: var(--shadow-sm);
+
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--color-text-secondary);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    &.accent {
+      border-left: 3px solid var(--color-primary);
+      .stat-value {
+        color: var(--color-primary);
+      }
+    }
+    &.success {
+      border-left: 3px solid var(--color-success);
+      .stat-value {
+        color: var(--color-success);
+      }
+    }
+    &.muted {
+      border-left: 3px solid var(--color-text-muted);
+    }
+    &.info {
+      border-left: 3px solid var(--color-info, #0ea5e9);
+      .stat-value {
+        color: var(--color-info, #0ea5e9);
+      }
+    }
+  }
+}
+
+// ── Filter Bar ────────────────────────────────────────────────────────────
+.filter-bar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+
+  mat-form-field {
+    flex: 1;
+    min-width: 220px;
+    max-width: 420px;
+  }
+}
+
+.filter-promote-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  padding: 0 4px;
+
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+  }
+}
+
+// ── Student Cell ──────────────────────────────────────────────────────────
+.student-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar-sm {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.avatar-initials {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.student-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.student-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.student-email {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+// ── Roll Badge ────────────────────────────────────────────────────────────
+.roll-badge {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  background: var(--color-hover);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+// ── Blood Badge ───────────────────────────────────────────────────────────
+.blood-badge {
+  display: inline-block;
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
+  color: var(--color-error);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+// ── Selected Row ──────────────────────────────────────────────────────────
+.mat-mdc-row.selected-row {
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent) !important;
+}
+
+// ── Checkbox Column Width ─────────────────────────────────────────────────
+.col-check {
+  width: 52px;
+  padding-right: 0 !important;
+}
+.mat-mdc-header-cell:first-child {
+  padding-right: 0 !important;
+}
+
+// ── Unenroll Icon Button (NEW) ────────────────────────────────────────────
+// Gives the unenroll button a subtle red tint on hover to signal danger.
+.unenroll-icon-btn {
+  color: var(--color-text-muted) !important;
+  transition: color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    color: var(--color-error) !important;
+    background: color-mix(in srgb, var(--color-error) 10%, transparent) !important;
+  }
+
+  mat-icon {
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+  }
+}

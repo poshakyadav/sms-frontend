@@ -1,0 +1,82 @@
+<div class="form-page">
+  <header>
+    <div>
+      <h1>{{ isEdit() ? 'Edit Class' : 'New Class' }}</h1>
+      <p class="subtitle">
+        {{ isEdit() ? 'Update class name, level and order' : 'Define a new grade level' }}
+      </p>
+    </div>
+    <button mat-stroked-button (click)="router.navigate(['/school/academics/classes'])">
+      <mat-icon>arrow_back</mat-icon> Back
+    </button>
+  </header>
+
+  @if (notFound()) {
+  <div class="state-container error">
+    <mat-icon class="state-icon">search_off</mat-icon>
+    <h2>Class Not Found</h2>
+    <p>Redirecting back…</p>
+  </div>
+  } @else {
+  <div class="form-card">
+    @if (loading() && isEdit()) {
+    <div class="loading-overlay">
+      <mat-spinner diameter="44"></mat-spinner>
+      <p>Loading class data…</p>
+    </div>
+    } @else {
+    <form [formGroup]="form" (ngSubmit)="save()" class="form-layout">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Class Name</mat-label>
+        <input matInput formControlName="name" placeholder="e.g. Class 10, LKG, Nursery" />
+        @if (nameControl?.errors?.['required'] && nameControl?.touched) {
+        <mat-error>Class name is required</mat-error>
+        } @if (nameControl?.errors?.['minlength'] && nameControl?.touched) {
+        <mat-error>Minimum 1 character</mat-error>
+        }
+      </mat-form-field>
+
+      <div class="date-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Level (0 = Nursery)</mat-label>
+          <input matInput type="number" formControlName="level" min="0" max="12" />
+          <mat-hint>0 to 12</mat-hint>
+          @if (levelControl?.errors?.['min'] && levelControl?.touched) {
+          <mat-error>Minimum 0</mat-error>
+          } @if (levelControl?.errors?.['max'] && levelControl?.touched) {
+          <mat-error>Maximum 12</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Sort Order</mat-label>
+          <input matInput type="number" formControlName="sort_order" min="0" max="100" />
+          <mat-hint>Controls display order (lower = first)</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <div class="form-actions">
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="router.navigate(['/school/academics/classes'])"
+        >
+          Cancel
+        </button>
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="form.invalid || loading()"
+        >
+          @if (loading()) {
+          <mat-spinner diameter="18" style="display: inline-block; margin-right: 8px"></mat-spinner>
+          }
+          {{ isEdit() ? 'Update Class' : 'Create Class' }}
+        </button>
+      </div>
+    </form>
+    }
+  </div>
+  }
+</div>

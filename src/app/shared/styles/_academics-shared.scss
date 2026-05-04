@@ -1,0 +1,423 @@
+// ============================================================
+// _academics-shared.scss
+// Single source of truth for ALL academics module styles.
+// Import this in every academics component SCSS:
+//   @use '../../../../../shared/styles/academics-shared' as *;
+// (adjust relative path as needed)
+// ============================================================
+
+// ── Page shell ───────────────────────────────────────────────────────────────
+.page-container,
+.page-layout {
+  padding: 32px 28px;
+  max-width: 1280px;
+  margin: 0 auto;
+
+  @media (max-width: 768px) {
+    padding: 20px 16px;
+  }
+}
+
+// ── Page header (title + action buttons) ─────────────────────────────────────
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  .header-left {
+    h1 {
+      margin: 0 0 4px;
+      font-size: 1.875rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      letter-spacing: -0.02em;
+    }
+    p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--color-text-secondary);
+    }
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    letter-spacing: -0.02em;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .header-actions {
+      width: 100%;
+    }
+  }
+}
+
+// ── Shared state styles (used by loading, error, empty) ──────────────────────
+%state-base {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 380px;
+  gap: 16px;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+%state-icon-base {
+  font-size: 72px;
+  height: 72px;
+  width: 72px;
+  opacity: 0.55;
+  color: var(--color-text-muted);
+}
+
+// ── Feedback states: loading / error / empty ─────────────────────────────────
+.state-container {
+  @extend %state-base;
+
+  .state-icon {
+    @extend %state-icon-base;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
+  p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+  }
+
+  // Error modifier — use class="state-container error"
+  &.error {
+    .state-icon {
+      color: var(--color-error);
+      opacity: 1;
+    }
+    h2 {
+      color: var(--color-error);
+    }
+  }
+}
+
+// ── Legacy aliases — flat classes (no compound extends) ───────────────────────
+.loading-container,
+.loading-state {
+  @extend %state-base;
+
+  .state-icon {
+    @extend %state-icon-base;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
+  p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+  }
+}
+
+.error-container,
+.error-state {
+  @extend %state-base;
+
+  .state-icon {
+    @extend %state-icon-base;
+    color: var(--color-error);
+    opacity: 1;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--color-error);
+  }
+
+  p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+  }
+}
+
+.empty-state {
+  @extend %state-base;
+
+  mat-icon {
+    @extend %state-icon-base;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
+  p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+  }
+}
+
+// ── Data table card ───────────────────────────────────────────────────────────
+.table-card,
+.table-container {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+
+  table {
+    width: 100%;
+  }
+}
+
+.mat-mdc-header-cell {
+  background: var(--color-hover) !important;
+  font-weight: 700 !important;
+  font-size: 0.78rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary) !important;
+  padding: 14px 16px !important;
+}
+
+.mat-mdc-cell {
+  padding: 14px 16px !important;
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--color-divider) !important;
+}
+
+.mat-mdc-row {
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--color-hover) !important;
+  }
+
+  &:last-child .mat-mdc-cell {
+    border-bottom: none !important;
+  }
+}
+
+// ── Form page wrapper ─────────────────────────────────────────────────────────
+.form-page {
+  max-width: 840px;
+  margin: 36px auto;
+  padding: 0 24px;
+
+  @media (max-width: 600px) {
+    padding: 0 16px;
+    margin: 20px auto;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    gap: 16px;
+    flex-wrap: wrap;
+
+    h1 {
+      margin: 0;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+    }
+
+    @media (max-width: 600px) {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+}
+
+// ── Form card ─────────────────────────────────────────────────────────────────
+.form-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border);
+  padding: 36px;
+
+  @media (max-width: 600px) {
+    padding: 24px 20px;
+  }
+}
+
+// ── Form layout ───────────────────────────────────────────────────────────────
+.form-layout,
+.form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.date-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.full-width,
+mat-form-field.full-width {
+  width: 100%;
+}
+
+// ── Form actions bar ──────────────────────────────────────────────────────────
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+
+  button {
+    min-width: 120px;
+  }
+}
+
+// ── Loading overlay inside form ───────────────────────────────────────────────
+.loading-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 16px;
+  color: var(--color-text-secondary);
+}
+
+// ── Badge / chip helpers ──────────────────────────────────────────────────────
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+
+  &.global {
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    color: var(--color-primary-dark);
+  }
+
+  &.year-specific {
+    background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
+    color: var(--color-secondary);
+  }
+
+  &.active {
+    background: color-mix(in srgb, var(--color-success) 14%, transparent);
+    color: var(--color-success);
+  }
+
+  &.inactive {
+    background: color-mix(in srgb, var(--color-text-muted) 14%, transparent);
+    color: var(--color-text-muted);
+  }
+}
+
+// ── Mappings bulk form row ────────────────────────────────────────────────────
+.mapping-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 16px;
+  align-items: center;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ── Capacity badge ────────────────────────────────────────────────────────────
+.capacity-badge {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin-left: 6px;
+}
+
+// ── Inline add-form card ──────────────────────────────────────────────────────
+.inline-form-card {
+  background: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg-card));
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  margin-bottom: 28px;
+
+  h3 {
+    margin: 0 0 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+}
+
+// ── Responsive table overflow ─────────────────────────────────────────────────
+.overflow-x {
+  overflow-x: auto;
+}
+
+// ── Action button spacing ─────────────────────────────────────────────────────
+.cell-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+// ── Section label ─────────────────────────────────────────────────────────────
+.section-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-text-muted);
+  margin-bottom: 12px;
+}

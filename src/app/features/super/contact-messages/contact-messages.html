@@ -1,0 +1,344 @@
+<!-- contact-messages.html -->
+<div class="cm-page">
+  <!-- ══════════════════════════════════════════════
+         PAGE HEADER
+         ══════════════════════════════════════════════ -->
+  <div class="cm-page-header">
+    <div class="cm-header-left">
+      <div class="cm-header-icon">
+        <mat-icon>support_agent</mat-icon>
+      </div>
+      <div>
+        <h1 class="cm-page-title">
+          School Contact Messages @if (openCount() > 0) {
+          <span class="cm-open-badge">{{ openCount() }} open</span>
+          } @if (inReviewCount() > 0) {
+          <span class="cm-review-badge">{{ inReviewCount() }} in review</span>
+          }
+        </h1>
+        <p class="cm-page-sub">
+          Support messages from school owners. Review and respond to their issues.
+        </p>
+      </div>
+    </div>
+    <button
+      mat-stroked-button
+      class="cm-refresh-btn"
+      (click)="loadMessages()"
+      [disabled]="loading()"
+    >
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+         FILTERS
+         ══════════════════════════════════════════════ -->
+  <div class="cm-toolbar">
+    <!-- Status chips -->
+    <div class="cm-filter-row">
+      <div class="cm-filter-chips">
+        @for (f of statusFilters; track f.value) {
+        <button
+          class="cm-chip"
+          [class.active]="statusFilter() === f.value"
+          (click)="statusFilter.set(f.value)"
+        >
+          @if (f.value !== 'ALL' && statusConfig[f.value]) {
+          <span class="cm-chip-dot" [style.background]="statusConfig[f.value].dotColor"></span>
+          }
+          {{ f.label }}
+        </button>
+        }
+      </div>
+
+      <!-- Category filter -->
+      <div class="cm-cat-filter-wrap">
+        <mat-icon class="cm-cat-icon">filter_list</mat-icon>
+        <select
+          class="cm-cat-select"
+          [value]="categoryFilter()"
+          (change)="categoryFilter.set($any($event.target).value)"
+        >
+          @for (c of categoryFilters; track c.value) {
+          <option [value]="c.value">{{ c.label }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Search -->
+      <div class="cm-search-wrap">
+        <mat-icon class="cm-search-icon">search</mat-icon>
+        <input
+          class="cm-search-input"
+          type="text"
+          placeholder="Search school, owner, subject…"
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
+        />
+        @if (searchQuery()) {
+        <button class="cm-search-clear" (click)="searchQuery.set('')">
+          <mat-icon>close</mat-icon>
+        </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+         MAIN CONTENT
+         ══════════════════════════════════════════════ -->
+  <div class="cm-content" [class.panel-open]="panelOpen()">
+    <!-- List -->
+    <div class="cm-list-wrap">
+      @if (loading()) {
+      <div class="cm-loading">
+        <mat-spinner diameter="40"></mat-spinner>
+        <span>Loading messages…</span>
+      </div>
+      } @else if (filteredMessages().length === 0) {
+      <div class="cm-empty">
+        <div class="cm-empty-icon">
+          <mat-icon>inbox</mat-icon>
+        </div>
+        <h3>No messages found</h3>
+        <p>
+          @if (searchQuery() || statusFilter() !== 'ALL' || categoryFilter() !== 'ALL') { Try
+          adjusting your filters or search query. } @else { When schools send support messages,
+          they'll appear here. }
+        </p>
+      </div>
+      } @else {
+
+      <div class="cm-list">
+        @for (msg of filteredMessages(); track msg.id) {
+        <div
+          class="cm-card"
+          [class.active]="selectedMessage()?.id === msg.id"
+          [class.status-open]="msg.status === 'OPEN'"
+          (click)="openPanel(msg)"
+        >
+          <!-- Left accent line based on category -->
+          <div
+            class="cm-card-accent"
+            [style.background]="categoryConfig[msg.category]?.color"
+          ></div>
+
+          <div class="cm-card-body">
+            <!-- Top row -->
+            <div class="cm-card-top">
+              <!-- School avatar + category icon -->
+              <div class="cm-school-avatar-wrap">
+                <div class="cm-school-avatar">{{ getInitials(msg.schoolName) }}</div>
+                <div
+                  class="cm-cat-icon-badge"
+                  [style.background]="categoryConfig[msg.category]?.bg"
+                  [style.color]="categoryConfig[msg.category]?.color"
+                >
+                  <mat-icon>{{ categoryConfig[msg.category]?.icon }}</mat-icon>
+                </div>
+              </div>
+
+              <div class="cm-card-main">
+                <div class="cm-card-header-row">
+                  <div class="cm-school-info">
+                    <span class="cm-school-name">{{ msg.schoolName }}</span>
+                    <span class="cm-school-code">{{ msg.schoolCode }}</span>
+                  </div>
+                  <div class="cm-card-meta-right">
+                    <span
+                      class="cm-status-chip"
+                      [style.color]="statusConfig[msg.status]?.color"
+                      [style.background]="statusConfig[msg.status]?.bg"
+                    >
+                      <span
+                        class="cm-status-dot"
+                        [style.background]="statusConfig[msg.status]?.dotColor"
+                      ></span>
+                      {{ statusConfig[msg.status]?.label }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="cm-subject">{{ msg.subject }}</div>
+                <div class="cm-preview">{{ msg.message }}</div>
+
+                <div class="cm-card-footer-row">
+                  <span
+                    class="cm-cat-tag"
+                    [style.color]="categoryConfig[msg.category]?.color"
+                    [style.background]="categoryConfig[msg.category]?.bg"
+                  >
+                    {{ categoryConfig[msg.category]?.label }}
+                  </span>
+                  <span class="cm-owner-info">
+                    <mat-icon>person_outline</mat-icon>
+                    {{ msg.ownerName }}
+                  </span>
+                  <span class="cm-ref">{{ getReferenceId(msg.id) }}</span>
+                  <span class="cm-date">{{ formatDate(msg.createdAt) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+
+      <div class="cm-list-footer">
+        Showing {{ filteredMessages().length }} of {{ messages().length }} messages
+      </div>
+
+      }
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+           DETAIL PANEL
+           ══════════════════════════════════════════════ -->
+    @if (panelOpen() && selectedMessage()) {
+    <div class="cm-panel" [class.open]="panelOpen()">
+      <!-- Panel header -->
+      <div class="cm-panel-header">
+        <div class="cm-panel-header-content">
+          <div
+            class="cm-panel-cat"
+            [style.background]="categoryConfig[selectedMessage()!.category]?.bg"
+            [style.color]="categoryConfig[selectedMessage()!.category]?.color"
+          >
+            <mat-icon>{{ categoryConfig[selectedMessage()!.category]?.icon }}</mat-icon>
+            {{ categoryConfig[selectedMessage()!.category]?.label }}
+          </div>
+          <h2 class="cm-panel-title">{{ selectedMessage()!.subject }}</h2>
+          <div class="cm-panel-meta">
+            <span class="cm-ref-id">{{ getReferenceId(selectedMessage()!.id) }}</span>
+            <span
+              class="cm-status-chip"
+              [style.color]="statusConfig[selectedMessage()!.status]?.color"
+              [style.background]="statusConfig[selectedMessage()!.status]?.bg"
+            >
+              <span
+                class="cm-status-dot"
+                [style.background]="statusConfig[selectedMessage()!.status]?.dotColor"
+              ></span>
+              {{ statusConfig[selectedMessage()!.status]?.label }}
+            </span>
+          </div>
+        </div>
+        <button class="cm-panel-close" (click)="closePanel()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="cm-panel-body">
+        <!-- School & owner info -->
+        <div class="cm-detail-section">
+          <div class="cm-detail-section-label"><mat-icon>domain</mat-icon> School & Contact</div>
+          <div class="cm-detail-grid">
+            <div class="cm-detail-row">
+              <span class="cm-detail-key">School</span>
+              <span class="cm-detail-val">{{ selectedMessage()!.schoolName }}</span>
+            </div>
+            <div class="cm-detail-row">
+              <span class="cm-detail-key">Code</span>
+              <span class="cm-detail-val cm-monospace">{{ selectedMessage()!.schoolCode }}</span>
+            </div>
+            <div class="cm-detail-row">
+              <span class="cm-detail-key">Owner</span>
+              <span class="cm-detail-val">{{ selectedMessage()!.ownerName }}</span>
+            </div>
+            <div class="cm-detail-row">
+              <span class="cm-detail-key">Email</span>
+              <a [href]="'mailto:' + selectedMessage()!.ownerEmail" class="cm-detail-link">
+                {{ selectedMessage()!.ownerEmail }}
+              </a>
+            </div>
+            @if (selectedMessage()!.ownerPhone) {
+            <div class="cm-detail-row">
+              <span class="cm-detail-key">Phone</span>
+              <a [href]="'tel:' + selectedMessage()!.ownerPhone" class="cm-detail-link">
+                {{ selectedMessage()!.ownerPhone }}
+              </a>
+            </div>
+            }
+            <div class="cm-detail-row">
+              <span class="cm-detail-key">Submitted</span>
+              <span class="cm-detail-val">{{ formatDateTime(selectedMessage()!.createdAt) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Message body -->
+        <div class="cm-detail-section">
+          <div class="cm-detail-section-label"><mat-icon>message</mat-icon> Message</div>
+          <div class="cm-message-box">{{ selectedMessage()!.message }}</div>
+        </div>
+
+        <!-- Status actions -->
+        @if (canManage()) {
+        <div class="cm-detail-section">
+          <div class="cm-detail-section-label"><mat-icon>sync_alt</mat-icon> Update Status</div>
+          <div class="cm-status-actions">
+            @for (s of getNextStatuses(selectedMessage()!.status); track s.value) {
+            <button
+              mat-stroked-button
+              class="cm-status-btn"
+              [class]="'status-' + s.value.toLowerCase().replace('_', '-')"
+              (click)="updateStatus(s.value)"
+              [disabled]="updatingStatus()"
+            >
+              @if (updatingStatus()) {
+              <mat-spinner diameter="14"></mat-spinner>
+              } @else {
+              <span
+                class="cm-status-dot"
+                [style.background]="statusConfig[s.value]?.dotColor"
+              ></span>
+              }
+              {{ s.label }}
+            </button>
+            }
+          </div>
+        </div>
+
+        <!-- Internal Notes -->
+        <div class="cm-detail-section">
+          <div class="cm-detail-section-label">
+            <mat-icon>sticky_note_2</mat-icon> Internal Notes
+            <span class="cm-private-label">Private</span>
+          </div>
+          <textarea
+            class="cm-notes-area"
+            placeholder="Add notes, action items, or context for this message…"
+            [value]="notesValue()"
+            (input)="notesValue.set($any($event.target).value)"
+            rows="5"
+          >
+          </textarea>
+          <button
+            mat-flat-button
+            class="cm-save-notes-btn"
+            (click)="saveNotes()"
+            [disabled]="savingNotes()"
+          >
+            @if (savingNotes()) {
+            <mat-spinner diameter="16"></mat-spinner>
+            Saving… } @else {
+            <ng-container>
+              <mat-icon>save</mat-icon>
+              Save Notes
+            </ng-container>
+            }
+          </button>
+        </div>
+        } @if (selectedMessage()!.resolvedAt) {
+        <div class="cm-resolved-info">
+          <mat-icon>check_circle_outline</mat-icon>
+          Resolved on {{ formatDateTime(selectedMessage()!.resolvedAt!) }}
+        </div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+</div>

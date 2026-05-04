@@ -1,0 +1,146 @@
+<div class="detail-dialog">
+  <!-- ── Header ──────────────────────────────────────────────────── -->
+  <div class="dialog-header" [class]="headerClass()">
+    <div class="header-top">
+      <div class="header-avatar">
+        @if (p.avatarUrl) {
+        <img [src]="p.avatarUrl" [alt]="data.studentName" class="avatar-img" />
+        } @else {
+        <div class="avatar-initials">{{ getInitials(data.studentName) }}</div>
+        }
+      </div>
+      <div class="header-info">
+        <h2 class="student-name">{{ data.studentName }}</h2>
+        @if (p.email) {
+        <p class="student-email">{{ p.email }}</p>
+        }
+      </div>
+      <button mat-icon-button mat-dialog-close class="close-btn">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <!-- Status badge row -->
+    <div class="header-badges">
+      <span class="status-badge" [class]="typeBadgeClass()">
+        <mat-icon>{{ typeIcon() }}</mat-icon>
+        {{ typeLabel() }}
+      </span>
+      @if (p.isActive === false) {
+      <span class="status-badge inactive-badge">
+        <mat-icon>block</mat-icon>
+        Account Deactivated
+      </span>
+      }
+    </div>
+  </div>
+
+  <!-- ── Body ───────────────────────────────────────────────────── -->
+  <div class="dialog-body">
+    <!-- Unenrollment Reason (most prominent) -->
+    @if (p.unenrollmentReason) {
+    <div class="reason-section">
+      <div class="section-label">
+        <mat-icon>chat_bubble_outline</mat-icon>
+        Unenrollment Reason
+      </div>
+      <blockquote class="reason-text">"{{ p.unenrollmentReason }}"</blockquote>
+    </div>
+    }
+
+    <!-- Key details grid -->
+    <div class="details-grid">
+      @if (p.lastClassName) {
+      <div class="detail-card">
+        <mat-icon class="detail-icon class-icon">school</mat-icon>
+        <div class="detail-content">
+          <span class="detail-label">Last Class</span>
+          <span class="detail-value"> {{ p.lastClassName }} — {{ p.lastSectionName }} </span>
+        </div>
+      </div>
+      } @if (p.lastRollNumber) {
+      <div class="detail-card">
+        <mat-icon class="detail-icon roll-icon">tag</mat-icon>
+        <div class="detail-content">
+          <span class="detail-label">Last Roll Number</span>
+          <span class="detail-value roll-value">{{ p.lastRollNumber }}</span>
+        </div>
+      </div>
+      } @if (p.unenrolledAt) {
+      <div class="detail-card">
+        <mat-icon class="detail-icon date-icon">calendar_today</mat-icon>
+        <div class="detail-content">
+          <span class="detail-label">Unenrolled On</span>
+          <span class="detail-value">{{ formatDate(p.unenrolledAt) }}</span>
+        </div>
+      </div>
+      } @if (p.admissionDate) {
+      <div class="detail-card">
+        <mat-icon class="detail-icon admit-icon">assignment_ind</mat-icon>
+        <div class="detail-content">
+          <span class="detail-label">Admission Date</span>
+          <span class="detail-value">{{ formatDate(p.admissionDate) }}</span>
+        </div>
+      </div>
+      } @if (p.phone) {
+      <div class="detail-card">
+        <mat-icon class="detail-icon phone-icon">phone</mat-icon>
+        <div class="detail-content">
+          <span class="detail-label">Phone</span>
+          <span class="detail-value">{{ p.phone }}</span>
+        </div>
+      </div>
+      } @if (p.gender) {
+      <div class="detail-card">
+        <mat-icon class="detail-icon gender-icon">person</mat-icon>
+        <div class="detail-content">
+          <span class="detail-label">Gender</span>
+          <span class="detail-value">{{ p.gender }}</span>
+        </div>
+      </div>
+      } @if (p.bloodGroup) {
+      <div class="detail-card">
+        <mat-icon class="detail-icon blood-icon">water_drop</mat-icon>
+        <div class="detail-content">
+          <span class="detail-label">Blood Group</span>
+          <span class="detail-value blood-value">{{ p.bloodGroup }}</span>
+        </div>
+      </div>
+      }
+    </div>
+
+    <!-- Info notice for temporary -->
+    @if (p.unenrollmentType === 'TEMPORARY') {
+    <div class="info-notice temporary-notice">
+      <mat-icon>info</mat-icon>
+      <div>
+        <strong>Temporary Leave</strong>
+        <p>This student can be re-enrolled from the <em>Enroll Students</em> tab at any time.</p>
+      </div>
+    </div>
+    }
+
+    <!-- Info notice for permanent -->
+    @if (p.unenrollmentType === 'PERMANENT') {
+    <div class="info-notice permanent-notice">
+      <mat-icon>warning</mat-icon>
+      <div>
+        <strong>Permanent Unenrollment</strong>
+        <p>
+          This student's account is deactivated. To re-enroll, go to
+          <strong>Users → Edit User</strong> to reactivate their account first.
+        </p>
+      </div>
+    </div>
+    }
+  </div>
+
+  <!-- ── Actions ─────────────────────────────────────────────────── -->
+  <div class="dialog-actions">
+    <button mat-stroked-button [routerLink]="['/school/students', data.studentId]" mat-dialog-close>
+      <mat-icon>visibility</mat-icon>
+      View Full Profile
+    </button>
+    <button mat-raised-button color="primary" mat-dialog-close>Close</button>
+  </div>
+</div>

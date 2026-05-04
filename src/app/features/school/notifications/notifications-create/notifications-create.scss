@@ -1,0 +1,48 @@
+// notifications-create.scss
+@use '../../../../shared/styles/notifications-shared' as *;
+
+// ── Section title with icon ───────────────────────────────────────────────────
+.form-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .section-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: var(--color-primary);
+  }
+}
+
+// ── Two-column layout for optional fields ─────────────────────────────────────
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  mat-form-field {
+    width: 100%;
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ── Option meta text inside mat-option ───────────────────────────────────────
+.option-meta {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+// ── Submit button spinner + icon alignment ────────────────────────────────────
+button[type='submit'] {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  mat-spinner {
+    --mdc-circular-progress-active-indicator-color: var(--color-on-primary);
+  }
+}

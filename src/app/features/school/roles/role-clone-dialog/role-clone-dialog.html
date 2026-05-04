@@ -1,0 +1,99 @@
+<!-- role-clone-dialog.html -->
+<!-- UPDATED: Shows the source role's category badge.
+     Category is inherited automatically from the source role on the backend —
+     the cloned role will live in the same permission universe. -->
+
+<div class="rcd-shell">
+  <!-- Header -->
+  <div class="rcd-header">
+    <div class="rcd-header-left">
+      <div class="rcd-header-icon">
+        <mat-icon>content_copy</mat-icon>
+      </div>
+      <div>
+        <h2 class="rcd-title">Clone Role</h2>
+        <p class="rcd-subtitle">
+          Copying from <strong>{{ sourceRole.name }}</strong>
+        </p>
+      </div>
+    </div>
+    <button mat-icon-button class="rcd-close" (click)="cancel()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Body -->
+  <div class="rcd-body">
+    <!-- Source role info banner -->
+    <div class="rcd-banner">
+      <mat-icon class="rcd-banner-icon">info_outline</mat-icon>
+      <div class="rcd-banner-content">
+        <p class="rcd-banner-title">Cloning: {{ sourceRole.name }}</p>
+        <p class="rcd-banner-desc">
+          All {{ sourceRole.permissions.length }} permissions will be copied to the new role. You
+          can edit permissions on the new role afterwards.
+        </p>
+      </div>
+    </div>
+
+    <!-- Category inheritance notice -->
+    <div
+      class="rcd-category-notice"
+      [class.rcd-category-notice--staff]="sourceRole.category === 'staff'"
+      [class.rcd-category-notice--student]="sourceRole.category === 'student'"
+      [class.rcd-category-notice--parent]="sourceRole.category === 'parent'"
+      [matTooltip]="categoryMeta.tooltip"
+    >
+      <mat-icon class="rcd-cat-icon">{{ categoryMeta.icon }}</mat-icon>
+      <div class="rcd-cat-text">
+        <span class="rcd-cat-label">{{ categoryMeta.label }} Role</span>
+        <span class="rcd-cat-hint">
+          The cloned role inherits this category — it stays in the
+          <strong>{{ categoryMeta.label | lowercase }}</strong> permission universe.
+        </span>
+      </div>
+      <mat-icon class="rcd-cat-lock" matTooltip="Category is inherited and cannot be changed">
+        lock
+      </mat-icon>
+    </div>
+
+    <form [formGroup]="form" class="rcd-form">
+      <mat-form-field appearance="outline" class="rcd-field">
+        <mat-label>New Role Name</mat-label>
+        <input
+          matInput
+          formControlName="name"
+          placeholder="e.g. Senior Teacher (Modified)"
+          autocomplete="off"
+        />
+        @if (form.get('name')?.hasError('required') && form.get('name')?.touched) {
+        <mat-error>Name is required</mat-error>
+        } @if (form.get('name')?.hasError('minlength')) {
+        <mat-error>At least 2 characters</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="rcd-field">
+        <mat-label>Description <span class="rcd-optional">(optional)</span></mat-label>
+        <textarea matInput formControlName="description" rows="2"></textarea>
+      </mat-form-field>
+    </form>
+  </div>
+
+  <!-- Footer -->
+  <div class="rcd-footer">
+    <button mat-stroked-button class="rcd-btn-cancel" (click)="cancel()" [disabled]="saving()">
+      Cancel
+    </button>
+    <button
+      mat-flat-button
+      class="rcd-btn-clone"
+      (click)="clone()"
+      [disabled]="saving() || form.invalid"
+    >
+      @if (saving()) {
+      <mat-spinner diameter="16" class="rcd-btn-spinner"></mat-spinner>
+      } Clone Role
+    </button>
+  </div>
+</div>

@@ -1,0 +1,577 @@
+// user-form/user-form.scss
+@use '../../../../shared/styles/users-shared' as *;
+
+// ── Form-page-specific additions ──────────────────────────────────────────────
+
+.optional-label {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.role-option-desc {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.active-toggle-row {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 0;
+  flex: 1;
+
+  .toggle-hint {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    padding-left: 28px;
+  }
+}
+
+// ── Edit badge in header ───────────────────────────────────────────────────────
+
+.header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.edit-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border: 1px solid #f59e0b;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #92400e;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: #d97706;
+  }
+}
+
+// ── Field wrapper: locked/unlocked pattern ─────────────────────────────────────
+
+.field-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  position: relative;
+  transition: all 0.2s ease;
+
+  &.col-span-2 {
+    grid-column: span 2;
+  }
+
+  .field-input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  // Locked state — subtle dimming
+  &.field-locked {
+    .field-input {
+      opacity: 0.72;
+
+      ::ng-deep .mat-mdc-text-field-wrapper {
+        background: var(--color-bg-subtle, #f8f9fa) !important;
+
+        .mat-mdc-form-field-flex {
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+
+  // Unlocked state — highlight
+  &.field-unlocked {
+    .field-input {
+      ::ng-deep .mat-mdc-text-field-wrapper {
+        background: #fff9f0 !important;
+        border-color: #f59e0b !important;
+      }
+
+      ::ng-deep .mdc-notched-outline__leading,
+      ::ng-deep .mdc-notched-outline__notch,
+      ::ng-deep .mdc-notched-outline__trailing {
+        border-color: #f59e0b !important;
+        border-width: 2px !important;
+      }
+    }
+
+    // Highlight unlocked label
+    ::ng-deep .mat-mdc-form-field-label,
+    ::ng-deep .mat-mdc-floating-label {
+      color: #d97706 !important;
+    }
+  }
+
+  &.toggle-wrapper {
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--color-border, #e5e7eb);
+    background: var(--color-bg-subtle, #f9fafb);
+
+    &.field-unlocked {
+      background: #fff9f0;
+      border-color: #f59e0b;
+    }
+
+    &.field-locked {
+      opacity: 0.7;
+    }
+  }
+}
+
+// ── Edit (pen) button ──────────────────────────────────────────────────────────
+
+.field-edit-btn {
+  flex-shrink: 0;
+  margin-top: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1.5px solid var(--color-border, #d1d5db);
+  background: var(--color-surface, #fff);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
+  color: var(--color-text-muted, #9ca3af);
+
+  mat-icon {
+    font-size: 17px;
+    width: 17px;
+    height: 17px;
+  }
+
+  &:hover {
+    border-color: #3b82f6;
+    color: #3b82f6;
+    background: #eff6ff;
+    transform: scale(1.05);
+  }
+
+  // Active (unlocked) state
+  &.active {
+    border-color: #f59e0b;
+    color: #d97706;
+    background: #fffbeb;
+
+    mat-icon {
+      // Lock icon when unlocked
+    }
+
+    &:hover {
+      border-color: #ef4444;
+      color: #dc2626;
+      background: #fef2f2;
+    }
+  }
+}
+
+// ── Confirmation overlay & dialog ──────────────────────────────────────────────
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: overlayIn 0.2s ease;
+}
+
+@keyframes overlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.confirm-dialog {
+  background: var(--color-surface, #fff);
+  border-radius: 20px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  max-width: 600px;
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: dialogSlideIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes dialogSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+// Dialog header
+.confirm-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 24px 24px 20px;
+  border-bottom: 1px solid var(--color-border, #f3f4f6);
+  background: linear-gradient(135deg, #f0fdf4 0%, #f8fafc 100%);
+
+  .confirm-header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+
+    mat-icon {
+      color: white;
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+  }
+
+  .confirm-header-text {
+    flex: 1;
+
+    h2 {
+      margin: 0 0 4px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--color-text-primary, #111827);
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--color-text-muted, #6b7280);
+    }
+  }
+
+  .confirm-close-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted, #9ca3af);
+    transition: all 0.15s;
+    flex-shrink: 0;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    &:hover {
+      background: var(--color-hover, #f3f4f6);
+      color: var(--color-text-primary, #111827);
+    }
+  }
+}
+
+// Dialog body
+.confirm-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border, #e5e7eb);
+    border-radius: 99px;
+  }
+}
+
+.changes-count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #e0f2fe;
+  border: 1px solid #bae6fd;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #0369a1;
+  margin-bottom: 16px;
+
+  mat-icon {
+    font-size: 15px;
+    width: 15px;
+    height: 15px;
+    color: #0284c7;
+  }
+}
+
+.changes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.change-item {
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--color-bg-subtle, #fafafa);
+
+  .change-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px 8px;
+    background: var(--color-bg-subtle, #f3f4f6);
+    border-bottom: 1px solid var(--color-border, #e5e7eb);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text-secondary, #374151);
+
+    .change-label-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      color: var(--color-text-muted, #9ca3af);
+    }
+  }
+
+  .change-values {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    flex-wrap: wrap;
+
+    @media (max-width: 480px) {
+      flex-direction: column;
+      align-items: flex-start;
+
+      .change-arrow {
+        transform: rotate(90deg);
+      }
+    }
+  }
+
+  .change-old,
+  .change-new {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .change-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+
+    &.old {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    &.new {
+      background: #dcfce7;
+      color: #16a34a;
+    }
+  }
+
+  .change-value-text {
+    font-size: 0.85rem;
+    color: var(--color-text-primary, #1f2937);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .change-arrow {
+    color: var(--color-text-muted, #9ca3af);
+    flex-shrink: 0;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+}
+
+.confirm-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+
+  mat-icon {
+    color: #d97706;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #92400e;
+    line-height: 1.5;
+  }
+}
+
+// Dialog actions
+.confirm-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--color-border, #f3f4f6);
+  background: var(--color-bg-subtle, #f9fafb);
+
+  @media (max-width: 480px) {
+    flex-direction: column-reverse;
+
+    .cancel-btn,
+    .confirm-btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .cancel-btn {
+    gap: 6px;
+  }
+
+  .confirm-btn {
+    gap: 6px;
+    min-width: 160px;
+  }
+}
+
+// ── Back button tweak ──────────────────────────────────────────────────────────
+
+.back-btn {
+  white-space: nowrap;
+}
+
+
+.field-input-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+// Primary role immutability badge
+.primary-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-card)),
+    color-mix(in srgb, var(--color-secondary) 6%, var(--color-bg-card))
+  );
+  border: 1.5px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+  border-radius: 10px;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+
+  mat-icon {
+    font-size: 15px;
+    width: 15px;
+    height: 15px;
+    color: var(--color-primary);
+    flex-shrink: 0;
+  }
+
+  strong {
+    color: var(--color-primary-dark);
+    font-weight: 700;
+  }
+
+  .primary-role-hint {
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+    font-style: italic;
+  }
+}
+
+// Role option row inside mat-select
+.role-option-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+// "Primary" chip inside the dropdown option
+.role-primary-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary-dark);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+  border-radius: 9999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}

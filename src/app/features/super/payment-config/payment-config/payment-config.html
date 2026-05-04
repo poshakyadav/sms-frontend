@@ -1,0 +1,279 @@
+<!-- features/super/payment-config/payment-config.html -->
+
+<div class="pc-root">
+  <header class="pc-header">
+    <div class="pc-header__left">
+      <div class="pc-header__icon">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+          <line x1="1" y1="10" x2="23" y2="10"></line>
+        </svg>
+      </div>
+      <div>
+        <h1 class="pc-header__title">Payment Configuration</h1>
+        <p class="pc-header__sub">Set up your UPI payment details and setup fee</p>
+      </div>
+    </div>
+  </header>
+
+  @if (loading()) {
+  <div class="pc-loading">
+    <div class="pc-spinner"></div>
+    <p>Loading configuration…</p>
+  </div>
+  } @if (!loading() && error()) {
+  <div class="pc-error-state">
+    <svg
+      width="32"
+      height="32"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+    >
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    <p>{{ error() }}</p>
+    <button class="btn btn--primary" (click)="loadConfig()">Retry</button>
+  </div>
+  } @if (!loading() && !error()) {
+  <div class="pc-layout">
+    <!-- Form -->
+    <div class="pc-form-panel">
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <!-- Fee Toggle -->
+        <div class="pc-section">
+          <div class="pc-section__header">
+            <h2 class="pc-section__title">Fee Settings</h2>
+            <label class="toggle-switch">
+              <input type="checkbox" formControlName="isFeeEnabled" />
+              <span class="toggle-switch__track">
+                <span class="toggle-switch__thumb"></span>
+              </span>
+              <span class="toggle-switch__label">
+                {{ form.get('isFeeEnabled')?.value ? 'Fee enabled' : 'Fee disabled (free)' }}
+              </span>
+            </label>
+          </div>
+
+          <div class="field-row">
+            <div class="field field--large">
+              <label class="field__label">Setup Fee Amount (₹) <span class="req">*</span></label>
+              <div class="field__input-wrap">
+                <span class="field__prefix">₹</span>
+                <input
+                  class="field__input field__input--prefix"
+                  type="number"
+                  formControlName="setupFeeAmountRupees"
+                  placeholder="5000"
+                  min="0"
+                  step="100"
+                />
+              </div>
+              @if (form.get('setupFeeAmountRupees')?.touched &&
+              form.get('setupFeeAmountRupees')?.invalid) {
+              <span class="field__error">Valid amount required</span>
+              }
+              <span class="field__hint">Stored internally in paise. Enter amount in ₹.</span>
+            </div>
+            <div class="field">
+              <label class="field__label">Currency</label>
+              <input
+                class="field__input"
+                formControlName="currency"
+                placeholder="INR"
+                maxlength="3"
+              />
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field__label">Fee Description <span class="req">*</span></label>
+            <textarea
+              class="field__input field__input--textarea"
+              formControlName="feeDescription"
+              placeholder="One-time school setup fee — includes onboarding support by our team"
+              rows="2"
+            ></textarea>
+            @if (form.get('feeDescription')?.touched && form.get('feeDescription')?.invalid) {
+            <span class="field__error">Description is required (min. 5 characters)</span>
+            }
+          </div>
+        </div>
+
+        <div class="pc-divider"></div>
+
+        <!-- UPI Settings -->
+        <div class="pc-section">
+          <h2 class="pc-section__title">UPI Payment Details</h2>
+          <p class="pc-section__desc">Schools will pay using these details after registration.</p>
+
+          <div class="field">
+            <label class="field__label">UPI ID <span class="req">*</span></label>
+            <input
+              class="field__input"
+              formControlName="upiId"
+              placeholder="yourname@upi"
+              autocomplete="off"
+            />
+            @if (form.get('upiId')?.touched && form.get('upiId')?.invalid) {
+            <span class="field__error">Valid UPI ID required</span>
+            }
+            <span class="field__hint"
+              >Schools will copy this and pay via Google Pay, PhonePe, or any UPI app</span
+            >
+          </div>
+
+          <div class="field">
+            <label class="field__label">QR Code Image URL</label>
+            <input
+              class="field__input"
+              formControlName="qrCodeUrl"
+              placeholder="https://your-cdn.com/qr-code.png"
+            />
+            @if (form.get('qrCodeUrl')?.invalid && form.get('qrCodeUrl')?.value) {
+            <span class="field__error">Must be a valid https:// URL</span>
+            }
+            <span class="field__hint"
+              >Upload your QR code image to any CDN and paste the link here</span
+            >
+          </div>
+        </div>
+
+        @if (form.get('qrCodeUrl')?.value && !form.get('qrCodeUrl')?.invalid) {
+        <div class="qr-preview">
+          <p class="qr-preview__label">QR Code Preview</p>
+          <img
+            [src]="form.get('qrCodeUrl')!.value"
+            alt="QR Code Preview"
+            class="qr-preview__img"
+            (error)="$any($event.target).style.display = 'none'"
+          />
+        </div>
+        }
+
+        <div class="pc-actions">
+          <button
+            type="submit"
+            class="btn btn--primary btn--lg"
+            [disabled]="saving() || form.invalid"
+          >
+            @if (saving()) {
+            <span class="btn-spinner"></span>
+            Saving… } @else if (saveSuccess()) {
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Saved! } @else {
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            Save Configuration }
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Preview Panel -->
+    <div class="pc-preview-panel">
+      <div class="pc-preview">
+        <h3 class="pc-preview__title">Live Preview</h3>
+        <p class="pc-preview__sub">This is what schools will see on the payment page</p>
+
+        <div class="preview-fee-box">
+          <span class="preview-fee-box__label">One-time Setup Fee</span>
+          <span class="preview-fee-box__amount">{{ feePreview }}</span>
+          <span class="preview-fee-box__desc">{{
+            form.get('feeDescription')?.value || 'Fee description will appear here'
+          }}</span>
+        </div>
+
+        <div class="preview-upi">
+          <span class="preview-upi__label">UPI ID</span>
+          <div class="preview-upi__row">
+            <span class="preview-upi__value">{{ form.get('upiId')?.value || 'yourname@upi' }}</span>
+            <span class="preview-copy-btn">Copy</span>
+          </div>
+        </div>
+
+        <div class="preview-status">
+          <div
+            class="preview-status__item"
+            [class.preview-status__item--active]="form.get('isFeeEnabled')?.value"
+          >
+            <div class="preview-status__dot"></div>
+            <span>Fee {{ form.get('isFeeEnabled')?.value ? 'required' : 'waived' }}</span>
+          </div>
+          <div
+            class="preview-status__item"
+            [class.preview-status__item--active]="!!form.get('upiId')?.value"
+          >
+            <div class="preview-status__dot"></div>
+            <span>UPI {{ form.get('upiId')?.value ? 'configured' : 'not set' }}</span>
+          </div>
+          <div
+            class="preview-status__item"
+            [class.preview-status__item--active]="
+              !!form.get('qrCodeUrl')?.value && !form.get('qrCodeUrl')?.invalid
+            "
+          >
+            <div class="preview-status__dot"></div>
+            <span
+              >QR code
+              {{
+                form.get('qrCodeUrl')?.value && !form.get('qrCodeUrl')?.invalid
+                  ? 'uploaded'
+                  : 'not set'
+              }}</span
+            >
+          </div>
+        </div>
+
+        <div class="preview-tip">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <p>
+            Generate your UPI QR code from Google Pay or PhonePe, save the image, and upload it to
+            any image hosting service (Cloudinary, ImgBB, etc.) to get a URL.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>

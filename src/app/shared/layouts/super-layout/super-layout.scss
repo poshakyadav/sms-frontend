@@ -1,0 +1,114 @@
+// super-layout.scss
+
+:host {
+  display: block;
+  height: 100%;
+}
+
+.super-layout-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--sl-page-bg);
+  color: var(--sl-page-text);
+  transition: background 0.25s ease, color 0.25s ease;
+
+  &::before {
+    content: '';
+    position: fixed;
+    top: -20%;
+    left: -10%;
+    width: 50vw;
+    height: 50vh;
+    background: radial-gradient(ellipse, var(--sl-glow) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+}
+
+// ── CSS custom properties scoped to super portal ──────────────────────────────
+// Dark mode (default for super portal)
+:host,
+:host-context([data-theme='dark']),
+:host-context(:not([data-theme='light'])) {
+  --sl-page-bg: #0b0e18;
+  --sl-page-text: #a0b8d0;
+  --sl-glow: rgba(0, 212, 255, 0.04);
+  --sl-grid-line: rgba(0, 212, 255, 0.015);
+  --sl-scrollbar: rgba(0, 212, 255, 0.1);
+  --sl-scrollbar-thumb: rgba(0, 212, 255, 0.15);
+}
+
+// Light mode
+:host-context([data-theme='light']) {
+  --sl-page-bg: #f0f4ff;
+  --sl-page-text: #0f172a;
+  --sl-glow: rgba(0, 80, 180, 0.03);
+  --sl-grid-line: rgba(0, 80, 180, 0.012);
+  --sl-scrollbar: rgba(0, 80, 180, 0.08);
+  --sl-scrollbar-thumb: rgba(0, 80, 180, 0.15);
+}
+
+.super-layout-header {
+  flex-shrink: 0;
+  z-index: 100;
+  position: relative;
+}
+
+.super-layout-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+.super-layout-sidebar {
+  flex-shrink: 0;
+  height: 100%;
+  // overflow: hidden;
+  // overflow must be visible so the collapse-btn pill can protrude
+  // past the sidebar's right border without being clipped by the layout.
+  overflow: visible;
+
+  @media (max-width: 768px) {
+    width: 0 !important;
+    overflow: visible;
+  }
+}
+
+.super-main-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px;
+  box-sizing: border-box;
+  min-width: 0;
+
+  background-image: linear-gradient(var(--sl-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--sl-grid-line) 1px, transparent 1px);
+  background-size: 40px 40px;
+
+  scrollbar-width: thin;
+  scrollbar-color: var(--sl-scrollbar-thumb) transparent;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--sl-scrollbar-thumb);
+    border-radius: 4px;
+  }
+
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 12px;
+  }
+}

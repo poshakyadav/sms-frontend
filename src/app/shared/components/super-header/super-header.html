@@ -1,0 +1,115 @@
+<header class="super-header">
+  <div class="scanline" aria-hidden="true"></div>
+
+  <div class="header-inner">
+    <!-- Mobile hamburger -->
+    <button
+      class="icon-btn hamburger mobile-only"
+      mat-icon-button
+      (click)="onHamburgerClick()"
+      aria-label="Open navigation"
+    >
+      <mat-icon>menu</mat-icon>
+    </button>
+
+    <!-- Brand -->
+    <div class="brand-section">
+      <div class="brand-badge">
+        <mat-icon class="brand-icon">admin_panel_settings</mat-icon>
+      </div>
+      <div class="brand-text-wrap desktop-only">
+        <span class="brand-title">EduFlow</span>
+        <span class="brand-sub">Control Center</span>
+      </div>
+
+      <!-- System status pill -->
+      <div class="status-pill" [class]="systemStatus()">
+        <span class="status-dot"></span>
+        <span class="status-label">
+          {{
+            systemStatus() === 'healthy'
+              ? 'All Systems Operational'
+              : systemStatus() === 'degraded'
+              ? 'Degraded'
+              : 'Outage'
+          }}
+        </span>
+      </div>
+    </div>
+
+    <div class="flex-spacer"></div>
+
+    <!-- Actions -->
+    <div class="actions-section">
+      <!-- Dark mode toggle -->
+      <button
+        class="icon-btn theme-btn"
+        mat-icon-button
+        (click)="toggleDarkMode()"
+        [matTooltip]="isDarkMode() ? 'Light mode' : 'Dark mode'"
+        matTooltipPosition="below"
+        aria-label="Toggle theme"
+      >
+        <mat-icon>{{ isDarkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+      </button>
+
+      <!-- Notifications -->
+      <div class="notif-wrapper">
+        <!-- Badge sits on the wrapper, above & outside the button -->
+        <span
+          class="notif-badge"
+          *ngIf="notificationCount() > 0"
+          aria-label="{{ notificationCount() }} unread alerts"
+        >
+          {{ notificationCount() > 9 ? '9+' : notificationCount() }}
+        </span>
+
+        <button
+          class="icon-btn notif-btn"
+          mat-icon-button
+          (click)="toggleNotifications()"
+          matTooltip="System Alerts"
+          matTooltipPosition="below"
+          aria-label="System alerts"
+        >
+          <mat-icon class="bell-icon">notifications_active</mat-icon>
+        </button>
+
+        <!-- Alerts panel -->
+        <div class="notif-panel" *ngIf="notificationPanelOpen()">
+          <div class="notif-panel-header">
+            <span class="notif-title">System Alerts</span>
+            <button class="clear-btn" mat-button (click)="markAllRead()">Clear all</button>
+          </div>
+          <div class="notif-list">
+            <div class="notif-item" *ngFor="let n of notifications()" [class.unread]="n.unread">
+              <div class="notif-icon-wrap" [class]="n.severity">
+                <mat-icon class="notif-item-icon">{{ n.icon }}</mat-icon>
+              </div>
+              <div class="notif-content">
+                <p class="notif-text">{{ n.text }}</p>
+                <span class="notif-time">{{ n.time }}</span>
+              </div>
+              <div class="severity-bar" [class]="n.severity"></div>
+            </div>
+          </div>
+          <div class="notif-footer">
+            <button mat-button class="view-all-btn">View all alerts</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div class="header-divider desktop-only"></div>
+
+      <!-- User chip (display only — no logout here, it lives in the sidebar) -->
+      <div class="user-chip">
+        <div class="user-avatar">{{ userInitials() }}</div>
+        <div class="user-meta desktop-only">
+          <span class="user-name">{{ userName() }}</span>
+          <span class="user-role">{{ roleLabel() }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>

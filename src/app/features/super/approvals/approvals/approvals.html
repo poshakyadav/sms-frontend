@@ -1,0 +1,445 @@
+<!-- features/super/approvals/approvals.html -->
+
+<div class="apr-root">
+  <header class="apr-header">
+    <div class="apr-header__left">
+      <div class="apr-header__icon" [class.apr-header__icon--pulse]="pendingCount > 0">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <polyline points="9 11 12 14 22 4"></polyline>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+        </svg>
+        @if (pendingCount > 0) {
+        <span class="apr-header__badge">{{ pendingCount }}</span>
+        }
+      </div>
+      <div>
+        <h1 class="apr-header__title">Payment Approvals</h1>
+        <p class="apr-header__sub">Verify UTR numbers and activate school accounts</p>
+      </div>
+    </div>
+    <button class="btn btn--ghost" (click)="loadApprovals()">
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <polyline points="1 4 1 10 7 10"></polyline>
+        <path d="M3.51 15a9 9 0 1 0 .49-4.2"></path>
+      </svg>
+      Refresh
+    </button>
+  </header>
+
+  @if (pendingCount > 0) {
+  <div class="apr-alert">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+    >
+      <path
+        d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+      ></path>
+      <line x1="12" y1="9" x2="12" y2="13"></line>
+      <line x1="12" y1="17" x2="12.01" y2="17"></line>
+    </svg>
+    <strong>{{ pendingCount }} payment{{ pendingCount > 1 ? 's' : '' }}</strong> waiting for
+    verification. Check your UPI app to match UTR numbers before approving.
+  </div>
+  }
+
+  <!-- Filter tabs -->
+  @if (!loading() && !error()) {
+  <div class="apr-tabs">
+    @for (tab of [ { key: 'SUBMITTED', label: 'Pending' }, { key: 'VERIFIED', label: 'Approved' }, {
+    key: 'REJECTED', label: 'Rejected' }, { key: 'ALL', label: 'All' } ]; track tab.key) {
+    <button
+      class="apr-tab"
+      [class.apr-tab--active]="filterStatus() === tab.key"
+      (click)="setFilter(tab.key)"
+    >
+      {{ tab.label }}
+      @if (tab.key === 'SUBMITTED' && pendingCount > 0) {
+      <span class="apr-tab__count">{{ pendingCount }}</span>
+      }
+    </button>
+    }
+  </div>
+  } @if (loading()) {
+  <div class="apr-loading">
+    <div class="apr-spinner"></div>
+    <p>Loading payment records…</p>
+  </div>
+  } @if (!loading() && error()) {
+  <div class="apr-error">
+    <p>{{ error() }}</p>
+    <button class="btn btn--primary" (click)="loadApprovals()">Retry</button>
+  </div>
+  } @if (!loading() && !error()) {
+  <div class="apr-layout" [class.apr-layout--split]="selected()">
+    <!-- List -->
+    <div class="apr-list">
+      @if (filteredApprovals().length === 0) {
+      <div class="apr-empty">
+        <svg
+          width="40"
+          height="40"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1"
+        >
+          <polyline points="9 11 12 14 22 4"></polyline>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+        </svg>
+        <p>No {{ filterStatus() === 'ALL' ? '' : filterStatus().toLowerCase() }} records</p>
+      </div>
+      } @for (approval of filteredApprovals(); track approval.id) {
+      <div
+        class="apr-card"
+        [class.apr-card--selected]="selected()?.id === approval.id"
+        [class.apr-card--pending]="approval.status === 'SUBMITTED'"
+        [class.apr-card--approved]="approval.status === 'VERIFIED'"
+        [class.apr-card--rejected]="approval.status === 'REJECTED'"
+        (click)="selectApproval(approval)"
+      >
+        <div class="apr-card__top">
+          <div class="apr-card__school">
+            <div class="apr-card__avatar">{{ approval.schoolName.charAt(0) }}</div>
+            <div>
+              <div class="apr-card__name">{{ approval.schoolName }}</div>
+              @if (approval.invitationCity) {
+              <div class="apr-card__city">{{ approval.invitationCity }}</div>
+              }
+            </div>
+          </div>
+          <span class="badge" [class]="getStatusInfo(approval.status).cls">
+            {{ getStatusInfo(approval.status).label }}
+          </span>
+        </div>
+
+        <div class="apr-card__meta">
+          <div class="apr-card__meta-item">
+            <span class="apr-card__meta-label">UTR</span>
+            <span class="apr-card__meta-val apr-card__meta-val--mono">
+              {{ approval.utrNumber || '—' }}
+            </span>
+          </div>
+          <div class="apr-card__meta-item">
+            <span class="apr-card__meta-label">Amount</span>
+            <span class="apr-card__meta-val">{{ formatCurrency(approval.amountPaid) }}</span>
+          </div>
+          <div class="apr-card__meta-item">
+            <span class="apr-card__meta-label">Submitted</span>
+            <span class="apr-card__meta-val">{{ daysSince(approval.submittedAt) }}</span>
+          </div>
+        </div>
+
+        @if (approval.status === 'SUBMITTED') {
+        <div class="apr-card__actions" (click)="$event.stopPropagation()">
+          <button
+            class="btn-sm btn-sm--approve"
+            [disabled]="approvingId() === approval.id || rejectingId() === approval.id"
+            (click)="openApproveConfirm(approval.id)"
+          >
+            @if (approvingId() === approval.id) {
+            <span class="mini-spinner"></span>
+            } @else {
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            } Approve & Activate
+          </button>
+          <button
+            class="btn-sm btn-sm--reject"
+            [disabled]="approvingId() === approval.id || rejectingId() === approval.id"
+            (click)="openReject(approval.id)"
+          >
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            Reject
+          </button>
+        </div>
+        }
+      </div>
+      }
+    </div>
+
+    <!-- Detail panel -->
+    @if (selected()) {
+    <div class="apr-detail">
+      <div class="apr-detail__header">
+        <h3 class="apr-detail__title">Payment Detail</h3>
+        <button class="apr-detail__close" (click)="selected.set(null)">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="apr-detail__body">
+        <div class="detail-school">
+          <div class="detail-school__avatar">{{ selected()!.schoolName.charAt(0) }}</div>
+          <div>
+            <div class="detail-school__name">{{ selected()!.schoolName }}</div>
+            <div class="detail-school__email">{{ selected()!.schoolEmail }}</div>
+            @if (selected()!.invitationCity) {
+            <div class="detail-school__city">📍 {{ selected()!.invitationCity }}</div>
+            }
+          </div>
+        </div>
+
+        <span class="badge detail-status-badge" [class]="getStatusInfo(selected()!.status).cls">
+          {{ getStatusInfo(selected()!.status).label }}
+        </span>
+
+        <div class="detail-section">
+          <div class="detail-section__title">Payment Info</div>
+
+          <div class="detail-row">
+            <span class="detail-row__label">UTR Number</span>
+            <span class="detail-row__val detail-row__val--utr">
+              {{ selected()!.utrNumber || 'Not provided' }}
+            </span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-row__label">Amount Expected</span>
+            <span class="detail-row__val">{{ formatCurrency(selected()!.amountExpected) }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-row__label">Amount Paid</span>
+            <span class="detail-row__val">{{ formatCurrency(selected()!.amountPaid) }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-row__label">Payer Name</span>
+            <span class="detail-row__val">{{ selected()!.payerName || '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-row__label">Payer Phone</span>
+            <span class="detail-row__val">{{ selected()!.payerPhone || '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-row__label">Submitted</span>
+            <span class="detail-row__val">{{ selected()!.submittedAt | date : 'medium' }}</span>
+          </div>
+        </div>
+
+        @if (selected()!.screenshotUrl) {
+        <div class="detail-section">
+          <div class="detail-section__title">Payment Screenshot</div>
+          <a [href]="selected()!.screenshotUrl!" target="_blank" class="screenshot-link">
+            View Screenshot →
+          </a>
+        </div>
+        } @if (selected()!.rejectionReason) {
+        <div class="detail-rejection">
+          <div class="detail-rejection__title">Rejection Reason</div>
+          <p>{{ selected()!.rejectionReason }}</p>
+        </div>
+        } @if (selected()!.internalNotes) {
+        <div class="detail-section">
+          <div class="detail-section__title">Internal Notes</div>
+          <p class="detail-notes">{{ selected()!.internalNotes }}</p>
+        </div>
+        } @if (selected()!.status === 'SUBMITTED') {
+        <div class="detail-verify-tip">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <p>
+            Open your UPI app and search for UTR <strong>{{ selected()!.utrNumber }}</strong> to
+            verify this payment before approving.
+          </p>
+        </div>
+
+        <div class="detail-actions">
+          <button
+            class="btn btn--success"
+            [disabled]="approvingId() === selected()!.id"
+            (click)="openApproveConfirm(selected()!.id)"
+          >
+            @if (approvingId() === selected()!.id) {
+            <span class="btn-spinner"></span> Approving… } @else {
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Approve & Activate School }
+          </button>
+          <button
+            class="btn btn--danger"
+            [disabled]="rejectingId() === selected()!.id"
+            (click)="openReject(selected()!.id)"
+          >
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            Reject Payment
+          </button>
+        </div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+  }
+</div>
+
+<!-- Approve Confirm Modal -->
+@if (showApproveConfirm()) {
+<div class="modal-overlay" (click)="closeApproveConfirm()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal__header modal__header--success">
+      <div class="modal__header-icon">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+        >
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <h2 class="modal__title">Confirm Payment Approval</h2>
+    </div>
+    <div class="modal__body">
+      <p class="modal__desc">
+        Approving will immediately activate the school and provision their database. Make sure
+        you've verified the UTR number in your UPI app first.
+      </p>
+      <div class="field">
+        <label class="field__label">Internal Notes (optional)</label>
+        <textarea
+          class="field__input field__input--textarea"
+          [(ngModel)]="approveNotes"
+          placeholder="e.g. Verified in PhonePe — UTR matches ₹5000 payment"
+          rows="2"
+        ></textarea>
+      </div>
+      <div class="modal__actions">
+        <button class="btn btn--ghost" (click)="closeApproveConfirm()">Cancel</button>
+        <button class="btn btn--success" (click)="confirmApprove()">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          Yes, Approve & Activate
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Reject Modal -->
+@if (showRejectModal()) {
+<div class="modal-overlay" (click)="closeReject()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal__header modal__header--danger">
+      <div class="modal__header-icon modal__header-icon--danger">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </div>
+      <h2 class="modal__title">Reject Payment</h2>
+    </div>
+    <div class="modal__body">
+      <p class="modal__desc">
+        The school will receive an email with your rejection reason and will be able to resubmit
+        payment proof.
+      </p>
+      <div class="field">
+        <label class="field__label">Rejection Reason <span class="req">*</span></label>
+        <textarea
+          class="field__input field__input--textarea"
+          [(ngModel)]="rejectReason"
+          placeholder="e.g. UTR number not found in our UPI app. Please recheck and resubmit the correct UTR."
+          rows="3"
+        ></textarea>
+      </div>
+      <div class="modal__actions">
+        <button class="btn btn--ghost" (click)="closeReject()">Cancel</button>
+        <button class="btn btn--danger" (click)="confirmReject()" [disabled]="!rejectReason.trim()">
+          Reject & Notify School
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}

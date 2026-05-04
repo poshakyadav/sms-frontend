@@ -1,0 +1,208 @@
+<div class="form-page">
+  <!-- Page header with back nav -->
+  <div class="form-page__nav">
+    <button mat-icon-button class="back-btn" (click)="cancel()" matTooltip="Back to users">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div class="form-page__breadcrumb">
+      <span class="breadcrumb-parent" (click)="cancel()">Admin Users</span>
+      <mat-icon class="breadcrumb-sep">chevron_right</mat-icon>
+      <span class="breadcrumb-current">New User</span>
+    </div>
+  </div>
+
+  <div class="form-page__body">
+    <!-- Left: heading + description -->
+    <aside class="form-page__aside">
+      <div class="aside__icon">
+        <mat-icon>person_add</mat-icon>
+      </div>
+      <h1 class="aside__title">Create Admin User</h1>
+      <p class="aside__desc">
+        Add a new user to the super-admin portal. Assign one or more roles to control their access
+        level.
+      </p>
+
+      <!-- Role legend -->
+      <div class="role-legend">
+        <h3 class="role-legend__title">Role guide</h3>
+        <div class="role-legend__item">
+          <span class="role-badge badge--manager">SUPERMANAGER</span>
+          <p>Manage schools, payments, users &amp; infrastructure.</p>
+        </div>
+        <div class="role-legend__item">
+          <span class="role-badge badge--user">SUPERUSER</span>
+          <p>View dashboard, invite schools, basic access.</p>
+        </div>
+        <div class="role-legend__item role-legend__item--warn">
+          <mat-icon class="legend-warn-icon">shield</mat-icon>
+          <p>SUPERADMIN cannot be assigned to new users.</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Right: form card -->
+    <main class="form-page__main">
+      <!-- Loading skeleton -->
+      @if (loading()) {
+      <div class="card loading-card">
+        <div class="skeleton skeleton--title"></div>
+        <div class="skeleton skeleton--field"></div>
+        <div class="skeleton skeleton--field"></div>
+        <div class="skeleton skeleton--field"></div>
+        <div class="skeleton skeleton--field"></div>
+      </div>
+      } @else {
+      <form [formGroup]="form" (ngSubmit)="submit()" class="card" novalidate>
+        <div class="card__section-label">Account details</div>
+
+        <!-- Name + Email row -->
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label" for="name">Full name</label>
+            <div
+              class="field-input-wrap"
+              [class.field-input-wrap--error]="
+                hasError('name', 'required') || hasError('name', 'minlength')
+              "
+            >
+              <mat-icon class="field-icon">badge</mat-icon>
+              <input
+                id="name"
+                formControlName="name"
+                placeholder="Jane Smith"
+                autocomplete="off"
+                class="field-input"
+              />
+            </div>
+            @if (hasError('name', 'required')) {
+            <span class="field-error">Name is required</span>
+            } @else if (hasError('name', 'minlength')) {
+            <span class="field-error">At least 2 characters</span>
+            }
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="email">Email address</label>
+            <div
+              class="field-input-wrap"
+              [class.field-input-wrap--error]="
+                hasError('email', 'required') || hasError('email', 'email')
+              "
+            >
+              <mat-icon class="field-icon">mail</mat-icon>
+              <input
+                id="email"
+                type="email"
+                formControlName="email"
+                placeholder="jane@example.com"
+                autocomplete="off"
+                class="field-input"
+              />
+            </div>
+            @if (hasError('email', 'required')) {
+            <span class="field-error">Email is required</span>
+            } @else if (hasError('email', 'email')) {
+            <span class="field-error">Invalid email address</span>
+            }
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="field-group">
+          <label class="field-label" for="password">Password</label>
+          <div
+            class="field-input-wrap"
+            [class.field-input-wrap--error]="
+              hasError('password', 'required') || hasError('password', 'minlength')
+            "
+          >
+            <mat-icon class="field-icon">key</mat-icon>
+            <input
+              id="password"
+              [type]="showPassword() ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="••••••••"
+              autocomplete="new-password"
+              class="field-input"
+            />
+            <button
+              type="button"
+              class="field-toggle-btn"
+              (click)="showPassword.set(!showPassword())"
+              [matTooltip]="showPassword() ? 'Hide password' : 'Show password'"
+            >
+              <mat-icon>{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+          </div>
+          @if (hasError('password', 'required')) {
+          <span class="field-error">Password is required</span>
+          } @else if (hasError('password', 'minlength')) {
+          <span class="field-error">Minimum 8 characters</span>
+          } @else {
+          <span class="field-hint">Minimum 8 characters</span>
+          }
+        </div>
+
+        <div class="card__divider"></div>
+        <div class="card__section-label">Access &amp; roles</div>
+
+        <!-- Roles multi-select -->
+        <div class="field-group">
+          <label class="field-label">Assign roles</label>
+          <div class="roles-grid">
+            @for (role of allRoles(); track role.id) { @if (role.name !== 'SUPERADMIN') {
+            <label
+              class="role-card"
+              [class.role-card--selected]="form.get('roleIds')?.value?.includes(role.id)"
+            >
+              <input
+                type="checkbox"
+                class="role-card__check"
+                [value]="role.id"
+                [checked]="form.get('roleIds')?.value?.includes(role.id)"
+                (change)="onRoleToggle(role.id, $any($event.target).checked)"
+              />
+              <div class="role-card__body">
+                <span class="role-badge" [ngClass]="getRoleBadgeClass(role.name)">
+                  {{ role.name }}
+                </span>
+                @if (role.description) {
+                <p class="role-card__desc">{{ role.description }}</p>
+                }
+                <div class="role-card__check-indicator">
+                  <mat-icon>check_circle</mat-icon>
+                </div>
+              </div>
+            </label>
+            } }
+          </div>
+          @if (form.get('roleIds')?.touched && !form.get('roleIds')?.value?.length) {
+          <span class="field-error">Select at least one role</span>
+          }
+        </div>
+
+        <!-- Footer actions -->
+        <div class="card__footer">
+          <button type="button" mat-button class="cancel-btn" (click)="cancel()">Cancel</button>
+          <button
+            type="submit"
+            mat-flat-button
+            color="primary"
+            class="submit-btn"
+            [disabled]="form.invalid || saving()"
+          >
+            @if (saving()) {
+            <mat-spinner diameter="18" color="accent"></mat-spinner>
+            Creating… } @else {
+            <ng-container>
+              <mat-icon>check</mat-icon>
+            </ng-container>
+            Create user }
+          </button>
+        </div>
+      </form>
+      }
+    </main>
+  </div>
+</div>

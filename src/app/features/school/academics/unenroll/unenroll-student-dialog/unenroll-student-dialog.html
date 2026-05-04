@@ -1,0 +1,197 @@
+<!-- unenroll-student-dialog.html -->
+
+<div class="dialog-shell">
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <div class="dialog-header">
+    <div class="header-icon-wrap warning">
+      <mat-icon>person_remove</mat-icon>
+    </div>
+    <div class="header-text">
+      <h2 class="dialog-title">Unenroll Student</h2>
+      <p class="dialog-subtitle">{{ data.studentName }}</p>
+    </div>
+    <button mat-icon-button class="close-btn" (click)="close()" [disabled]="submitting()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <!-- ── Body ───────────────────────────────────────────────────────────── -->
+  <div class="dialog-body">
+    <!-- Loading state -->
+    @if (loading()) {
+    <div class="state-center">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Loading enrollment details…</p>
+    </div>
+    }
+
+    <!-- Error state -->
+    @else if (error()) {
+    <div class="state-center error">
+      <mat-icon class="state-icon">error_outline</mat-icon>
+      <p>{{ error() }}</p>
+      <button mat-stroked-button (click)="loadStatus()">Retry</button>
+    </div>
+    }
+
+    <!-- Not enrolled state -->
+    @else if (!status()?.isEnrolled) {
+    <div class="state-center">
+      <mat-icon class="state-icon info-icon">info_outline</mat-icon>
+      <p>This student does not have an active enrollment for the current academic year.</p>
+    </div>
+    }
+
+    <!-- Main content -->
+    @else {
+
+    <!-- ── Current Enrollment Card ───────────────────────────────────── -->
+    <div class="info-card enrollment-card">
+      <div class="info-card-header">
+        <mat-icon>school</mat-icon>
+        <span>Current Enrollment</span>
+      </div>
+      <div class="info-card-body">
+        <div class="info-row">
+          <span class="info-label">Class</span>
+          <span class="info-value">
+            {{ status()!.enrollment!.className }} — {{ status()!.enrollment!.sectionName }}
+          </span>
+        </div>
+        @if (status()!.enrollment!.rollNumber) {
+        <div class="info-row">
+          <span class="info-label">Roll Number</span>
+          <span class="info-value roll-mono">{{ status()!.enrollment!.rollNumber }}</span>
+        </div>
+        } @if (status()!.enrollment!.enrollmentDate) {
+        <div class="info-row">
+          <span class="info-label">Enrolled Since</span>
+          <span class="info-value">{{ status()!.enrollment!.enrollmentDate }}</span>
+        </div>
+        }
+      </div>
+    </div>
+
+    <!-- ── Records Preserved Notice ─────────────────────────────────── -->
+    <div class="records-notice">
+      <mat-icon class="notice-icon">shield_check</mat-icon>
+      <div class="notice-content">
+        <strong>All historical records are preserved</strong>
+        <span class="records-chips">
+          <span class="chip">
+            <mat-icon>event_available</mat-icon>
+            {{ status()!.recordCounts!.attendanceRecords }} attendance records
+          </span>
+          <span class="chip">
+            <mat-icon>grade</mat-icon>
+            {{ status()!.recordCounts!.examMarkRecords }} exam marks
+          </span>
+        </span>
+      </div>
+    </div>
+
+    <!-- ── Pending Fees Warning ──────────────────────────────────────── -->
+    @if (hasPendingFees()) {
+    <div class="alert-banner warning-banner">
+      <mat-icon>warning_amber</mat-icon>
+      <div class="alert-content">
+        <strong>Pending Fees: {{ formatCurrency(pendingAmount()) }}</strong>
+        <p>
+          This student has outstanding fees. Unenrolling does not waive these fees. The balance will
+          remain in the fee records for future settlement.
+        </p>
+      </div>
+    </div>
+    }
+
+    <!-- ── Unenrollment Form ─────────────────────────────────────────── -->
+    <form [formGroup]="form" class="unenroll-form">
+      <!-- Type selector -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Unenrollment Type</mat-label>
+        <mat-icon matPrefix>category</mat-icon>
+        <mat-select formControlName="unenrollmentType">
+          <mat-option value="TEMPORARY"> Temporary — Student may return later </mat-option>
+          <mat-option value="PERMANENT"> Permanent — Student is leaving the school </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Permanent type warning -->
+      @if (isPermanent()) {
+      <div class="alert-banner danger-banner">
+        <mat-icon>dangerous</mat-icon>
+        <div class="alert-content">
+          <strong>Permanent Unenrollment</strong>
+          <p>
+            The student's login account will be <strong>deactivated</strong>
+            and their roll number cleared. This action can be reversed by reactivating their account
+            and re-enrolling.
+          </p>
+        </div>
+      </div>
+      }
+
+      <!-- Reason textarea -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Reason for Unenrollment *</mat-label>
+        <mat-icon matPrefix>edit_note</mat-icon>
+        <textarea
+          matInput
+          formControlName="reason"
+          rows="3"
+          placeholder="e.g. Parent requested withdrawal due to relocation to another city…"
+          maxlength="500"
+        ></textarea>
+        <mat-hint align="end"> {{ reasonControl?.value?.length || 0 }} / 500 </mat-hint>
+        @if (reasonControl?.hasError('required') && reasonControl?.touched) {
+        <mat-error>Reason is required</mat-error>
+        } @if (reasonControl?.hasError('minlength') && reasonControl?.touched) {
+        <mat-error>Reason must be at least 5 characters</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Fee acknowledgment -->
+      @if (hasPendingFees()) {
+      <div class="checkbox-row">
+        <mat-checkbox formControlName="acknowledgePendingFees" color="warn">
+          I acknowledge that {{ data.studentName }} has pending fees of
+          <strong>{{ formatCurrency(pendingAmount()) }}</strong>
+          and I understand they are not waived by this action.
+        </mat-checkbox>
+      </div>
+      }
+    </form>
+    }
+  </div>
+
+  <!-- ── Footer ─────────────────────────────────────────────────────────── -->
+  @if (!loading() && !error() && status()?.isEnrolled) {
+  <mat-divider></mat-divider>
+  <div class="dialog-footer">
+    <button mat-stroked-button (click)="close()" [disabled]="submitting()">Cancel</button>
+    <button
+      mat-raised-button
+      [color]="isPermanent() ? 'warn' : 'primary'"
+      [disabled]="
+        form.invalid ||
+        submitting() ||
+        (hasPendingFees() && !form.get('acknowledgePendingFees')?.value)
+      "
+      (click)="confirm()"
+      class="confirm-btn"
+    >
+      @if (submitting()) {
+      <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+      <span>{{ isPermanent() ? 'Permanently Unenrolling…' : 'Temporarily Unenrolling…' }}</span>
+      } @else {
+      <ng-container>
+        <mat-icon>{{ isPermanent() ? 'person_remove' : 'pause_circle' }}</mat-icon>
+        <span>{{ isPermanent() ? 'Permanently Unenroll' : 'Temporarily Unenroll' }}</span>
+      </ng-container>
+      }
+    </button>
+  </div>
+  }
+</div>

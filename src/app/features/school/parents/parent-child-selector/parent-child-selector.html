@@ -1,0 +1,124 @@
+<div class="modal-backdrop" (click)="onBackdropClick($event)">
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-label="Select student profile">
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="header-icon">
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+      </div>
+      <div class="header-text">
+        <h2>Select a Student</h2>
+        <p>Choose which child's profile to view</p>
+      </div>
+    </div>
+
+    <!-- Children list -->
+    <div class="children-list">
+      <button
+        class="child-card"
+        *ngFor="let child of children"
+        [class.hovered]="hoveredId() === child.studentId"
+        (mouseenter)="hoveredId.set(child.studentId)"
+        (mouseleave)="hoveredId.set(null)"
+        (click)="selectChild(child)"
+      >
+        <!-- Avatar -->
+        <div class="child-avatar" [style.background]="getAvatarColor(child.studentName)">
+          <img
+            *ngIf="child.studentAvatarUrl"
+            [src]="child.studentAvatarUrl"
+            [alt]="child.studentName"
+            class="avatar-img"
+          />
+          <span *ngIf="!child.studentAvatarUrl" class="avatar-initials">
+            {{ getInitials(child.studentName) }}
+          </span>
+        </div>
+
+        <!-- Info -->
+        <div class="child-info">
+          <div class="child-name-row">
+            <span class="child-name">{{ child.studentName }}</span>
+            <span class="primary-badge" *ngIf="child.isPrimary">Primary</span>
+          </div>
+          <span class="relationship">{{ child.relationship }}</span>
+          <div class="child-class" *ngIf="child.currentEnrollment">
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="2" y="3" width="20" height="14" rx="2" />
+              <path d="M8 21h8M12 17v4" />
+            </svg>
+            {{ child.currentEnrollment.className }} – {{ child.currentEnrollment.sectionName }}
+            <span *ngIf="child.currentEnrollment.rollNumber" class="roll-num">
+              · Roll {{ child.currentEnrollment.rollNumber }}
+            </span>
+          </div>
+          <div class="child-class not-enrolled" *ngIf="!child.currentEnrollment">
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            Not enrolled in current year
+          </div>
+        </div>
+
+        <!-- Arrow -->
+        <div class="child-arrow">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M9 18l6-6-6-6" />
+          </svg>
+        </div>
+      </button>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <p class="footer-note">
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        You can switch between students anytime from the top navigation
+      </p>
+    </div>
+  </div>
+</div>

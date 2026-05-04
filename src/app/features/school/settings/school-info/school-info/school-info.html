@@ -1,0 +1,493 @@
+<!-- school-info.html -->
+<!-- ─────────────────────────────────────────────────────────────────────────
+  School Configuration Page
+  Route: /school/settings/info
+  ───────────────────────────────────────────────────────────────────────── -->
+
+<div class="school-info-page">
+  <!-- ══ Page Header ══════════════════════════════════════════════════════ -->
+  <div class="page-header">
+    <div class="page-header-content">
+      <div class="page-title-row">
+        <div class="page-icon">
+          <mat-icon>business</mat-icon>
+        </div>
+        <div>
+          <h1 class="page-title">School Configuration</h1>
+          <p class="page-subtitle">Manage your school's identity, contact details, and branding</p>
+        </div>
+      </div>
+
+      <!-- Breadcrumb -->
+      <nav class="breadcrumb">
+        <a routerLink="/school/dashboard" class="breadcrumb-link">Dashboard</a>
+        <mat-icon class="breadcrumb-sep">chevron_right</mat-icon>
+        <a routerLink="/school/settings/theme" class="breadcrumb-link">Settings</a>
+        <mat-icon class="breadcrumb-sep">chevron_right</mat-icon>
+        <span class="breadcrumb-current">School Info</span>
+      </nav>
+    </div>
+  </div>
+
+  <!-- ══ Loading State ════════════════════════════════════════════════════ -->
+  <div class="loading-state" *ngIf="loading()">
+    <div class="loading-card">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Loading school information…</p>
+    </div>
+  </div>
+
+  <!-- ══ Error State ══════════════════════════════════════════════════════ -->
+  <div class="error-state" *ngIf="!loading() && error()">
+    <div class="error-card">
+      <mat-icon class="error-icon">error_outline</mat-icon>
+      <h3>Failed to load</h3>
+      <p>{{ error() }}</p>
+      <button mat-flat-button class="retry-btn" (click)="loadSchoolInfo()">
+        <mat-icon>refresh</mat-icon>
+        Retry
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ Main Content ══════════════════════════════════════════════════════ -->
+  <div class="page-content" *ngIf="!loading() && !error()">
+    <!-- ── Section Tabs ─────────────────────────────────────────────────── -->
+    <div class="section-tabs">
+      <button
+        class="tab-btn"
+        [class.active]="activeSection() === 'basic'"
+        (click)="setSection('basic')"
+      >
+        <mat-icon>info_outline</mat-icon>
+        <span>Basic Info</span>
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeSection() === 'contact'"
+        (click)="setSection('contact')"
+      >
+        <mat-icon>contact_phone</mat-icon>
+        <span>Contact</span>
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeSection() === 'branding'"
+        (click)="setSection('branding')"
+      >
+        <mat-icon>palette</mat-icon>
+        <span>Branding</span>
+      </button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <div class="form-layout">
+        <!-- ════════════════════════════════════════════════════════════════
+            LEFT COLUMN — Form fields
+            ════════════════════════════════════════════════════════════════ -->
+        <div class="form-column">
+          <!-- ── BASIC INFO ──────────────────────────────────────────────── -->
+          <div class="form-card" [class.hidden]="activeSection() !== 'basic'">
+            <div class="card-header">
+              <div class="card-icon card-icon--blue">
+                <mat-icon>school</mat-icon>
+              </div>
+              <div>
+                <h2 class="card-title">Basic Information</h2>
+                <p class="card-subtitle">School name, tagline, and identity</p>
+              </div>
+            </div>
+
+            <div class="fields-grid">
+              <!-- School Code (read-only) -->
+              <div class="field-group field-group--readonly">
+                <label class="field-label">
+                  <mat-icon>tag</mat-icon>
+                  School Code
+                  <span class="badge badge--readonly">Read-only</span>
+                </label>
+                <div class="readonly-field">
+                  <span class="readonly-value">{{ schoolInfo()?.uniqueCode }}</span>
+                  <span class="readonly-hint">Assigned at registration · cannot be changed</span>
+                </div>
+              </div>
+
+              <!-- Full School Name -->
+              <div class="field-group" [class.has-error]="isInvalid('name')">
+                <label class="field-label" for="name">
+                  <mat-icon>title</mat-icon>
+                  Full School Name
+                  <span class="required-star">*</span>
+                </label>
+                <div class="input-wrapper">
+                  <input
+                    id="name"
+                    class="form-input"
+                    type="text"
+                    formControlName="name"
+                    placeholder="e.g. Delhi Public School, Sector 21"
+                    autocomplete="organization"
+                  />
+                </div>
+                <span class="field-error" *ngIf="getError('name')">{{ getError('name') }}</span>
+              </div>
+
+              <!-- Tagline -->
+              <div class="field-group" [class.has-error]="isInvalid('tagline')">
+                <label class="field-label" for="tagline">
+                  <mat-icon>format_quote</mat-icon>
+                  Tagline / Motto
+                </label>
+                <div class="input-wrapper">
+                  <input
+                    id="tagline"
+                    class="form-input"
+                    type="text"
+                    formControlName="tagline"
+                    placeholder="e.g. Excellence in Education"
+                  />
+                </div>
+                <span class="field-hint">Shown below the school name in the header (optional)</span>
+                <span class="field-error" *ngIf="getError('tagline')">{{
+                  getError('tagline')
+                }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── CONTACT ───────────────────────────────────────────────── -->
+          <div class="form-card" [class.hidden]="activeSection() !== 'contact'">
+            <div class="card-header">
+              <div class="card-icon card-icon--green">
+                <mat-icon>contact_phone</mat-icon>
+              </div>
+              <div>
+                <h2 class="card-title">Contact Details</h2>
+                <p class="card-subtitle">Phone, email, website and address</p>
+              </div>
+            </div>
+
+            <div class="fields-grid">
+              <!-- Phone -->
+              <div class="field-group field-group--half" [class.has-error]="isInvalid('phone')">
+                <label class="field-label" for="phone">
+                  <mat-icon>phone</mat-icon>
+                  Primary Phone
+                </label>
+                <div class="input-wrapper">
+                  <input
+                    id="phone"
+                    class="form-input"
+                    type="tel"
+                    formControlName="phone"
+                    placeholder="+91 98765 43210"
+                    autocomplete="tel"
+                  />
+                </div>
+                <span class="field-error" *ngIf="getError('phone')">{{ getError('phone') }}</span>
+              </div>
+
+              <!-- Alternate Phone -->
+              <div
+                class="field-group field-group--half"
+                [class.has-error]="isInvalid('alternatePhone')"
+              >
+                <label class="field-label" for="alternatePhone">
+                  <mat-icon>phone_forwarded</mat-icon>
+                  Alternate Phone
+                </label>
+                <div class="input-wrapper">
+                  <input
+                    id="alternatePhone"
+                    class="form-input"
+                    type="tel"
+                    formControlName="alternatePhone"
+                    placeholder="+91 98765 43211"
+                    autocomplete="tel"
+                  />
+                </div>
+                <span class="field-error" *ngIf="getError('alternatePhone')">{{
+                  getError('alternatePhone')
+                }}</span>
+              </div>
+
+              <!-- Email -->
+              <div class="field-group field-group--half" [class.has-error]="isInvalid('email')">
+                <label class="field-label" for="schoolEmail">
+                  <mat-icon>email</mat-icon>
+                  School Email
+                </label>
+                <div class="input-wrapper">
+                  <input
+                    id="schoolEmail"
+                    class="form-input"
+                    type="email"
+                    formControlName="email"
+                    placeholder="info@yourschool.edu.in"
+                    autocomplete="email"
+                  />
+                </div>
+                <span class="field-error" *ngIf="getError('email')">{{ getError('email') }}</span>
+              </div>
+
+              <!-- Website -->
+              <div class="field-group field-group--half" [class.has-error]="isInvalid('website')">
+                <label class="field-label" for="website">
+                  <mat-icon>language</mat-icon>
+                  Website
+                </label>
+                <div class="input-wrapper">
+                  <input
+                    id="website"
+                    class="form-input"
+                    type="url"
+                    formControlName="website"
+                    placeholder="https://yourschool.edu.in"
+                    autocomplete="url"
+                  />
+                </div>
+                <span class="field-error" *ngIf="getError('website')">{{
+                  getError('website')
+                }}</span>
+              </div>
+
+              <!-- Address Line 1 -->
+              <div class="field-group" [class.has-error]="isInvalid('addressLineOne')">
+                <label class="field-label" for="addressLineOne">
+                  <mat-icon>location_on</mat-icon>
+                  Address Line 1
+                </label>
+                <div class="input-wrapper">
+                  <input
+                    id="addressLineOne"
+                    class="form-input"
+                    type="text"
+                    formControlName="addressLineOne"
+                    placeholder="Street / Block / Area"
+                    autocomplete="street-address"
+                  />
+                </div>
+                <span class="field-error" *ngIf="getError('addressLineOne')">{{
+                  getError('addressLineOne')
+                }}</span>
+              </div>
+
+              <!-- Address Line 2 -->
+              <div class="field-group" [class.has-error]="isInvalid('addressLineTwo')">
+                <label class="field-label" for="addressLineTwo">
+                  <mat-icon>location_city</mat-icon>
+                  Address Line 2
+                </label>
+                <div class="input-wrapper">
+                  <input
+                    id="addressLineTwo"
+                    class="form-input"
+                    type="text"
+                    formControlName="addressLineTwo"
+                    placeholder="City, State, PIN"
+                    autocomplete="address-line2"
+                  />
+                </div>
+                <span class="field-error" *ngIf="getError('addressLineTwo')">{{
+                  getError('addressLineTwo')
+                }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── BRANDING ──────────────────────────────────────────────── -->
+          <div class="form-card" [class.hidden]="activeSection() !== 'branding'">
+            <div class="card-header">
+              <div class="card-icon card-icon--purple">
+                <mat-icon>auto_awesome</mat-icon>
+              </div>
+              <div>
+                <h2 class="card-title">Branding</h2>
+                <p class="card-subtitle">Short name and logo used throughout the app</p>
+              </div>
+            </div>
+
+            <div class="fields-grid">
+              <!-- Short Name -->
+              <div class="field-group" [class.has-error]="isInvalid('shortName')">
+                <label class="field-label" for="shortName">
+                  <mat-icon>badge</mat-icon>
+                  Short Name
+                  <span
+                    class="badge badge--info"
+                    matTooltip="Shown in the header and sidebar instead of the school code. Max 8 characters."
+                    matTooltipPosition="right"
+                  >
+                    What's this?
+                  </span>
+                </label>
+                <div class="input-wrapper shortname-wrapper">
+                  <input
+                    id="shortName"
+                    class="form-input shortname-input"
+                    type="text"
+                    formControlName="shortName"
+                    placeholder="e.g. DPS, RYAN"
+                    maxlength="8"
+                    autocomplete="off"
+                    style="text-transform: uppercase"
+                  />
+                  <span class="char-counter" [class.limit]="shortNameLength() >= 7">
+                    {{ shortNameLength() }}/8
+                  </span>
+                </div>
+                <span class="field-hint">
+                  Max 8 characters · Used in header, sidebar, and school branding throughout the app
+                </span>
+                <span class="field-error" *ngIf="getError('shortName')">{{
+                  getError('shortName')
+                }}</span>
+              </div>
+
+              <!-- Logo URL -->
+              <div class="field-group" [class.has-error]="isInvalid('logoUrl')">
+                <label class="field-label" for="logoUrl">
+                  <mat-icon>image</mat-icon>
+                  Logo URL
+                </label>
+                <div class="input-wrapper">
+                  <input
+                    id="logoUrl"
+                    class="form-input"
+                    type="url"
+                    formControlName="logoUrl"
+                    placeholder="https://cdn.yourschool.edu.in/logo.png"
+                    autocomplete="off"
+                    (input)="onLogoUrlChange()"
+                  />
+                </div>
+                <span class="field-hint">
+                  Direct link to your school logo image (PNG or SVG recommended)
+                </span>
+                <span class="field-error" *ngIf="getError('logoUrl')">{{
+                  getError('logoUrl')
+                }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Form Actions ───────────────────────────────────────────── -->
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn-reset"
+              mat-stroked-button
+              (click)="onReset()"
+              [disabled]="saving() || form.pristine"
+            >
+              <mat-icon>undo</mat-icon>
+              Reset changes
+            </button>
+            <button
+              type="submit"
+              class="btn-save"
+              mat-flat-button
+              [disabled]="saving() || form.invalid || form.pristine"
+            >
+              <mat-spinner *ngIf="saving()" diameter="16"></mat-spinner>
+              <mat-icon *ngIf="!saving()">save</mat-icon>
+              {{ saving() ? 'Saving…' : 'Save changes' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════════════
+            RIGHT COLUMN — Preview cards
+            ════════════════════════════════════════════════════════════════ -->
+        <div class="preview-column">
+          <!-- ── School Identity Card ──────────────────────────────────── -->
+          <div class="preview-card">
+            <div class="preview-label">
+              <mat-icon>preview</mat-icon>
+              Live Preview
+            </div>
+
+            <!-- Header preview -->
+            <div class="header-preview">
+              <div class="preview-logo">
+                <ng-container *ngIf="logoPreviewUrl(); else previewInitials">
+                  <img
+                    [src]="logoPreviewUrl()!"
+                    alt="School Logo"
+                    class="preview-logo-img"
+                    (error)="onLogoPreviewError()"
+                  />
+                </ng-container>
+                <ng-template #previewInitials>
+                  <span class="preview-logo-text">{{ shortNamePreview().slice(0, 2) }}</span>
+                </ng-template>
+              </div>
+              <div class="preview-school-text">
+                <span class="preview-name">{{
+                  form.get('name')?.value || schoolInfo()?.name || 'School Name'
+                }}</span>
+                <span
+                  class="preview-tagline"
+                  *ngIf="form.get('tagline')?.value || schoolInfo()?.tagline"
+                >
+                  {{ form.get('tagline')?.value || schoolInfo()?.tagline }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Short name badge -->
+            <div class="shortname-preview">
+              <span class="shortname-label">Short Name (in header)</span>
+              <div class="shortname-badge">
+                {{ shortNamePreview() }}
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Info Summary ───────────────────────────────────────────── -->
+          <div class="info-summary-card">
+            <div class="summary-header">
+              <mat-icon>info</mat-icon>
+              <h3>About Short Name</h3>
+            </div>
+            <ul class="summary-list">
+              <li>
+                <mat-icon>check_circle</mat-icon>
+                Shown in the top header instead of the school code
+              </li>
+              <li>
+                <mat-icon>check_circle</mat-icon>
+                Used on admission receipts and reports
+              </li>
+              <li>
+                <mat-icon>check_circle</mat-icon>
+                Max 8 characters — keep it punchy
+              </li>
+              <li>
+                <mat-icon>check_circle</mat-icon>
+                Only letters, numbers, hyphens allowed
+              </li>
+            </ul>
+
+            <div class="examples-row">
+              <span class="example-chip">DPS</span>
+              <span class="example-chip">RYAN</span>
+              <span class="example-chip">KENDRIYA</span>
+              <span class="example-chip">ST.MARY</span>
+            </div>
+          </div>
+
+          <!-- ── School Code Card ──────────────────────────────────────── -->
+          <div class="code-card">
+            <div class="code-card-label">
+              <mat-icon>qr_code</mat-icon>
+              Your School Code
+            </div>
+            <div class="code-value">{{ schoolInfo()?.uniqueCode }}</div>
+            <p class="code-note">This code is used for login and cannot be changed.</p>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

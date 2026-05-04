@@ -1,0 +1,12 @@
+@use '../../../../shared/styles/attendance-shared' as *;
+
+// ── Percentage value color overrides ─────────────────────────────────────────
+.pct-good {
+  color: var(--color-success) !important;
+}
+.pct-warn {
+  color: var(--color-warning) !important;
+}
+.pct-bad {
+  color: var(--color-error) !important;
+}

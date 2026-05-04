@@ -1,0 +1,198 @@
+<!-- mappings-list.html -->
+<div class="page-container">
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>Promotion Mappings</h1>
+      <p>Define how each class-section promotes to the next — globally or per academic year</p>
+    </div>
+    <div class="header-actions">
+      @if (canManage()) {
+      <button mat-raised-button color="primary" routerLink="/school/academics/mappings/bulk">
+        <mat-icon>add</mat-icon> Create Mappings
+      </button>
+      }
+      <button mat-icon-button (click)="loadMappings()" matTooltip="Refresh">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Scope Guide Banner ─────────────────────────────────────────────── -->
+  <div class="guide-banner">
+    <div class="guide-banner-icon">
+      <mat-icon>info_outline</mat-icon>
+    </div>
+    <div class="guide-banner-body">
+      <strong>How mappings work</strong>
+      <p>
+        <span class="badge global">Global</span> mappings are reused every academic year
+        automatically. <span class="badge year-specific">Year-specific</span> mappings override
+        globals for that particular year. During promotion, year-specific mappings take priority.
+      </p>
+    </div>
+  </div>
+
+  <!-- ── Scope Selector + Stats ─────────────────────────────────────────── -->
+  <div class="scope-card">
+    <div class="scope-card-inner">
+      <!-- Stats -->
+      @if (!loading() && !error()) {
+      <div class="scope-stats">
+        <div class="scope-stat">
+          <span class="stat-num">{{ globalCount() }}</span>
+          <span class="stat-lbl">Global</span>
+        </div>
+        <div class="scope-stat-divider"></div>
+        <div class="scope-stat">
+          <span class="stat-num">{{ yearSpecificCount() }}</span>
+          <span class="stat-lbl">Year-specific</span>
+        </div>
+        <div class="scope-stat-divider"></div>
+        <div class="scope-stat">
+          <span class="stat-num">{{ mappings().length }}</span>
+          <span class="stat-lbl">Shown</span>
+        </div>
+      </div>
+      }
+
+      <!-- Scope Filter -->
+      <div class="scope-filter">
+        <label class="scope-filter-label">Filter by</label>
+
+        @if (loadingYears()) {
+        <div class="scope-loading">
+          <mat-spinner diameter="18"></mat-spinner>
+          <span>Loading years…</span>
+        </div>
+        } @else {
+        <mat-form-field appearance="outline" class="scope-select">
+          <mat-label>View</mat-label>
+          <mat-icon matPrefix>filter_list</mat-icon>
+          <mat-select [ngModel]="selectedScope()" (ngModelChange)="onScopeChange($event)">
+            <mat-option value="all">All Mappings</mat-option>
+            <mat-option value="global"> <mat-icon>public</mat-icon> Global only </mat-option>
+            <mat-optgroup label="By Academic Year">
+              @for (year of academicYears(); track year.id) {
+              <mat-option [value]="year.id">
+                {{ year.name }}
+                @if (year.isCurrent) {
+                <span class="current-year-chip">current</span>
+                }
+              </mat-option>
+              }
+            </mat-optgroup>
+          </mat-select>
+        </mat-form-field>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Loading ────────────────────────────────────────────────────────── -->
+  @if (loading()) {
+  <div class="state-container">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading mappings…</p>
+  </div>
+  }
+
+  <!-- ── Error ──────────────────────────────────────────────────────────── -->
+  @else if (error()) {
+  <div class="state-container error">
+    <mat-icon class="state-icon">error_outline</mat-icon>
+    <h2>Could not load mappings</h2>
+    <p>{{ error() }}</p>
+    <button mat-raised-button color="primary" (click)="loadMappings()">Retry</button>
+  </div>
+  }
+
+  <!-- ── Empty ──────────────────────────────────────────────────────────── -->
+  @else if (mappings().length === 0) {
+  <div class="state-container">
+    <mat-icon class="state-icon">timeline</mat-icon>
+    <h2>
+      @if (selectedScope() === 'all') { No Promotion Mappings Yet } @else if (selectedScope() ===
+      'global') { No Global Mappings } @else { No Mappings for this Academic Year }
+    </h2>
+    <p>
+      @if (selectedScope() === 'global') { Global mappings are reused every year. Create them once
+      and they'll always apply unless overridden by a year-specific mapping. } @else if
+      (selectedScope() !== 'all') { No year-specific overrides for this year. If global mappings
+      exist, they will be used automatically. } @else { Define where each class-section promotes
+      to.<br />
+      Without mappings, students stay in the same section during promotion. }
+    </p>
+    @if (canManage()) {
+    <button mat-raised-button color="primary" routerLink="/school/academics/mappings/bulk">
+      <mat-icon>add</mat-icon> Create Mappings
+    </button>
+    }
+  </div>
+  }
+
+  <!-- ── Table ──────────────────────────────────────────────────────────── -->
+  @else {
+  <div class="table-card overflow-x">
+    <table mat-table [dataSource]="mappings()">
+      <!-- From -->
+      <ng-container matColumnDef="currentDisplayName">
+        <th mat-header-cell *matHeaderCellDef>From (current class)</th>
+        <td mat-cell *matCellDef="let m">
+          <strong>{{ m.currentDisplayName }}</strong>
+        </td>
+      </ng-container>
+
+      <!-- Arrow -->
+      <ng-container matColumnDef="arrow">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let m">
+          <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+        </td>
+      </ng-container>
+
+      <!-- To -->
+      <ng-container matColumnDef="nextDisplayName">
+        <th mat-header-cell *matHeaderCellDef>To (next class)</th>
+        <td mat-cell *matCellDef="let m">
+          <strong>{{ m.nextDisplayName }}</strong>
+        </td>
+      </ng-container>
+
+      <!-- Scope -->
+      <ng-container matColumnDef="scope">
+        <th mat-header-cell *matHeaderCellDef>Scope</th>
+        <td mat-cell *matCellDef="let m">
+          @if (m.isGlobal) {
+          <span class="badge global"> <mat-icon>public</mat-icon> Global </span>
+          } @else {
+          <span class="badge year-specific">
+            <mat-icon>event</mat-icon> {{ m.academicYearName ?? '—' }}
+          </span>
+          }
+        </td>
+      </ng-container>
+
+      <!-- Actions -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let m">
+          <div class="cell-actions">
+            @if (canManage()) {
+            <button mat-icon-button (click)="edit(m)" matTooltip="Edit mapping">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="delete(m)" matTooltip="Delete mapping">
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+            }
+          </div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+  </div>
+  }
+</div>

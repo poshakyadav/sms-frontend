@@ -1,0 +1,117 @@
+<!-- role-detail-dialog.html -->
+<!-- UPDATED: Shows category badge alongside the system/custom badge. -->
+<!-- Category is locked and read-only — shows icon + label + tooltip. -->
+
+<div class="rdd-shell">
+  <!-- Header -->
+  <div class="rdd-header">
+    <div class="rdd-header-left">
+      <div class="rdd-header-icon" [class.rdd-header-icon--system]="role.isSystem">
+        <mat-icon>{{ role.isSystem ? 'verified_user' : 'person_pin' }}</mat-icon>
+      </div>
+      <div class="rdd-header-text">
+        <h2 class="rdd-title">{{ role.name }}</h2>
+        <p class="rdd-subtitle">{{ role.description }}</p>
+      </div>
+    </div>
+    <div class="rdd-header-right">
+      <!-- System / Custom badge -->
+      <span
+        class="rdd-badge"
+        [class.rdd-badge--system]="role.isSystem"
+        [class.rdd-badge--custom]="!role.isSystem"
+      >
+        {{ role.isSystem ? 'System' : 'Custom' }}
+      </span>
+      <!-- Category badge -->
+      <span
+        class="rdd-cat-badge"
+        [class.rdd-cat-badge--staff]="role.category === 'staff'"
+        [class.rdd-cat-badge--student]="role.category === 'student'"
+        [class.rdd-cat-badge--parent]="role.category === 'parent'"
+        [matTooltip]="categoryMeta.tooltip"
+      >
+        <mat-icon class="rdd-cat-icon">{{ categoryMeta.icon }}</mat-icon>
+        {{ categoryMeta.label }}
+      </span>
+      <button mat-icon-button class="rdd-close" (click)="close()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Meta Row -->
+  <div class="rdd-meta">
+    <div class="rdd-meta-item">
+      <mat-icon>lock</mat-icon>
+      <span>{{ role.permissions.length }} permissions</span>
+    </div>
+    <!-- Category universe info -->
+    <div class="rdd-meta-item rdd-meta-item--cat">
+      <mat-icon>{{ categoryMeta.icon }}</mat-icon>
+      <span>{{ categoryMeta.label }} permission universe</span>
+    </div>
+    @if (role.createdAt) {
+    <div class="rdd-meta-item">
+      <mat-icon>calendar_today</mat-icon>
+      <span>Created {{ role.createdAt | date : 'mediumDate' }}</span>
+    </div>
+    }
+    <div class="rdd-meta-item">
+      <mat-icon>{{ role.isSystem ? 'lock' : 'edit' }}</mat-icon>
+      <span>{{ role.isSystem ? 'System-managed' : 'Custom role' }}</span>
+    </div>
+  </div>
+
+  <!-- Category info banner -->
+  <div
+    class="rdd-cat-banner"
+    [class.rdd-cat-banner--staff]="role.category === 'staff'"
+    [class.rdd-cat-banner--student]="role.category === 'student'"
+    [class.rdd-cat-banner--parent]="role.category === 'parent'"
+  >
+    <mat-icon>{{ categoryMeta.icon }}</mat-icon>
+    <p>
+      This is a <strong>{{ categoryMeta.label }}</strong> role. It can only hold
+      {{ categoryMeta.label | lowercase }}-category permissions. The category is permanent and
+      cannot be changed after role creation.
+    </p>
+  </div>
+
+  <!-- Body -->
+  <div class="rdd-body">
+    @if (role.permissions.length === 0) {
+    <div class="rdd-empty">
+      <mat-icon>lock_open</mat-icon>
+      <p>No permissions assigned to this role.</p>
+    </div>
+    } @else {
+    <div class="rdd-modules">
+      @for (entry of moduleEntries; track entry[0]) {
+      <div class="rdd-module">
+        <div class="rdd-module-header">
+          <span class="rdd-module-name">{{ entry[0] }}</span>
+          <span class="rdd-module-count">{{ entry[1].length }}</span>
+        </div>
+        <div class="rdd-perm-list">
+          @for (perm of entry[1]; track perm.id) {
+          <div class="rdd-perm-row">
+            <mat-icon class="rdd-perm-check">check_circle</mat-icon>
+            <div class="rdd-perm-info">
+              <span class="rdd-perm-name">{{ perm.name }}</span>
+              <span class="rdd-perm-slug">{{ perm.slug }}</span>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+      }
+    </div>
+    }
+  </div>
+
+  <!-- Footer -->
+  <div class="rdd-footer">
+    <button mat-flat-button class="rdd-btn-close" (click)="close()">Close</button>
+  </div>
+</div>

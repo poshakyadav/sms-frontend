@@ -1,0 +1,286 @@
+// src/styles/_buttons.scss
+// ─────────────────────────────────────────────────────────────────────────────
+// SHARED BUTTONS — icon-buttons, stroked, ghost, back, field-edit lock/unlock.
+// ─────────────────────────────────────────────────────────────────────────────
+@use 'tokens' as *;
+
+// ── Icon / square utility button ─────────────────────────────────────────────
+// Usage: <button class="icon-btn"> or <button class="icon-btn icon-btn--sm">
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  font-family: inherit;
+
+  mat-icon {
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+  }
+
+  &:hover {
+    background: var(--color-hover);
+    color: var(--color-text-primary);
+    border-color: var(--color-primary);
+  }
+
+  &--sm {
+    width: 32px;
+    height: 32px;
+
+    mat-icon {
+      font-size: 16px;
+      height: 16px;
+      width: 16px;
+    }
+  }
+}
+
+// ── Field edit / lock toggle button ──────────────────────────────────────────
+// Used in user-form next to each locked field.
+.field-edit-btn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  margin-top: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-surface);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  padding: 0;
+  min-width: unset;
+  font-family: inherit;
+
+  mat-icon {
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
+  }
+
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  }
+
+  &.active {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  }
+}
+
+// ── Step / wizard buttons ─────────────────────────────────────────────────────
+// Used in user-creation-hub stepper footer.
+.step-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+  transition: all 0.15s ease;
+  line-height: 1;
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+
+  &--primary {
+    background: var(--persona-color, var(--color-primary));
+    color: #fff;
+
+    &:hover:not([disabled]) {
+      opacity: 0.88;
+    }
+
+    &[disabled] {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+  }
+
+  &--secondary {
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+
+    &:hover {
+      background: var(--color-hover);
+      color: var(--color-text-primary);
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: var(--color-text-muted);
+    padding: 9px 12px;
+
+    &:hover {
+      color: var(--color-text-secondary);
+      text-decoration: underline;
+    }
+  }
+
+  &--submit {
+    padding: 9px 24px;
+  }
+}
+
+// ── Permission section buttons ────────────────────────────────────────────────
+.perm-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+
+  mat-icon {
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
+  }
+
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  }
+
+  &--active {
+    border-color: var(--color-error);
+    color: var(--color-error);
+    background: color-mix(in srgb, var(--color-error) 6%, transparent);
+  }
+}
+
+.perm-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+  background: transparent;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+
+  mat-icon {
+    font-size: 12px;
+    height: 12px;
+    width: 12px;
+  }
+
+  &--deny {
+    border-color: color-mix(in srgb, var(--color-error) 25%, transparent);
+    color: var(--color-error);
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-error) 8%, transparent);
+    }
+  }
+
+  &--restore {
+    border-color: color-mix(in srgb, var(--color-success) 25%, transparent);
+    color: color-mix(in srgb, var(--color-success) 70%, #000);
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-success) 8%, transparent);
+    }
+  }
+}
+
+.perm-save-btn,
+.perm-cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+  border: 1px solid;
+
+  mat-icon {
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
+  }
+
+  &[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.perm-cancel-btn {
+  border-color: var(--color-border);
+  background: transparent;
+  color: var(--color-text-secondary);
+
+  &:hover:not([disabled]) {
+    background: var(--color-hover);
+    color: var(--color-text-primary);
+  }
+}
+
+.perm-save-btn {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+
+  &:hover:not([disabled]) {
+    opacity: 0.88;
+  }
+}
+
+// ── Form-level action bar ─────────────────────────────────────────────────────
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0 4px;
+  flex-wrap: wrap;
+
+  @media (max-width: $bp-sm) {
+    flex-direction: column-reverse;
+    button {
+      width: 100%;
+    }
+  }
+}

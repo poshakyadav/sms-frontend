@@ -1,14 +1,46 @@
-// styles.scss
+// styles.scss (global)
 
-// Include theming for Angular Material with `mat.theme()`.
-// This Sass mixin will define CSS variables that are used for styling Angular Material
-// components according to the Material 3 design spec.
-// Learn more about theming and how to use it for your application's
-// custom components at https://material.angular.dev/guide/theming
+// ─────────────────────────────────────────────────────────────────────────────
+// GLOBAL STYLES — entry point.
+// Only concerns: Angular Material theme, CSS custom properties (design tokens),
+// minimal resets, global utility classes, and toast colours.
+// Everything else lives in src/styles/_*.scss partials.
+// ─────────────────────────────────────────────────────────────────────────────
 @use '@angular/material' as mat;
 
 // Super Tokens import for super-module components
 @use '../../sms-frontend/src/app/shared/styles/super-shared-style/super-tokens' as *;
+
+// ── Shared partials ───────────────────────────────────────────────────────────
+// Import order matters: tokens → skeletons → layout → buttons → cards →
+// tables → stats → feed → permissions → dialogs → dark-theme (must be last so it can override above).
+@use 'styles/tokens';
+@use 'styles/skeletons';
+@use 'styles/layout';
+@use 'styles/buttons';
+@use 'styles/cards';
+@use 'styles/tables';
+@use 'styles/stats';
+@use 'styles/feed';
+@use 'styles/permissions';
+@use 'styles/dialogs';
+@use 'styles/user-tabs';
+@use 'styles/inline-dialogs';
+@use 'styles/dark-theme';
+
+// ── Angular Material theme ────────────────────────────────────────────────────
+html {
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+}
 
 :root {
   /* ==================== BRAND COLORS ==================== */
@@ -44,123 +76,30 @@
 
   /* ==================== SHADOWS ==================== */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.10), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.10), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
- 
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
   /* ==================== RADIUS ==================== */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
 }
 
-/* Dark mode support (ready for future toggle) */
-// [data-theme='dark'] {
-//   --color-bg-main: #0f172a;
-//   --color-bg-surface: #1e2937;
-//   --color-bg-card: #1e2937;
-//   --color-border: #334155;
-//   --color-divider: #475569;
-//   --color-text-primary: #f1f5f9;
-//   --color-text-secondary: #cbd5e1;
-//   --color-text-muted: #94a3b8;
-// }
-
-/* ==================== DARK MODE ==================== */
-/* ThemeService sets data-theme="dark" on <html> element */
-[data-theme='dark'] {
-  /* ── Surfaces ── */
-  --color-bg-main: #0d1117;
-  --color-bg-surface: #161b27;
-  --color-bg-card: #1e2433;
- 
-  /* ── Borders & Dividers ── */
-  --color-border: #2d3748;
-  --color-divider: #252d3d;
- 
-  /* ── Typography ── */
-  --color-text-primary: #f1f5f9;
-  --color-text-secondary: #94a3b8;
-  --color-text-muted: #64748b;
- 
-  /* ── Brand (slightly brightened for dark bg contrast) ── */
-  --color-primary: #60a5fa;
-  --color-primary-light: #93c5fd;
-  --color-primary-dark: #3b82f6;
-  --color-on-primary: #0f172a;
- 
-  --color-secondary: #a78bfa;
-  --color-on-secondary: #0f172a;
- 
-  /* ── Semantic (slightly softened for dark bg) ── */
-  --color-success: #34d399;
-  --color-warning: #fbbf24;
-  --color-error: #f87171;
-  --color-info: #60a5fa;
- 
-  /* ── Interactive States ── */
-  --color-hover: #1e2d3d;
-  --color-active: #1e3a5f;
- 
-  /* ── Shadows (deeper for dark mode depth) ── */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
-}
-
-html {
-  @include mat.theme(
-    (
-      color: (
-        primary: mat.$azure-palette,
-        tertiary: mat.$blue-palette,
-      ),
-      typography: Roboto,
-      density: 0,
-    )
-  );
-}
-
-body {
-  // Default the application to a light color theme. This can be changed to
-  // `dark` to enable the dark color theme, or to `light dark` to defer to the
-  // user's system settings.
-  // color-scheme: light;
-
-  // Set a default background, font and text colors for the application using
-  // Angular Material's system-level CSS variables. Learn more about these
-  // variables at https://material.angular.dev/guide/system-variables
-  background-color: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
-  font: var(--mat-sys-body-medium);
-
-  // Reset the user agent margin.
-  margin: 0;
-}
-/* You can add global styles to this file, and also import other style files */
-
+// ── Base reset ────────────────────────────────────────────────────────────────
 html,
 body {
   height: 100%;
 }
+
 body {
   margin: 0;
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
   font-family: Roboto, 'Helvetica Neue', sans-serif;
+  font: var(--mat-sys-body-medium);
 }
 
-/* Global utility classes */
-.bg-primary {
-  background-color: var(--color-primary);
-}
-.text-on-primary {
-  color: var(--color-on-primary);
-}
-.border-primary {
-  border-color: var(--color-primary);
-}
-
-// ======== Custom styles for the app ========
-
-// Toast styles for different types of messages
+// ── Toast / Snackbar colours ──────────────────────────────────────────────────
 .success-toast {
   --mdc-snackbar-container-color: #4caf50;
   color: white;
@@ -176,4 +115,16 @@ body {
 .warning-toast {
   --mdc-snackbar-container-color: #ff9800;
   color: white;
+}
+
+// ── Minimal global utilities ──────────────────────────────────────────────────
+// Only truly global helpers that don't belong to a specific partial.
+.bg-primary {
+  background-color: var(--color-primary);
+}
+.text-on-primary {
+  color: var(--color-on-primary);
+}
+.border-primary {
+  border-color: var(--color-primary);
 }

@@ -1,0 +1,767 @@
+// src/styles/_permissions.scss
+// ─────────────────────────────────────────────────────────────────────────────
+// PERMISSION OVERRIDES PANEL — shared by user-form (and any future editor
+// that exposes the 3-state permission picker).
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Section wrapper ───────────────────────────────────────────────────────────
+.perm-section {
+  border-color: var(--color-border);
+  transition: border-color 0.2s ease;
+
+  &--unlocked {
+    border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+    box-shadow: var(--shadow-md),
+      0 0 0 1px color-mix(in srgb, var(--color-primary) 15%, transparent);
+  }
+}
+
+// ── Section header ────────────────────────────────────────────────────────────
+.perm-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__subtitle {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    font-weight: 400;
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+}
+
+// Category badge inside subtitle
+.perm-cat-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+
+  &--staff {
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    color: var(--color-primary);
+  }
+  &--student {
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    color: color-mix(in srgb, var(--color-success) 70%, #000);
+  }
+  &--parent {
+    background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+    color: color-mix(in srgb, var(--color-warning) 70%, #000);
+  }
+}
+
+// Active grant/deny badge beside the Edit button
+.perm-active-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+
+  mat-icon {
+    font-size: 13px;
+    height: 13px;
+    width: 13px;
+  }
+
+  &--grant {
+    background: color-mix(in srgb, var(--color-success) 10%, transparent);
+    color: color-mix(in srgb, var(--color-success) 70%, #000);
+    border-color: color-mix(in srgb, var(--color-success) 20%, transparent);
+  }
+
+  &--deny {
+    background: color-mix(in srgb, var(--color-error) 10%, transparent);
+    color: var(--color-error);
+    border-color: color-mix(in srgb, var(--color-error) 20%, transparent);
+  }
+}
+
+// ── How-to guide bar ──────────────────────────────────────────────────────────
+.perm-guide-bar {
+  padding: 0 20px 12px;
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.perm-guide-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+  }
+
+  &:hover {
+    background: var(--color-hover);
+    color: var(--color-text-primary);
+  }
+}
+
+.perm-guide-chevron {
+  transition: transform 0.2s ease;
+  &--open {
+    transform: rotate(180deg);
+  }
+}
+
+.perm-guide-content {
+  margin-top: 12px;
+  padding: 14px;
+  background: var(--color-hover);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-divider);
+}
+
+.perm-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.perm-guide-card {
+  display: flex;
+  gap: 10px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+
+  strong {
+    display: block;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 3px;
+  }
+  p {
+    margin: 0;
+    color: var(--color-text-secondary);
+  }
+  em {
+    font-style: italic;
+  }
+  ol {
+    margin: 0;
+    padding-left: 16px;
+    color: var(--color-text-secondary);
+    li {
+      margin-bottom: 4px;
+    }
+  }
+}
+
+.perm-guide-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+
+  &--blue {
+    background: color-mix(in srgb, var(--color-info) 12%, transparent);
+    mat-icon {
+      color: var(--color-info);
+    }
+  }
+  &--green {
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    mat-icon {
+      color: var(--color-success);
+    }
+  }
+  &--red {
+    background: color-mix(in srgb, var(--color-error) 12%, transparent);
+    mat-icon {
+      color: var(--color-error);
+    }
+  }
+  &--purple {
+    background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
+    mat-icon {
+      color: var(--color-secondary);
+    }
+  }
+}
+
+// Legend chips inside guide card
+.perm-legend-chip {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 9999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+
+  &--inherited {
+    background: color-mix(in srgb, var(--color-text-muted) 12%, transparent);
+    color: var(--color-text-muted);
+  }
+  &--granted {
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    color: color-mix(in srgb, var(--color-success) 70%, #000);
+  }
+  &--denied {
+    background: color-mix(in srgb, var(--color-error) 12%, transparent);
+    color: var(--color-error);
+  }
+}
+
+// ── Locked state body ─────────────────────────────────────────────────────────
+.perm-locked-body {
+  padding: 20px;
+}
+
+.perm-empty-state {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  background: var(--color-hover);
+  border-radius: var(--radius-sm);
+
+  &__icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-text-muted) 10%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    mat-icon {
+      font-size: 22px;
+      height: 22px;
+      width: 22px;
+      color: var(--color-text-muted);
+    }
+  }
+
+  &__title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin: 0 0 4px;
+  }
+  &__desc {
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+    margin: 0;
+    line-height: 1.5;
+  }
+}
+
+.perm-locked-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.perm-locked-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.84rem;
+  border: 1px solid transparent;
+
+  mat-icon {
+    font-size: 17px;
+    height: 17px;
+    width: 17px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  &--grant {
+    background: color-mix(in srgb, var(--color-success) 8%, transparent);
+    border-color: color-mix(in srgb, var(--color-success) 15%, transparent);
+    color: color-mix(in srgb, var(--color-success) 70%, var(--color-text-primary));
+    mat-icon {
+      color: var(--color-success);
+    }
+  }
+
+  &--deny {
+    background: color-mix(in srgb, var(--color-error) 8%, transparent);
+    border-color: color-mix(in srgb, var(--color-error) 15%, transparent);
+    color: color-mix(in srgb, var(--color-error) 80%, var(--color-text-primary));
+    mat-icon {
+      color: var(--color-error);
+    }
+  }
+}
+
+.perm-locked-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin: 4px 0 0;
+  padding: 0 4px;
+  mat-icon {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+  }
+}
+
+// ── Picker body ───────────────────────────────────────────────────────────────
+.perm-picker-body {
+  padding: 0 20px 20px;
+}
+
+.perm-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 0;
+  span {
+    font-size: 0.86rem;
+    color: var(--color-text-muted);
+  }
+}
+
+// Legend bar inside picker
+.perm-legend-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-divider);
+  margin-bottom: 14px;
+}
+
+.perm-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+}
+
+.perm-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &--inherited {
+    background: var(--color-text-muted);
+  }
+  &--granted {
+    background: var(--color-success);
+  }
+  &--denied {
+    background: var(--color-error);
+  }
+}
+
+.perm-legend-sep {
+  flex: 1;
+}
+
+// Search bar
+.perm-picker-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.perm-picker-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+
+  mat-icon {
+    position: absolute;
+    left: 10px;
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+    color: var(--color-text-muted);
+    pointer-events: none;
+  }
+}
+
+.perm-search-input {
+  width: 100%;
+  padding: 8px 36px 8px 34px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font-size: 0.84rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: var(--color-primary);
+  }
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+}
+
+.perm-search-clear {
+  position: absolute;
+  right: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  color: var(--color-text-muted);
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+  }
+  &:hover {
+    color: var(--color-text-primary);
+  }
+}
+
+// ── Module accordion ──────────────────────────────────────────────────────────
+.perm-module-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 480px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+  }
+}
+
+.perm-module {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+
+  &--expanded {
+    border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+  }
+}
+
+.perm-module-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--color-bg-surface) 60%, var(--color-bg-card));
+  cursor: pointer;
+  transition: background 0.15s ease;
+  user-select: none;
+
+  &:hover {
+    background: var(--color-hover);
+  }
+
+  &__name {
+    flex: 1;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    text-transform: capitalize;
+  }
+  &__count {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 9999px;
+    background: var(--color-hover);
+    color: var(--color-text-muted);
+  }
+  &__chevron {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+    color: var(--color-text-muted);
+    transition: transform 0.2s ease;
+  }
+}
+
+.perm-module--expanded .perm-module-header__chevron {
+  transform: rotate(180deg);
+}
+
+.perm-module-deny-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
+  color: var(--color-error);
+  border: 1px solid color-mix(in srgb, var(--color-error) 18%, transparent);
+  mat-icon {
+    font-size: 11px;
+    height: 11px;
+    width: 11px;
+  }
+}
+
+// ── Permission item rows ──────────────────────────────────────────────────────
+.perm-item-list {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--color-divider);
+}
+
+.perm-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--color-divider);
+  transition: background 0.15s ease;
+  cursor: pointer;
+
+  &:last-child {
+    border-bottom: none;
+  }
+  &:hover {
+    background: var(--color-hover);
+  }
+
+  &--inherited {
+    background: color-mix(in srgb, var(--color-text-muted) 4%, transparent);
+  }
+  &--granted {
+    background: color-mix(in srgb, var(--color-success) 4%, transparent);
+  }
+  &--denied {
+    background: color-mix(in srgb, var(--color-error) 4%, transparent);
+    opacity: 0.85;
+  }
+
+  &__state {
+    flex-shrink: 0;
+    width: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  &__name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__slug {
+    font-size: 0.68rem;
+    color: var(--color-text-muted);
+    font-family: 'Courier New', monospace;
+    background: var(--color-hover);
+    padding: 1px 5px;
+    border-radius: 3px;
+    max-width: max-content;
+  }
+
+  &__badges {
+    flex-shrink: 0;
+  }
+  &__action {
+    flex-shrink: 0;
+  }
+}
+
+.perm-state-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.15s ease;
+
+  mat-icon {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+  }
+
+  &--denied {
+    background: color-mix(in srgb, var(--color-error) 15%, transparent);
+    color: var(--color-error);
+    &:hover {
+      background: color-mix(in srgb, var(--color-error) 25%, transparent);
+    }
+  }
+}
+
+.perm-state-inherited {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  mat-icon {
+    font-size: 13px;
+    height: 13px;
+    width: 13px;
+  }
+}
+
+.perm-state-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+
+  &--inherited {
+    background: color-mix(in srgb, var(--color-text-muted) 12%, transparent);
+    color: var(--color-text-muted);
+  }
+  &--granted {
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    color: color-mix(in srgb, var(--color-success) 70%, #000);
+  }
+  &--denied {
+    background: color-mix(in srgb, var(--color-error) 12%, transparent);
+    color: var(--color-error);
+  }
+}
+
+.perm-no-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 0;
+  color: var(--color-text-muted);
+  font-size: 0.84rem;
+  text-align: center;
+
+  mat-icon {
+    font-size: 28px;
+    height: 28px;
+    width: 28px;
+    opacity: 0.5;
+  }
+}
+
+// ── Action bar ────────────────────────────────────────────────────────────────
+.perm-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0 0;
+  margin-top: 14px;
+  border-top: 1px solid var(--color-divider);
+  gap: 10px;
+  flex-wrap: wrap;
+
+  &__left {
+    display: flex;
+    align-items: center;
+  }
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.perm-unsaved-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+  color: color-mix(in srgb, var(--color-warning) 70%, #000);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent);
+  mat-icon {
+    font-size: 12px;
+    height: 12px;
+    width: 12px;
+  }
+}

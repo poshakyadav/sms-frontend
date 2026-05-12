@@ -1,0 +1,541 @@
+// src/styles/_dark-theme.scss
+// ─────────────────────────────────────────────────────────────────────────────
+// DARK MODE — all Angular Material MDC token overrides + shared component
+// overrides for [data-theme='dark'].
+//
+// ThemeService sets data-theme="dark" on <html>.
+// These rules MUST live in a globally-imported file (not component SCSS)
+// because Angular Material sets its tokens on :root / host-level, which
+// component-scoped styles cannot override.
+//
+// Partial coverage order (mirrors styles.scss import order):
+//   tokens → skeletons → layout → buttons → cards → tables → stats → feed →
+//   permissions → dialogs → user-tabs → inline-dialogs
+// ─────────────────────────────────────────────────────────────────────────────
+
+[data-theme='dark'] {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SURFACE TOKENS (design system)
+  // ═══════════════════════════════════════════════════════════════════════════
+  --color-bg-main: #0d1117;
+  --color-bg-surface: #161b27;
+  --color-bg-card: #1e2433;
+  --color-border: #2d3748;
+  --color-divider: #252d3d;
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #94a3b8;
+  --color-text-muted: #64748b;
+  --color-primary: #60a5fa;
+  --color-primary-light: #93c5fd;
+  --color-primary-dark: #3b82f6;
+  --color-on-primary: #0f172a;
+  --color-secondary: #a78bfa;
+  --color-on-secondary: #0f172a;
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-error: #f87171;
+  --color-info: #60a5fa;
+  --color-hover: #1e2d3d;
+  --color-active: #1e3a5f;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ANGULAR MATERIAL MDC TOKENS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── Mat Table ───────────────────────────────────────────────────────────────
+  --mat-table-background-color: #1e2433;
+  --mat-table-header-headline-color: #94a3b8;
+  --mat-table-row-item-label-text-color: #f1f5f9;
+  --mat-table-row-item-outline-color: #252d3d;
+  --mat-table-header-container-height: 52px;
+  --mat-table-footer-container-height: 52px;
+  --mat-table-row-item-container-height: 52px;
+
+  .mat-mdc-table {
+    background: #1e2433 !important;
+  }
+  .mdc-data-table__content {
+    background: #1e2433 !important;
+  }
+
+  .mdc-data-table__row {
+    background-color: #1e2433 !important;
+    &:hover,
+    &:hover .mdc-data-table__cell {
+      background-color: #1e2d3d !important;
+    }
+  }
+
+  .mdc-data-table__header-row {
+    background-color: color-mix(in srgb, #161b27 60%, #1e2433) !important;
+  }
+
+  .mdc-data-table__cell,
+  .mdc-data-table__header-cell {
+    border-bottom-color: #252d3d !important;
+    color: #f1f5f9 !important;
+  }
+
+  .mdc-data-table__header-cell {
+    color: #94a3b8 !important;
+  }
+
+  // ── Mat Paginator ───────────────────────────────────────────────────────────
+  --mat-paginator-container-background-color: #1e2433;
+  --mat-paginator-container-text-color: #94a3b8;
+  --mat-paginator-select-trigger-text-color: #f1f5f9;
+  --mat-paginator-enabled-icon-color: #64748b;
+  --mat-paginator-disabled-icon-color: #2d3748;
+
+  .mat-mdc-paginator {
+    background: #1e2433 !important;
+    border-top: 1px solid #2d3748;
+  }
+
+  .mat-mdc-paginator-outer-container,
+  .mat-mdc-paginator-container {
+    background: #1e2433 !important;
+    color: #94a3b8 !important;
+  }
+
+  .mat-mdc-paginator .mat-mdc-select-value {
+    color: #f1f5f9 !important;
+  }
+  .mat-mdc-paginator-icon {
+    fill: #64748b !important;
+  }
+
+  // ── Mat Form Field (outlined) ────────────────────────────────────────────────
+  --mdc-outlined-text-field-outline-color: #2d3748;
+  --mdc-outlined-text-field-hover-outline-color: #60a5fa;
+  --mdc-outlined-text-field-focus-outline-color: #60a5fa;
+  --mdc-outlined-text-field-label-text-color: #64748b;
+  --mdc-outlined-text-field-hover-label-text-color: #94a3b8;
+  --mdc-outlined-text-field-focus-label-text-color: #60a5fa;
+  --mdc-outlined-text-field-input-text-color: #f1f5f9;
+  --mdc-outlined-text-field-caret-color: #60a5fa;
+  --mdc-outlined-text-field-disabled-outline-color: #252d3d;
+  --mat-form-field-leading-icon-color: #64748b;
+  --mat-form-field-trailing-icon-color: #64748b;
+  --mat-form-field-focus-leading-icon-color: #60a5fa;
+
+  .mdc-notched-outline__leading,
+  .mdc-notched-outline__notch,
+  .mdc-notched-outline__trailing {
+    border-color: #2d3748 !important;
+  }
+
+  .mat-mdc-form-field:hover {
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+      border-color: #60a5fa !important;
+    }
+  }
+
+  .mat-mdc-form-field.mat-focused {
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+      border-color: #60a5fa !important;
+    }
+    .mdc-floating-label {
+      color: #60a5fa !important;
+    }
+  }
+
+  .mdc-floating-label {
+    color: #64748b !important;
+  }
+
+  .mat-mdc-form-field input::placeholder {
+    color: #64748b !important;
+    opacity: 1 !important;
+  }
+  .mat-mdc-form-field input.mat-mdc-input-element {
+    color: #f1f5f9 !important;
+    caret-color: #60a5fa !important;
+  }
+  .mat-mdc-form-field .mat-icon {
+    color: #64748b !important;
+  }
+
+  // ── Mat Select ──────────────────────────────────────────────────────────────
+  --mat-select-trigger-text-color: #f1f5f9;
+  --mat-select-enabled-arrow-color: #64748b;
+  --mat-option-label-text-color: #f1f5f9;
+  --mat-option-hover-state-layer-color: #1e2d3d;
+  --mat-option-selected-state-label-text-color: #60a5fa;
+  --mat-select-panel-background-color: #1e2433;
+
+  .mat-mdc-select-value {
+    color: #f1f5f9 !important;
+  }
+  .mat-mdc-select-arrow {
+    color: #64748b !important;
+  }
+
+  // ── Mat Icon Buttons ─────────────────────────────────────────────────────────
+  --mat-icon-button-icon-color: #64748b;
+
+  .mat-mdc-icon-button {
+    color: #64748b !important;
+    &:hover {
+      background-color: #1e2d3d !important;
+      color: #f1f5f9 !important;
+    }
+    &[color='warn'] {
+      color: #f87171 !important;
+      &:hover {
+        background-color: rgba(248, 113, 113, 0.1) !important;
+      }
+    }
+    &[color='primary'] {
+      color: #60a5fa !important;
+      &:hover {
+        background-color: rgba(96, 165, 250, 0.1) !important;
+      }
+    }
+  }
+
+  // ── Mat Stroked / Protected Buttons ─────────────────────────────────────────
+  --mdc-outlined-button-outline-color: #2d3748;
+  --mdc-outlined-button-label-text-color: #94a3b8;
+  --mdc-protected-button-container-color: #60a5fa;
+  --mdc-protected-button-label-text-color: #0f172a;
+
+  [mat-stroked-button]:not([color]) {
+    border-color: #2d3748 !important;
+    color: #94a3b8 !important;
+
+    &:hover:not([disabled]) {
+      border-color: #60a5fa !important;
+      color: #60a5fa !important;
+      background: rgba(96, 165, 250, 0.08) !important;
+    }
+  }
+
+  // ── Mat Tooltip ──────────────────────────────────────────────────────────────
+  --mdc-plain-tooltip-container-color: #161b27;
+  --mdc-plain-tooltip-supporting-text-color: #f1f5f9;
+
+  // ── Spinner ──────────────────────────────────────────────────────────────────
+  --mdc-circular-progress-active-indicator-color: #60a5fa;
+
+  // ── Mat Checkbox ─────────────────────────────────────────────────────────────
+  --mdc-checkbox-unselected-icon-color: #64748b;
+  --mdc-checkbox-unselected-hover-icon-color: #94a3b8;
+
+  // ── Loading shade ─────────────────────────────────────────────────────────────
+  .loading-shade {
+    background: rgba(13, 17, 23, 0.8) !important;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SHARED COMPONENT OVERRIDES — _layout, _buttons, _cards, _permissions,
+  // _dialogs (confirm overlay).
+  // Applied here because they depend on the global MDC token cascade above.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── Layout surfaces ──────────────────────────────────────────────────────────
+  .section-card,
+  .step-main,
+  .step-sidebar,
+  .step-footer,
+  .confirm-dialog,
+  .perm-guide-content,
+  .perm-empty-state {
+    background-color: var(--color-bg-card);
+    border-color: var(--color-border);
+  }
+
+  .section-header,
+  .perm-module-header {
+    background: color-mix(in srgb, var(--color-bg-main) 40%, var(--color-bg-card));
+  }
+
+  // ── Permissions panel ─────────────────────────────────────────────────────────
+  .perm-module {
+    border-color: var(--color-border);
+  }
+  .perm-module--expanded {
+    border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
+  }
+
+  .perm-item {
+    &--inherited {
+      background: color-mix(in srgb, var(--color-text-muted) 6%, transparent);
+    }
+    &--granted {
+      background: color-mix(in srgb, var(--color-success) 6%, transparent);
+    }
+    &--denied {
+      background: color-mix(in srgb, var(--color-error) 6%, transparent);
+    }
+    &:hover {
+      background: var(--color-hover);
+    }
+  }
+
+  .perm-item__slug {
+    background: color-mix(in srgb, var(--color-bg-main) 60%, transparent);
+  }
+
+  .perm-search-input {
+    background: var(--color-bg-surface);
+    border-color: var(--color-border);
+    color: var(--color-text-primary);
+    &:focus {
+      border-color: var(--color-primary);
+    }
+    &::placeholder {
+      color: var(--color-text-muted);
+    }
+  }
+
+  // ── Shared cards / buttons ────────────────────────────────────────────────────
+  .field-edit-btn {
+    background: var(--color-bg-surface) !important;
+    border-color: var(--color-border) !important;
+    color: var(--color-text-secondary) !important;
+
+    &:hover,
+    &.active {
+      border-color: var(--color-primary) !important;
+      color: var(--color-primary) !important;
+      background: color-mix(in srgb, var(--color-primary) 10%, transparent) !important;
+    }
+  }
+
+  .facility-chip {
+    background: var(--color-bg-surface);
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+  }
+
+  // ── Confirm dialog (_dialogs.scss) ────────────────────────────────────────────
+  .confirm-overlay {
+    background: rgba(0, 0, 0, 0.65);
+  }
+  .confirm-dialog {
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.55), 0 8px 16px rgba(0, 0, 0, 0.35);
+  }
+
+  .change-item {
+    border-color: var(--color-border);
+  }
+  .change-label {
+    background: color-mix(in srgb, var(--color-bg-main) 40%, var(--color-bg-card));
+    border-color: var(--color-border);
+  }
+
+  // ── Role / perm search inputs ─────────────────────────────────────────────────
+  .role-search-input,
+  .perm-search-input {
+    background: var(--color-bg-surface);
+    border-color: var(--color-border);
+    color: var(--color-text-primary);
+    &::placeholder {
+      color: var(--color-text-muted);
+    }
+    &:focus {
+      border-color: var(--color-primary);
+    }
+  }
+
+  // ── Persona / stepper cards ───────────────────────────────────────────────────
+  .persona-card,
+  .role-option-card {
+    background: var(--color-bg-card);
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // _user-tabs.scss — dark overrides
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  .tab-bar {
+    background: var(--color-bg-card);
+    border-color: var(--color-border);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .tab-btn {
+    color: var(--color-text-secondary);
+
+    &:hover:not(.active) {
+      background: var(--color-hover);
+      color: var(--color-text-primary);
+    }
+
+    .tab-count {
+      background: var(--color-hover);
+      color: var(--color-text-muted);
+    }
+
+    // Active states — accent colours shift to dark-mode palette
+    &.active {
+      &[data-color='staff'] {
+        background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+        color: var(--color-primary-light);
+        .tab-icon {
+          color: var(--color-primary);
+        }
+        .tab-count {
+          background: var(--color-primary);
+          color: var(--color-on-primary);
+        }
+      }
+
+      &[data-color='student'] {
+        background: color-mix(in srgb, var(--color-success) 16%, transparent);
+        color: color-mix(in srgb, var(--color-success) 90%, #fff);
+        .tab-icon {
+          color: var(--color-success);
+        }
+        .tab-count {
+          background: var(--color-success);
+          color: #0f172a;
+        }
+      }
+
+      &[data-color='parent'] {
+        background: color-mix(in srgb, #fbbf24 16%, transparent);
+        color: #fbbf24;
+        .tab-icon {
+          color: #fbbf24;
+        }
+        .tab-count {
+          background: #fbbf24;
+          color: #0f172a;
+        }
+      }
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // _inline-dialogs.scss — dark overrides
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // Backdrop
+  .dialog-backdrop {
+    background: rgba(0, 0, 0, 0.65);
+  }
+
+  // Dialog box
+  .custom-dialog {
+    background: var(--color-bg-card);
+    border-color: var(--color-border);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.55), 0 8px 16px rgba(0, 0, 0, 0.35);
+    scrollbar-color: var(--color-border) transparent;
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--color-border);
+    }
+  }
+
+  // Header icon wrappers
+  .dialog-icon-wrap {
+    &.icon-warn {
+      background: color-mix(in srgb, var(--color-warning) 18%, transparent);
+      mat-icon {
+        color: var(--color-warning);
+      }
+    }
+    &.icon-success {
+      background: color-mix(in srgb, var(--color-success) 18%, transparent);
+      mat-icon {
+        color: var(--color-success);
+      }
+    }
+    &.icon-danger {
+      background: color-mix(in srgb, var(--color-error) 18%, transparent);
+      mat-icon {
+        color: var(--color-error);
+      }
+    }
+  }
+
+  // Titles
+  .dialog-titles {
+    h2 {
+      color: var(--color-text-primary);
+    }
+    .dialog-subtitle {
+      color: var(--color-text-muted);
+    }
+  }
+
+  // Danger header border
+  .danger-header {
+    border-bottom-color: color-mix(in srgb, var(--color-error) 20%, transparent);
+  }
+
+  // Blocking banner
+  .blocking-banner {
+    background: color-mix(in srgb, var(--color-error) 10%, transparent);
+    border-color: color-mix(in srgb, var(--color-error) 28%, transparent);
+
+    p {
+      color: color-mix(in srgb, var(--color-error) 90%, var(--color-text-primary));
+    }
+  }
+
+  // Impact items
+  .impact-item {
+    &.info {
+      background: color-mix(in srgb, var(--color-info) 10%, transparent);
+      color: color-mix(in srgb, var(--color-info) 80%, var(--color-text-primary));
+    }
+    &.success {
+      background: color-mix(in srgb, var(--color-success) 10%, transparent);
+      color: color-mix(in srgb, var(--color-success) 70%, var(--color-text-primary));
+    }
+    &.warning {
+      background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+      color: color-mix(in srgb, var(--color-warning) 80%, var(--color-text-primary));
+    }
+    &.danger {
+      background: color-mix(in srgb, var(--color-error) 10%, transparent);
+      color: color-mix(in srgb, var(--color-error) 80%, var(--color-text-primary));
+    }
+  }
+
+  // Summary cards
+  .summary-card {
+    &.danger {
+      background: color-mix(in srgb, var(--color-error) 10%, transparent);
+      border-color: color-mix(in srgb, var(--color-error) 25%, transparent);
+    }
+    &.warning {
+      background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+      border-color: color-mix(in srgb, var(--color-warning) 28%, transparent);
+      color: var(--color-warning);
+    }
+    &.info {
+      background: color-mix(in srgb, var(--color-info) 10%, transparent);
+      border-color: color-mix(in srgb, var(--color-info) 25%, transparent);
+    }
+  }
+
+  // Confirm text blocks
+  .dialog-confirm-text {
+    background: var(--color-hover);
+    color: var(--color-text-secondary);
+
+    &.danger-text {
+      background: color-mix(in srgb, var(--color-error) 8%, transparent);
+      border-color: color-mix(in srgb, var(--color-error) 22%, transparent);
+      color: color-mix(in srgb, var(--color-error) 90%, var(--color-text-primary));
+    }
+  }
+
+  // Footer
+  .dialog-footer {
+    border-top-color: var(--color-divider);
+  }
+}

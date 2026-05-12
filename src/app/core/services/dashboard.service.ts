@@ -38,21 +38,41 @@ export interface DashboardGrade {
   remarks?: string;
 }
 
+// ── NEW: One row per active class-section (OWNER / MANAGEMENT only) ───────────
+// Mirrors the AttendanceCoverageItem interface in backend services.ts.
+// Built server-side with a single LEFT JOIN — never N+1.
+export interface AttendanceCoverageItem {
+  classSectionId: number;
+  className: string;
+  sectionName: string;
+  /** True when ≥ 1 attendance record exists for today's date in this section. */
+  isMarked: boolean;
+  /** Number of student records entered today (for "X students marked" label). */
+  markedCount: number;
+  /** Total active enrollments (for "X / Y" completion display). */
+  totalEnrolled: number;
+}
+
 export interface DashboardStats {
-  // Owner / Management
+  // Owner / Management — core counts
   totalStudents?: number;
   totalTeachers?: number;
   totalStaff?: number;
   currentEnrollments?: number;
-  feesCollected?: number;
-  feesPending?: number;
-  feeCollectionRate?: number;
   activeClassSections?: number;
- 
+
+  // ── OWNER / MANAGEMENT: attendance summary (shown as a stat chip) ──────────
+  // "sectionsMarkedToday / totalActiveSections" renders as "8 / 12 Sections"
+  sectionsMarkedToday?: number;
+  totalActiveSections?: number;
+
+  // NOTE: feesCollected / feesPending / feeCollectionRate are intentionally
+  // absent for OWNER — they are shown on the dedicated /school/fees/dashboard.
+
   // Teacher
   attendancesMarkedToday?: number;
   pendingSubmissions?: number;
- 
+
   // Student / Parent shared
   myClass?: string;
   mySection?: string;
@@ -60,7 +80,7 @@ export interface DashboardStats {
   attendancePercentage?: number;
   totalDaysTracked?: number;
   pendingAssignments?: number;
- 
+
   // Parent — child identity
   childName?: string;
   childAvatarUrl?: string;
@@ -68,14 +88,17 @@ export interface DashboardStats {
   childBloodGroup?: string;
   childAdmissionDate?: string;
   childMedicalInfo?: string;
- 
+
   // Parent — attendance breakdown
   presentDays?: number;
   absentDays?: number;
- 
+
   // Parent — fees
+
+  feesCollected?: number;   
+  feesPending?: number; 
   totalFeeDue?: number;
- 
+
   // Allow any key (backend is dynamic)
   [key: string]: number | string | undefined;
 }
@@ -84,6 +107,8 @@ export interface DashboardLists {
   recentNotifications?: DashboardNotification[];
   assignedClasses?: DashboardAssignedClass[];
   recentGrades?: DashboardGrade[];
+  // ── NEW: per-section coverage list (OWNER / MANAGEMENT only) ──────────────
+  attendanceCoverage?: AttendanceCoverageItem[];
   [key: string]: any[] | undefined;
 }
 
@@ -102,11 +127,8 @@ export class DashboardService {
   private platformId = inject(PLATFORM_ID);
 
   getDashboard(): Observable<DashboardData> {
-    // ── GUARD: school API requires auth token stored in localStorage.
-    // On the server there is no localStorage, so this call would go out
-    // unauthenticated, get transfer-cached by Angular hydration, and the
-    // browser would reuse that empty response instead of its own authenticated
-    // request. Return EMPTY on the server so nothing is cached.
+    // SSR guard — school API requires auth token in localStorage.
+    // Return EMPTY on the server so nothing is transfer-cached unauthenticated.
     if (!isPlatformBrowser(this.platformId)) {
       return EMPTY;
     }

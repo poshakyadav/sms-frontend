@@ -1,7 +1,6 @@
 <!-- user-form/user-form.html -->
-<!-- UPDATED: Added "Direct Permission Overrides" section in edit mode. -->
-<!-- The section is gated by permissions.manage and locked by default, -->
-<!-- following the same field-lock pattern as all other editable fields. -->
+<!-- PRODUCTION-GRADE: Full guardian fields, UDISE+ section, 3-state permission overrides -->
+<!-- Matches user-form.ts signals, forms, computed properties, and user-form.scss classes -->
 
 <div class="form-page">
   <!-- ── Page Header ──────────────────────────────────────────────── -->
@@ -57,7 +56,12 @@
           >
             <mat-form-field appearance="outline" class="field-input">
               <mat-label>Full Name</mat-label>
-              <input matInput formControlName="name" required placeholder="e.g. John Doe" />
+              <input
+                matInput
+                formControlName="name"
+                required
+                placeholder="e.g. Ravi Kumar Sharma"
+              />
               @if (form.get('name')?.hasError('required') && form.get('name')?.touched) {
               <mat-error>Full name is required</mat-error>
               } @if (form.get('name')?.hasError('minlength') && form.get('name')?.touched) {
@@ -92,7 +96,7 @@
                 type="email"
                 formControlName="email"
                 required
-                placeholder="john@school.edu"
+                placeholder="user@school.edu"
               />
               @if (form.get('email')?.hasError('required') && form.get('email')?.touched) {
               <mat-error>Email is required</mat-error>
@@ -137,7 +141,7 @@
             data-field="newPassword"
           >
             <mat-form-field appearance="outline" class="field-input">
-              <mat-label>New Password (optional)</mat-label>
+              <mat-label>New Password <span class="optional-label">(optional)</span></mat-label>
               <mat-icon matPrefix>lock_reset</mat-icon>
               <input matInput type="password" formControlName="newPassword" />
               <mat-hint>Leave blank to keep current password</mat-hint>
@@ -174,7 +178,7 @@
               </mat-option>
               }
             </mat-select>
-            <mat-hint>This permanently defines the user's identity and profile type</mat-hint>
+            <mat-hint>Permanently defines the user's identity and profile type</mat-hint>
             @if (form.get('primaryRoleId')?.hasError('required') &&
             form.get('primaryRoleId')?.touched) {
             <mat-error>Primary role is required</mat-error>
@@ -182,9 +186,9 @@
           </mat-form-field>
           }
 
-          <!-- Roles -->
+          <!-- Roles (additional roles) -->
           <div
-            class="field-wrapper"
+            class="field-wrapper roles-field-wrapper"
             [class.field-locked]="isEdit() && !isFieldEditable('roleIds')"
             [class.field-unlocked]="isEdit() && isFieldEditable('roleIds')"
             data-field="roleIds"
@@ -198,21 +202,34 @@
                 <span class="primary-role-hint">— permanent, cannot be removed</span>
               </div>
               }
-              <mat-form-field appearance="outline" class="field-input">
+
+              <mat-form-field appearance="outline" class="field-input roles-select-field">
                 <mat-label>{{ isEdit() ? 'Additional Roles' : 'Assign Roles' }}</mat-label>
                 <mat-icon matPrefix>badge</mat-icon>
-                <mat-select formControlName="roleIds" multiple required>
+                <mat-select
+                  formControlName="roleIds"
+                  multiple
+                  required
+                  panelClass="roles-select-panel"
+                >
                   @for (role of availableRoles(); track role.id) {
                   <mat-option
                     [value]="role.id"
                     [disabled]="isEdit() && role.id === primaryRoleId()"
                   >
-                    <div class="role-option-row">
-                      <span>{{ getRoleDisplayName(role) }}</span>
-                      @if (isEdit() && role.id === primaryRoleId()) {
-                      <span class="role-primary-chip">Primary</span>
-                      } @if (role.description) {
-                      <span class="role-option-desc"> — {{ role.description }}</span>
+                    <div class="role-option-inner">
+                      <div class="role-option-main">
+                        <span class="role-option-name">{{ getRoleDisplayName(role) }}</span>
+                        @if (isEdit() && role.id === primaryRoleId()) {
+                        <span class="role-primary-chip">Primary</span>
+                        } @if (role.category) {
+                        <span class="role-category-chip role-category-chip--{{ role.category }}">
+                          {{ role.category }}
+                        </span>
+                        }
+                      </div>
+                      @if (role.description) {
+                      <span class="role-option-desc">{{ role.description }}</span>
                       }
                     </div>
                   </mat-option>
@@ -223,6 +240,26 @@
                 <mat-error>At least one role is required</mat-error>
                 }
               </mat-form-field>
+
+              @if ((form.get('roleIds')?.value?.length ?? 0) > 0) {
+              <div class="selected-roles-summary">
+                <span class="summary-label">Assigned:</span>
+                <div class="summary-chips">
+                  @for (roleId of form.get('roleIds')?.value; track roleId) { @let role =
+                  availableRoles() | findById: roleId; @if (role) {
+                  <span
+                    class="summary-chip"
+                    [class.summary-chip--primary]="isEdit() && roleId === primaryRoleId()"
+                  >
+                    {{ getRoleDisplayName(role) }}
+                    @if (isEdit() && roleId === primaryRoleId()) {
+                    <mat-icon class="chip-lock-icon">lock</mat-icon>
+                    }
+                  </span>
+                  } }
+                </div>
+              </div>
+              }
             </div>
             @if (isEdit()) {
             <button
@@ -276,6 +313,7 @@
       </div>
       <div class="section-body">
         <div class="form-grid-3">
+          <!-- Phone -->
           <div
             class="field-wrapper"
             [class.field-locked]="isEdit() && !isFieldEditable('phone')"
@@ -303,6 +341,7 @@
             }
           </div>
 
+          <!-- Alternate Phone -->
           <div
             class="field-wrapper"
             [class.field-locked]="isEdit() && !isFieldEditable('alternatePhone')"
@@ -327,6 +366,7 @@
             }
           </div>
 
+          <!-- Date of Birth -->
           <div
             class="field-wrapper"
             [class.field-locked]="isEdit() && !isFieldEditable('dateOfBirth')"
@@ -335,7 +375,13 @@
           >
             <mat-form-field appearance="outline" class="field-input">
               <mat-label>Date of Birth</mat-label>
-              <input matInput [matDatepicker]="dobPicker" formControlName="dateOfBirth" />
+              <input
+                matInput
+                [matDatepicker]="dobPicker"
+                formControlName="dateOfBirth"
+                placeholder="DD/MM/YYYY"
+              />
+              <mat-hint>DD/MM/YYYY</mat-hint>
               <mat-datepicker-toggle matIconSuffix [for]="dobPicker" />
               <mat-datepicker #dobPicker />
             </mat-form-field>
@@ -352,6 +398,7 @@
             }
           </div>
 
+          <!-- Gender -->
           <div
             class="field-wrapper"
             [class.field-locked]="isEdit() && !isFieldEditable('gender')"
@@ -380,6 +427,7 @@
             }
           </div>
 
+          <!-- Blood Group -->
           <div
             class="field-wrapper"
             [class.field-locked]="isEdit() && !isFieldEditable('bloodGroup')"
@@ -421,6 +469,7 @@
       </div>
       <div class="section-body">
         <div class="form-grid-2">
+          <!-- Address Line 1 -->
           <div
             class="field-wrapper"
             [class.field-locked]="isEdit() && !isFieldEditable('addressLineOne')"
@@ -444,6 +493,7 @@
             }
           </div>
 
+          <!-- Address Line 2 -->
           <div
             class="field-wrapper"
             [class.field-locked]="isEdit() && !isFieldEditable('addressLineTwo')"
@@ -472,15 +522,17 @@
           </div>
         </div>
         <div class="form-grid-3">
+          <!-- City -->
           <div
             class="field-wrapper"
             [class.field-locked]="isEdit() && !isFieldEditable('city')"
             [class.field-unlocked]="isEdit() && isFieldEditable('city')"
             data-field="city"
           >
-            <mat-form-field appearance="outline" class="field-input"
-              ><mat-label>City</mat-label><input matInput formControlName="city"
-            /></mat-form-field>
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>City</mat-label>
+              <input matInput formControlName="city" />
+            </mat-form-field>
             @if (isEdit()) {
             <button
               type="button"
@@ -493,15 +545,18 @@
             </button>
             }
           </div>
+
+          <!-- State -->
           <div
             class="field-wrapper"
             [class.field-locked]="isEdit() && !isFieldEditable('state')"
             [class.field-unlocked]="isEdit() && isFieldEditable('state')"
             data-field="state"
           >
-            <mat-form-field appearance="outline" class="field-input"
-              ><mat-label>State / Province</mat-label><input matInput formControlName="state"
-            /></mat-form-field>
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>State / Province</mat-label>
+              <input matInput formControlName="state" />
+            </mat-form-field>
             @if (isEdit()) {
             <button
               type="button"
@@ -514,15 +569,18 @@
             </button>
             }
           </div>
+
+          <!-- Postal Code -->
           <div
             class="field-wrapper"
             [class.field-locked]="isEdit() && !isFieldEditable('postalCode')"
             [class.field-unlocked]="isEdit() && isFieldEditable('postalCode')"
             data-field="postalCode"
           >
-            <mat-form-field appearance="outline" class="field-input"
-              ><mat-label>Postal Code</mat-label><input matInput formControlName="postalCode"
-            /></mat-form-field>
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Postal Code</mat-label>
+              <input matInput formControlName="postalCode" />
+            </mat-form-field>
             @if (isEdit()) {
             <button
               type="button"
@@ -540,25 +598,195 @@
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- SECTION 4: Role-specific Profile Fields (conditional)       -->
+    <!-- SECTION 4: Guardian / Family Information (ALL USER TYPES)  -->
     <!-- ═══════════════════════════════════════════════════════════ -->
+    <div class="form-section">
+      <div class="section-header">
+        <mat-icon>family_restroom</mat-icon>
+        <span class="section-title">Guardian &amp; Family Information</span>
+      </div>
+      <div class="section-body">
+        <div class="section-info-card section-info-card--blue">
+          <mat-icon>info_outline</mat-icon>
+          <div>
+            <strong>Required for UDISE+ &amp; Admit Cards</strong>
+            <p>
+              Father and mother names are mandatory for government data submissions and TC
+              generation. All other fields are optional.
+            </p>
+          </div>
+        </div>
+        <div class="form-grid-2">
+          <!-- Father Name -->
+          <div
+            class="field-wrapper"
+            [class.field-locked]="isEdit() && !isFieldEditable('fatherName')"
+            [class.field-unlocked]="isEdit() && isFieldEditable('fatherName')"
+            data-field="fatherName"
+          >
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Father's Full Name</mat-label>
+              <mat-icon matPrefix>person</mat-icon>
+              <input matInput formControlName="fatherName" placeholder="e.g. Ramesh Kumar Sharma" />
+              <mat-hint>As on Aadhaar card — required for UDISE+</mat-hint>
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="field-edit-btn"
+              [class.active]="isFieldEditable('fatherName')"
+              (click)="toggleFieldEdit('fatherName', $event)"
+              [matTooltip]="isFieldEditable('fatherName') ? 'Lock field' : 'Edit field'"
+            >
+              <mat-icon>{{ isFieldEditable('fatherName') ? 'lock' : 'edit' }}</mat-icon>
+            </button>
+            }
+          </div>
 
+          <!-- Mother Name -->
+          <div
+            class="field-wrapper"
+            [class.field-locked]="isEdit() && !isFieldEditable('motherName')"
+            [class.field-unlocked]="isEdit() && isFieldEditable('motherName')"
+            data-field="motherName"
+          >
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Mother's Full Name</mat-label>
+              <mat-icon matPrefix>person</mat-icon>
+              <input matInput formControlName="motherName" placeholder="e.g. Sunita Sharma" />
+              <mat-hint>As on Aadhaar card — required for UDISE+</mat-hint>
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="field-edit-btn"
+              [class.active]="isFieldEditable('motherName')"
+              (click)="toggleFieldEdit('motherName', $event)"
+              [matTooltip]="isFieldEditable('motherName') ? 'Lock field' : 'Edit field'"
+            >
+              <mat-icon>{{ isFieldEditable('motherName') ? 'lock' : 'edit' }}</mat-icon>
+            </button>
+            }
+          </div>
+
+          <!-- Guardian Name -->
+          <div
+            class="field-wrapper"
+            [class.field-locked]="isEdit() && !isFieldEditable('guardianName')"
+            [class.field-unlocked]="isEdit() && isFieldEditable('guardianName')"
+            data-field="guardianName"
+          >
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label
+                >Guardian's Full Name <span class="optional-label">(if not parent)</span></mat-label
+              >
+              <mat-icon matPrefix>supervised_user_circle</mat-icon>
+              <input
+                matInput
+                formControlName="guardianName"
+                placeholder="e.g. Rajiv Sharma (Uncle)"
+              />
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="field-edit-btn"
+              [class.active]="isFieldEditable('guardianName')"
+              (click)="toggleFieldEdit('guardianName', $event)"
+              [matTooltip]="isFieldEditable('guardianName') ? 'Lock field' : 'Edit field'"
+            >
+              <mat-icon>{{ isFieldEditable('guardianName') ? 'lock' : 'edit' }}</mat-icon>
+            </button>
+            }
+          </div>
+
+          <!-- Guardian Relation -->
+          <div
+            class="field-wrapper"
+            [class.field-locked]="isEdit() && !isFieldEditable('guardianRelation')"
+            [class.field-unlocked]="isEdit() && isFieldEditable('guardianRelation')"
+            data-field="guardianRelation"
+          >
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Guardian's Relation</mat-label>
+              <mat-icon matPrefix>link</mat-icon>
+              <input
+                matInput
+                formControlName="guardianRelation"
+                placeholder="e.g. Uncle, Grandparent, Legal Guardian"
+              />
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="field-edit-btn"
+              [class.active]="isFieldEditable('guardianRelation')"
+              (click)="toggleFieldEdit('guardianRelation', $event)"
+              [matTooltip]="isFieldEditable('guardianRelation') ? 'Lock field' : 'Edit field'"
+            >
+              <mat-icon>{{ isFieldEditable('guardianRelation') ? 'lock' : 'edit' }}</mat-icon>
+            </button>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- SECTION 5: Role-specific Profile Fields (conditional)          -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+
+    <!-- ── STUDENT PROFILE ──────────────────────────────────────────── -->
     @if (showStudentFields()) {
     <div class="form-section role-fields-card">
       <div class="section-header">
-        <mat-icon>school</mat-icon><span class="section-title">Student Profile</span>
+        <mat-icon>school</mat-icon>
+        <span class="section-title">Student Profile</span>
       </div>
       <div class="section-body">
+        <!-- School-internal admission fields -->
+        <div class="udise-section-header">
+          <mat-icon>edit_note</mat-icon>
+          <span>Admission Details</span>
+        </div>
         <div class="form-grid-2">
+          <!-- Admission Number -->
+          <div
+            class="field-wrapper"
+            [class.field-locked]="isEdit() && !isFieldEditable('admissionNumber')"
+            [class.field-unlocked]="isEdit() && isFieldEditable('admissionNumber')"
+            data-field="admissionNumber"
+          >
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Admission Number</mat-label>
+              <mat-icon matPrefix>confirmation_number</mat-icon>
+              <input matInput formControlName="admissionNumber" placeholder="e.g. ADM-2025-001" />
+              <mat-hint>School's internal registration number</mat-hint>
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="field-edit-btn"
+              [class.active]="isFieldEditable('admissionNumber')"
+              (click)="toggleFieldEdit('admissionNumber', $event)"
+              [matTooltip]="isFieldEditable('admissionNumber') ? 'Lock field' : 'Edit field'"
+            >
+              <mat-icon>{{ isFieldEditable('admissionNumber') ? 'lock' : 'edit' }}</mat-icon>
+            </button>
+            }
+          </div>
+
+          <!-- Roll Number -->
           <div
             class="field-wrapper"
             [class.field-locked]="isEdit() && !isFieldEditable('rollNumber')"
             [class.field-unlocked]="isEdit() && isFieldEditable('rollNumber')"
             data-field="rollNumber"
           >
-            <mat-form-field appearance="outline" class="field-input"
-              ><mat-label>Roll Number</mat-label><input matInput formControlName="rollNumber"
-            /></mat-form-field>
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Roll Number</mat-label>
+              <input matInput formControlName="rollNumber" />
+            </mat-form-field>
             @if (isEdit()) {
             <button
               type="button"
@@ -571,21 +799,27 @@
             </button>
             }
           </div>
+
+          <!-- Admission Date -->
           <div
             class="field-wrapper"
             [class.field-locked]="isEdit() && !isFieldEditable('admissionDate')"
             [class.field-unlocked]="isEdit() && isFieldEditable('admissionDate')"
             data-field="admissionDate"
           >
-            <mat-form-field appearance="outline" class="field-input"
-              ><mat-label>Admission Date</mat-label
-              ><input
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Admission Date</mat-label>
+              <mat-icon matPrefix>event</mat-icon>
+              <input
                 matInput
                 [matDatepicker]="admPicker"
-                formControlName="admissionDate" /><mat-datepicker-toggle
-                matIconSuffix
-                [for]="admPicker" /><mat-datepicker #admPicker
-            /></mat-form-field>
+                formControlName="admissionDate"
+                placeholder="DD/MM/YYYY"
+              />
+              <mat-hint>DD/MM/YYYY</mat-hint>
+              <mat-datepicker-toggle matIconSuffix [for]="admPicker" />
+              <mat-datepicker #admPicker />
+            </mat-form-field>
             @if (isEdit()) {
             <button
               type="button"
@@ -598,16 +832,81 @@
             </button>
             }
           </div>
+
+          <!-- Enrollment Type -->
+          <div
+            class="field-wrapper"
+            [class.field-locked]="isEdit() && !isFieldEditable('enrollmentType')"
+            [class.field-unlocked]="isEdit() && isFieldEditable('enrollmentType')"
+            data-field="enrollmentType"
+          >
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Enrollment Type</mat-label>
+              <mat-select formControlName="enrollmentType">
+                @for (et of enrollmentTypes; track et.value) {
+                <mat-option [value]="et.value">{{ et.label }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="field-edit-btn"
+              [class.active]="isFieldEditable('enrollmentType')"
+              (click)="toggleFieldEdit('enrollmentType', $event)"
+              [matTooltip]="isFieldEditable('enrollmentType') ? 'Lock field' : 'Edit field'"
+            >
+              <mat-icon>{{ isFieldEditable('enrollmentType') ? 'lock' : 'edit' }}</mat-icon>
+            </button>
+            }
+          </div>
+
+          <!-- Previous Class Result -->
+          <div
+            class="field-wrapper"
+            [class.field-locked]="isEdit() && !isFieldEditable('previousClassResult')"
+            [class.field-unlocked]="isEdit() && isFieldEditable('previousClassResult')"
+            data-field="previousClassResult"
+          >
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Previous Class Result</mat-label>
+              <mat-select formControlName="previousClassResult">
+                <mat-option value="">Not specified</mat-option>
+                @for (pcr of previousClassResults; track pcr.value) {
+                <mat-option [value]="pcr.value">{{ pcr.label }}</mat-option>
+                }
+              </mat-select>
+              <mat-hint>How did the student exit their previous class?</mat-hint>
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="field-edit-btn"
+              [class.active]="isFieldEditable('previousClassResult')"
+              (click)="toggleFieldEdit('previousClassResult', $event)"
+              [matTooltip]="isFieldEditable('previousClassResult') ? 'Lock field' : 'Edit field'"
+            >
+              <mat-icon>{{ isFieldEditable('previousClassResult') ? 'lock' : 'edit' }}</mat-icon>
+            </button>
+            }
+          </div>
+
+          <!-- Previous School -->
           <div
             class="field-wrapper col-span-2"
             [class.field-locked]="isEdit() && !isFieldEditable('previousSchool')"
             [class.field-unlocked]="isEdit() && isFieldEditable('previousSchool')"
             data-field="previousSchool"
           >
-            <mat-form-field appearance="outline" class="field-input"
-              ><mat-label>Previous School</mat-label
-              ><input matInput formControlName="previousSchool"
-            /></mat-form-field>
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Previous School Name</mat-label>
+              <mat-icon matPrefix>school</mat-icon>
+              <input
+                matInput
+                formControlName="previousSchool"
+                placeholder="Transfer from… (leave blank for new admissions)"
+              />
+            </mat-form-field>
             @if (isEdit()) {
             <button
               type="button"
@@ -620,17 +919,65 @@
             </button>
             }
           </div>
+
+          <!-- Previous School UDISE Code -->
+          <div
+            class="field-wrapper"
+            [class.field-locked]="isEdit() && !isFieldEditable('previousSchoolUdiseCode')"
+            [class.field-unlocked]="isEdit() && isFieldEditable('previousSchoolUdiseCode')"
+            data-field="previousSchoolUdiseCode"
+          >
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Previous School UDISE Code</mat-label>
+              <mat-icon matPrefix>fingerprint</mat-icon>
+              <input
+                matInput
+                formControlName="previousSchoolUdiseCode"
+                placeholder="11-digit code"
+                maxlength="11"
+              />
+              <mat-hint>Required by UDISE+ for transfer students</mat-hint>
+              @if (form.get('previousSchoolUdiseCode')?.hasError('pattern') &&
+              form.get('previousSchoolUdiseCode')?.touched) {
+              <mat-error>Must be exactly 11 digits</mat-error>
+              }
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="field-edit-btn"
+              [class.active]="isFieldEditable('previousSchoolUdiseCode')"
+              (click)="toggleFieldEdit('previousSchoolUdiseCode', $event)"
+              [matTooltip]="
+                isFieldEditable('previousSchoolUdiseCode') ? 'Lock field' : 'Edit field'
+              "
+            >
+              <mat-icon>{{
+                isFieldEditable('previousSchoolUdiseCode') ? 'lock' : 'edit'
+              }}</mat-icon>
+            </button>
+            }
+          </div>
+
+          <!-- Medical Info -->
           <div
             class="field-wrapper col-span-2"
             [class.field-locked]="isEdit() && !isFieldEditable('medicalInfo')"
             [class.field-unlocked]="isEdit() && isFieldEditable('medicalInfo')"
             data-field="medicalInfo"
           >
-            <mat-form-field appearance="outline" class="field-input"
-              ><mat-label
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label
                 >Medical Information
                 <span class="optional-label">(allergies, conditions)</span></mat-label
-              ><textarea matInput formControlName="medicalInfo" rows="3"></textarea>
+              >
+              <mat-icon matPrefix>medical_information</mat-icon>
+              <textarea
+                matInput
+                formControlName="medicalInfo"
+                rows="3"
+                placeholder="Allergies, conditions, notes…"
+              ></textarea>
             </mat-form-field>
             @if (isEdit()) {
             <button
@@ -645,12 +992,502 @@
             }
           </div>
         </div>
+
+        <!-- UDISE+ National Identity -->
+        <div class="udise-section-header">
+          <mat-icon>fingerprint</mat-icon>
+          <span>National Identity Numbers</span>
+        </div>
+        <div class="section-info-card section-info-card--amber">
+          <mat-icon>assignment_ind</mat-icon>
+          <div>
+            <strong>UDISE+ Government Data</strong>
+            <p>
+              These fields feed directly into MoE's UDISE+ submission. All are optional — update
+              them from the student profile anytime.
+            </p>
+          </div>
+        </div>
+        <div class="form-grid-2">
+          <!-- PEN -->
+          <div
+            class="field-wrapper"
+            [class.field-locked]="isEdit() && !isFieldEditable('pen')"
+            [class.field-unlocked]="isEdit() && isFieldEditable('pen')"
+            data-field="pen"
+          >
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>PEN (Permanent Education Number)</mat-label>
+              <mat-icon matPrefix>badge</mat-icon>
+              <input matInput formControlName="pen" placeholder="16-digit number" maxlength="16" />
+              <mat-hint>Assigned by UDISE+ — 16 digits</mat-hint>
+              @if (form.get('pen')?.hasError('pattern') && form.get('pen')?.touched) {
+              <mat-error>Must be exactly 16 digits</mat-error>
+              }
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="field-edit-btn"
+              [class.active]="isFieldEditable('pen')"
+              (click)="toggleFieldEdit('pen', $event)"
+              [matTooltip]="isFieldEditable('pen') ? 'Lock field' : 'Edit field'"
+            >
+              <mat-icon>{{ isFieldEditable('pen') ? 'lock' : 'edit' }}</mat-icon>
+            </button>
+            }
+          </div>
+
+          <!-- APAAR ID -->
+          <div
+            class="field-wrapper"
+            [class.field-locked]="isEdit() && !isFieldEditable('apaarId')"
+            [class.field-unlocked]="isEdit() && isFieldEditable('apaarId')"
+            data-field="apaarId"
+          >
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>APAAR ID (ABC ID)</mat-label>
+              <mat-icon matPrefix>credit_card</mat-icon>
+              <input
+                matInput
+                formControlName="apaarId"
+                placeholder="12-digit number"
+                maxlength="12"
+              />
+              <mat-hint>Academic Bank of Credits — 12 digits</mat-hint>
+              @if (form.get('apaarId')?.hasError('pattern') && form.get('apaarId')?.touched) {
+              <mat-error>Must be exactly 12 digits</mat-error>
+              }
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="field-edit-btn"
+              [class.active]="isFieldEditable('apaarId')"
+              (click)="toggleFieldEdit('apaarId', $event)"
+              [matTooltip]="isFieldEditable('apaarId') ? 'Lock field' : 'Edit field'"
+            >
+              <mat-icon>{{ isFieldEditable('apaarId') ? 'lock' : 'edit' }}</mat-icon>
+            </button>
+            }
+          </div>
+
+          <!-- State Student ID -->
+          <div
+            class="field-wrapper"
+            [class.field-locked]="isEdit() && !isFieldEditable('stateStudentId')"
+            [class.field-unlocked]="isEdit() && isFieldEditable('stateStudentId')"
+            data-field="stateStudentId"
+          >
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>State Student ID</mat-label>
+              <mat-icon matPrefix>numbers</mat-icon>
+              <input matInput formControlName="stateStudentId" placeholder="e.g. SAMAGRA ID" />
+              <mat-hint>State-specific tracking number</mat-hint>
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="field-edit-btn"
+              [class.active]="isFieldEditable('stateStudentId')"
+              (click)="toggleFieldEdit('stateStudentId', $event)"
+              [matTooltip]="isFieldEditable('stateStudentId') ? 'Lock field' : 'Edit field'"
+            >
+              <mat-icon>{{ isFieldEditable('stateStudentId') ? 'lock' : 'edit' }}</mat-icon>
+            </button>
+            }
+          </div>
+
+          <!-- Aadhaar Masked -->
+          <div
+            class="field-wrapper"
+            [class.field-locked]="isEdit() && !isFieldEditable('aadhaarMasked')"
+            [class.field-unlocked]="isEdit() && isFieldEditable('aadhaarMasked')"
+            data-field="aadhaarMasked"
+          >
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Aadhaar (Masked)</mat-label>
+              <mat-icon matPrefix>lock</mat-icon>
+              <input
+                matInput
+                formControlName="aadhaarMasked"
+                placeholder="XXXX XXXX 1234"
+                maxlength="14"
+              />
+              <mat-hint>Only last 4 digits — e.g. XXXX XXXX 5678</mat-hint>
+              @if (form.get('aadhaarMasked')?.hasError('pattern') &&
+              form.get('aadhaarMasked')?.touched) {
+              <mat-error>Format: XXXX XXXX followed by 4 digits</mat-error>
+              }
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="field-edit-btn"
+              [class.active]="isFieldEditable('aadhaarMasked')"
+              (click)="toggleFieldEdit('aadhaarMasked', $event)"
+              [matTooltip]="isFieldEditable('aadhaarMasked') ? 'Lock field' : 'Edit field'"
+            >
+              <mat-icon>{{ isFieldEditable('aadhaarMasked') ? 'lock' : 'edit' }}</mat-icon>
+            </button>
+            }
+          </div>
+
+          <!-- Aadhaar Name -->
+          <div
+            class="field-wrapper col-span-2"
+            [class.field-locked]="isEdit() && !isFieldEditable('aadhaarName')"
+            [class.field-unlocked]="isEdit() && isFieldEditable('aadhaarName')"
+            data-field="aadhaarName"
+          >
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Name on Aadhaar Card</mat-label>
+              <mat-icon matPrefix>person_pin</mat-icon>
+              <input
+                matInput
+                formControlName="aadhaarName"
+                placeholder="Exact name as printed on Aadhaar"
+              />
+              <mat-hint>May differ from school records — used for APAAR verification</mat-hint>
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="field-edit-btn"
+              [class.active]="isFieldEditable('aadhaarName')"
+              (click)="toggleFieldEdit('aadhaarName', $event)"
+              [matTooltip]="isFieldEditable('aadhaarName') ? 'Lock field' : 'Edit field'"
+            >
+              <mat-icon>{{ isFieldEditable('aadhaarName') ? 'lock' : 'edit' }}</mat-icon>
+            </button>
+            }
+          </div>
+        </div>
+
+        <!-- UDISE+ Demographic -->
+        <div class="udise-section-header">
+          <mat-icon>people</mat-icon>
+          <span>Demographic Information</span>
+        </div>
+        <div class="form-grid-2">
+          <!-- Social Category -->
+          <div
+            class="field-wrapper"
+            [class.field-locked]="isEdit() && !isFieldEditable('socialCategory')"
+            [class.field-unlocked]="isEdit() && isFieldEditable('socialCategory')"
+            data-field="socialCategory"
+          >
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Social Category</mat-label>
+              <mat-select formControlName="socialCategory">
+                <mat-option [value]="null">Not specified</mat-option>
+                @for (sc of socialCategories; track sc.value) {
+                <mat-option [value]="sc.value">{{ sc.label }}</mat-option>
+                }
+              </mat-select>
+              <mat-hint>Required for reservation &amp; scholarship tracking</mat-hint>
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="field-edit-btn"
+              [class.active]="isFieldEditable('socialCategory')"
+              (click)="toggleFieldEdit('socialCategory', $event)"
+              [matTooltip]="isFieldEditable('socialCategory') ? 'Lock field' : 'Edit field'"
+            >
+              <mat-icon>{{ isFieldEditable('socialCategory') ? 'lock' : 'edit' }}</mat-icon>
+            </button>
+            }
+          </div>
+
+          <!-- Religion -->
+          <div
+            class="field-wrapper"
+            [class.field-locked]="isEdit() && !isFieldEditable('religion')"
+            [class.field-unlocked]="isEdit() && isFieldEditable('religion')"
+            data-field="religion"
+          >
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Religion</mat-label>
+              <mat-select formControlName="religion">
+                <mat-option [value]="null">Not specified</mat-option>
+                @for (rel of religions; track rel.value) {
+                <mat-option [value]="rel.value">{{ rel.label }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="field-edit-btn"
+              [class.active]="isFieldEditable('religion')"
+              (click)="toggleFieldEdit('religion', $event)"
+              [matTooltip]="isFieldEditable('religion') ? 'Lock field' : 'Edit field'"
+            >
+              <mat-icon>{{ isFieldEditable('religion') ? 'lock' : 'edit' }}</mat-icon>
+            </button>
+            }
+          </div>
+
+          <!-- Locality Type -->
+          <div
+            class="field-wrapper"
+            [class.field-locked]="isEdit() && !isFieldEditable('localityType')"
+            [class.field-unlocked]="isEdit() && isFieldEditable('localityType')"
+            data-field="localityType"
+          >
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Locality Type</mat-label>
+              <mat-select formControlName="localityType">
+                <mat-option value="">Not specified</mat-option>
+                @for (lt of localityTypes; track lt.value) {
+                <mat-option [value]="lt.value">{{ lt.label }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="field-edit-btn"
+              [class.active]="isFieldEditable('localityType')"
+              (click)="toggleFieldEdit('localityType', $event)"
+              [matTooltip]="isFieldEditable('localityType') ? 'Lock field' : 'Edit field'"
+            >
+              <mat-icon>{{ isFieldEditable('localityType') ? 'lock' : 'edit' }}</mat-icon>
+            </button>
+            }
+          </div>
+
+          <!-- Mother Tongue Code -->
+          <div
+            class="field-wrapper"
+            [class.field-locked]="isEdit() && !isFieldEditable('motherTongueCode')"
+            [class.field-unlocked]="isEdit() && isFieldEditable('motherTongueCode')"
+            data-field="motherTongueCode"
+          >
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Mother Tongue Code</mat-label>
+              <mat-icon matPrefix>language</mat-icon>
+              <input
+                matInput
+                type="number"
+                formControlName="motherTongueCode"
+                placeholder="Census language code (e.g. 22 for Hindi)"
+              />
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="field-edit-btn"
+              [class.active]="isFieldEditable('motherTongueCode')"
+              (click)="toggleFieldEdit('motherTongueCode', $event)"
+              [matTooltip]="isFieldEditable('motherTongueCode') ? 'Lock field' : 'Edit field'"
+            >
+              <mat-icon>{{ isFieldEditable('motherTongueCode') ? 'lock' : 'edit' }}</mat-icon>
+            </button>
+            }
+          </div>
+
+          <!-- isMinority checkbox -->
+          <div class="checkbox-row col-span-2">
+            <mat-checkbox
+              formControlName="isMinority"
+              color="primary"
+              [disabled]="isEdit() && !isFieldEditable('isMinority')"
+            >
+              Belongs to a Religious Minority Community
+            </mat-checkbox>
+            <p class="checkbox-hint">Affects eligibility for PM Scholarship and minority schemes</p>
+          </div>
+
+          <!-- isBpl checkbox -->
+          <div class="checkbox-row col-span-2">
+            <mat-checkbox
+              formControlName="isBpl"
+              color="primary"
+              [disabled]="isEdit() && !isFieldEditable('isBpl')"
+            >
+              Below Poverty Line (BPL) Family
+            </mat-checkbox>
+            <p class="checkbox-hint">
+              BPL students are eligible for free uniforms, transport subsidies, and scholarships
+            </p>
+          </div>
+        </div>
+
+        <!-- CWSN -->
+        <div class="udise-section-header">
+          <mat-icon>accessibility</mat-icon>
+          <span>Children With Special Needs (CWSN)</span>
+        </div>
+        <div class="form-grid-2">
+          <!-- isCwsn toggle -->
+          <div class="checkbox-row col-span-2">
+            <mat-checkbox
+              formControlName="isCwsn"
+              color="primary"
+              [disabled]="isEdit() && !isFieldEditable('isCwsn')"
+            >
+              Student is a Child With Special Needs (CWSN)
+            </mat-checkbox>
+            <p class="checkbox-hint">
+              Schools with CWSN students receive additional government grants
+            </p>
+          </div>
+
+          <!-- CWSN conditional fields -->
+          @if (showCwsnFields()) {
+
+          <!-- Disability Type -->
+          <div
+            class="field-wrapper"
+            [class.field-locked]="isEdit() && !isFieldEditable('disabilityType')"
+            [class.field-unlocked]="isEdit() && isFieldEditable('disabilityType')"
+            data-field="disabilityType"
+          >
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Type of Disability</mat-label>
+              <mat-select formControlName="disabilityType">
+                <mat-option [value]="null">Not specified</mat-option>
+                @for (dt of disabilityTypes; track dt.value) {
+                <mat-option [value]="dt.value">{{ dt.label }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="field-edit-btn"
+              [class.active]="isFieldEditable('disabilityType')"
+              (click)="toggleFieldEdit('disabilityType', $event)"
+              [matTooltip]="isFieldEditable('disabilityType') ? 'Lock field' : 'Edit field'"
+            >
+              <mat-icon>{{ isFieldEditable('disabilityType') ? 'lock' : 'edit' }}</mat-icon>
+            </button>
+            }
+          </div>
+
+          <!-- hasDisabilityCertificate -->
+          <div class="checkbox-row">
+            <mat-checkbox
+              formControlName="hasDisabilityCertificate"
+              color="primary"
+              [disabled]="isEdit() && !isFieldEditable('hasDisabilityCertificate')"
+            >
+              Has Valid Disability Certificate (UDID Card)
+            </mat-checkbox>
+          </div>
+
+          <!-- UDID Number -->
+          <div
+            class="field-wrapper col-span-2"
+            [class.field-locked]="isEdit() && !isFieldEditable('udidNumber')"
+            [class.field-unlocked]="isEdit() && isFieldEditable('udidNumber')"
+            data-field="udidNumber"
+          >
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>UDID Card Number</mat-label>
+              <mat-icon matPrefix>credit_card</mat-icon>
+              <input
+                matInput
+                formControlName="udidNumber"
+                placeholder="18-character alphanumeric"
+                maxlength="30"
+              />
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="field-edit-btn"
+              [class.active]="isFieldEditable('udidNumber')"
+              (click)="toggleFieldEdit('udidNumber', $event)"
+              [matTooltip]="isFieldEditable('udidNumber') ? 'Lock field' : 'Edit field'"
+            >
+              <mat-icon>{{ isFieldEditable('udidNumber') ? 'lock' : 'edit' }}</mat-icon>
+            </button>
+            }
+          </div>
+
+          }
+        </div>
+
+        <!-- Government Facilities -->
+        <div class="udise-section-header">
+          <mat-icon>volunteer_activism</mat-icon>
+          <span>Government Facilities Received</span>
+        </div>
+        <div class="facilities-grid">
+          @for (facility of facilityOptions; track facility.value) {
+          <button
+            type="button"
+            class="facility-chip"
+            [class.facility-chip--selected]="isFacilitySelected(facility.value)"
+            (click)="toggleFacility(facility.value)"
+            [disabled]="isEdit() && !isFieldEditable('facilitiesReceived')"
+          >
+            <mat-icon class="facility-chip__icon">
+              {{ isFacilitySelected(facility.value) ? 'check_circle' : 'radio_button_unchecked' }}
+            </mat-icon>
+            {{ facility.label }}
+          </button>
+          }
+        </div>
+        @if (isEdit()) {
+        <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px">
+          <button
+            type="button"
+            class="field-edit-btn"
+            [class.active]="isFieldEditable('facilitiesReceived')"
+            (click)="toggleFieldEdit('facilitiesReceived', $event)"
+            [matTooltip]="isFieldEditable('facilitiesReceived') ? 'Lock field' : 'Edit facilities'"
+          >
+            <mat-icon>{{ isFieldEditable('facilitiesReceived') ? 'lock' : 'edit' }}</mat-icon>
+          </button>
+          <span style="font-size: 0.75rem; color: var(--color-text-muted)">
+            {{
+              isFieldEditable('facilitiesReceived') ? 'Editing facilities' : 'Click edit to modify'
+            }}
+          </span>
+        </div>
+        }
+
+        <!-- Verification flags -->
+        <div class="udise-section-header" style="margin-top: 20px">
+          <mat-icon>verified</mat-icon>
+          <span>Verification Status</span>
+        </div>
+        <div class="form-grid-2">
+          <div class="checkbox-row">
+            <mat-checkbox
+              formControlName="isAadhaarVerified"
+              color="primary"
+              [disabled]="isEdit() && !isFieldEditable('isAadhaarVerified')"
+            >
+              Aadhaar Verified by School
+            </mat-checkbox>
+            <p class="checkbox-hint">School has physically verified the student's Aadhaar</p>
+          </div>
+          <div class="checkbox-row">
+            <mat-checkbox
+              formControlName="udiseVerified"
+              color="primary"
+              [disabled]="isEdit() && !isFieldEditable('udiseVerified')"
+            >
+              UDISE+ Data Verified
+            </mat-checkbox>
+            <p class="checkbox-hint">All government IDs confirmed against the UDISE+ portal</p>
+          </div>
+        </div>
       </div>
     </div>
-    } @if (showTeacherFields()) {
+    }
+
+    <!-- ── TEACHER PROFILE ──────────────────────────────────────── -->
+    @if (showTeacherFields()) {
     <div class="form-section role-fields-card">
       <div class="section-header">
-        <mat-icon>cast_for_education</mat-icon><span class="section-title">Teacher Profile</span>
+        <mat-icon>cast_for_education</mat-icon>
+        <span class="section-title">Teacher Profile</span>
       </div>
       <div class="section-body">
         <div class="form-grid-2">
@@ -660,10 +1497,10 @@
             [class.field-unlocked]="isEdit() && isFieldEditable('qualification')"
             data-field="qualification"
           >
-            <mat-form-field appearance="outline" class="field-input"
-              ><mat-label>Qualification</mat-label
-              ><input matInput formControlName="qualification" placeholder="e.g. M.Sc, B.Ed"
-            /></mat-form-field>
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Qualification</mat-label>
+              <input matInput formControlName="qualification" placeholder="e.g. M.Sc, B.Ed" />
+            </mat-form-field>
             @if (isEdit()) {
             <button
               type="button"
@@ -676,16 +1513,17 @@
             </button>
             }
           </div>
+
           <div
             class="field-wrapper"
             [class.field-locked]="isEdit() && !isFieldEditable('experienceYears')"
             [class.field-unlocked]="isEdit() && isFieldEditable('experienceYears')"
             data-field="experienceYears"
           >
-            <mat-form-field appearance="outline" class="field-input"
-              ><mat-label>Experience (Years)</mat-label
-              ><input matInput type="number" formControlName="experienceYears" min="0"
-            /></mat-form-field>
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Experience (Years)</mat-label>
+              <input matInput type="number" formControlName="experienceYears" min="0" />
+            </mat-form-field>
             @if (isEdit()) {
             <button
               type="button"
@@ -698,16 +1536,17 @@
             </button>
             }
           </div>
+
           <div
             class="field-wrapper"
             [class.field-locked]="isEdit() && !isFieldEditable('specialization')"
             [class.field-unlocked]="isEdit() && isFieldEditable('specialization')"
             data-field="specialization"
           >
-            <mat-form-field appearance="outline" class="field-input"
-              ><mat-label>Specialization / Subject</mat-label
-              ><input matInput formControlName="specialization" placeholder="e.g. Mathematics"
-            /></mat-form-field>
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Specialization / Subject</mat-label>
+              <input matInput formControlName="specialization" placeholder="e.g. Mathematics" />
+            </mat-form-field>
             @if (isEdit()) {
             <button
               type="button"
@@ -720,160 +1559,26 @@
             </button>
             }
           </div>
+
           <div
             class="field-wrapper"
             [class.field-locked]="isEdit() && !isFieldEditable('joiningDate')"
             [class.field-unlocked]="isEdit() && isFieldEditable('joiningDate')"
             data-field="joiningDate"
           >
-            <mat-form-field appearance="outline" class="field-input"
-              ><mat-label>Joining Date</mat-label
-              ><input
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Joining Date</mat-label>
+              <mat-icon matPrefix>event</mat-icon>
+              <input
                 matInput
                 [matDatepicker]="joinPicker"
-                formControlName="joiningDate" /><mat-datepicker-toggle
-                matIconSuffix
-                [for]="joinPicker" /><mat-datepicker #joinPicker
-            /></mat-form-field>
-            @if (isEdit()) {
-            <button
-              type="button"
-              class="field-edit-btn"
-              [class.active]="isFieldEditable('joiningDate')"
-              (click)="toggleFieldEdit('joiningDate', $event)"
-              [matTooltip]="isFieldEditable('joiningDate') ? 'Lock field' : 'Edit field'"
-            >
-              <mat-icon>{{ isFieldEditable('joiningDate') ? 'lock' : 'edit' }}</mat-icon>
-            </button>
-            }
-          </div>
-        </div>
-      </div>
-    </div>
-    } @if (showParentFields()) {
-    <div class="form-section role-fields-card">
-      <div class="section-header">
-        <mat-icon>family_restroom</mat-icon><span class="section-title">Parent Profile</span>
-      </div>
-      <div class="section-body">
-        <div class="form-grid-2">
-          <div
-            class="field-wrapper"
-            [class.field-locked]="isEdit() && !isFieldEditable('occupation')"
-            [class.field-unlocked]="isEdit() && isFieldEditable('occupation')"
-            data-field="occupation"
-          >
-            <mat-form-field appearance="outline" class="field-input"
-              ><mat-label>Occupation</mat-label
-              ><input matInput formControlName="occupation" placeholder="e.g. Engineer, Teacher"
-            /></mat-form-field>
-            @if (isEdit()) {
-            <button
-              type="button"
-              class="field-edit-btn"
-              [class.active]="isFieldEditable('occupation')"
-              (click)="toggleFieldEdit('occupation', $event)"
-              [matTooltip]="isFieldEditable('occupation') ? 'Lock field' : 'Edit field'"
-            >
-              <mat-icon>{{ isFieldEditable('occupation') ? 'lock' : 'edit' }}</mat-icon>
-            </button>
-            }
-          </div>
-        </div>
-      </div>
-    </div>
-    } @if (showStaffFields()) {
-    <div class="form-section role-fields-card">
-      <div class="section-header">
-        <mat-icon>work</mat-icon><span class="section-title">Staff Profile</span>
-      </div>
-      <div class="section-body">
-        <div class="form-grid-2">
-          <div
-            class="field-wrapper"
-            [class.field-locked]="isEdit() && !isFieldEditable('department')"
-            [class.field-unlocked]="isEdit() && isFieldEditable('department')"
-            data-field="department"
-          >
-            <mat-form-field appearance="outline" class="field-input"
-              ><mat-label>Department</mat-label
-              ><input matInput formControlName="department" placeholder="e.g. Administration"
-            /></mat-form-field>
-            @if (isEdit()) {
-            <button
-              type="button"
-              class="field-edit-btn"
-              [class.active]="isFieldEditable('department')"
-              (click)="toggleFieldEdit('department', $event)"
-              [matTooltip]="isFieldEditable('department') ? 'Lock field' : 'Edit field'"
-            >
-              <mat-icon>{{ isFieldEditable('department') ? 'lock' : 'edit' }}</mat-icon>
-            </button>
-            }
-          </div>
-          <div
-            class="field-wrapper"
-            [class.field-locked]="isEdit() && !isFieldEditable('salary')"
-            [class.field-unlocked]="isEdit() && isFieldEditable('salary')"
-            data-field="salary"
-          >
-            <mat-form-field appearance="outline" class="field-input"
-              ><mat-label>Salary</mat-label><mat-icon matPrefix>currency_rupee</mat-icon
-              ><input matInput type="number" formControlName="salary" min="0"
-            /></mat-form-field>
-            @if (isEdit()) {
-            <button
-              type="button"
-              class="field-edit-btn"
-              [class.active]="isFieldEditable('salary')"
-              (click)="toggleFieldEdit('salary', $event)"
-              [matTooltip]="isFieldEditable('salary') ? 'Lock field' : 'Edit field'"
-            >
-              <mat-icon>{{ isFieldEditable('salary') ? 'lock' : 'edit' }}</mat-icon>
-            </button>
-            }
-          </div>
-          <div
-            class="field-wrapper"
-            [class.field-locked]="isEdit() && !isFieldEditable('shift')"
-            [class.field-unlocked]="isEdit() && isFieldEditable('shift')"
-            data-field="shift"
-          >
-            <mat-form-field appearance="outline" class="field-input"
-              ><mat-label>Shift</mat-label
-              ><mat-select formControlName="shift"
-                ><mat-option value="">Not assigned</mat-option>@for (s of shifts; track s.value)
-                {<mat-option [value]="s.value">{{ s.label }}</mat-option
-                >}</mat-select
-              ></mat-form-field
-            >
-            @if (isEdit()) {
-            <button
-              type="button"
-              class="field-edit-btn"
-              [class.active]="isFieldEditable('shift')"
-              (click)="toggleFieldEdit('shift', $event)"
-              [matTooltip]="isFieldEditable('shift') ? 'Lock field' : 'Edit field'"
-            >
-              <mat-icon>{{ isFieldEditable('shift') ? 'lock' : 'edit' }}</mat-icon>
-            </button>
-            }
-          </div>
-          <div
-            class="field-wrapper"
-            [class.field-locked]="isEdit() && !isFieldEditable('joiningDate')"
-            [class.field-unlocked]="isEdit() && isFieldEditable('joiningDate')"
-            data-field="joiningDate"
-          >
-            <mat-form-field appearance="outline" class="field-input"
-              ><mat-label>Joining Date</mat-label
-              ><input
-                matInput
-                [matDatepicker]="staffJoinPicker"
-                formControlName="joiningDate" /><mat-datepicker-toggle
-                matIconSuffix
-                [for]="staffJoinPicker" /><mat-datepicker #staffJoinPicker
-            /></mat-form-field>
+                formControlName="joiningDate"
+                placeholder="DD/MM/YYYY"
+              />
+              <mat-hint>DD/MM/YYYY</mat-hint>
+              <mat-datepicker-toggle matIconSuffix [for]="joinPicker" />
+              <mat-datepicker #joinPicker />
+            </mat-form-field>
             @if (isEdit()) {
             <button
               type="button"
@@ -890,6 +1595,558 @@
       </div>
     </div>
     }
+
+    <!-- ── PARENT PROFILE ──────────────────────────────────────── -->
+    @if (showParentFields()) {
+    <div class="form-section role-fields-card">
+      <div class="section-header">
+        <mat-icon>family_restroom</mat-icon>
+        <span class="section-title">Parent Profile</span>
+      </div>
+      <div class="section-body">
+        <div class="form-grid-2">
+          <div
+            class="field-wrapper"
+            [class.field-locked]="isEdit() && !isFieldEditable('occupation')"
+            [class.field-unlocked]="isEdit() && isFieldEditable('occupation')"
+            data-field="occupation"
+          >
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Occupation</mat-label>
+              <mat-icon matPrefix>work</mat-icon>
+              <input matInput formControlName="occupation" placeholder="e.g. Engineer, Teacher" />
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="field-edit-btn"
+              [class.active]="isFieldEditable('occupation')"
+              (click)="toggleFieldEdit('occupation', $event)"
+              [matTooltip]="isFieldEditable('occupation') ? 'Lock field' : 'Edit field'"
+            >
+              <mat-icon>{{ isFieldEditable('occupation') ? 'lock' : 'edit' }}</mat-icon>
+            </button>
+            }
+          </div>
+        </div>
+        <div class="roll-number-info-card">
+          <mat-icon>info_outline</mat-icon>
+          <p>
+            After creating the parent account, link their children via
+            <strong>Academics → Parents → Parent-Student Manager</strong>.
+          </p>
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- ── STAFF PROFILE ───────────────────────────────────────── -->
+    @if (showStaffFields()) {
+    <div class="form-section role-fields-card">
+      <div class="section-header">
+        <mat-icon>work</mat-icon>
+        <span class="section-title">Staff Profile</span>
+      </div>
+      <div class="section-body">
+        <div class="form-grid-2">
+          <div
+            class="field-wrapper"
+            [class.field-locked]="isEdit() && !isFieldEditable('department')"
+            [class.field-unlocked]="isEdit() && isFieldEditable('department')"
+            data-field="department"
+          >
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Department</mat-label>
+              <mat-icon matPrefix>corporate_fare</mat-icon>
+              <input matInput formControlName="department" placeholder="e.g. Administration" />
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="field-edit-btn"
+              [class.active]="isFieldEditable('department')"
+              (click)="toggleFieldEdit('department', $event)"
+              [matTooltip]="isFieldEditable('department') ? 'Lock field' : 'Edit field'"
+            >
+              <mat-icon>{{ isFieldEditable('department') ? 'lock' : 'edit' }}</mat-icon>
+            </button>
+            }
+          </div>
+
+          <div
+            class="field-wrapper"
+            [class.field-locked]="isEdit() && !isFieldEditable('salary')"
+            [class.field-unlocked]="isEdit() && isFieldEditable('salary')"
+            data-field="salary"
+          >
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Monthly Salary (₹)</mat-label>
+              <mat-icon matPrefix>currency_rupee</mat-icon>
+              <input matInput type="number" formControlName="salary" min="0" />
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="field-edit-btn"
+              [class.active]="isFieldEditable('salary')"
+              (click)="toggleFieldEdit('salary', $event)"
+              [matTooltip]="isFieldEditable('salary') ? 'Lock field' : 'Edit field'"
+            >
+              <mat-icon>{{ isFieldEditable('salary') ? 'lock' : 'edit' }}</mat-icon>
+            </button>
+            }
+          </div>
+
+          <div
+            class="field-wrapper"
+            [class.field-locked]="isEdit() && !isFieldEditable('shift')"
+            [class.field-unlocked]="isEdit() && isFieldEditable('shift')"
+            data-field="shift"
+          >
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Shift</mat-label>
+              <mat-select formControlName="shift">
+                <mat-option value="">Not assigned</mat-option>
+                @for (s of shifts; track s.value) {
+                <mat-option [value]="s.value">{{ s.label }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="field-edit-btn"
+              [class.active]="isFieldEditable('shift')"
+              (click)="toggleFieldEdit('shift', $event)"
+              [matTooltip]="isFieldEditable('shift') ? 'Lock field' : 'Edit field'"
+            >
+              <mat-icon>{{ isFieldEditable('shift') ? 'lock' : 'edit' }}</mat-icon>
+            </button>
+            }
+          </div>
+
+          <div
+            class="field-wrapper"
+            [class.field-locked]="isEdit() && !isFieldEditable('joiningDate')"
+            [class.field-unlocked]="isEdit() && isFieldEditable('joiningDate')"
+            data-field="joiningDate"
+          >
+            <mat-form-field appearance="outline" class="field-input">
+              <mat-label>Joining Date</mat-label>
+              <mat-icon matPrefix>event</mat-icon>
+              <input
+                matInput
+                [matDatepicker]="staffJoinPicker"
+                formControlName="joiningDate"
+                placeholder="DD/MM/YYYY"
+              />
+              <mat-hint>DD/MM/YYYY</mat-hint>
+              <mat-datepicker-toggle matIconSuffix [for]="staffJoinPicker" />
+              <mat-datepicker #staffJoinPicker />
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="field-edit-btn"
+              [class.active]="isFieldEditable('joiningDate')"
+              (click)="toggleFieldEdit('joiningDate', $event)"
+              [matTooltip]="isFieldEditable('joiningDate') ? 'Lock field' : 'Edit field'"
+            >
+              <mat-icon>{{ isFieldEditable('joiningDate') ? 'lock' : 'edit' }}</mat-icon>
+            </button>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- SECTION 6: Direct Permission Overrides (edit mode only)        -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    @if (isEdit()) {
+    <div
+      class="form-section perm-overrides-section"
+      [class.perm-overrides-section--unlocked]="permSectionUnlocked()"
+    >
+      <!-- Section Header -->
+      <div class="section-header perm-section-header">
+        <div class="perm-header-left">
+          <mat-icon>security</mat-icon>
+          <div class="perm-header-text">
+            <span class="section-title">Permission Overrides</span>
+            <span class="perm-section-subtitle">
+              Grant extra or block inherited permissions for this
+              <span
+                class="perm-cat-badge"
+                [class.perm-cat-badge--staff]="permCategoryLabel() === 'Staff'"
+                [class.perm-cat-badge--student]="permCategoryLabel() === 'Student'"
+                [class.perm-cat-badge--parent]="permCategoryLabel() === 'Parent'"
+              >
+                {{ permCategoryLabel() }}
+              </span>
+              user.
+            </span>
+          </div>
+        </div>
+        <div class="perm-header-right">
+          @if (originalGrantIds().size > 0) {
+          <span class="perm-active-badge perm-active-badge--grant">
+            <mat-icon>add_circle</mat-icon>
+            {{ originalGrantIds().size }} grant{{ originalGrantIds().size !== 1 ? 's' : '' }}
+          </span>
+          } @if (originalDenyIds().size > 0) {
+          <span class="perm-active-badge perm-active-badge--deny">
+            <mat-icon>block</mat-icon>
+            {{ originalDenyIds().size }} block{{ originalDenyIds().size !== 1 ? 's' : '' }}
+          </span>
+          }
+          <button
+            type="button"
+            class="perm-toggle-btn"
+            [class.perm-toggle-btn--active]="permSectionUnlocked()"
+            (click)="togglePermSection()"
+            [matTooltip]="permSectionUnlocked() ? 'Cancel editing' : 'Edit permission overrides'"
+          >
+            <mat-icon>{{ permSectionUnlocked() ? 'lock_open' : 'edit' }}</mat-icon>
+            {{ permSectionUnlocked() ? 'Cancel' : 'Edit Overrides' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- ── HOW-TO GUIDE ──────────────────────────────────────────── -->
+      <div class="perm-guide-bar">
+        <button
+          type="button"
+          class="perm-guide-toggle"
+          (click)="guideExpanded.set(!guideExpanded())"
+        >
+          <mat-icon>help_outline</mat-icon>
+          <span>How do Permission Overrides work?</span>
+          <mat-icon class="guide-chevron" [class.guide-chevron--open]="guideExpanded()"
+            >expand_more</mat-icon
+          >
+        </button>
+
+        @if (guideExpanded()) {
+        <div class="perm-guide-content">
+          <div class="guide-grid">
+            <div class="guide-card">
+              <div class="guide-card-icon guide-card-icon--blue"><mat-icon>layers</mat-icon></div>
+              <div>
+                <strong>3 Permission States</strong>
+                <p>
+                  Every permission can be: <em>Inherited from role</em>,
+                  <em>Explicitly granted</em> (beyond role), or <em>Blocked</em> (revoked from
+                  role).
+                </p>
+              </div>
+            </div>
+            <div class="guide-card">
+              <div class="guide-card-icon guide-card-icon--green">
+                <mat-icon>add_circle</mat-icon>
+              </div>
+              <div>
+                <strong>Granting Extra Permissions</strong>
+                <p>
+                  For permissions NOT inherited from the user's role, check the checkbox to grant
+                  them directly without creating a new role.
+                </p>
+              </div>
+            </div>
+            <div class="guide-card">
+              <div class="guide-card-icon guide-card-icon--red"><mat-icon>block</mat-icon></div>
+              <div>
+                <strong>Blocking Inherited Permissions</strong>
+                <p>
+                  For inherited permissions, click <strong>Block</strong> to revoke them for this
+                  specific user. Blocks always win.
+                </p>
+              </div>
+            </div>
+            <div class="guide-card guide-card--steps">
+              <div class="guide-card-icon guide-card-icon--purple">
+                <mat-icon>checklist</mat-icon>
+              </div>
+              <div>
+                <strong>Visual Legend</strong>
+                <ol>
+                  <li>
+                    <span class="legend-chip legend-chip--inherited">via role</span> — inherited,
+                    click <strong>Block</strong> to revoke.
+                  </li>
+                  <li>
+                    <span class="legend-chip legend-chip--granted">granted</span> — explicitly
+                    added, uncheck to remove.
+                  </li>
+                  <li>
+                    <span class="legend-chip legend-chip--denied">blocked</span> — explicitly
+                    revoked, click <strong>Restore</strong> to re-enable.
+                  </li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+
+      <!-- ── LOCKED STATE ─────────────────────────────────────────── -->
+      @if (!permSectionUnlocked()) {
+      <div class="perm-locked-body">
+        @if (totalActiveOverrides() === 0) {
+        <div class="perm-empty-state">
+          <div class="perm-empty-icon"><mat-icon>shield_outlined</mat-icon></div>
+          <div>
+            <p class="perm-empty-title">No overrides configured</p>
+            <p class="perm-empty-desc">
+              This user's access comes entirely from their assigned roles. Click "Edit Overrides" to
+              grant extra permissions or block specific ones.
+            </p>
+          </div>
+        </div>
+        } @else {
+        <div class="perm-locked-summary">
+          @if (originalGrantIds().size > 0) {
+          <div class="perm-locked-row perm-locked-row--grant">
+            <mat-icon>add_circle</mat-icon>
+            <span
+              >{{ originalGrantIds().size }} permission{{
+                originalGrantIds().size !== 1 ? 's' : ''
+              }}
+              explicitly <strong>granted</strong> beyond role.</span
+            >
+          </div>
+          } @if (originalDenyIds().size > 0) {
+          <div class="perm-locked-row perm-locked-row--deny">
+            <mat-icon>block</mat-icon>
+            <span
+              >{{ originalDenyIds().size }} permission{{
+                originalDenyIds().size !== 1 ? 's' : ''
+              }}
+              explicitly <strong>blocked</strong> from role.</span
+            >
+          </div>
+          }
+          <p class="perm-locked-hint">
+            <mat-icon>info_outline</mat-icon>
+            Click <strong>"Edit Overrides"</strong> to review or change these.
+          </p>
+        </div>
+        }
+      </div>
+      }
+
+      <!-- ── UNLOCKED: PERMISSION PICKER ─────────────────────────── -->
+      @if (permSectionUnlocked()) {
+      <div class="perm-picker-body">
+        @if (loadingPermissions()) {
+        <div class="perm-loading">
+          <mat-spinner diameter="32"></mat-spinner>
+          <span>Loading {{ permCategoryLabel() }} permissions…</span>
+        </div>
+        } @else {
+
+        <!-- Legend bar -->
+        <div class="perm-legend-bar">
+          <div class="perm-legend-item">
+            <span class="perm-legend-dot perm-legend-dot--inherited"></span>
+            <span>Inherited from role</span>
+          </div>
+          <div class="perm-legend-item">
+            <span class="perm-legend-dot perm-legend-dot--granted"></span>
+            <span>Explicitly granted</span>
+          </div>
+          <div class="perm-legend-item">
+            <span class="perm-legend-dot perm-legend-dot--denied"></span>
+            <span>Blocked / revoked</span>
+          </div>
+          <div class="perm-legend-sep"></div>
+          <span class="perm-count-chip">
+            <mat-icon>check_circle</mat-icon>
+            {{ grantCount() + roleInheritedPermissionIds().size - denyCount() }} active
+          </span>
+          @if (denyCount() > 0) {
+          <span class="perm-count-chip perm-count-chip--deny">
+            <mat-icon>block</mat-icon>
+            {{ denyCount() }} blocked
+          </span>
+          }
+        </div>
+
+        <!-- Search -->
+        <div class="perm-picker-header">
+          <div class="perm-picker-search">
+            <mat-icon>search</mat-icon>
+            <input
+              type="text"
+              [value]="permissionSearch()"
+              (input)="permissionSearch.set($any($event.target).value)"
+              placeholder="Search by name or slug…"
+              class="perm-search-input"
+            />
+            @if (permissionSearch()) {
+            <button type="button" class="perm-search-clear" (click)="permissionSearch.set('')">
+              <mat-icon>close</mat-icon>
+            </button>
+            }
+          </div>
+        </div>
+
+        <!-- Module accordion groups -->
+        <div class="perm-module-list">
+          @for (group of filteredPermGroups(); track group.module) {
+          <div class="perm-module" [class.perm-module--expanded]="group.expanded">
+            <div class="perm-module-header" (click)="togglePermModule(group)">
+              <span class="perm-module-name">{{ group.module }}</span>
+              <span class="perm-module-count">{{ group.permissions.length }}</span>
+              @if (isPermModuleHasDenials(group)) {
+              <span class="perm-module-deny-badge"> <mat-icon>block</mat-icon> has blocks </span>
+              }
+              <mat-icon class="perm-module-chevron">
+                {{ group.expanded ? 'expand_less' : 'expand_more' }}
+              </mat-icon>
+            </div>
+
+            @if (group.expanded) {
+            <div class="perm-item-list">
+              @for (perm of group.permissions; track perm.id) { @let state =
+              getPermissionState(perm.id);
+              <div
+                class="perm-item"
+                [class.perm-item--inherited]="state === 'inherited'"
+                [class.perm-item--granted]="state === 'granted'"
+                [class.perm-item--denied]="state === 'denied'"
+              >
+                <!-- State indicator -->
+                <div class="perm-item-state">
+                  @if (state === 'denied') {
+                  <button
+                    type="button"
+                    class="perm-state-btn perm-state-btn--denied"
+                    (click)="restoreDeniedPermission(perm.id, $event)"
+                    matTooltip="Click to restore this permission"
+                  >
+                    <mat-icon>block</mat-icon>
+                  </button>
+                  } @else if (state === 'inherited') {
+                  <div class="perm-state-inherited" matTooltip="Inherited from role">
+                    <mat-icon>lock</mat-icon>
+                  </div>
+                  } @else {
+                  <mat-checkbox
+                    [checked]="state === 'granted'"
+                    (change)="togglePermission(perm.id)"
+                    (click)="$event.stopPropagation()"
+                    color="primary"
+                  ></mat-checkbox>
+                  }
+                </div>
+
+                <!-- Permission info -->
+                <div class="perm-item-info" (click)="togglePermission(perm.id)">
+                  <span class="perm-item-name">{{ perm.name }}</span>
+                  <code class="perm-item-slug">{{ perm.slug }}</code>
+                </div>
+
+                <!-- State chip -->
+                <div class="perm-item-badges">
+                  @if (state === 'inherited') {
+                  <span class="perm-state-chip perm-state-chip--inherited">via role</span>
+                  } @else if (state === 'granted') {
+                  <span class="perm-state-chip perm-state-chip--granted">granted</span>
+                  } @else if (state === 'denied') {
+                  <span class="perm-state-chip perm-state-chip--denied">blocked</span>
+                  }
+                </div>
+
+                <!-- Action button -->
+                <div class="perm-item-action">
+                  @if (state === 'inherited') {
+                  <button
+                    type="button"
+                    class="perm-action-deny-btn"
+                    (click)="denyInheritedPermission(perm.id, $event)"
+                    matTooltip="Block this permission for this user"
+                  >
+                    <mat-icon>block</mat-icon>
+                    Block
+                  </button>
+                  } @else if (state === 'denied') {
+                  <button
+                    type="button"
+                    class="perm-action-restore-btn"
+                    (click)="restoreDeniedPermission(perm.id, $event)"
+                    matTooltip="Restore this permission"
+                  >
+                    <mat-icon>undo</mat-icon>
+                    Restore
+                  </button>
+                  }
+                </div>
+              </div>
+              }
+            </div>
+            }
+          </div>
+          } @if (filteredPermGroups().length === 0 && !loadingPermissions()) {
+          <div class="perm-no-results">
+            @if (permissionSearch()) {
+            <mat-icon>search_off</mat-icon>
+            <p>
+              No permissions match "<strong>{{ permissionSearch() }}</strong
+              >"
+            </p>
+            } @else {
+            <mat-icon>lock_open</mat-icon>
+            <p>No permissions available for this category.</p>
+            }
+          </div>
+          }
+        </div>
+
+        <!-- Save / Cancel action bar -->
+        <div class="perm-action-bar">
+          <div class="perm-action-bar-left">
+            @if (hasPermissionChanges()) {
+            <span class="perm-unsaved-badge">
+              <mat-icon>edit</mat-icon>
+              Unsaved changes
+            </span>
+            }
+          </div>
+          <div class="perm-action-bar-right">
+            <button
+              type="button"
+              class="perm-cancel-btn"
+              (click)="cancelPermEdit()"
+              [disabled]="savingPermissions()"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="perm-save-btn"
+              (click)="savePermissions()"
+              [disabled]="savingPermissions() || !hasPermissionChanges()"
+            >
+              @if (savingPermissions()) {
+              <mat-spinner diameter="16"></mat-spinner>
+              } @else {
+              <mat-icon>save</mat-icon>
+              } Save Overrides
+            </button>
+          </div>
+        </div>
+
+        }
+        <!-- end @else (not loading) -->
+      </div>
+      }
+      <!-- end @if (permSectionUnlocked()) -->
+    </div>
+    }
+    <!-- end @if (isEdit()) -->
 
     <!-- ── Form Actions ─────────────────────────────────────────── -->
     <div class="form-actions">
@@ -911,210 +2168,7 @@
       </button>
     </div>
   </form>
-
-  <!-- ═══════════════════════════════════════════════════════════════ -->
-  <!-- SECTION 5: Direct Permission Overrides (edit mode only)        -->
-  <!-- ═══════════════════════════════════════════════════════════════ -->
-  @if (isEdit()) {
-  <div
-    class="form-section perm-overrides-section"
-    [class.perm-overrides-section--unlocked]="permSectionUnlocked()"
-  >
-    <!-- Section Header -->
-    <div class="section-header perm-section-header">
-      <div class="perm-header-left">
-        <mat-icon>security</mat-icon>
-        <div>
-          <span class="section-title">Direct Permission Overrides</span>
-          <span class="perm-section-subtitle">
-            Extra permissions beyond what this user's roles provide. Scoped to the
-            <span
-              class="perm-cat-badge"
-              [class.perm-cat-badge--staff]="permCategoryLabel() === 'Staff'"
-              [class.perm-cat-badge--student]="permCategoryLabel() === 'Student'"
-              [class.perm-cat-badge--parent]="permCategoryLabel() === 'Parent'"
-            >
-              {{ permCategoryLabel() }}
-            </span>
-            permission universe only.
-          </span>
-        </div>
-      </div>
-      <div class="perm-header-right">
-        @if (permSectionUnlocked() && originalPermissionIds().size > 0) {
-        <span class="perm-active-badge">
-          <mat-icon>check_circle</mat-icon>
-          {{ originalPermissionIds().size }} active override{{
-            originalPermissionIds().size !== 1 ? 's' : ''
-          }}
-        </span>
-        }
-        <button
-          type="button"
-          class="perm-toggle-btn"
-          [class.perm-toggle-btn--active]="permSectionUnlocked()"
-          (click)="togglePermSection()"
-          [matTooltip]="
-            permSectionUnlocked() ? 'Lock permission overrides' : 'Edit permission overrides'
-          "
-        >
-          <mat-icon>{{ permSectionUnlocked() ? 'lock_open' : 'edit' }}</mat-icon>
-          {{ permSectionUnlocked() ? 'Lock' : 'Edit Overrides' }}
-        </button>
-      </div>
-    </div>
-
-    <!-- Locked state: summary chips -->
-    @if (!permSectionUnlocked()) {
-    <div class="perm-locked-body">
-      @if (originalPermissionIds().size === 0) {
-      <div class="perm-empty-state">
-        <mat-icon>lock_open</mat-icon>
-        <p>
-          No direct permission overrides — this user's access comes entirely from their assigned
-          roles.
-        </p>
-      </div>
-      } @else {
-      <p class="perm-locked-hint">
-        Click "Edit Overrides" above to manage direct permission overrides for this user.
-      </p>
-      }
-    </div>
-    }
-
-    <!-- Unlocked state: permission picker -->
-    @if (permSectionUnlocked()) {
-    <div class="perm-picker-body">
-      @if (loadingPermissions()) {
-      <div class="perm-loading">
-        <mat-spinner diameter="32"></mat-spinner>
-        <span>Loading {{ permCategoryLabel() }} permissions…</span>
-      </div>
-      } @else {
-      <!-- Info banner -->
-      <div class="perm-info-banner">
-        <mat-icon>info_outline</mat-icon>
-        <p>
-          Showing <strong>{{ totalPermCount() }}</strong> {{ permCategoryLabel() }}-category
-          permissions. Only permissions within this universe can be assigned to this user's primary
-          role (<code>{{ primaryRoleName() }}</code
-          >). Permissions from other categories are blocked at the backend.
-        </p>
-      </div>
-
-      <!-- Picker header -->
-      <div class="perm-picker-header">
-        <div class="perm-picker-search">
-          <mat-icon>search</mat-icon>
-          <input
-            type="text"
-            [value]="permissionSearch()"
-            (input)="permissionSearch.set($any($event.target).value)"
-            placeholder="Search permissions…"
-            class="perm-search-input"
-          />
-          @if (permissionSearch()) {
-          <button type="button" class="perm-search-clear" (click)="permissionSearch.set('')">
-            <mat-icon>close</mat-icon>
-          </button>
-          }
-        </div>
-        <div class="perm-picker-actions">
-          <span class="perm-count-chip">
-            <mat-icon>check_circle</mat-icon>
-            {{ selectedPermCount() }} of {{ totalPermCount() }} selected
-          </span>
-          <button type="button" class="perm-text-btn" (click)="selectAllPerms()">Select all</button>
-          <span class="perm-divider">|</span>
-          <button type="button" class="perm-text-btn" (click)="clearAllPerms()">Clear all</button>
-        </div>
-      </div>
-
-      <!-- Module groups -->
-      <div class="perm-module-list">
-        @for (group of filteredPermGroups(); track group.module) {
-        <div class="perm-module">
-          <div class="perm-module-header" (click)="togglePermModule(group)">
-            <mat-checkbox
-              [checked]="isPermModuleFullySelected(group)"
-              [indeterminate]="isPermModulePartiallySelected(group)"
-              (change)="togglePermModulePermissions(group)"
-              (click)="$event.stopPropagation()"
-              color="primary"
-            ></mat-checkbox>
-            <span class="perm-module-name">{{ group.module }}</span>
-            <span class="perm-module-count">{{ group.permissions.length }}</span>
-            <mat-icon
-              class="perm-module-chevron"
-              [class.perm-module-chevron--open]="group.expanded"
-            >
-              expand_more
-            </mat-icon>
-          </div>
-
-          @if (group.expanded) {
-          <div class="perm-item-list">
-            @for (perm of group.permissions; track perm.id) {
-            <div class="perm-item" (click)="toggleSinglePermission(perm.id)">
-              <mat-checkbox
-                [checked]="isPermSelected(perm.id)"
-                (change)="toggleSinglePermission(perm.id)"
-                (click)="$event.stopPropagation()"
-                color="primary"
-              ></mat-checkbox>
-              <div class="perm-item-info">
-                <span class="perm-item-name">{{ perm.name }}</span>
-                <span class="perm-item-slug">{{ perm.slug }}</span>
-              </div>
-            </div>
-            }
-          </div>
-          }
-        </div>
-        } @if (filteredPermGroups().length === 0 && !loadingPermissions()) {
-        <div class="perm-no-results">
-          @if (permissionSearch()) {
-          <mat-icon>search_off</mat-icon>
-          <p>No permissions match "{{ permissionSearch() }}"</p>
-          } @else {
-          <mat-icon>lock_open</mat-icon>
-          <p>No permissions available for this category.</p>
-          }
-        </div>
-        }
-      </div>
-
-      <!-- Permission save/cancel footer -->
-      <div class="perm-footer">
-        <button
-          type="button"
-          mat-stroked-button
-          class="perm-cancel-btn"
-          (click)="cancelPermEdit()"
-          [disabled]="savingPermissions()"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          mat-flat-button
-          class="perm-save-btn"
-          (click)="savePermissions()"
-          [disabled]="savingPermissions() || !hasPermissionChanges()"
-        >
-          @if (savingPermissions()) {
-          <mat-spinner diameter="16"></mat-spinner>
-          } @else {
-          <mat-icon>save</mat-icon>
-          } Save Permission Overrides
-        </button>
-      </div>
-      }
-    </div>
-    }
-  </div>
-  } }
+  }
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════════ -->
@@ -1142,17 +2196,18 @@
         @for (change of pendingChanges(); track change.field) {
         <div class="change-item">
           <div class="change-label">
-            <mat-icon class="change-label-icon">chevron_right</mat-icon>{{ change.label }}
+            <mat-icon class="change-label-icon">chevron_right</mat-icon>
+            {{ change.label }}
           </div>
           <div class="change-values">
             <div class="change-old">
-              <span class="change-badge old">Before</span
-              ><span class="change-value-text">{{ change.oldValue }}</span>
+              <span class="change-badge old">Before</span>
+              <span class="change-value-text">{{ change.oldValue }}</span>
             </div>
             <div class="change-arrow"><mat-icon>arrow_forward</mat-icon></div>
             <div class="change-new">
-              <span class="change-badge new">After</span
-              ><span class="change-value-text">{{ change.newValue }}</span>
+              <span class="change-badge new">After</span>
+              <span class="change-value-text">{{ change.newValue }}</span>
             </div>
           </div>
         </div>
@@ -1161,14 +2216,14 @@
       <div class="confirm-warning">
         <mat-icon>warning_amber</mat-icon>
         <p>
-          These changes will take effect immediately. Role changes will invalidate the user's
-          current session.
+          These changes take effect immediately. Role changes will invalidate the user's current
+          session.
         </p>
       </div>
     </div>
     <div class="confirm-actions">
       <button mat-stroked-button type="button" (click)="cancelConfirm()" class="cancel-btn">
-        <mat-icon>edit</mat-icon>Go Back & Edit
+        <mat-icon>edit</mat-icon> Go Back &amp; Edit
       </button>
       <button
         mat-raised-button
@@ -1179,8 +2234,10 @@
         [disabled]="submitting()"
       >
         @if (submitting()) {
-        <mat-spinner diameter="16" style="display: inline-block; margin-right: 8px"></mat-spinner> }
-        @else { <mat-icon>check_circle</mat-icon> } Confirm & Save
+        <mat-spinner diameter="16" style="display: inline-block; margin-right: 8px"></mat-spinner>
+        } @else {
+        <mat-icon>check_circle</mat-icon>
+        } Confirm &amp; Save
       </button>
     </div>
   </div>

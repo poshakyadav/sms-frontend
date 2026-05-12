@@ -1,0 +1,13 @@
+// src/styles/_tokens.scss
+// ─────────────────────────────────────────────────────────────────────────────
+// DESIGN TOKENS — CSS custom properties are defined in styles.scss :root.
+// This file only exports Sass-level constants used inside other partials.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Breakpoints
+$bp-xs: 360px;
+$bp-sm: 420px;
+$bp-md: 640px;
+$bp-lg: 768px;
+$bp-xl: 900px;
+$bp-2xl: 960px;

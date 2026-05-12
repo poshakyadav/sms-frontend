@@ -1,0 +1,404 @@
+// src/styles/_tables.scss
+// ─────────────────────────────────────────────────────────────────────────────
+// CUSTOM HTML TABLE — used wherever a native <table> replaces mat-table.
+// Also covers: search bar, active filter bar, load-more bar, student cell,
+// avatar patterns, and cell-level helpers used across list views.
+//
+// Mobile-first: every rule defaults to mobile, widens at breakpoints.
+// ─────────────────────────────────────────────────────────────────────────────
+@use 'tokens' as *;
+
+// ── Table card wrapper ────────────────────────────────────────────────────────
+.table-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.overflow-x {
+  overflow-x: auto;
+}
+
+.table-info-bar {
+  padding: 10px 16px;
+  background: var(--color-hover);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+
+  @media (min-width: $bp-lg) {
+    padding: 10px 18px;
+  }
+}
+
+// ── Core table ────────────────────────────────────────────────────────────────
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 640px; // triggers overflow-x scroll on mobile
+
+  thead tr {
+    background: var(--color-hover);
+  }
+
+  th {
+    padding: 12px 14px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-text-secondary);
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+    white-space: nowrap;
+
+    @media (min-width: $bp-lg) {
+      padding: 13px 16px;
+      font-size: 0.72rem;
+    }
+  }
+
+  td {
+    padding: 12px 14px;
+    font-size: 0.85rem;
+    color: var(--color-text-primary);
+    border-bottom: 1px solid var(--color-divider);
+    vertical-align: middle;
+
+    @media (min-width: $bp-lg) {
+      padding: 14px 16px;
+      font-size: 0.88rem;
+    }
+  }
+
+  .table-row {
+    transition: background 0.12s ease;
+
+    &:hover {
+      background: var(--color-hover);
+    }
+
+    &:last-child td {
+      border-bottom: none;
+    }
+  }
+
+  // Column helpers
+  .col-action {
+    text-align: right;
+    width: 1%; // shrink to content
+    white-space: nowrap;
+  }
+}
+
+// ── Cell content helpers ──────────────────────────────────────────────────────
+.cell-text {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+.cell-muted {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+// ── Student / person cell ─────────────────────────────────────────────────────
+.student-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 180px;
+
+  @media (min-width: $bp-lg) {
+    gap: 12px;
+    min-width: 200px;
+  }
+}
+
+// ── Avatar ────────────────────────────────────────────────────────────────────
+.avatar-sm {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+
+  @media (min-width: $bp-lg) {
+    width: 38px;
+    height: 38px;
+  }
+
+  &.avatar-inactive {
+    opacity: 0.4;
+    filter: grayscale(100%);
+  }
+}
+
+.avatar-initials {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  color: var(--color-primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  user-select: none;
+
+  @media (min-width: $bp-lg) {
+    width: 38px;
+    height: 38px;
+    font-size: 0.75rem;
+  }
+
+  &.avatar-inactive {
+    background: color-mix(in srgb, var(--color-text-muted) 12%, transparent);
+    color: var(--color-text-muted);
+  }
+}
+
+// ── Student cell info stack ───────────────────────────────────────────────────
+.student-cell-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cell-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  &.name-inactive {
+    color: var(--color-text-muted);
+    text-decoration: line-through;
+    text-decoration-color: var(--color-text-muted);
+  }
+}
+
+.cell-sub {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  @media (min-width: $bp-lg) {
+    font-size: 0.75rem;
+  }
+}
+
+// ── Search bar ────────────────────────────────────────────────────────────────
+.search-bar {
+  margin-bottom: 14px;
+
+  @media (min-width: $bp-lg) {
+    margin-bottom: 16px;
+  }
+
+  .search-field {
+    width: 100%;
+
+    @media (min-width: $bp-lg) {
+      max-width: 560px;
+    }
+  }
+}
+
+// ── Active filter bar ─────────────────────────────────────────────────────────
+.active-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+
+  @media (min-width: $bp-lg) {
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .filter-label {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    font-weight: 500;
+  }
+
+  .filter-count {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    margin-left: auto;
+  }
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px 4px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+
+  mat-icon {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+  }
+
+  .chip-clear {
+    width: 20px !important;
+    height: 20px !important;
+    line-height: 20px !important;
+    padding: 0 !important;
+    opacity: 0.7;
+
+    mat-icon {
+      font-size: 14px;
+      height: 14px;
+      width: 14px;
+    }
+  }
+
+  // Colour modifiers — add more as needed
+  &.filter-chip--primary {
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    color: var(--color-primary);
+    border-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
+  }
+
+  &.filter-chip--info {
+    background: color-mix(in srgb, var(--color-info) 12%, transparent);
+    color: var(--color-info);
+    border-color: color-mix(in srgb, var(--color-info) 25%, transparent);
+  }
+
+  &.filter-chip--warning {
+    background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+    color: color-mix(in srgb, var(--color-warning) 70%, #000);
+    border-color: color-mix(in srgb, var(--color-warning) 25%, transparent);
+  }
+
+  &.filter-chip--error {
+    background: color-mix(in srgb, var(--color-error) 12%, transparent);
+    color: var(--color-error);
+    border-color: color-mix(in srgb, var(--color-error) 25%, transparent);
+  }
+
+  &.filter-chip--success {
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    color: color-mix(in srgb, var(--color-success) 70%, #000);
+    border-color: color-mix(in srgb, var(--color-success) 25%, transparent);
+  }
+}
+
+// ── Load more bar ─────────────────────────────────────────────────────────────
+.load-more-bar {
+  display: flex;
+  justify-content: center;
+  padding: 14px 16px;
+  border-top: 1px solid var(--color-divider);
+  background: var(--color-hover);
+
+  @media (min-width: $bp-lg) {
+    padding: 16px;
+  }
+}
+
+.load-more-btn {
+  min-width: 160px;
+  gap: 8px;
+  font-size: 0.875rem !important;
+  color: var(--color-text-secondary) !important;
+
+  @media (min-width: $bp-lg) {
+    min-width: 200px;
+  }
+
+  &:hover {
+    color: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+  }
+}
+
+.load-more-count {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin-left: 4px;
+}
+
+// ── Row actions ───────────────────────────────────────────────────────────────
+.cell-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+}
+
+.cell-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+}
+
+.action-btn {
+  color: var(--color-text-secondary) !important;
+  transition: color 0.15s ease;
+
+  &:hover {
+    color: var(--color-primary) !important;
+  }
+}
+
+// ── Inline badges ─────────────────────────────────────────────────────────────
+.blood-badge {
+  display: inline-block;
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
+  color: var(--color-error);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.roll-chip {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  background: var(--color-hover);
+  color: var(--color-text-secondary);
+  padding: 1px 7px;
+  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  width: fit-content;
+}
+
+.capacity-note {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin-left: 4px;
+}
+
+// ── Empty state actions ───────────────────────────────────────────────────────
+.empty-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 4px;
+}

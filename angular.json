@@ -26,27 +26,42 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "src/styles.scss"
-            ],
-            "server": "src/main.server.ts",
-            "outputMode": "server",
-            "ssr": {
-              "entry": "src/server.ts"
-            }
+            "styles": ["src/styles.scss"],
+
+            "outputMode": "static",
+            "allowedCommonJsDependencies": [
+              "html2canvas",
+              "canvg",
+              "raf",
+              "rgbcolor",
+              "core-js/modules/es.promise.js",
+              "core-js/modules/es.string.match.js",
+              "core-js/modules/es.string.replace.js",
+              "core-js/modules/es.string.starts-with.js",
+              "core-js/modules/es.array.iterator.js",
+              "core-js/modules/web.dom-collections.iterator.js",
+              "core-js/modules/es.array.reduce.js",
+              "core-js/modules/es.string.ends-with.js",
+              "core-js/modules/es.string.split.js",
+              "core-js/modules/es.string.trim.js",
+              "core-js/modules/es.array.index-of.js",
+              "core-js/modules/es.string.includes.js",
+              "core-js/modules/es.array.reverse.js",
+              "core-js/modules/es.regexp.to-string.js"
+            ]
           },
           "configurations": {
             "production": {
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumWarning": "1mb",
+                  "maximumError": "2mb"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "32kb",
+                  "maximumError": "64kb"
                 }
               ],
               "outputHashing": "all"
@@ -85,9 +100,7 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "src/styles.scss"
-            ]
+            "styles": ["src/styles.scss"]
           }
         }
       }

@@ -40,91 +40,54 @@ export class IndianDateAdapter extends NativeDateAdapter {
    * Accepts:  DD/MM/YYYY  or  DD-MM-YYYY  or  DDMMYYYY
    * Falls back to the default parser for anything else.
    */
-  // override parse(value: string | number): Date | null {
-  //   if (typeof value === 'number') {
-  //     return new Date(value);
-  //   }
-
-  //   if (!value || !value.trim()) {
-  //     return null;
-  //   }
-
-  //   // Normalize separators: accept '/', '-', '.'
-  //   const normalized = value.trim().replace(/[-.\s]/g, '/');
-  //   const parts = normalized.split('/');
-
-  //   if (parts.length === 3) {
-  //     const day = parseInt(parts[0], 10);
-  //     const month = parseInt(parts[1], 10) - 1; // JS months are 0-indexed
-  //     const year = parseInt(parts[2], 10);
-
-  //     if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
-  //       // Handle 2-digit years: 25 → 2025
-  //       const fullYear = year < 100 ? 2000 + year : year;
-  //       const date = new Date(fullYear, month, day);
-  //       // Validate: ensure the parsed components round-trip correctly
-  //       if (
-  //         date.getFullYear() === fullYear &&
-  //         date.getMonth() === month &&
-  //         date.getDate() === day
-  //       ) {
-  //         return date;
-  //       }
-  //     }
-  //   }
-
-  //   // Fallback: let the browser try (handles ISO strings from patchValue)
-  //   const fallback = new Date(value);
-  //   return isNaN(fallback.getTime()) ? null : fallback;
-  // }
 
   override parse(value: string | number): Date | null {
     if (typeof value === 'number') {
       return new Date(value);
     }
-  
+
     if (!value || !value.trim()) {
       return null;
     }
-  
+
     const trimmed = value.trim();
-  
+
     // ── Handle ISO format from backend: yyyy-MM-dd ─────────────────────────
     // Must be checked BEFORE the generic separator-split below, because
     // "2026-04-15".split('/') gives 1 part and falls to the browser fallback
     // which interprets it as UTC midnight → wrong local date in some timezones.
     const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (isoMatch) {
-      const year  = parseInt(isoMatch[1], 10);
+      const year = parseInt(isoMatch[1], 10);
       const month = parseInt(isoMatch[2], 10) - 1; // 0-indexed
-      const day   = parseInt(isoMatch[3], 10);
-      return new Date(year, month, day);   // local midnight — no UTC shift
+      const day = parseInt(isoMatch[3], 10);
+      return new Date(year, month, day); // local midnight — no UTC shift
     }
-  
+
     // ── Handle DD/MM/YYYY typed by the user ───────────────────────────────
     // Normalize separators: accept '/', '-', '.'
     const normalized = trimmed.replace(/[-.\s]/g, '/');
     const parts = normalized.split('/');
-  
+
     if (parts.length === 3) {
-      const day   = parseInt(parts[0], 10);
+      const day = parseInt(parts[0], 10);
       const month = parseInt(parts[1], 10) - 1;
-      const year  = parseInt(parts[2], 10);
-  
+      const year = parseInt(parts[2], 10);
+
       if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
         const fullYear = year < 100 ? 2000 + year : year;
         const date = new Date(fullYear, month, day);
-  
+
         if (
           date.getFullYear() === fullYear &&
-          date.getMonth()    === month    &&
-          date.getDate()     === day
+          date.getMonth() === month &&
+          date.getDate() === day
         ) {
           return date;
         }
       }
     }
-  
+
     // ── Last resort fallback (e.g. full ISO datetime strings) ─────────────
     const fallback = new Date(trimmed);
     return isNaN(fallback.getTime()) ? null : fallback;

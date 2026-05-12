@@ -43,12 +43,11 @@
   ══════════════════════════════════════════════════════════════════════ -->
   <div class="toolbar">
     <mat-form-field appearance="outline" class="search-field">
-      <mat-label>Search {{ activeTabInfo.label | lowercase }}…</mat-label>
       <mat-icon matPrefix>search</mat-icon>
       <input
         matInput
         (keyup)="applyFilter($event)"
-        [placeholder]="'Name, email, phone — filtered to ' + activeTabInfo.label"
+        [placeholder]="'Search ' + (activeTabInfo.label | lowercase) + '… name, email, phone'"
       />
     </mat-form-field>
 
@@ -62,16 +61,16 @@
       <button mat-stroked-button (click)="loadCurrentTab()" [disabled]="loading()" class="btn-load">
         @if (loading()) {
         <mat-spinner diameter="16" class="inline-spinner"></mat-spinner>
-        Loading… } @else if (isTabLoaded()) {
-        <ng-container>
-          <mat-icon>refresh</mat-icon>
-          Refresh
-        </ng-container>
+        } @if (isTabLoaded() && !loading()) {
+        <mat-icon>refresh</mat-icon>
+        } @if (!isTabLoaded() && !loading()) {
+        <mat-icon>download</mat-icon>
+        } @if (loading()) {
+        <span class="btn-label">Loading…</span>
+        } @else if (isTabLoaded()) {
+        <span class="btn-label">Refresh</span>
         } @else {
-        <ng-container>
-          <mat-icon>download</mat-icon>
-          Load {{ activeTabInfo.label }}
-        </ng-container>
+        <span class="btn-label">Load {{ activeTabInfo.label }}</span>
         }
       </button>
     </div>
@@ -104,7 +103,7 @@
     </p>
     <button mat-raised-button color="primary" (click)="loadCurrentTab()" class="btn-load-prompt">
       <mat-icon>download</mat-icon>
-      Load {{ activeTabInfo.label }}
+      <span class="btn-label">Load {{ activeTabInfo.label }}</span>
     </button>
   </div>
   }
@@ -156,10 +155,7 @@
                 }
               </span>
               } } @if (user.roles.length > 2) {
-              <span
-                class="more-badge"
-                [matTooltip]="getExtraRolesTooltip(user)"
-              >
+              <span class="more-badge" [matTooltip]="getExtraRolesTooltip(user)">
                 +{{ user.roles.length - 2 }}
               </span>
               } @if (user.roles.length === 0) {

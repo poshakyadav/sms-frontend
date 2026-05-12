@@ -1,0 +1,340 @@
+// src/styles/_cards.scss
+// ─────────────────────────────────────────────────────────────────────────────
+// SHARED CARDS & CHIPS — info cards, badges, role chips, facility chips,
+// status chips, summary chips.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Info / hint cards ─────────────────────────────────────────────────────────
+// Usage: <div class="info-card info-card--blue">
+.info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+  font-size: 0.82rem;
+  line-height: 1.6;
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  strong {
+    display: block;
+    font-size: 0.84rem;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  p {
+    margin: 0;
+    opacity: 0.85;
+  }
+
+  &--blue {
+    background: color-mix(in srgb, var(--color-info) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-info) 18%, transparent);
+    color: color-mix(in srgb, var(--color-info) 70%, var(--color-text-primary));
+    mat-icon {
+      color: var(--color-info);
+    }
+  }
+
+  &--amber {
+    background: color-mix(in srgb, var(--color-warning) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-warning) 18%, transparent);
+    color: color-mix(in srgb, var(--color-warning) 60%, var(--color-text-primary));
+    mat-icon {
+      color: var(--color-warning);
+    }
+  }
+
+  &--green {
+    background: color-mix(in srgb, var(--color-success) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-success) 18%, transparent);
+    color: color-mix(in srgb, var(--color-success) 60%, var(--color-text-primary));
+    mat-icon {
+      color: var(--color-success);
+    }
+  }
+
+  &--muted {
+    background: var(--color-hover);
+    border: 1px solid var(--color-divider);
+    color: var(--color-text-secondary);
+    mat-icon {
+      color: var(--color-primary);
+    }
+  }
+}
+
+// ── UDISE / sub-section headers ───────────────────────────────────────────────
+.subsection-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 20px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-divider);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+
+  &:first-of-type {
+    margin-top: 0;
+  }
+
+  mat-icon {
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
+    color: var(--color-primary);
+  }
+}
+
+// ── Checkbox rows ─────────────────────────────────────────────────────────────
+.checkbox-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 0;
+
+  &.col-full,
+  &.col-span-2 {
+    grid-column: 1 / -1;
+  }
+}
+
+.checkbox-hint {
+  margin: 0 0 0 28px;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+// ── Facility chip grid ────────────────────────────────────────────────────────
+.facilities-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+  grid-column: 1 / -1;
+}
+
+.facility-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px 5px 8px;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+
+  &__icon {
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
+    flex-shrink: 0;
+  }
+
+  &:hover:not(&--selected) {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+  }
+
+  &--selected {
+    background: color-mix(in srgb, var(--color-success) 10%, transparent);
+    border-color: var(--color-success);
+    color: color-mix(in srgb, var(--color-success) 70%, var(--color-text-primary));
+
+    .facility-chip__icon {
+      color: var(--color-success);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+// ── Status / count chips ──────────────────────────────────────────────────────
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+
+  mat-icon {
+    font-size: 12px;
+    height: 12px;
+    width: 12px;
+  }
+
+  &--success {
+    background: color-mix(in srgb, var(--color-success) 10%, transparent);
+    color: color-mix(in srgb, var(--color-success) 70%, #000);
+    border-color: color-mix(in srgb, var(--color-success) 20%, transparent);
+  }
+
+  &--error {
+    background: color-mix(in srgb, var(--color-error) 10%, transparent);
+    color: var(--color-error);
+    border-color: color-mix(in srgb, var(--color-error) 20%, transparent);
+  }
+
+  &--warning {
+    background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+    color: color-mix(in srgb, var(--color-warning) 70%, #000);
+    border-color: color-mix(in srgb, var(--color-warning) 20%, transparent);
+  }
+
+  &--primary {
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    color: var(--color-primary);
+    border-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
+  }
+
+  &--muted {
+    background: color-mix(in srgb, var(--color-text-muted) 12%, transparent);
+    color: var(--color-text-muted);
+  }
+}
+
+// ── Role / category chips ─────────────────────────────────────────────────────
+.role-chip {
+  padding: 1px 6px;
+  border-radius: 9999px;
+  font-size: 0.66rem;
+  font-weight: 600;
+
+  &--primary-marker {
+    background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+    color: color-mix(in srgb, var(--color-warning) 70%, #000);
+  }
+
+  &--staff {
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    color: var(--color-primary);
+  }
+
+  &--student {
+    background: color-mix(in srgb, var(--color-success) 10%, transparent);
+    color: color-mix(in srgb, var(--color-success) 70%, #000);
+  }
+
+  &--parent {
+    background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+    color: color-mix(in srgb, var(--color-warning) 70%, #000);
+  }
+}
+
+// ── Edit badge (header) ───────────────────────────────────────────────────────
+.edit-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+
+  mat-icon {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+  }
+}
+
+// ── Success banner (post-creation) ────────────────────────────────────────────
+.success-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
+  background: color-mix(in srgb, var(--color-success) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-success) 25%, transparent);
+  border-radius: var(--radius-md);
+
+  &__icon mat-icon {
+    font-size: 28px;
+    height: 28px;
+    width: 28px;
+    color: var(--color-success);
+  }
+
+  h3 {
+    margin: 0 0 6px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+  }
+}
+
+// ── Field wrapper (lock/unlock) ───────────────────────────────────────────────
+// Wraps mat-form-field + the lock/edit toggle button.
+.field-wrapper {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+
+  .field-input {
+    flex: 1;
+    min-width: 0;
+    transition: opacity 0.2s ease;
+    width: 100%;
+  }
+
+  &--locked .field-input {
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  &--unlocked {
+    .field-input {
+      opacity: 1;
+    }
+  }
+
+  &.col-span-2,
+  &.col-full {
+    grid-column: 1 / -1;
+  }
+}
+
+// ── Optional label ────────────────────────────────────────────────────────────
+.optional-label {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  margin-left: 4px;
+}

@@ -1,11 +1,16 @@
 // fee-report.scss
-// Imports shared fees base and adds only report-specific overrides.
+// Component-specific styles only.
+// All shared patterns (page shell, page-header, controls-card, controls-row,
+// stats-grid, stat-card, table-card, table-scroll, mat-table overrides,
+// amount-cell, status-badge, state-container, cell-actions, row-overdue/paid)
+// are provided by:
+//   @use '../../../../../shared/styles/fees-shared' as *;
 
 @use '../../../../../shared/styles/fees-shared' as *;
 
 // ── Refresh button ─────────────────────────────────────────────────────────────
 .refresh-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
 
@@ -16,7 +21,7 @@
   }
 }
 
-// ── Filters card extras ────────────────────────────────────────────────────────
+// ── Filters loading indicator ──────────────────────────────────────────────────
 .filters-loading {
   display: flex;
   align-items: center;
@@ -25,6 +30,7 @@
   font-size: 0.875rem;
 }
 
+// ── Filter field sizing ────────────────────────────────────────────────────────
 .filter-field {
   flex: 1;
   min-width: 200px;
@@ -35,6 +41,7 @@
   }
 }
 
+// ── Overdue toggle ─────────────────────────────────────────────────────────────
 .filter-toggle {
   display: flex;
   align-items: center;
@@ -42,7 +49,7 @@
   white-space: nowrap;
 }
 
-// mat-select option extras
+// ── Mat-select option helpers ──────────────────────────────────────────────────
 .option-count {
   font-size: 0.75rem;
   color: var(--color-text-muted);
@@ -55,7 +62,7 @@
   margin-left: 4px;
 }
 
-// ── Prompt state (empty — no class-section selected) ──────────────────────────
+// ── Prompt state (no class-section selected) ───────────────────────────────────
 .state-prompt {
   border: 1.5px dashed var(--color-border);
   border-radius: var(--radius-lg);
@@ -128,9 +135,14 @@
     font-style: italic;
     margin-left: 4px;
   }
+
+  @media (max-width: 900px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
-// ── Stat card extras ───────────────────────────────────────────────────────────
+// ── Collection-rate stat card extra ───────────────────────────────────────────
 .stat-card.info .stat-value {
   color: var(--color-info);
 }
@@ -215,7 +227,7 @@
   }
 }
 
-// ── Roll number pill ───────────────────────────────────────────────────────────
+// ── Roll-number pill ───────────────────────────────────────────────────────────
 .roll-pill {
   display: inline-block;
   padding: 3px 10px;
@@ -246,12 +258,12 @@
   color: var(--color-text-muted);
 }
 
-// ── Clickable row ──────────────────────────────────────────────────────────────
+// ── Clickable rows ─────────────────────────────────────────────────────────────
 .clickable-row {
   cursor: pointer;
 }
 
-// ── Action buttons ─────────────────────────────────────────────────────────────
+// ── Action icon buttons ────────────────────────────────────────────────────────
 .action-btn {
   color: var(--color-text-muted);
   transition: color 0.15s ease;
@@ -261,7 +273,7 @@
   }
 }
 
-// ── Table footer ───────────────────────────────────────────────────────────────
+// ── Table footer totals ────────────────────────────────────────────────────────
 .table-footer {
   display: flex;
   align-items: center;
@@ -276,6 +288,11 @@
     flex: 1;
   }
 
+  .footer-label {
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
   .footer-total {
     font-size: 0.82rem;
     color: var(--color-text-secondary);
@@ -283,39 +300,24 @@
     strong {
       font-weight: 600;
     }
-
-    .footer-due {
-      color: var(--color-error);
-    }
-
-    .footer-paid {
-      color: var(--color-success);
-    }
   }
 
-  .footer-label {
-    font-weight: 600;
-    color: var(--color-text-primary);
+  .footer-due {
+    color: var(--color-error);
+  }
+  .footer-paid {
+    color: var(--color-success);
   }
 }
 
 // ── Sticky header fix ──────────────────────────────────────────────────────────
-.report-table {
-  .mat-mdc-header-row {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-  }
+.report-table .mat-mdc-header-row {
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 // ── Responsive ─────────────────────────────────────────────────────────────────
-@media (max-width: 900px) {
-  .report-context {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
-
 @media (max-width: 768px) {
   .controls-row {
     flex-direction: column;
@@ -332,10 +334,8 @@
     padding-top: 0;
   }
 
-  .table-header-row {
-    .table-hint {
-      display: none;
-    }
+  .table-header-row .table-hint {
+    display: none;
   }
 
   .table-footer {
@@ -350,7 +350,7 @@
 }
 
 @media (max-width: 600px) {
-  // Collapse class-section column on small screens — it's in the context strip
+  // Collapse class-section column — it's visible in the context strip
   .mat-column-classSection {
     display: none;
   }

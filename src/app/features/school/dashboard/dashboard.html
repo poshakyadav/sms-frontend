@@ -1,5 +1,4 @@
-<!-- dashboard.html
--->
+<!-- dashboard.html -->
 <div class="dash-page">
   <!-- ── Loading ──────────────────────────────────────────────────────── -->
   @if (loading()) {
@@ -89,12 +88,119 @@
   <div class="dash-grid">
     <!-- Left: content column -->
     <div class="dash-main">
-      <!-- ══════════════════════════════════════════════════════════════ -->
-      <!-- PARENT PERSONA — fully redesigned                             -->
-      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <!-- OWNER / MANAGEMENT — Attendance Coverage Card                  -->
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      @if (data()!.persona === 'OWNER' || data()!.persona === 'MANAGEMENT') { @let coverage =
+      data()!.lists['attendanceCoverage']; @let markedCount = data()!.stats['sectionsMarkedToday']
+      ?? 0; @let totalCount = data()!.stats['totalActiveSections'] ?? 0; @let allDone = markedCount
+      === totalCount && totalCount > 0; @let nonePending = totalCount === 0;
+
+      <div class="dash-card attendance-coverage-card">
+        <!-- Card header with summary badge -->
+        <div class="dash-card-header">
+          <mat-icon>fact_check</mat-icon>
+          <h3>Today's Attendance Coverage</h3>
+
+          @if (!nonePending) {
+          <!-- Pill: "8 / 12" -->
+          <span
+            class="coverage-summary-pill"
+            [class.pill-done]="allDone"
+            [class.pill-partial]="!allDone"
+          >
+            {{ markedCount }} / {{ totalCount }}
+          </span>
+          }
+
+          <!-- Navigate to attendance marking -->
+          <a class="card-link" routerLink="/school/attendance/mark"> Mark Attendance </a>
+        </div>
+
+        <!-- All done banner -->
+        @if (allDone) {
+        <div class="coverage-all-done">
+          <mat-icon>check_circle</mat-icon>
+          <span>All sections have attendance marked for today!</span>
+        </div>
+        }
+
+        <!-- No sections at all -->
+        @else if (nonePending) {
+        <div class="coverage-empty">
+          <mat-icon>inbox</mat-icon>
+          <span>No active class-sections found.</span>
+        </div>
+        }
+
+        <!-- Coverage list -->
+        @else if (coverage && coverage.length > 0) {
+        <div class="coverage-list">
+          @for (item of coverage; track item.classSectionId) {
+          <div
+            class="coverage-row"
+            [class.coverage-row--marked]="item.isMarked"
+            [class.coverage-row--pending]="!item.isMarked"
+          >
+            <!-- Status icon -->
+            <div
+              class="coverage-icon-wrap"
+              [style.background]="
+                'color-mix(in srgb,' + getCoverageAccent(item) + ' 12%, transparent)'
+              "
+            >
+              <mat-icon [style.color]="getCoverageAccent(item)">
+                {{ item.isMarked ? 'check_circle' : 'pending' }}
+              </mat-icon>
+            </div>
+
+            <!-- Class + section name + sub-label -->
+            <div class="coverage-info">
+              <span class="coverage-name">
+                {{ item.className }} &ndash; {{ item.sectionName }}
+              </span>
+              <span class="coverage-sublabel" [class.sublabel--pending]="!item.isMarked">
+                {{ getCoverageLabel(item) }}
+              </span>
+
+              <!-- Inline mini progress bar (only when partially/fully marked) -->
+              @if (item.isMarked && item.totalEnrolled > 0) {
+              <div class="coverage-progress-track">
+                <div
+                  class="coverage-progress-fill"
+                  [style.width.%]="getCoverageProgress(item)"
+                  [style.background]="getCoverageAccent(item)"
+                ></div>
+              </div>
+              }
+            </div>
+
+            <!-- Right: completion percentage or "Pending" badge -->
+            <div class="coverage-right">
+              @if (item.isMarked && item.totalEnrolled > 0) {
+              <span class="coverage-pct" [style.color]="getCoverageAccent(item)">
+                {{ getCoverageProgress(item) }}%
+              </span>
+              } @else if (!item.isMarked) {
+              <span class="coverage-pending-badge">Pending</span>
+              }
+            </div>
+          </div>
+          }
+        </div>
+        }
+      </div>
+      }
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <!-- END OWNER / MANAGEMENT — Attendance Coverage Card              -->
+      <!-- ════════════════════════════════════════════════════════════════ -->
+
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <!-- PARENT PERSONA — fully redesigned                               -->
+      <!-- ════════════════════════════════════════════════════════════════ -->
       @if (data()!.persona === 'PARENT') { @let ps = data()!.stats;
 
-      <!-- ── No child selected state ──────────────────────────────── -->
+      <!-- ── No child selected state ──────────────────────────────────── -->
       @if (!ps['childName']) {
       <div class="dash-card empty-card parent-no-child-card">
         <mat-icon class="empty-icon">child_care</mat-icon>
@@ -103,14 +209,13 @@
       </div>
       } @else {
 
-      <!-- ── Child Identity Card ───────────────────────────────────── -->
+      <!-- ── Child Identity Card ───────────────────────────────────────── -->
       <div class="dash-card child-identity-card">
         <div class="dash-card-header">
           <mat-icon>child_care</mat-icon>
           <h3>Child Profile</h3>
         </div>
         <div class="child-identity-body">
-          <!-- Avatar -->
           <div class="child-avatar-wrap">
             @if (ps['childAvatarUrl']) {
             <img [src]="ps['childAvatarUrl']" [alt]="ps['childName']" class="child-avatar-img" />
@@ -120,7 +225,6 @@
             </div>
             }
           </div>
-          <!-- Details -->
           <div class="child-details">
             <h2 class="child-name">{{ ps['childName'] }}</h2>
             <div class="child-meta-grid">
@@ -158,7 +262,7 @@
         </div>
       </div>
 
-      <!-- ── Attendance Card ───────────────────────────────────────── -->
+      <!-- ── Attendance Card ───────────────────────────────────────────── -->
       @if (ps['totalDaysTracked'] !== undefined) {
       <div class="dash-card parent-attendance-card">
         <div class="dash-card-header">
@@ -167,7 +271,6 @@
           <a class="card-link" routerLink="/school/attendance/student/child">View details</a>
         </div>
         <div class="attendance-summary">
-          <!-- Percentage ring -->
           <div class="attendance-ring-wrap">
             <svg class="attendance-ring" viewBox="0 0 80 80">
               <circle
@@ -201,7 +304,6 @@
               </span>
             </div>
           </div>
-          <!-- Breakdown -->
           <div class="attendance-breakdown">
             <div class="att-stat att-present">
               <span class="att-count">{{ ps['presentDays'] ?? 0 }}</span>
@@ -222,7 +324,7 @@
       </div>
       }
 
-      <!-- ── Fee Summary Card ──────────────────────────────────────── -->
+      <!-- ── Fee Summary Card ──────────────────────────────────────────── -->
       @if (ps['totalFeeDue'] !== undefined) {
       <div class="dash-card parent-fee-card">
         <div class="dash-card-header">
@@ -252,7 +354,6 @@
             </span>
           </div>
         </div>
-        <!-- Progress bar -->
         @if (ps['totalFeeDue']! > 0) {
         <div class="fee-progress-wrap">
           <div class="fee-progress-bar">
@@ -269,7 +370,7 @@
       </div>
       }
 
-      <!-- ── Pending Assignments Banner ─────────────────────────────── -->
+      <!-- ── Pending Assignments Banner ─────────────────────────────────── -->
       @if ((ps['pendingAssignments'] ?? 0) > 0) {
       <div class="dash-card pending-assignments-banner">
         <div class="banner-icon-wrap">
@@ -289,7 +390,7 @@
       </div>
       }
 
-      <!-- ── Recent Grades ──────────────────────────────────────────── -->
+      <!-- ── Recent Grades ──────────────────────────────────────────────── -->
       @if (data()!.lists['recentGrades']?.length) {
       <div class="dash-card">
         <div class="dash-card-header">
@@ -302,15 +403,11 @@
           <div class="grade-row">
             <div class="grade-info">
               <span class="grade-exam">{{ grade.examName }}</span>
-              @if (grade.remarks) {
-              <span class="grade-remarks">{{ grade.remarks }}</span>
-              }
+              @if (grade.remarks) { <span class="grade-remarks">{{ grade.remarks }}</span> }
             </div>
             <div class="grade-right">
               <span class="grade-marks">{{ grade.marksObtained }}</span>
-              @if (grade.grade) {
-              <span class="grade-letter">{{ grade.grade }}</span>
-              }
+              @if (grade.grade) { <span class="grade-letter">{{ grade.grade }}</span> }
             </div>
           </div>
           }
@@ -318,7 +415,7 @@
       </div>
       }
 
-      <!-- ── Recent Notifications ───────────────────────────────────── -->
+      <!-- ── Recent Notifications ───────────────────────────────────────── -->
       @if (data()!.lists['recentNotifications']?.length) {
       <div class="dash-card">
         <div class="dash-card-header">
@@ -347,9 +444,9 @@
       } }
       <!-- end @else (child selected) -->
       }
-      <!-- ══════════════════════════════════════════════════════════════ -->
-      <!-- END PARENT PERSONA                                            -->
-      <!-- ══════════════════════════════════════════════════════════════ -->
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <!-- END PARENT PERSONA                                             -->
+      <!-- ════════════════════════════════════════════════════════════════ -->
 
       <!-- Student: My Info card -->
       @if (data()!.persona === 'STUDENT' && data()!.stats) { @let stats = data()!.stats;
@@ -403,9 +500,7 @@
               <span class="class-name">{{ cls.className }} – {{ cls.sectionName }}</span>
               <span class="class-subject">{{ cls.subjectName }}</span>
             </div>
-            @if (cls.isPrimary) {
-            <span class="primary-tag">Primary</span>
-            }
+            @if (cls.isPrimary) { <span class="primary-tag">Primary</span> }
           </div>
           }
         </div>
@@ -424,15 +519,11 @@
           <div class="grade-row">
             <div class="grade-info">
               <span class="grade-exam">{{ grade.examName }}</span>
-              @if (grade.remarks) {
-              <span class="grade-remarks">{{ grade.remarks }}</span>
-              }
+              @if (grade.remarks) { <span class="grade-remarks">{{ grade.remarks }}</span> }
             </div>
             <div class="grade-right">
               <span class="grade-marks">{{ grade.marksObtained }}</span>
-              @if (grade.grade) {
-              <span class="grade-letter">{{ grade.grade }}</span>
-              }
+              @if (grade.grade) { <span class="grade-letter">{{ grade.grade }}</span> }
             </div>
           </div>
           }

@@ -1,8 +1,4 @@
 // users.service.ts
-// UPDATED: UserRole and UserPermission interfaces now include `category`.
-// getUserDirectPermissions and assignDirectPermissions updated accordingly.
-// getAllPermissionsForUser is a new helper that fetches category-scoped
-// permissions for the user direct-permission assignment form.
 
 import { Injectable } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
@@ -10,8 +6,7 @@ import { catchError, map, Observable, throwError } from 'rxjs';
 import { ApiService } from './api.service';
 import { RoleCategory } from './roles.service';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
+// ── Permission Category Types ──────────────────────────────────────────────────
 export type UserCategory = 'staff' | 'student' | 'parent';
 
 export interface UserRole {
@@ -19,7 +14,6 @@ export interface UserRole {
   name: string;
   description?: string;
   isSystem?: boolean;
-  // UPDATED: category is now returned by the roles API
   category?: RoleCategory;
 }
 
@@ -28,7 +22,6 @@ export interface UserPermission {
   slug: string;
   name: string;
   module: string;
-  // UPDATED: category is now returned by the permissions API
   category?: RoleCategory;
 }
 
@@ -36,6 +29,70 @@ export interface UserProfile {
   type: 'student' | 'teacher' | 'parent' | 'staff' | null;
   data: Record<string, any> | null;
 }
+
+// ── UDISE+ Enum Types ──────────────────────────────────────────────────────────
+
+export type EnrollmentType = 'REGULAR' | 'PRIVATE' | 'OPEN_SCHOOL';
+export type PreviousClassResult = 'PROMOTED' | 'NOT_PROMOTED' | 'NEW_ADMISSION' | 'TRANSFERRED';
+export type SocialCategory = 1 | 2 | 3 | 4 | 5; // 1=General, 2=SC, 3=ST, 4=OBC, 5=OBC-NCL
+export type Religion = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8; // Hindu–No Religion
+export type LocalityType = 'URBAN' | 'RURAL';
+export type DisabilityType = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+export type FacilityReceived =
+  | 'FREE_TEXTBOOKS'
+  | 'FREE_UNIFORM'
+  | 'FREE_TRANSPORT'
+  | 'FREE_BICYCLE'
+  | 'SCHOLARSHIP'
+  | 'MID_DAY_MEAL'
+  | 'FREE_STATIONERY'
+  | 'OTHERS';
+
+// ── Labels for UDISE+ dropdowns ────────────────────────────────────────────────
+
+export const SOCIAL_CATEGORY_LABELS: Record<SocialCategory, string> = {
+  1: 'General',
+  2: 'SC (Scheduled Caste)',
+  3: 'ST (Scheduled Tribe)',
+  4: 'OBC (Other Backward Class)',
+  5: 'OBC-NCL (Non Creamy Layer)',
+};
+
+export const RELIGION_LABELS: Record<Religion, string> = {
+  1: 'Hindu',
+  2: 'Muslim',
+  3: 'Christian',
+  4: 'Sikh',
+  5: 'Buddhist',
+  6: 'Jain',
+  7: 'Others',
+  8: 'No Religion',
+};
+
+export const DISABILITY_TYPE_LABELS: Record<DisabilityType, string> = {
+  1: 'Visual Impairment',
+  2: 'Hearing Impairment',
+  3: 'Speech & Language',
+  4: 'Locomotor Disability',
+  5: 'Mental Retardation',
+  6: 'Learning Disability',
+  7: 'Autism',
+  8: 'Multiple Disabilities',
+  9: 'Others',
+};
+
+export const FACILITY_LABELS: Record<FacilityReceived, string> = {
+  FREE_TEXTBOOKS: 'Free Textbooks',
+  FREE_UNIFORM: 'Free Uniform',
+  FREE_TRANSPORT: 'Free Transport',
+  FREE_BICYCLE: 'Free Bicycle',
+  SCHOLARSHIP: 'Scholarship',
+  MID_DAY_MEAL: 'Mid-Day Meal',
+  FREE_STATIONERY: 'Free Stationery',
+  OTHERS: 'Others',
+};
+
+// ── SchoolUser interface (matches backend SAFE_USER_FIELDS + profile) ──────────
 
 export interface SchoolUser {
   id: number;
@@ -53,22 +110,67 @@ export interface SchoolUser {
   city?: string;
   state?: string;
   postalCode?: string;
+  // NEW: Parental / guardian fields
+  fatherName?: string;
+  motherName?: string;
+  guardianName?: string;
+  guardianRelation?: string;
+  // Lifecycle
   isActive: boolean;
+  termsAcceptedAt?: string | null;
   tokenVersion: number;
   createdAt: string;
   updatedAt?: string;
-  // Joined
   roles: UserRole[];
   profile?: UserProfile | null;
 }
 
-// ── Deletion impact types ─────────────────────────────────────────────────────
- 
+// ── Student Profile Data (includes all UDISE+ fields) ─────────────────────────
+
+export interface StudentProfileData {
+  userId: number;
+  // School-internal
+  admissionNumber?: string | null;
+  rollNumber?: string;
+  admissionDate?: string;
+  previousSchool?: string;
+  medicalInfo?: string;
+  enrollmentType: EnrollmentType;
+  // UDISE / National identity
+  pen?: string | null;
+  apaarId?: string | null;
+  stateStudentId?: string | null;
+  aadhaarMasked?: string | null;
+  aadhaarName?: string | null;
+  previousSchoolUdiseCode?: string | null;
+  // UDISE+ demographic
+  previousClassResult?: PreviousClassResult | null;
+  socialCategory?: SocialCategory | null;
+  religion?: Religion | null;
+  isMinority?: boolean;
+  motherTongueCode?: number | null;
+  // Socio-economic
+  isBpl?: boolean;
+  localityType?: LocalityType | null;
+  // CWSN
+  isCwsn?: boolean;
+  disabilityType?: DisabilityType | null;
+  hasDisabilityCertificate?: boolean;
+  udidNumber?: string | null;
+  // Facilities
+  facilitiesReceived?: FacilityReceived[];
+  // Verification flags
+  isAadhaarVerified?: boolean;
+  udiseVerified?: boolean;
+}
+
+// ── Deletion impact types ──────────────────────────────────────────────────────
+
 export interface DeletionWarning {
   severity: 'info' | 'warning' | 'danger';
   message: string;
 }
- 
+
 export interface DeletionSummary {
   enrollments: number;
   attendanceRecords: number;
@@ -79,7 +181,7 @@ export interface DeletionSummary {
   linkedChildren: number;
   linkedParents: number;
 }
- 
+
 export interface DeletionCheckResult {
   canDelete: boolean;
   blockingReason?: string;
@@ -92,13 +194,17 @@ export interface DeletionCheckResult {
   };
 }
 
-// ── CRUD payloads ─────────────────────────────────────────────────
+// ── CREATE payload ─────────────────────────────────────────────────────────────
+
 export interface CreateUserPayload {
+  // Core
   name: string;
   email: string;
   password: string;
   primaryRoleId: number;
   roleIds: number[];
+
+  // Common (school_users)
   phone?: string;
   alternatePhone?: string;
   dateOfBirth?: string;
@@ -110,26 +216,72 @@ export interface CreateUserPayload {
   city?: string;
   state?: string;
   postalCode?: string;
-  // Student
+
+  // NEW: Parental / guardian fields (school_users)
+  fatherName?: string;
+  motherName?: string;
+  guardianName?: string;
+  guardianRelation?: string;
+
+  // Student — school-internal
+  admissionNumber?: string;
   rollNumber?: string;
   admissionDate?: string;
   previousSchool?: string;
   medicalInfo?: string;
-  // Teacher
+  enrollmentType?: EnrollmentType;
+
+  // Student — UDISE / National identity
+  pen?: string | null;
+  apaarId?: string | null;
+  stateStudentId?: string | null;
+  aadhaarMasked?: string | null;
+  aadhaarName?: string | null;
+  previousSchoolUdiseCode?: string | null;
+
+  // Student — UDISE+ demographic
+  previousClassResult?: PreviousClassResult | null;
+  socialCategory?: SocialCategory | null;
+  religion?: Religion | null;
+  isMinority?: boolean;
+  motherTongueCode?: number | null;
+
+  // Student — Socio-economic
+  isBpl?: boolean;
+  localityType?: LocalityType | null;
+
+  // Student — CWSN
+  isCwsn?: boolean;
+  disabilityType?: DisabilityType | null;
+  hasDisabilityCertificate?: boolean;
+  udidNumber?: string | null;
+
+  // Student — Facilities / schemes
+  facilitiesReceived?: FacilityReceived[];
+
+  // Student — Verification flags
+  isAadhaarVerified?: boolean;
+  udiseVerified?: boolean;
+
+  // Teacher profile
   qualification?: string;
   experienceYears?: number;
   specialization?: string;
-  // Parent
+  joiningDate?: string;
+
+  // Parent profile
   occupation?: string;
-  // Staff
+
+  // Staff profile
   department?: string;
   salary?: number;
   shift?: string;
-  joiningDate?: string;
 }
 
+// ── UPDATE payload (subset of create, no password/roleIds/primaryRoleId) ────────
+
 export interface UpdateUserPayload
-  extends Partial<Omit<CreateUserPayload, 'password' | 'roleIds'>> {
+  extends Partial<Omit<CreateUserPayload, 'password' | 'roleIds' | 'primaryRoleId'>> {
   newPassword?: string;
   isActive?: boolean;
 }
@@ -138,11 +290,17 @@ export interface AssignRolesPayload {
   roleIds: number[];
 }
 
+/**
+ * Carries both grant IDs and denial IDs.
+ * permissionIds        → extra permissions to GRANT beyond roles
+ * deniedPermissionIds  → permissions to explicitly REVOKE from role inheritance
+ */
 export interface AssignPermissionsPayload {
   permissionIds: number[];
+  deniedPermissionIds: number[];
 }
 
-// ── Service ───────────────────────────────────────────────────────────────────
+// ── Service ────────────────────────────────────────────────────────────────────
 
 @Injectable({ providedIn: 'root' })
 export class UsersService {
@@ -150,7 +308,7 @@ export class UsersService {
 
   constructor(private api: ApiService) {}
 
-  // ── Users CRUD ────────────────────────────────────────────────────────────
+  // ── Users CRUD ──────────────────────────────────────────────────────────────
 
   getUsers(): Observable<SchoolUser[]> {
     return this.api.get<{ success: boolean; users: SchoolUser[] }>(this.base).pipe(
@@ -159,12 +317,7 @@ export class UsersService {
     );
   }
 
-   /**
-   * Fetch users filtered by category (staff | student | parent).
-   * Calls GET /school/users/by-category?category=<category>
-   * Called only on demand (when user clicks a tab or presses load).
-   */
-   getUsersByCategory(category: UserCategory): Observable<SchoolUser[]> {
+  getUsersByCategory(category: UserCategory): Observable<SchoolUser[]> {
     const params = new HttpParams().set('category', category);
     return this.api
       .get<{ success: boolean; users: SchoolUser[]; category: string }>(
@@ -176,17 +329,10 @@ export class UsersService {
         catchError((err) => throwError(() => err))
       );
   }
- 
-  /**
-   * Check what impact deleting a user would have — BEFORE actually deleting.
-   * Calls GET /school/users/:id/deletion-check
-   * Use the returned DeletionCheckResult to populate the confirmation dialog.
-   */
+
   checkDeletionImpact(userId: number): Observable<DeletionCheckResult> {
     return this.api
-      .get<{ success: boolean } & DeletionCheckResult>(
-        `${this.base}/${userId}/deletion-check`
-      )
+      .get<{ success: boolean } & DeletionCheckResult>(`${this.base}/${userId}/deletion-check`)
       .pipe(
         map((res) => ({
           canDelete: res.canDelete,
@@ -233,7 +379,7 @@ export class UsersService {
     return this.updateUser(id, { isActive });
   }
 
-  // ── Roles ─────────────────────────────────────────────────────────────────
+  // ── Roles ────────────────────────────────────────────────────────────────────
 
   getUserRoles(userId: number): Observable<UserRole[]> {
     return this.api
@@ -244,12 +390,6 @@ export class UsersService {
       );
   }
 
-  /**
-   * Assign/replace roles for a user.
-   * Calls PUT /school/users/:id/roles
-   * Replaces ALL existing roles with the new set.
-   * The backend increments tokenVersion to invalidate existing sessions.
-   */
   assignRoles(userId: number, roleIds: number[]): Observable<{ message: string }> {
     return this.api
       .put<{ success: boolean; message: string }>(`${this.base}/${userId}/roles`, { roleIds })
@@ -259,12 +399,9 @@ export class UsersService {
       );
   }
 
-  // ── Permissions ───────────────────────────────────────────────────────────
+  // ── Permissions ──────────────────────────────────────────────────────────────
 
-  /**
-   * Returns the user's current direct permission overrides.
-   * Each permission now includes its `category` field.
-   */
+  /** Returns the user's current direct permission GRANTS. */
   getUserDirectPermissions(userId: number): Observable<UserPermission[]> {
     return this.api
       .get<{ success: boolean; permissions: UserPermission[] }>(
@@ -276,22 +413,32 @@ export class UsersService {
       );
   }
 
+  /** Returns the user's current permission DENIALS (revocations). */
+  getUserDeniedPermissions(userId: number): Observable<UserPermission[]> {
+    return this.api
+      .get<{ success: boolean; permissions: UserPermission[] }>(
+        `${this.base}/${userId}/denied-permissions`
+      )
+      .pipe(
+        map((res) => res.permissions ?? []),
+        catchError((err) => throwError(() => err))
+      );
+  }
+
   /**
-   * UPDATED: Assigns direct permission overrides to a user.
-   *
-   * The backend validates that all permissionIds belong to the same category
-   * as the user's primaryRole and returns a 422 CATEGORY_MISMATCH error if not.
-   *
-   * Call RolesService.getAllPermissions(category) to pre-filter the picker so
-   * the user never sees out-of-universe permissions in the first place.
+   * Saves both extra grants and explicit denials atomically.
+   * permissionIds        → IDs to GRANT (beyond what roles give)
+   * deniedPermissionIds  → IDs to DENY (override and remove from role inheritance)
    */
   assignDirectPermissions(
     userId: number,
-    permissionIds: number[]
+    permissionIds: number[],
+    deniedPermissionIds: number[]
   ): Observable<{ message: string }> {
     return this.api
       .put<{ success: boolean; message: string }>(`${this.base}/${userId}/permissions`, {
         permissionIds,
+        deniedPermissionIds,
       })
       .pipe(
         map((res) => ({ message: res.message })),

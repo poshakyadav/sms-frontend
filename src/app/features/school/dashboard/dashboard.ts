@@ -1,9 +1,4 @@
 // dashboard.ts
-// CHANGES vs original:
-//  - Added getInitials(), getAttendanceRingColor(), getAttendanceDash(),
-//    getFeeProgress() helper methods used by the parent dashboard template
-//  - statCards computed: PARENT persona excluded (parent has its own card layout)
-//  - quickLinks: uses link.key for track instead of link.label (more stable)
 
 import {
   afterNextRender,
@@ -24,6 +19,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { AuthService } from '../../../core/services/auth.service';
 import {
+  AttendanceCoverageItem,
   DashboardService,
   DashboardData,
   DashboardPersona,
@@ -40,6 +36,11 @@ interface StatCard {
   icon: string;
   accentVar: string;
 }
+
+// ── Fee stat keys excluded from the OWNER stat strip ─────────────────────────
+// The owner has a dedicated /school/fees/dashboard for this data.
+// Keeping them here caused confusion (duplicate reporting surface).
+const OWNER_EXCLUDED_STAT_KEYS = new Set(['feesCollected', 'feesPending', 'feeCollectionRate']);
 
 @Component({
   selector: 'app-dashboard',
@@ -115,7 +116,11 @@ export class Dashboard implements OnInit {
     }
   });
 
-  // PARENT persona has its own custom card layout — exclude from generic stat strip
+  // ── Stat cards ──────────────────────────────────────────────────────────────
+  // Rules:
+  //   1. PARENT persona always excluded — it has its own custom card layout.
+  //   2. OWNER persona: feesCollected / feesPending / feeCollectionRate excluded.
+  //   3. sectionsMarkedToday is rendered as "X / Y" composite (not raw number).
   statCards = computed((): StatCard[] => {
     const stats = this.data()?.stats;
     const persona = this.data()?.persona;
@@ -123,20 +128,35 @@ export class Dashboard implements OnInit {
 
     const config: Record<
       string,
-      { label: string; icon: string; accentVar: string; format?: 'currency' | 'percent' }
+      {
+        label: string;
+        icon: string;
+        accentVar: string;
+        format?: 'currency' | 'percent' | 'attendance-coverage';
+      }
     > = {
-      totalStudents: { label: 'Total Students', icon: 'school', accentVar: '--color-primary' },
+      totalStudents: {
+        label: 'Total Students',
+        icon: 'school',
+        accentVar: '--color-primary',
+      },
       totalTeachers: {
         label: 'Total Teachers',
         icon: 'cast_for_education',
         accentVar: '--color-secondary',
       },
-      totalStaff: { label: 'Total Staff', icon: 'badge', accentVar: '--color-info' },
+      totalStaff: {
+        label: 'Total Staff',
+        icon: 'badge',
+        accentVar: '--color-info',
+      },
       currentEnrollments: {
         label: 'Enrollments',
         icon: 'how_to_reg',
         accentVar: '--color-success',
       },
+      // Fee stats intentionally kept in config so MANAGEMENT sees them,
+      // but OWNER_EXCLUDED_STAT_KEYS filters them out for OWNER below.
       feesCollected: {
         label: 'Fees Collected',
         icon: 'payments',
@@ -155,7 +175,20 @@ export class Dashboard implements OnInit {
         accentVar: '--color-success',
         format: 'percent',
       },
-      activeClassSections: { label: 'Active Classes', icon: 'class', accentVar: '--color-info' },
+      activeClassSections: {
+        label: 'Active Classes',
+        icon: 'class',
+        accentVar: '--color-info',
+      },
+      // ── Attendance coverage summary chip (OWNER / MANAGEMENT) ──────────────
+      // Raw value = sectionsMarkedToday; totalActiveSections comes from stats.
+      // We format it as "X / Y Sections" in the display value below.
+      sectionsMarkedToday: {
+        label: "Today's Attendance",
+        icon: 'fact_check',
+        accentVar: '--color-success',
+        format: 'attendance-coverage',
+      },
       attendancesMarkedToday: {
         label: 'Marked Today',
         icon: 'task_alt',
@@ -185,12 +218,29 @@ export class Dashboard implements OnInit {
     };
 
     return Object.entries(stats)
-      .filter(([key, val]) => val !== undefined && val !== null && config[key])
+      .filter(([key, val]) => {
+        if (val === undefined || val === null || !config[key]) return false;
+        // Strip fee cards for OWNER — dedicated fee dashboard exists
+        if (persona === 'OWNER' && OWNER_EXCLUDED_STAT_KEYS.has(key)) return false;
+        // totalActiveSections is only used as denominator inside the composite
+        // attendance-coverage chip — don't render it as its own card
+        if (key === 'totalActiveSections') return false;
+        return true;
+      })
       .map(([key, val]) => {
         const c = config[key];
         let display: string | number = val as string | number;
-        if (c.format === 'currency') display = '₹' + Number(val).toLocaleString('en-IN');
-        if (c.format === 'percent') display = `${val}%`;
+
+        if (c.format === 'currency') {
+          display = '₹' + Number(val).toLocaleString('en-IN');
+        } else if (c.format === 'percent') {
+          display = `${val}%`;
+        } else if (c.format === 'attendance-coverage') {
+          // "8 / 12 Sections" — reads totalActiveSections from the same stats object
+          const total = stats['totalActiveSections'] ?? 0;
+          display = `${val} / ${total}`;
+        }
+
         return { key, label: c.label, value: display, icon: c.icon, accentVar: c.accentVar };
       });
   });
@@ -202,6 +252,42 @@ export class Dashboard implements OnInit {
       (link) => link.personas.includes(persona) && this.auth.hasPermission(link.permission)
     );
   });
+
+  // ── Attendance coverage helpers ─────────────────────────────────────────────
+
+  /**
+   * Sublabel shown under the class-section name in the coverage list.
+   * Examples:
+   *   "38 / 40 students marked"
+   *   "Not marked yet"
+   *   "No students enrolled"
+   */
+  getCoverageLabel(item: AttendanceCoverageItem): string {
+    if (item.totalEnrolled === 0) return 'No students enrolled';
+    if (!item.isMarked) return 'Not marked yet';
+    return `${item.markedCount} / ${item.totalEnrolled} students marked`;
+  }
+
+  /**
+   * Progress bar fill width (0–100%) for a coverage row.
+   * 0 when not marked, partial when some students are recorded.
+   */
+  getCoverageProgress(item: AttendanceCoverageItem): number {
+    if (!item.isMarked || item.totalEnrolled === 0) return 0;
+    return Math.round((item.markedCount / item.totalEnrolled) * 100);
+  }
+
+  /**
+   * Accent color for the coverage row icon and progress bar.
+   * Green = fully marked (100%), Amber = partial, Red = not started.
+   */
+  getCoverageAccent(item: AttendanceCoverageItem): string {
+    if (!item.isMarked) return 'var(--color-error)';
+    const pct = this.getCoverageProgress(item);
+    if (pct >= 100) return 'var(--color-success)';
+    if (pct >= 50) return 'var(--color-warning)';
+    return 'var(--color-warning)';
+  }
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
@@ -237,9 +323,8 @@ export class Dashboard implements OnInit {
     });
   }
 
-  // ── Parent dashboard helpers ────────────────────────────────────────────
+  // ── Parent dashboard helpers ────────────────────────────────────────────────
 
-  /** Returns initials (up to 2 chars) from a full name */
   getInitials(name: string | undefined): string {
     if (!name) return '?';
     const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -247,7 +332,6 @@ export class Dashboard implements OnInit {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
-  /** Returns a CSS color variable for the SVG attendance ring */
   getAttendanceRingColor(pct: number | undefined): string {
     if (pct === undefined) return 'var(--color-divider)';
     if (pct >= 85) return 'var(--color-success)';
@@ -255,17 +339,12 @@ export class Dashboard implements OnInit {
     return 'var(--color-error)';
   }
 
-  /**
-   * Converts an attendance percentage to an SVG stroke-dasharray value.
-   * Circle circumference = 2π × 32 ≈ 201.
-   */
   getAttendanceDash(pct: number | undefined): string {
     const circ = 201;
     const filled = ((pct ?? 0) / 100) * circ;
     return `${filled} ${circ - filled}`;
   }
 
-  /** Returns the fee payment progress as a rounded percentage */
   getFeeProgress(paid: number | undefined, total: number | undefined): number {
     if (!total || total === 0) return 0;
     return Math.round(((paid ?? 0) / total) * 100);

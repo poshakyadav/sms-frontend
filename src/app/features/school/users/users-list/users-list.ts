@@ -97,8 +97,12 @@ export class UsersList {
   loadingDelete = signal(false);
   error = signal<string | null>(null);
 
+  // Per-tab data cache — populated on first load/refresh, cleared on tab switch
+  // to avoid showing stale cross-tab data.
+  private tabCache = new Map<UserCategory, SchoolUser[]>();
+
   // Track which tabs have been loaded (avoid re-fetching unless refresh clicked)
-  private loadedTabs = new Set<UserCategory>();
+  // private loadedTabs = new Set<UserCategory>();
 
   // ── Deletion dialog state ──────────────────────────────────────────────────
   showDeleteDialog = signal(false);
@@ -115,18 +119,22 @@ export class UsersList {
   // ── Tab switching ──────────────────────────────────────────────────────────
   switchTab(tab: UserCategory): void {
     if (this.activeTab() === tab) return;
-
+  
     this.activeTab.set(tab);
     this.error.set(null);
     this.clearFilter();
-
-    // Show empty state — user must click Load or switch to see data
-    if (!this.loadedTabs.has(tab)) {
-      this.dataSource.data = [];
-    } else {
-      // Re-apply the cached data for this tab if we had it
-      // (We store nothing here; just clear and let user load again or keep it)
-    }
+  
+    // Immediately restore this tab's cached data (empty array if not yet loaded).
+    // This is the critical fix: we ALWAYS update dataSource on tab switch so
+    // the previous tab's rows never bleed into the new tab's view.
+    const cached = this.tabCache.get(tab) ?? [];
+    this.dataSource.data = cached;
+  
+    // Re-attach paginator/sort after data change
+    setTimeout(() => {
+      this.dataSource.paginator = this.paginator;
+      this.dataSource.sort = this.sort;
+    });
   }
 
   // ── Load users for active tab ──────────────────────────────────────────────
@@ -134,15 +142,22 @@ export class UsersList {
     const tab = this.activeTab();
     this.loading.set(true);
     this.error.set(null);
-
+  
     this.usersService.getUsersByCategory(tab).subscribe({
       next: (users) => {
-        this.dataSource.data = users;
-        this.loadedTabs.add(tab);
-        setTimeout(() => {
-          this.dataSource.paginator = this.paginator;
-          this.dataSource.sort = this.sort;
-        });
+        // Store in per-tab cache
+        this.tabCache.set(tab, users);
+  
+        // Only apply to dataSource if this tab is still active
+        // (guards against a slow response arriving after the user switched away)
+        if (this.activeTab() === tab) {
+          this.dataSource.data = users;
+          setTimeout(() => {
+            this.dataSource.paginator = this.paginator;
+            this.dataSource.sort = this.sort;
+          });
+        }
+  
         this.loading.set(false);
       },
       error: (err) => {
@@ -154,7 +169,7 @@ export class UsersList {
   }
 
   isTabLoaded(): boolean {
-    return this.loadedTabs.has(this.activeTab());
+    return this.tabCache.has(this.activeTab());
   }
 
   // ── Search ─────────────────────────────────────────────────────────────────
@@ -297,7 +312,10 @@ export class UsersList {
   }
 
   getExtraRolesTooltip(user: SchoolUser): string {
-    return user.roles.slice(2).map(r => r.name.replace(/_/g, ' ')).join(', ');
+    return user.roles
+      .slice(2)
+      .map((r) => r.name.replace(/_/g, ' '))
+      .join(', ');
   }
 
   hasSummaryData(result: DeletionCheckResult): boolean {

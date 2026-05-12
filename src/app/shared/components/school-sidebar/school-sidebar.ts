@@ -15,6 +15,39 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
+import { APP_CONSTANTS } from '../../../app-constants';
+
+/**
+ * Slugs that belong ONLY to students. Never shown to staff even if they
+ * have the '*' wildcard — the wildcard only covers 'staff' category slugs.
+ */
+const STUDENT_ONLY_SLUGS = new Set([
+  'dashboard.student.view',
+  'students.view.own',
+  'attendance.student.view',
+  'fees.student.view',
+  'assignments.student.view',
+  'assignments.student.submit',
+  'exams.student.view',
+  'exams.student.admit-card',
+  'exams.student.report-card',
+  'notifications.student.view',
+]);
+
+/**
+ * Slugs that belong ONLY to parents. Never shown to staff even if they
+ * have the '*' wildcard.
+ */
+const PARENT_ONLY_SLUGS = new Set([
+  'dashboard.parent.view',
+  'attendance.parent.view',
+  'fees.parent.view',
+  'assignments.parent.view',
+  'exams.parent.view',
+  'exams.parent.admit-card',
+  'exams.parent.report-card',
+  'notifications.parent.view',
+]);
 
 // ─── Nav definitions ──────────────────────────────────────────────────────────
 
@@ -470,6 +503,8 @@ export class SchoolSidebar implements OnInit, OnDestroy {
 
   private routerSub!: Subscription;
 
+  readonly appConstants = APP_CONSTANTS;
+
   // ── PBAC-filtered navigation ─────────────────────────────────────────────
   filteredGroups = computed<NavGroup[]>(() => {
     return NAV_GROUPS.map((group) => ({
@@ -556,9 +591,44 @@ export class SchoolSidebar implements OnInit, OnDestroy {
     return url === child.route || url.startsWith(child.route + '/');
   }
 
-  private hasAnyPermission(permissions: string[]): boolean {
-    return permissions.some((p) => this.auth.hasPermission(p));
+  // private hasAnyPermission(permissions: string[]): boolean {
+  //   return permissions.some((p) => this.auth.hasPermission(p));
+  // }
+
+  /**
+ * SIDEBAR-SPECIFIC permission check.
+ *
+ * Differs from auth.hasPermission() in one critical way:
+ * the '*' wildcard (School Owner) does NOT match student/parent category slugs.
+ *
+ * This prevents the "My Academics" and "My Child" sidebar groups from
+ * appearing for the School Owner, even though auth.hasPermission('*') = true.
+ *
+ * auth.hasPermission() is intentionally NOT used here to avoid changing its
+ * behaviour globally (route guards and component templates rely on the current
+ * wildcard semantics for staff slugs).
+ */
+private hasAnyPermission(permissions: string[]): boolean {
+  return permissions.some((slug) => this.canSeeSidebarItem(slug));
+}
+
+private canSeeSidebarItem(slug: string): boolean {
+  const userPerms = this.auth.permissions();
+  const isWildcard = userPerms.includes('*');
+
+  // Wildcard users (School Owner) never see student/parent-only nav items
+  if (isWildcard) {
+    if (STUDENT_ONLY_SLUGS.has(slug) || PARENT_ONLY_SLUGS.has(slug)) {
+      return false;
+    }
+    // Wildcard covers all staff slugs
+    return true;
   }
+
+  // Non-wildcard: normal exact match
+  return userPerms.includes(slug);
+}
+
 
   /**
    * FIX: autoExpandActive now uses matchesChildRoute (respects matchStrategy)

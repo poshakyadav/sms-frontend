@@ -10,6 +10,8 @@ import { MatRippleModule } from '@angular/material/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AuthService } from '../../../../core/services/auth.service';
 
+import { APP_CONSTANTS } from '../../../../app-constants';
+
 // ─── Section / Card definitions ───────────────────────────────────────────────
 
 interface SettingsCard {
@@ -120,8 +122,8 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
     cards: [
       {
         key: 'app-about',
-        label: 'About EduFlow',
-        description: 'Learn about the EduFlow school management platform.',
+        label: `About ${APP_CONSTANTS.appName}`,
+        description: `Learn about the ${APP_CONSTANTS.appName} school management platform.`,
         icon: 'info',
         route: '/public/about',
         permission: null,
@@ -166,7 +168,7 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
       {
         key: 'contact',
         label: 'Contact Support',
-        description: 'Reach out to the EduFlow team for technical assistance.',
+        description: `Reach out to the ${APP_CONSTANTS.appName} team for technical assistance.`,
         icon: 'support_agent',
         route: '/school/contact-us',
         permission: 'contact.submit',
@@ -188,6 +190,8 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
 export class SchoolSettingsHub {
   private auth = inject(AuthService);
   private platformId = inject(PLATFORM_ID);
+
+  readonly appConstants = APP_CONSTANTS;
 
   /** Role label for the banner greeting */
   roleLabel = computed(() => {

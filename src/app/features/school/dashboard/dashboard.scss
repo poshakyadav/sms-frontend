@@ -1,8 +1,17 @@
 // dashboard.scss
-// All dark mode is handled automatically via CSS variables set in styles.scss.
-// [data-theme="dark"] on <html> remaps every --color-* token, so NO
-// component-level :host-context or [data-theme] selectors are needed here.
-// This keeps the file lean and ensures perfect consistency with the global theme.
+// ─────────────────────────────────────────────────────────────────────────────
+// DASHBOARD COMPONENT — component-specific layout & skin only.
+//
+// Shared styles consumed from global partials:
+//   • Skeleton shimmer      → styles/_skeletons.scss  (%skeleton-base)
+//   • Notification feed     → styles/_feed.scss        (.notif-*, .grade-*, .class-*)
+//   • Empty states          → styles/_cards.scss
+//   • Status / role chips   → styles/_cards.scss
+//   • Stat cards (KPI grid) → styles/_stats.scss       (.stat-card, .stat-card__*)
+//
+// Dark mode is handled automatically via CSS variables in styles/_dark-theme.scss.
+// NO :host-context or [data-theme] selectors needed here.
+// ─────────────────────────────────────────────────────────────────────────────
 
 // ── Page shell ────────────────────────────────────────────────────────────────
 .dash-page {
@@ -10,39 +19,21 @@
   max-width: 1280px;
   margin: 0 auto;
   min-height: 100%;
-  color: var(--color-text-primary); // ensures text inherits correctly
+  color: var(--color-text-primary);
 
   @media (max-width: 768px) {
     padding: 20px 16px;
   }
-
   @media (max-width: 480px) {
     padding: 16px 12px;
   }
 }
 
-// ── Loading skeleton ──────────────────────────────────────────────────────────
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-%skeleton-base {
-  background: linear-gradient(
-    90deg,
-    var(--color-hover) 25%,
-    var(--color-divider) 50%,
-    var(--color-hover) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.4s infinite;
-  border-radius: var(--radius-md);
-}
-
+// ── Loading skeleton layout ───────────────────────────────────────────────────
+// Skeleton shimmer — inlined because Angular compiles component SCSS in isolation;
+// @extend %placeholders and cross-file @use mixins are unreliable across the
+// component boundary. The keyframe is defined once in styles/_skeletons.scss
+// (global) so the animation name resolves at runtime.
 .dash-loading {
   display: flex;
   flex-direction: column;
@@ -50,7 +41,15 @@
 }
 
 .skeleton-header {
-  @extend %skeleton-base;
+  background: linear-gradient(
+    90deg,
+    var(--color-hover) 25%,
+    var(--color-divider) 50%,
+    var(--color-hover) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s infinite;
+  border-radius: var(--radius-md);
   height: 80px;
 }
 
@@ -61,7 +60,15 @@
 }
 
 .skeleton-stat {
-  @extend %skeleton-base;
+  background: linear-gradient(
+    90deg,
+    var(--color-hover) 25%,
+    var(--color-divider) 50%,
+    var(--color-hover) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s infinite;
+  border-radius: var(--radius-md);
   height: 100px;
 }
 
@@ -76,11 +83,27 @@
 }
 
 .skeleton-main {
-  @extend %skeleton-base;
+  background: linear-gradient(
+    90deg,
+    var(--color-hover) 25%,
+    var(--color-divider) 50%,
+    var(--color-hover) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s infinite;
+  border-radius: var(--radius-md);
   height: 340px;
 }
 .skeleton-side {
-  @extend %skeleton-base;
+  background: linear-gradient(
+    90deg,
+    var(--color-hover) 25%,
+    var(--color-divider) 50%,
+    var(--color-hover) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s infinite;
+  border-radius: var(--radius-md);
   height: 340px;
 }
 
@@ -172,6 +195,8 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   transition: background 0.2s ease, color 0.2s ease;
+
+  // default (fallback)
   background: color-mix(in srgb, var(--color-primary) 15%, transparent);
   color: var(--color-primary);
   border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
@@ -242,7 +267,9 @@
   }
 }
 
-// ── Stats strip ───────────────────────────────────────────────────────────────
+// ── Dashboard stats strip ─────────────────────────────────────────────────────
+// NOTE: .stat-card in _stats.scss is a *filter-card* pattern (clickable KPI).
+// Dashboard uses its own visual variant (.dash-stat-card) to avoid collision.
 .stats-strip {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
@@ -253,7 +280,6 @@
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
-
   @media (max-width: 400px) {
     grid-template-columns: 1fr;
   }
@@ -302,7 +328,6 @@
   @media (max-width: 640px) {
     width: 40px;
     height: 40px;
-
     mat-icon {
       font-size: 18px;
       height: 18px;
@@ -356,7 +381,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  min-width: 0; // prevent flex blowout
+  min-width: 0;
 }
 
 .dash-sidebar {
@@ -375,7 +400,6 @@
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
-  // Ensures text inside cards always reads correctly against card bg
   color: var(--color-text-primary);
 }
 
@@ -385,7 +409,6 @@
   gap: 10px;
   padding: 14px 18px;
   border-bottom: 1px solid var(--color-divider);
-  // Use a subtle tinted surface instead of raw hover color
   background: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg-card));
 
   mat-icon {
@@ -426,7 +449,112 @@
   }
 }
 
-// ── Student info grid (non-parent) ────────────────────────────────────────────
+// ── Empty card ────────────────────────────────────────────────────────────────
+.empty-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 36px 20px;
+  text-align: center;
+
+  .empty-icon {
+    font-size: 48px;
+    height: 48px;
+    width: 48px;
+    color: var(--color-text-muted);
+    opacity: 0.6;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.87rem;
+    color: var(--color-text-secondary);
+  }
+}
+
+.parent-no-child-card {
+  border-top: 3px solid var(--color-warning);
+  padding: 40px 20px;
+
+  .empty-icon {
+    color: var(--color-warning);
+    opacity: 0.8;
+  }
+  .empty-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+}
+
+// ── Quick links sidebar ───────────────────────────────────────────────────────
+.quick-links-card {
+  border-top: 3px solid var(--color-primary);
+}
+
+.quick-links {
+  padding: 6px 0;
+}
+
+.quick-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  text-decoration: none;
+  border-bottom: 1px solid var(--color-divider);
+  transition: background 0.12s;
+  cursor: pointer;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: var(--color-hover);
+    .ql-label,
+    .ql-arrow {
+      color: var(--color-primary);
+    }
+  }
+}
+
+.ql-icon-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+    color: var(--color-primary);
+  }
+}
+
+.ql-label {
+  flex: 1;
+  font-size: 0.87rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  transition: color 0.12s;
+}
+
+.ql-arrow {
+  font-size: 16px;
+  height: 16px;
+  width: 16px;
+  color: var(--color-text-muted);
+  transition: color 0.12s;
+}
+
+// ── Student academic info grid ────────────────────────────────────────────────
 .student-info-card {
   border-left: 3px solid var(--color-primary);
 }
@@ -434,8 +562,6 @@
 .info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 0;
-  padding: 0;
 
   @media (max-width: 480px) {
     grid-template-columns: repeat(2, 1fr);
@@ -478,12 +604,82 @@
   }
 }
 
-// ── Class list (teacher) ──────────────────────────────────────────────────────
-.class-list {
-  padding: 4px 0;
+// ═════════════════════════════════════════════════════════════════════════════
+// ATTENDANCE COVERAGE CARD (OWNER / MANAGEMENT)
+// ═════════════════════════════════════════════════════════════════════════════
+
+.attendance-coverage-card {
+  border-left: 3px solid var(--color-warning);
+
+  .dash-card-header mat-icon {
+    color: var(--color-warning);
+  }
 }
 
-.class-row {
+.coverage-summary-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+
+  &.pill-done {
+    background: color-mix(in srgb, var(--color-success) 15%, transparent);
+    color: var(--color-success);
+    border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);
+  }
+  &.pill-partial {
+    background: color-mix(in srgb, var(--color-warning) 15%, transparent);
+    color: var(--color-warning);
+    border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
+  }
+}
+
+.coverage-all-done {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  background: color-mix(in srgb, var(--color-success) 8%, var(--color-bg-card));
+  color: var(--color-success);
+  font-size: 0.9rem;
+  font-weight: 600;
+
+  mat-icon {
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+    flex-shrink: 0;
+  }
+}
+
+.coverage-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px;
+  color: var(--color-text-muted);
+  font-size: 0.87rem;
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+    flex-shrink: 0;
+  }
+}
+
+.coverage-list {
+  max-height: 440px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-divider) transparent;
+}
+
+.coverage-row {
   display: flex;
   align-items: center;
   gap: 14px;
@@ -497,297 +693,128 @@
   &:hover {
     background: var(--color-hover);
   }
+
+  &.coverage-row--marked:hover {
+    background: color-mix(in srgb, var(--color-success) 4%, var(--color-hover));
+  }
+  &.coverage-row--pending:hover {
+    background: color-mix(in srgb, var(--color-warning) 5%, var(--color-hover));
+  }
+
+  @media (max-width: 480px) {
+    gap: 10px;
+    padding: 10px 14px;
+  }
 }
 
-.class-avatar {
+.coverage-icon-wrap {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
-  color: var(--color-primary);
-  font-size: 0.9rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.class-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-
-  .class-name {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--color-text-primary);
-  }
-
-  .class-subject {
-    font-size: 0.78rem;
-    color: var(--color-text-secondary);
-  }
-}
-
-.primary-tag {
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 2px 8px;
-  background: color-mix(in srgb, var(--color-success) 15%, transparent);
-  color: var(--color-success);
-  border-radius: 9999px;
-  flex-shrink: 0;
-}
-
-// ── Grades list ───────────────────────────────────────────────────────────────
-.grades-list {
-  padding: 4px 0;
-}
-
-.grade-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 18px;
-  border-bottom: 1px solid var(--color-divider);
-  transition: background 0.12s;
-
-  &:last-child {
-    border-bottom: none;
-  }
-  &:hover {
-    background: var(--color-hover);
-  }
-}
-
-.grade-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
-
-  .grade-exam {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--color-text-primary);
-  }
-
-  .grade-remarks {
-    font-size: 0.78rem;
-    color: var(--color-text-muted);
-  }
-}
-
-.grade-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-  flex-shrink: 0;
-
-  .grade-marks {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--color-text-primary);
-  }
-
-  .grade-letter {
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: var(--color-primary);
-    background: color-mix(in srgb, var(--color-primary) 15%, transparent);
-    padding: 1px 6px;
-    border-radius: 4px;
-  }
-}
-
-// ── Notifications list ────────────────────────────────────────────────────────
-.notif-list {
-  padding: 4px 0;
-}
-
-.notif-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--color-divider);
-  transition: background 0.12s;
-
-  &:last-child {
-    border-bottom: none;
-  }
-  &:hover {
-    background: var(--color-hover);
-  }
-}
-
-.notif-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--color-primary);
-  flex-shrink: 0;
-  margin-top: 6px;
-}
-
-.notif-content {
-  flex: 1;
-  min-width: 0;
-
-  .notif-title {
-    margin: 0 0 3px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--color-text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .notif-msg {
-    margin: 0;
-    font-size: 0.8rem;
-    color: var(--color-text-secondary);
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-}
-
-.notif-date {
-  font-size: 0.72rem;
-  color: var(--color-text-muted);
-  white-space: nowrap;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-// ── Empty state ───────────────────────────────────────────────────────────────
-.empty-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 36px 20px;
-  text-align: center;
-
-  .empty-icon {
-    font-size: 48px;
-    height: 48px;
-    width: 48px;
-    color: var(--color-text-muted);
-    opacity: 0.6;
-  }
-
-  p {
-    margin: 0;
-    font-size: 0.87rem;
-    color: var(--color-text-secondary);
-  }
-}
-
-.parent-no-child-card {
-  border-top: 3px solid var(--color-warning);
-  padding: 40px 20px;
-
-  .empty-icon {
-    color: var(--color-warning);
-    opacity: 0.8;
-  }
-
-  .empty-title {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--color-text-primary);
-  }
-}
-
-// ── Quick links ───────────────────────────────────────────────────────────────
-.quick-links-card {
-  border-top: 3px solid var(--color-primary);
-}
-
-.quick-links {
-  padding: 6px 0;
-}
-
-.quick-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  text-decoration: none;
-  border-bottom: 1px solid var(--color-divider);
-  transition: background 0.12s;
-  cursor: pointer;
-
-  &:last-child {
-    border-bottom: none;
-  }
-
-  &:hover {
-    background: var(--color-hover);
-
-    .ql-label {
-      color: var(--color-primary);
-    }
-    .ql-arrow {
-      color: var(--color-primary);
-    }
-  }
-}
-
-.ql-icon-wrap {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 
   mat-icon {
-    font-size: 16px;
-    height: 16px;
-    width: 16px;
-    color: var(--color-primary);
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+
+  @media (max-width: 480px) {
+    width: 30px;
+    height: 30px;
+    mat-icon {
+      font-size: 15px;
+      height: 15px;
+      width: 15px;
+    }
   }
 }
 
-.ql-label {
+.coverage-info {
   flex: 1;
-  font-size: 0.87rem;
-  font-weight: 500;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.coverage-name {
+  font-size: 0.9rem;
+  font-weight: 600;
   color: var(--color-text-primary);
-  transition: color 0.12s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.ql-arrow {
-  font-size: 16px;
-  height: 16px;
-  width: 16px;
-  color: var(--color-text-muted);
-  transition: color 0.12s;
+.coverage-sublabel {
+  font-size: 0.76rem;
+  color: var(--color-text-secondary);
+
+  &.sublabel--pending {
+    color: var(--color-warning);
+    font-weight: 500;
+  }
+}
+
+.coverage-progress-track {
+  margin-top: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--color-divider);
+  overflow: hidden;
+  max-width: 160px;
+
+  @media (max-width: 480px) {
+    max-width: 100px;
+  }
+}
+
+.coverage-progress-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.4s ease;
+  min-width: 4px;
+}
+
+.coverage-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.coverage-pct {
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.coverage-pending-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--color-warning) 15%, transparent);
+  color: var(--color-warning);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
+
+  @media (max-width: 480px) {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+  }
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// PARENT DASHBOARD STYLES
+// PARENT DASHBOARD
 // ═════════════════════════════════════════════════════════════════════════════
 
-// ── Child Identity Card ───────────────────────────────────────────────────────
 .child-identity-card {
   border-left: 3px solid var(--color-secondary);
-
   .dash-card-header mat-icon {
     color: var(--color-secondary);
   }
@@ -797,7 +824,7 @@
   display: flex;
   align-items: flex-start;
   gap: 20px;
-  padding: 20px 20px 18px;
+  padding: 20px;
 
   @media (max-width: 600px) {
     flex-direction: column;
@@ -873,7 +900,7 @@
   }
 }
 
-// ── Attendance Card ───────────────────────────────────────────────────────────
+// ── Attendance ring ────────────────────────────────────────────────────────────
 .parent-attendance-card {
   border-left: 3px solid var(--color-primary);
 }
@@ -926,7 +953,6 @@
 .attendance-breakdown {
   display: flex;
   align-items: center;
-  gap: 0;
   flex: 1;
 }
 
@@ -944,7 +970,6 @@
     color: var(--color-text-primary);
     line-height: 1;
   }
-
   .att-label {
     font-size: 0.72rem;
     font-weight: 600;
@@ -968,10 +993,9 @@
   flex-shrink: 0;
 }
 
-// ── Fee Summary Card ──────────────────────────────────────────────────────────
+// ── Fee summary ────────────────────────────────────────────────────────────────
 .parent-fee-card {
   border-left: 3px solid var(--color-info);
-
   .dash-card-header mat-icon {
     color: var(--color-info);
   }
@@ -980,7 +1004,6 @@
 .fee-summary-body {
   display: flex;
   align-items: stretch;
-  padding: 0;
 
   @media (max-width: 480px) {
     flex-wrap: wrap;
@@ -1014,9 +1037,6 @@
     color: var(--color-text-primary);
     white-space: nowrap;
 
-    &.fee-total {
-      color: var(--color-text-primary);
-    }
     &.fee-paid {
       color: var(--color-success);
     }
@@ -1031,15 +1051,10 @@
   @media (max-width: 480px) {
     flex: 1 1 33%;
     padding: 16px 8px;
-
     .fee-value {
       font-size: 1rem;
     }
   }
-}
-
-.fee-divider-v {
-  display: none; // handled by border-right on .fee-stat
 }
 
 .fee-progress-wrap {
@@ -1073,14 +1088,13 @@
   flex-shrink: 0;
 }
 
-// ── Pending Assignments Banner ────────────────────────────────────────────────
+// ── Pending assignments banner ─────────────────────────────────────────────────
 .pending-assignments-banner {
   display: flex;
   align-items: center;
   gap: 14px;
   padding: 14px 18px;
   border-left: 3px solid var(--color-warning);
-  // Subtle tint over the card bg — works in both light and dark
   background: color-mix(in srgb, var(--color-warning) 6%, var(--color-bg-card));
 
   .banner-icon-wrap {
@@ -1114,7 +1128,6 @@
     font-weight: 700;
     color: var(--color-text-primary);
   }
-
   .banner-sub {
     font-size: 0.78rem;
     color: var(--color-text-secondary);
@@ -1136,7 +1149,6 @@
       height: 15px;
       width: 15px;
     }
-
     &:hover {
       text-decoration: underline;
     }
@@ -1145,7 +1157,6 @@
   @media (max-width: 480px) {
     flex-wrap: wrap;
     gap: 10px;
-
     .banner-action {
       width: 100%;
     }

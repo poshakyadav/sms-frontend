@@ -1,0 +1,121 @@
+// src/styles/_user-tabs.scss
+// ─────────────────────────────────────────────────────────────────────────────
+// CATEGORY TAB BAR — pill-style segmented control used by users-list and any
+// future list view that needs a Staff / Students / Parents switcher.
+//
+// Colour variants are driven by [data-color] on .tab-btn so the same markup
+// works for any set of categories without extra modifier classes.
+// Dark-mode overrides live in _dark-theme.scss (must stay global).
+// ─────────────────────────────────────────────────────────────────────────────
+
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 6px;
+  box-shadow: var(--shadow-sm);
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+  }
+}
+
+.tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: calc(var(--radius-md) - 4px);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+  white-space: nowrap;
+  font-family: inherit;
+  position: relative;
+
+  .tab-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+    transition: color 0.18s ease;
+  }
+
+  .tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    background: var(--color-hover);
+    color: var(--color-text-muted);
+    transition: background 0.18s ease, color 0.18s ease;
+  }
+
+  &:hover:not(.active) {
+    background: var(--color-hover);
+    color: var(--color-text-primary);
+  }
+
+  // ── Active state — colour driven by [data-color] attribute ────────────────
+  &.active {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+
+    .tab-count {
+      font-weight: 700;
+    }
+
+    &[data-color='staff'] {
+      background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+      color: var(--color-primary-dark);
+      .tab-icon {
+        color: var(--color-primary);
+      }
+      .tab-count {
+        background: var(--color-primary);
+        color: #fff;
+      }
+    }
+
+    &[data-color='student'] {
+      background: color-mix(in srgb, var(--color-success) 12%, transparent);
+      color: color-mix(in srgb, var(--color-success) 70%, #000);
+      .tab-icon {
+        color: var(--color-success);
+      }
+      .tab-count {
+        background: var(--color-success);
+        color: #fff;
+      }
+    }
+
+    &[data-color='parent'] {
+      background: color-mix(in srgb, #f59e0b 12%, transparent);
+      color: #b45309;
+      .tab-icon {
+        color: #f59e0b;
+      }
+      .tab-count {
+        background: #f59e0b;
+        color: #fff;
+      }
+    }
+  }
+
+  @media (max-width: 480px) {
+    justify-content: flex-start;
+    padding: 10px 14px;
+  }
+}

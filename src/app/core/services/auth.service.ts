@@ -410,7 +410,7 @@ export class AuthService {
     this.superPermissions.set([]);
   }
 
-  // ── NEW: centralised helper — writes the schoolInfo key ──────────────────
+  // ── centralised helper — writes the schoolInfo key ──────────────────
   // Called by saveSchoolAuth (login) and refresh tap.
   // Also called by school-info.service.ts and school-info.component.ts
   // to patch individual fields after a settings update.

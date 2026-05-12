@@ -17,76 +17,112 @@
 
 <mat-menu #notifMenu="matMenu" class="notif-menu-panel" xPosition="before">
   <div class="notif-panel" (click)="$event.stopPropagation()">
-    <!-- Header -->
+    <!-- ── Header ─────────────────────────────────────────────────── -->
     <div class="notif-header">
       <div class="notif-header-left">
-        <span class="notif-heading">Notifications</span>
-        @if (unreadCount() > 0) {
-        <span class="unread-badge">{{ unreadCount() }}</span>
-        }
+        <div class="notif-header-icon">
+          <mat-icon>notifications</mat-icon>
+        </div>
+        <div class="notif-header-text">
+          <span class="notif-heading">Notifications</span>
+          @if (unreadCount() > 0) {
+          <span class="notif-subheading">{{ unreadCount() }} unread</span>
+          } @else {
+          <span class="notif-subheading">All caught up</span>
+          }
+        </div>
       </div>
+
       @if (unreadCount() > 0) {
       <button class="mark-all-btn" (click)="markAllAsRead($event)" matTooltip="Mark all as read">
         <mat-icon>done_all</mat-icon>
-        Mark all read
+        <span>Mark all read</span>
       </button>
       }
     </div>
 
-    <!-- Loading -->
+    <!-- ── Loading ────────────────────────────────────────────────── -->
     @if (loading() && recentNotifications().length === 0) {
     <div class="notif-loading">
-      <mat-spinner diameter="28"></mat-spinner>
-      <span>Loading…</span>
+      <div class="loading-shimmer-list">
+        @for (i of [1, 2, 3]; track i) {
+        <div class="shimmer-item">
+          <div class="shimmer-dot"></div>
+          <div class="shimmer-content">
+            <div class="shimmer-line shimmer-title"></div>
+            <div class="shimmer-line shimmer-body"></div>
+            <div class="shimmer-line shimmer-time"></div>
+          </div>
+        </div>
+        }
+      </div>
     </div>
     }
 
-    <!-- Empty -->
+    <!-- ── Empty State ────────────────────────────────────────────── -->
     @if (!loading() && recentNotifications().length === 0) {
     <div class="notif-empty">
-      <mat-icon>notifications_none</mat-icon>
-      <p>No notifications yet</p>
+      <div class="notif-empty-illustration">
+        <div class="empty-ring empty-ring-1"></div>
+        <div class="empty-ring empty-ring-2"></div>
+        <mat-icon class="empty-bell-icon">notifications_none</mat-icon>
+      </div>
+      <p class="empty-title">All caught up!</p>
+      <p class="empty-desc">
+        No new notifications right now. We'll let you know when something arrives.
+      </p>
     </div>
     }
 
-    <!-- List -->
+    <!-- ── List ───────────────────────────────────────────────────── -->
     @if (recentNotifications().length > 0) {
     <div class="notif-list">
-      @for (n of recentNotifications(); track n.id) {
+      @for (n of recentNotifications(); track n.id; let isLast = $last) {
       <div
         class="notif-item"
         [class.unread]="!n.isRead"
+        [class.last]="isLast"
         (click)="markAsRead(n)"
         role="button"
         tabindex="0"
+        (keydown.enter)="markAsRead(n)"
       >
-        <div class="notif-dot-col">
+        <!-- Unread dot -->
+        <div class="notif-indicator">
           @if (!n.isRead) {
           <span class="unread-dot"></span>
+          } @else {
+          <span class="read-dot"></span>
           }
         </div>
 
+        <!-- Content -->
         <div class="notif-content">
-          <p class="notif-title">{{ n.title }}</p>
+          <div class="notif-top-row">
+            <p class="notif-title">{{ n.title }}</p>
+            @if (n.link) {
+            <mat-icon class="link-icon" matTooltip="Opens a link">open_in_new</mat-icon>
+            }
+          </div>
           <p class="notif-preview">
-            {{ n.message.length > 80 ? (n.message | slice : 0 : 80) + '…' : n.message }}
+            {{ n.message.length > 90 ? (n.message | slice : 0 : 90) + '…' : n.message }}
           </p>
-          <span class="notif-time">{{ getTimeAgo(n.createdAt) }}</span>
+          <div class="notif-meta">
+            <mat-icon class="time-icon">schedule</mat-icon>
+            <span class="notif-time">{{ getTimeAgo(n.createdAt) }}</span>
+          </div>
         </div>
-
-        @if (n.link) {
-        <mat-icon class="link-icon" matTooltip="Has a link">open_in_new</mat-icon>
-        }
       </div>
       }
     </div>
     }
 
-    <!-- Footer -->
+    <!-- ── Footer ─────────────────────────────────────────────────── -->
     <div class="notif-footer">
       <button class="view-all-btn" (click)="viewAllNotifications()">
+        <mat-icon class="view-all-icon">inbox</mat-icon>
         <span>View all notifications</span>
-        <mat-icon>arrow_forward</mat-icon>
+        <mat-icon class="arrow-icon">arrow_forward</mat-icon>
       </button>
     </div>
   </div>

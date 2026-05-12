@@ -1,9 +1,4 @@
 // user-creation-hub.ts
-// UPDATED: filteredStaffRoles now groups available roles by their category
-// (staff / student / parent) so the admin sees which universe each role belongs to.
-// The hub only shows 'staff'-category roles in the role picker — students and parents
-// have dedicated creation flows (Admit Student, Add Parent).
-// RoleOption now includes optional `category` field from the updated getAllRoles response.
 
 import {
   Component,
@@ -30,15 +25,24 @@ import { HttpParams } from '@angular/common/http';
 import { debounceTime, distinctUntilChanged, Subject, switchMap, of } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ApiService } from '../../../../core/services/api.service';
-import { UsersService, CreateUserPayload } from '../../../../core/services/users.service';
+import {
+  UsersService,
+  CreateUserPayload,
+  SOCIAL_CATEGORY_LABELS,
+  RELIGION_LABELS,
+  DISABILITY_TYPE_LABELS,
+  FACILITY_LABELS,
+  FacilityReceived,
+  SocialCategory,
+  Religion,
+  DisabilityType,
+} from '../../../../core/services/users.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { StudentParentsManager } from '../../../school/parents/student-parents-manager/student-parents-manager';
 import { RoleCategory } from '../../../../core/services/roles.service';
-
-// ── Indian date format provider ─────────────────────────────────────────
 import { INDIAN_DATE_PROVIDERS } from '../../../../core/adapters/indian-date-adapter';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// ── Types ──────────────────────────────────────────────────────────────────────
 
 export interface RolePersona {
   id: string;
@@ -63,14 +67,12 @@ export interface RoleOption {
   name: string;
   description?: string;
   isSystem?: boolean;
-  // UPDATED: category is now returned by getAllRoles
   category?: RoleCategory;
 }
 
-// Email check state
 type EmailCheckStatus = 'idle' | 'checking' | 'available' | 'taken' | 'error';
 
-// ── Personas ──────────────────────────────────────────────────────────────────
+// ── Personas ───────────────────────────────────────────────────────────────────
 
 export const ROLE_PERSONAS: RolePersona[] = [
   {
@@ -84,8 +86,20 @@ export const ROLE_PERSONAS: RolePersona[] = [
     steps: [
       { id: 'account', title: 'Account', subtitle: 'Login credentials', icon: 'lock' },
       { id: 'personal', title: 'Personal', subtitle: 'Student details', icon: 'person' },
-      { id: 'academic', title: 'Academic', subtitle: 'Admission info', icon: 'class' },
-      { id: 'parents', title: 'Parents', subtitle: 'Link guardians', icon: 'family_restroom' },
+      {
+        id: 'guardian',
+        title: 'Guardian',
+        subtitle: 'Parent & family info',
+        icon: 'family_restroom',
+      },
+      { id: 'academic', title: 'Academic', subtitle: 'Admission & school info', icon: 'class' },
+      { id: 'udise', title: 'UDISE+', subtitle: 'Government data fields', icon: 'assignment_ind' },
+      {
+        id: 'parents',
+        title: 'Parents',
+        subtitle: 'Link guardians',
+        icon: 'supervised_user_circle',
+      },
     ],
   },
   {
@@ -99,6 +113,12 @@ export const ROLE_PERSONAS: RolePersona[] = [
     steps: [
       { id: 'account', title: 'Account', subtitle: 'Login credentials', icon: 'lock' },
       { id: 'personal', title: 'Personal', subtitle: 'Contact & address', icon: 'person' },
+      {
+        id: 'guardian',
+        title: 'Emergency Contact',
+        subtitle: 'Family & guardian info',
+        icon: 'family_restroom',
+      },
       {
         id: 'teaching',
         title: 'Teaching Profile',
@@ -133,6 +153,12 @@ export const ROLE_PERSONAS: RolePersona[] = [
       { id: 'role', title: 'Role', subtitle: 'Pick a role', icon: 'badge' },
       { id: 'account', title: 'Account', subtitle: 'Login credentials', icon: 'lock' },
       { id: 'personal', title: 'Personal', subtitle: 'Contact & address', icon: 'person' },
+      {
+        id: 'guardian',
+        title: 'Emergency Contact',
+        subtitle: 'Family info',
+        icon: 'family_restroom',
+      },
       { id: 'work', title: 'Work', subtitle: 'Department & shift', icon: 'work' },
     ],
   },
@@ -148,16 +174,13 @@ export const ROLE_PERSONAS: RolePersona[] = [
   },
 ];
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// ── Component ──────────────────────────────────────────────────────────────────
 
 @Component({
   selector: 'app-user-creation-hub',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [
-    DatePipe,
-    ...INDIAN_DATE_PROVIDERS,
-  ],
+  providers: [DatePipe, ...INDIAN_DATE_PROVIDERS],
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -191,7 +214,6 @@ export class UserCreationHub implements OnInit {
   submitting = signal(false);
   loadingRoles = signal(false);
   createdUserId = signal<number | null>(null);
-
   availableRoles = signal<RoleOption[]>([]);
 
   // Email check
@@ -199,16 +221,47 @@ export class UserCreationHub implements OnInit {
   emailCheckMessage = signal<string>('');
   private emailCheckSubject = new Subject<string>();
 
+  // ── Static option lists ────────────────────────────────────────────────────
   readonly bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
   readonly genders = [
     { value: 'MALE', label: 'Male' },
     { value: 'FEMALE', label: 'Female' },
-    { value: 'OTHER', label: 'Other' },
+    { value: 'TRANSGENDER', label: 'Transgender' },
   ];
   readonly shifts = [
     { value: 'MORNING', label: 'Morning' },
     { value: 'AFTERNOON', label: 'Afternoon' },
     { value: 'EVENING', label: 'Evening' },
+  ];
+  readonly enrollmentTypes = [
+    { value: 'REGULAR', label: 'Regular' },
+    { value: 'PRIVATE', label: 'Private Candidate' },
+    { value: 'OPEN_SCHOOL', label: 'Open School (NIOS)' },
+  ];
+  readonly previousClassResults = [
+    { value: 'NEW_ADMISSION', label: 'New Admission (First time)' },
+    { value: 'PROMOTED', label: 'Promoted from previous class' },
+    { value: 'NOT_PROMOTED', label: 'Not Promoted / Detained' },
+    { value: 'TRANSFERRED', label: 'Transferred from another school' },
+  ];
+  readonly socialCategories = Object.entries(SOCIAL_CATEGORY_LABELS).map(([value, label]) => ({
+    value: Number(value),
+    label,
+  }));
+  readonly religions = Object.entries(RELIGION_LABELS).map(([value, label]) => ({
+    value: Number(value),
+    label,
+  }));
+  readonly disabilityTypes = Object.entries(DISABILITY_TYPE_LABELS).map(([value, label]) => ({
+    value: Number(value),
+    label,
+  }));
+  readonly facilityOptions: { value: FacilityReceived; label: string }[] = Object.entries(
+    FACILITY_LABELS
+  ).map(([value, label]) => ({ value: value as FacilityReceived, label }));
+  readonly localityTypes = [
+    { value: 'URBAN', label: 'Urban' },
+    { value: 'RURAL', label: 'Rural' },
   ];
 
   // ── Computed ───────────────────────────────────────────────────────────────
@@ -221,39 +274,26 @@ export class UserCreationHub implements OnInit {
     return Math.round(((this.currentStep() + 1) / total) * 100);
   });
 
-  // Staff role selector — UPDATED:
-  // Filter to only show 'staff'-category roles, excluding STUDENT, STUDENT_PARENT, TEACHER,
-  // and SCHOOL_OWNER (each has a dedicated hub persona).
-  // Also exclude student/parent category roles entirely — those can't be assigned via the
-  // staff flow since the profile table routing would break.
   staffRoleSearch = signal('');
-
   filteredStaffRoles = computed(() => {
     const q = this.staffRoleSearch().toLowerCase();
     const EXCLUDED_NAMES = ['STUDENT', 'STUDENT_PARENT', 'TEACHER', 'SCHOOL_OWNER'];
-
     return this.availableRoles().filter((r) => {
-      // Exclude by name pattern (backward compat for any roles without category set)
       const nameExcluded = EXCLUDED_NAMES.some((ex) => r.name.toUpperCase().includes(ex));
       if (nameExcluded) return false;
-
-      // UPDATED: If category is available, only show staff-category roles.
-      // Roles without a category field (old data) fall back to name-based filtering.
       if (r.category && r.category !== 'staff') return false;
-
-      // Search filter
       if (q && !r.name.toLowerCase().includes(q)) return false;
-
       return true;
     });
   });
-
   selectedStaffRole = signal<RoleOption | null>(null);
-
-  // Email verified guard
   emailVerified = computed(() => this.emailCheckStatus() === 'available');
 
+  // ── UDISE step: isCwsn toggle ──────────────────────────────────────────────
+  showCwsnFields = computed(() => !!this.udiseForm.get('isCwsn')?.value);
+
   // ── Forms ──────────────────────────────────────────────────────────────────
+
   accountForm = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
     email: ['', [Validators.required, Validators.email]],
@@ -272,10 +312,51 @@ export class UserCreationHub implements OnInit {
     postalCode: [''],
   });
 
+  /** Guardian / family fields — new for all user types */
+  guardianForm = this.fb.group({
+    fatherName: ['', Validators.maxLength(150)],
+    motherName: ['', Validators.maxLength(150)],
+    guardianName: ['', Validators.maxLength(150)],
+    guardianRelation: ['', Validators.maxLength(100)],
+  });
+
+  /** Student academic (school-internal) fields */
   studentAcademicForm = this.fb.group({
+    admissionNumber: ['', Validators.maxLength(50)],
     admissionDate: [null as Date | null],
     previousSchool: [''],
+    previousSchoolUdiseCode: ['', [Validators.pattern(/^\d{11}$|^$/)]], // 11 digits or empty
     medicalInfo: [''],
+    enrollmentType: ['REGULAR'],
+    previousClassResult: [''],
+  });
+
+  /** UDISE+ government data fields — student only */
+  udiseForm = this.fb.group({
+    // National identity
+    pen: ['', [Validators.pattern(/^\d{16}$|^$/)]],
+    apaarId: ['', [Validators.pattern(/^\d{12}$|^$/)]],
+    stateStudentId: ['', Validators.maxLength(50)],
+    aadhaarMasked: ['', [Validators.pattern(/^XXXX XXXX \d{4}$|^$/)]],
+    aadhaarName: ['', Validators.maxLength(150)],
+    // Demographic
+    socialCategory: [null as number | null],
+    religion: [null as number | null],
+    isMinority: [false],
+    motherTongueCode: [null as number | null],
+    // Socio-economic
+    isBpl: [false],
+    localityType: [''],
+    // CWSN
+    isCwsn: [false],
+    disabilityType: [null as number | null],
+    hasDisabilityCertificate: [false],
+    udidNumber: ['', Validators.maxLength(30)],
+    // Facilities (multi-select stored as array)
+    facilitiesReceived: [[] as string[]],
+    // Verification
+    isAadhaarVerified: [false],
+    udiseVerified: [false],
   });
 
   teachingForm = this.fb.group({
@@ -297,7 +378,6 @@ export class UserCreationHub implements OnInit {
   });
 
   constructor() {
-    // Debounced email check subscription
     this.emailCheckSubject
       .pipe(
         debounceTime(600),
@@ -410,7 +490,17 @@ export class UserCreationHub implements OnInit {
   private resetForms(): void {
     this.accountForm.reset();
     this.personalForm.reset();
-    this.studentAcademicForm.reset();
+    this.guardianForm.reset();
+    this.studentAcademicForm.reset({ enrollmentType: 'REGULAR' });
+    this.udiseForm.reset({
+      isCwsn: false,
+      isMinority: false,
+      isBpl: false,
+      isAadhaarVerified: false,
+      udiseVerified: false,
+      hasDisabilityCertificate: false,
+      facilitiesReceived: [],
+    });
     this.teachingForm.reset();
     this.parentProfileForm.reset();
     this.staffWorkForm.reset();
@@ -435,7 +525,9 @@ export class UserCreationHub implements OnInit {
     const stepId = this.currentStepId();
     if (stepId === 'account') return this.accountForm;
     if (stepId === 'personal') return this.personalForm;
+    if (stepId === 'guardian') return this.guardianForm;
     if (stepId === 'academic') return this.studentAcademicForm;
+    if (stepId === 'udise') return this.udiseForm;
     if (stepId === 'teaching') return this.teachingForm;
     if (stepId === 'profile') return this.parentProfileForm;
     if (stepId === 'work') return this.staffWorkForm;
@@ -445,13 +537,10 @@ export class UserCreationHub implements OnInit {
   canProceed(): boolean {
     const stepId = this.currentStepId();
 
-    if (stepId === 'role') {
-      return this.selectedStaffRole() !== null;
-    }
-
-    if (stepId === 'parents') {
-      return true;
-    }
+    if (stepId === 'role') return this.selectedStaffRole() !== null;
+    if (stepId === 'parents') return true;
+    if (stepId === 'guardian') return true; // all optional fields
+    if (stepId === 'udise') return true; // all optional fields
 
     if (stepId === 'account') {
       const form = this.accountForm;
@@ -466,6 +555,7 @@ export class UserCreationHub implements OnInit {
 
   next(): void {
     const stepId = this.currentStepId();
+    const persona = this.selectedPersona();
 
     if (stepId === 'parents') {
       this.router.navigate(['/school/users']);
@@ -473,7 +563,7 @@ export class UserCreationHub implements OnInit {
     }
 
     const form = this.getActiveForm();
-    if (form && form.invalid) {
+    if (form && form.invalid && stepId !== 'guardian' && stepId !== 'udise') {
       form.markAllAsTouched();
       return;
     }
@@ -490,11 +580,11 @@ export class UserCreationHub implements OnInit {
       }
     }
 
-    const persona = this.selectedPersona();
-    const isStudentAndOnAcademic = persona?.id === 'student' && stepId === 'academic';
+    // Trigger submit on last data-collection step
+    const isStudentUdiseStep = persona?.id === 'student' && stepId === 'udise';
     const isNonStudentLastStep = this.isLastStep() && stepId !== 'parents';
 
-    if (isStudentAndOnAcademic || isNonStudentLastStep) {
+    if (isStudentUdiseStep || isNonStudentLastStep) {
       this.submitUser();
       return;
     }
@@ -530,9 +620,9 @@ export class UserCreationHub implements OnInit {
 
     const acc = this.accountForm.value;
     const per = this.personalForm.value;
+    const grd = this.guardianForm.value;
 
     let primaryRoleId: number | null = null;
-
     if (persona.id === 'staff') {
       primaryRoleId = this.selectedStaffRole()?.id ?? null;
     } else {
@@ -551,6 +641,7 @@ export class UserCreationHub implements OnInit {
       password: acc.password!,
       primaryRoleId,
       roleIds: [primaryRoleId],
+      // Personal
       phone: per.phone?.trim() || undefined,
       alternatePhone: per.alternatePhone?.trim() || undefined,
       dateOfBirth: per.dateOfBirth ? this.fmt(per.dateOfBirth) : undefined,
@@ -560,13 +651,66 @@ export class UserCreationHub implements OnInit {
       city: per.city?.trim() || undefined,
       state: per.state?.trim() || undefined,
       postalCode: per.postalCode?.trim() || undefined,
+      // Guardian / parental (new)
+      fatherName: grd.fatherName?.trim() || undefined,
+      motherName: grd.motherName?.trim() || undefined,
+      guardianName: grd.guardianName?.trim() || undefined,
+      guardianRelation: grd.guardianRelation?.trim() || undefined,
     };
 
     if (persona.id === 'student') {
       const aca = this.studentAcademicForm.value;
+      const udi = this.udiseForm.value;
+
+      // Academic fields
+      payload.admissionNumber = aca.admissionNumber?.trim() || undefined;
       payload.admissionDate = aca.admissionDate ? this.fmt(aca.admissionDate) : undefined;
       payload.previousSchool = aca.previousSchool?.trim() || undefined;
+      payload.previousSchoolUdiseCode = aca.previousSchoolUdiseCode?.trim() || undefined;
       payload.medicalInfo = aca.medicalInfo?.trim() || undefined;
+      payload.enrollmentType = (aca.enrollmentType as any) || 'REGULAR';
+      payload.previousClassResult = (aca.previousClassResult as any) || undefined;
+
+      // UDISE+ national identity
+      payload.pen = udi.pen?.trim() || undefined;
+      payload.apaarId = udi.apaarId?.trim() || undefined;
+      payload.stateStudentId = udi.stateStudentId?.trim() || undefined;
+      payload.aadhaarMasked = udi.aadhaarMasked?.trim() || undefined;
+      payload.aadhaarName = udi.aadhaarName?.trim() || undefined;
+
+      // UDISE+ demographic
+      payload.socialCategory =
+  udi.socialCategory != null
+    ? (udi.socialCategory as unknown as SocialCategory)
+    : undefined;
+    payload.religion =
+    udi.religion != null
+      ? (udi.religion as unknown as Religion)
+      : undefined;
+      payload.isMinority = udi.isMinority ?? false;
+      payload.motherTongueCode = udi.motherTongueCode ?? undefined;
+
+      // Socio-economic
+      payload.isBpl = udi.isBpl ?? false;
+      payload.localityType = (udi.localityType as any) || undefined;
+
+      // CWSN
+      payload.isCwsn = udi.isCwsn ?? false;
+      if (udi.isCwsn) {
+        payload.disabilityType =
+    udi.disabilityType != null
+      ? (udi.disabilityType as unknown as DisabilityType)
+      : undefined;
+        payload.hasDisabilityCertificate = udi.hasDisabilityCertificate ?? false;
+        payload.udidNumber = udi.udidNumber?.trim() || undefined;
+      }
+
+      // Facilities
+      payload.facilitiesReceived = (udi.facilitiesReceived as any[]) ?? [];
+
+      // Verification
+      payload.isAadhaarVerified = udi.isAadhaarVerified ?? false;
+      payload.udiseVerified = udi.udiseVerified ?? false;
     }
 
     if (persona.id === 'teacher') {
@@ -600,7 +744,7 @@ export class UserCreationHub implements OnInit {
 
         if (persona.id === 'student') {
           this.toast.success(`${acc.name} admitted successfully!`);
-          this.currentStep.set(3);
+          this.currentStep.set(this.steps().length - 1); // jump to parents step
         } else {
           this.toast.success(`${acc.name} created successfully!`);
           this.router.navigate(['/school/users']);
@@ -623,10 +767,6 @@ export class UserCreationHub implements OnInit {
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
-  getStepLabel(step: StepDef, index: number): string {
-    return `Step ${index + 1}: ${step.title}`;
-  }
-
   formatRoleName(name: string): string {
     return name.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
   }
@@ -644,5 +784,25 @@ export class UserCreationHub implements OnInit {
     if (u.includes('ADMISSION')) return 'how_to_reg';
     if (u.includes('OWNER')) return 'star';
     return 'badge';
+  }
+
+  isFacilitySelected(value: FacilityReceived): boolean {
+    const facilities: string[] = this.udiseForm.get('facilitiesReceived')?.value ?? [];
+    return facilities.includes(value);
+  }
+
+  toggleFacility(value: FacilityReceived): void {
+    const ctrl = this.udiseForm.get('facilitiesReceived');
+    if (!ctrl) return;
+    const current: string[] = ctrl.value ?? [];
+    if (current.includes(value)) {
+      ctrl.setValue(current.filter((f) => f !== value));
+    } else {
+      ctrl.setValue([...current, value]);
+    }
+  }
+
+  getStepLabel(step: StepDef, index: number): string {
+    return `Step ${index + 1}: ${step.title}`;
   }
 }

@@ -65,7 +65,7 @@
     </div>
 
     <div class="brand-info" *ngIf="!isCollapsed() || mobileOpen()">
-      <span class="brand-title">EduFlow</span>
+      <span class="brand-title">{{ appConstants.appName }}</span>
       <span class="brand-school" *ngIf="schoolCode()">{{ schoolCode() }}</span>
     </div>
   </div>

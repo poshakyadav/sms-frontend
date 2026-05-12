@@ -20,7 +20,7 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideRouter(routes),
 
-    provideClientHydration(withEventReplay()),
+    // provideClientHydration(withEventReplay()),
 
     provideHttpClient(withInterceptors([authInterceptor]), withFetch()),
     provideNativeDateAdapter(),

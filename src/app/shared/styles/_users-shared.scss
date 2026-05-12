@@ -162,6 +162,7 @@
   justify-content: center;
   z-index: 10;
   border-radius: var(--radius-md);
+  backdrop-filter: blur(2px);
 }
 
 // Mat-table cell overrides
@@ -459,22 +460,170 @@
 }
 
 // ── Form actions ──────────────────────────────────────────────────────────────
+// .form-actions {
+//   display: flex;
+//   justify-content: flex-end;
+//   align-items: center;
+//   gap: 12px;
+//   margin-top: 24px;
+
+//   button {
+//     min-width: 120px;
+//   }
+
+//   @media (max-width: 480px) {
+//     flex-direction: column-reverse;
+
+//     button {
+//       width: 100%;
+//     }
+//   }
+// }
+
 .form-actions {
   display: flex;
   justify-content: flex-end;
   align-items: center;
   gap: 12px;
   margin-top: 24px;
+  padding: 18px 24px;
+  background: var(--color-bg-card);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
 
-  button {
-    min-width: 120px;
+  // ── Cancel / stroked button ─────────────────────────────────────────────────
+  [mat-stroked-button],
+  [mat-button] {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    min-width: 120px !important;
+    height: 40px !important;
+    padding: 0 18px !important;
+    border-radius: var(--radius-sm) !important;
+    border: 1.5px solid var(--color-border) !important;
+    background: var(--color-bg-surface) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    font-family: inherit !important;
+    letter-spacing: 0 !important;
+    cursor: pointer !important;
+    transition: all 0.16s ease !important;
+
+    // Force label text color — MDC wraps it in .mdc-button__label
+    .mdc-button__label,
+    span {
+      color: var(--color-text-secondary) !important;
+    }
+
+    mat-icon,
+    .mat-icon {
+      font-size: 18px !important;
+      width: 18px !important;
+      height: 18px !important;
+      color: var(--color-text-secondary) !important;
+    }
+
+    &:hover:not([disabled]) {
+      border-color: var(--color-primary) !important;
+      background: color-mix(in srgb, var(--color-primary) 5%, transparent) !important;
+
+      .mdc-button__label,
+      span,
+      mat-icon,
+      .mat-icon {
+        color: var(--color-primary) !important;
+      }
+    }
+
+    &[disabled] {
+      opacity: 0.45 !important;
+      cursor: not-allowed !important;
+    }
+  }
+
+  // ── Primary raised / flat button (Submit / Next / Save) ─────────────────────
+  // These !important guards specifically defeat MDC's --mdc-* token cascade
+  // which is the root cause of the invisible button in this theme.
+  [mat-raised-button][color='primary'],
+  [mat-flat-button][color='primary'] {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    min-width: 140px !important;
+    height: 42px !important;
+    padding: 0 22px !important;
+    border-radius: var(--radius-sm) !important;
+    border: none !important;
+    // ↓ THE KEY FIX: hard-set background + text via CSS vars, not MDC tokens
+    background: var(--color-primary) !important;
+    box-shadow: var(--shadow-sm) !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    font-family: inherit !important;
+    letter-spacing: 0 !important;
+    cursor: pointer !important;
+    transition: opacity 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease !important;
+
+    // Force every MDC internal label wrapper to use --color-on-primary
+    .mdc-button__label,
+    span:not(.mat-mdc-button-touch-target):not(.mat-mdc-focus-indicator) {
+      color: var(--color-on-primary) !important;
+    }
+
+    mat-icon,
+    .mat-icon {
+      font-size: 18px !important;
+      width: 18px !important;
+      height: 18px !important;
+      color: var(--color-on-primary) !important;
+    }
+
+    // Loading spinner inside button
+    mat-spinner,
+    .mat-mdc-progress-spinner {
+      --mdc-circular-progress-active-indicator-color: var(--color-on-primary) !important;
+    }
+
+    &:hover:not([disabled]) {
+      opacity: 0.88 !important;
+      box-shadow: var(--shadow-md) !important;
+      transform: translateY(-1px) !important;
+    }
+
+    &:active:not([disabled]) {
+      transform: translateY(0) !important;
+      opacity: 1 !important;
+    }
+
+    &[disabled] {
+      background: color-mix(in srgb, var(--color-primary) 45%, var(--color-border)) !important;
+      box-shadow: none !important;
+      cursor: not-allowed !important;
+      transform: none !important;
+
+      .mdc-button__label,
+      span:not(.mat-mdc-button-touch-target):not(.mat-mdc-focus-indicator),
+      mat-icon,
+      .mat-icon {
+        color: color-mix(in srgb, var(--color-on-primary) 55%, transparent) !important;
+      }
+    }
   }
 
   @media (max-width: 480px) {
     flex-direction: column-reverse;
+    padding: 14px 16px;
 
-    button {
-      width: 100%;
+    [mat-stroked-button],
+    [mat-button],
+    [mat-raised-button],
+    [mat-flat-button] {
+      width: 100% !important;
+      min-width: unset !important;
     }
   }
 }

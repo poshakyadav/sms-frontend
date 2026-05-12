@@ -1,0 +1,280 @@
+// src/styles/_dialogs.scss
+// ─────────────────────────────────────────────────────────────────────────────
+// SHARED DIALOGS / MODALS — confirm-before-save overlay used in user-form,
+// and any future modal patterns.
+// ─────────────────────────────────────────────────────────────────────────────
+
+@keyframes dialog-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes dialog-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// ── Overlay backdrop ──────────────────────────────────────────────────────────
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 16px;
+  backdrop-filter: blur(3px);
+  animation: dialog-fade-in 0.15s ease;
+}
+
+// ── Dialog box ────────────────────────────────────────────────────────────────
+.confirm-dialog {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.18), 0 8px 16px rgba(0, 0, 0, 0.1);
+  max-width: 540px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  animation: dialog-slide-up 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+// ── Header ────────────────────────────────────────────────────────────────────
+.confirm-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--color-divider);
+
+  &__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    mat-icon {
+      font-size: 22px;
+      height: 22px;
+      width: 22px;
+      color: var(--color-primary);
+    }
+  }
+
+  &__text {
+    flex: 1;
+    h2 {
+      margin: 0 0 3px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+    }
+    p {
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--color-text-secondary);
+    }
+  }
+
+  &__close {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+
+    mat-icon {
+      font-size: 16px;
+      height: 16px;
+      width: 16px;
+    }
+    &:hover {
+      background: var(--color-hover);
+      color: var(--color-text-primary);
+    }
+  }
+}
+
+// ── Body ──────────────────────────────────────────────────────────────────────
+.confirm-body {
+  padding: 20px 24px;
+}
+
+.changes-count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+  margin-bottom: 14px;
+
+  mat-icon {
+    font-size: 13px;
+    height: 13px;
+    width: 13px;
+  }
+}
+
+.changes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.change-item {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.change-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: color-mix(in srgb, var(--color-bg-surface) 60%, var(--color-bg-card));
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-divider);
+
+  &__icon {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+    color: var(--color-primary);
+  }
+}
+
+.change-values {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  flex-wrap: wrap;
+}
+
+.change-old,
+.change-new {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.change-badge {
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+
+  &--old {
+    background: color-mix(in srgb, var(--color-error) 10%, transparent);
+    color: var(--color-error);
+  }
+  &--new {
+    background: color-mix(in srgb, var(--color-success) 10%, transparent);
+    color: color-mix(in srgb, var(--color-success) 70%, #000);
+  }
+}
+
+.change-value-text {
+  font-size: 0.8rem;
+  color: var(--color-text-primary);
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.change-arrow mat-icon {
+  font-size: 16px;
+  height: 16px;
+  width: 16px;
+  color: var(--color-text-muted);
+}
+
+.confirm-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--color-warning) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 18%, transparent);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  color: color-mix(in srgb, var(--color-warning) 60%, var(--color-text-primary));
+  line-height: 1.5;
+
+  mat-icon {
+    font-size: 17px;
+    height: 17px;
+    width: 17px;
+    color: var(--color-warning);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  p {
+    margin: 0;
+  }
+}
+
+// ── Footer actions ────────────────────────────────────────────────────────────
+.confirm-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid var(--color-divider);
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  mat-icon {
+    font-size: 17px;
+    height: 17px;
+    width: 17px;
+  }
+
+  @media (max-width: 420px) {
+    flex-direction: column-reverse;
+    button {
+      width: 100%;
+    }
+  }
+}

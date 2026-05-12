@@ -1,3 +1,4 @@
+// Frontend service for managing attendance-related API calls and data transformations
 import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { forkJoin, map, Observable } from 'rxjs';

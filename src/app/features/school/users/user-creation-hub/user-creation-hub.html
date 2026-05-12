@@ -1,11 +1,12 @@
 <!-- user-creation-hub.html -->
-<!-- UPDATED: The staff role picker now shows only staff-category roles.
-     A small info note explains that student/parent roles have dedicated flows. -->
+<!-- UPDATED: Added guardian step (fatherName, motherName, guardianName, guardianRelation) -->
+<!-- UPDATED: Added UDISE+ step for students (pen, apaarId, socialCategory, isCwsn, etc.) -->
+<!-- UPDATED: admissionNumber added to academic step -->
 
 <div class="hub-page">
   <!-- ══════════════════════════════════════════════════════════════════════
-             PHASE 1: PERSONA SELECTOR
-             ══════════════════════════════════════════════════════════════════════ -->
+       PHASE 1: PERSONA SELECTOR
+  ══════════════════════════════════════════════════════════════════════ -->
   @if (!selectedPersona()) {
 
   <div class="hub-header">
@@ -53,12 +54,12 @@
   }
 
   <!-- ══════════════════════════════════════════════════════════════════════
-             PHASE 2: STEPPER WORKFLOW
-             ══════════════════════════════════════════════════════════════════════ -->
+       PHASE 2: STEPPER WORKFLOW
+  ══════════════════════════════════════════════════════════════════════ -->
   @else {
 
   <div class="stepper-layout" [attr.data-persona]="selectedPersona()!.id">
-    <!-- ── Left sidebar ────────────────────────────────────────────────── -->
+    <!-- ── Left sidebar ─────────────────────────────────────────────── -->
     <aside class="step-sidebar" [style.--persona-color]="selectedPersona()!.color">
       <div class="step-sidebar__header">
         <button class="step-sidebar__back" (click)="backToHub()">
@@ -103,7 +104,7 @@
       </nav>
     </aside>
 
-    <!-- ── Main step content ─────────────────────────────────────────────── -->
+    <!-- ── Main step content ─────────────────────────────────────────── -->
     <main class="step-main">
       <div class="step-header">
         <div class="step-header__icon" [style.--persona-color]="selectedPersona()!.color">
@@ -118,12 +119,10 @@
       <!-- ══ STEP: ROLE (staff) ══ -->
       @if (currentStepId() === 'role') {
       <div class="step-body">
-        <!-- UPDATED: Info note clarifying this shows only staff roles -->
         <div class="field-hint">
           Select the specific staff role for this user. Only staff-category roles are shown here —
           students and parents have their own dedicated creation flows above.
         </div>
-
         <div class="role-search-wrap">
           <mat-icon class="role-search-icon">search</mat-icon>
           <input
@@ -135,7 +134,6 @@
             autocomplete="off"
           />
         </div>
-
         <div class="role-cards-grid">
           @for (role of filteredStaffRoles(); track role.id) {
           <button
@@ -183,7 +181,7 @@
             }
           </mat-form-field>
 
-          <!-- Email with verification -->
+          <!-- Email -->
           <mat-form-field appearance="outline" class="col-full">
             <mat-label>Email Address</mat-label>
             <mat-icon matPrefix>email</mat-icon>
@@ -233,7 +231,6 @@
             }
           </mat-form-field>
 
-          <!-- Email status message -->
           @if (emailCheckMessage()) {
           <div
             class="email-status-msg col-full"
@@ -241,13 +238,9 @@
             [class.msg--err]="emailCheckStatus() === 'taken'"
             [class.msg--warn]="emailCheckStatus() === 'error'"
           >
-            @if (emailCheckStatus() === 'available') {
-            <mat-icon>check_circle</mat-icon>
-            } @else if (emailCheckStatus() === 'taken') {
-            <mat-icon>cancel</mat-icon>
-            } @else {
-            <mat-icon>warning</mat-icon>
-            }
+            @if (emailCheckStatus() === 'available') { <mat-icon>check_circle</mat-icon> } @else if
+            (emailCheckStatus() === 'taken') { <mat-icon>cancel</mat-icon> } @else {
+            <mat-icon>warning</mat-icon> }
             <span>{{ emailCheckMessage() }}</span>
           </div>
           }
@@ -347,10 +340,70 @@
       </form>
       }
 
+      <!-- ══ STEP: GUARDIAN / EMERGENCY CONTACT (ALL USER TYPES) ══ -->
+      @if (currentStepId() === 'guardian') {
+      <form class="step-body step-form" [formGroup]="guardianForm" novalidate>
+        <div class="section-info-card section-info-card--blue">
+          <mat-icon>info_outline</mat-icon>
+          <div>
+            <strong>Guardian & Family Information</strong>
+            <p>
+              All fields on this step are optional. For students, father and mother names are
+              required for UDISE+ government data submissions and admit card generation.
+            </p>
+          </div>
+        </div>
+        <div class="form-row-2">
+          <mat-form-field appearance="outline">
+            <mat-label>Father's Full Name</mat-label>
+            <mat-icon matPrefix>person</mat-icon>
+            <input matInput formControlName="fatherName" placeholder="e.g. Ramesh Kumar Sharma" />
+            <mat-hint>As on Aadhaar card — required for UDISE+</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Mother's Full Name</mat-label>
+            <mat-icon matPrefix>person</mat-icon>
+            <input matInput formControlName="motherName" placeholder="e.g. Sunita Sharma" />
+            <mat-hint>As on Aadhaar card — required for UDISE+</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label
+              >Guardian's Full Name <span class="optional-tag">(if not parent)</span></mat-label
+            >
+            <mat-icon matPrefix>supervised_user_circle</mat-icon>
+            <input
+              matInput
+              formControlName="guardianName"
+              placeholder="e.g. Rajiv Sharma (Uncle)"
+            />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Guardian's Relation</mat-label>
+            <mat-icon matPrefix>family_restroom</mat-icon>
+            <input
+              matInput
+              formControlName="guardianRelation"
+              placeholder="e.g. Uncle, Grandparent, Legal Guardian"
+            />
+          </mat-form-field>
+        </div>
+      </form>
+      }
+
       <!-- ══ STEP: ACADEMIC (student) ══ -->
       @if (currentStepId() === 'academic') {
       <form class="step-body step-form" [formGroup]="studentAcademicForm" novalidate>
         <div class="form-row-2">
+          <mat-form-field appearance="outline">
+            <mat-label>Admission Number</mat-label>
+            <mat-icon matPrefix>confirmation_number</mat-icon>
+            <input matInput formControlName="admissionNumber" placeholder="e.g. ADM-2025-001" />
+            <mat-hint>School's internal admission/registration number</mat-hint>
+          </mat-form-field>
+
           <mat-form-field appearance="outline">
             <mat-label>Admission Date</mat-label>
             <mat-icon matPrefix>event</mat-icon>
@@ -365,18 +418,50 @@
             <mat-datepicker #admPicker />
           </mat-form-field>
 
-          <div class="roll-number-info-card">
-            <mat-icon>info_outline</mat-icon>
-            <p>
-              <strong>Roll number</strong> can be assigned after the student is enrolled in a
-              class-section, via <em>Academics → Roll Numbers</em>.
-            </p>
-          </div>
+          <mat-form-field appearance="outline">
+            <mat-label>Enrollment Type</mat-label>
+            <mat-select formControlName="enrollmentType">
+              @for (et of enrollmentTypes; track et.value) {
+              <mat-option [value]="et.value">{{ et.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Previous Class Result</mat-label>
+            <mat-select formControlName="previousClassResult">
+              <mat-option value="">Not specified</mat-option>
+              @for (pcr of previousClassResults; track pcr.value) {
+              <mat-option [value]="pcr.value">{{ pcr.label }}</mat-option>
+              }
+            </mat-select>
+            <mat-hint>How did the student exit their previous class?</mat-hint>
+          </mat-form-field>
 
           <mat-form-field appearance="outline" class="col-full">
-            <mat-label>Previous School</mat-label>
+            <mat-label>Previous School Name</mat-label>
             <mat-icon matPrefix>school</mat-icon>
-            <input matInput formControlName="previousSchool" placeholder="Transfer from…" />
+            <input
+              matInput
+              formControlName="previousSchool"
+              placeholder="Transfer from… (leave blank for new admissions)"
+            />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="col-full">
+            <mat-label>Previous School UDISE Code</mat-label>
+            <mat-icon matPrefix>fingerprint</mat-icon>
+            <input
+              matInput
+              formControlName="previousSchoolUdiseCode"
+              placeholder="11-digit code (e.g. 09100401101)"
+              maxlength="11"
+            />
+            <mat-hint>Required by UDISE+ for transfer students</mat-hint>
+            @if (studentAcademicForm.get('previousSchoolUdiseCode')?.hasError('pattern') &&
+            studentAcademicForm.get('previousSchoolUdiseCode')?.touched) {
+            <mat-error>Must be exactly 11 digits</mat-error>
+            }
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="col-full">
@@ -389,6 +474,249 @@
               placeholder="Allergies, conditions, notes…"
             ></textarea>
           </mat-form-field>
+
+          <div class="roll-number-info-card col-full">
+            <mat-icon>info_outline</mat-icon>
+            <p>
+              <strong>Roll number</strong> can be assigned after the student is enrolled in a
+              class-section, via <em>Academics → Roll Numbers</em>.
+            </p>
+          </div>
+        </div>
+      </form>
+      }
+
+      <!-- ══ STEP: UDISE+ (student only) ══ -->
+      @if (currentStepId() === 'udise') {
+      <form class="step-body step-form" [formGroup]="udiseForm" novalidate>
+        <div class="section-info-card section-info-card--amber">
+          <mat-icon>assignment_ind</mat-icon>
+          <div>
+            <strong>UDISE+ Government Data</strong>
+            <p>
+              These fields feed directly into the Ministry of Education's UDISE+ data submission.
+              All fields are optional now — you can update them later from the student's profile.
+              Accurate data ensures correct government scheme eligibility.
+            </p>
+          </div>
+        </div>
+
+        <!-- National Identity -->
+        <div class="udise-section-header">
+          <mat-icon>fingerprint</mat-icon>
+          <span>National Identity Numbers</span>
+        </div>
+        <div class="form-row-2">
+          <mat-form-field appearance="outline">
+            <mat-label>PEN (Permanent Education Number)</mat-label>
+            <mat-icon matPrefix>badge</mat-icon>
+            <input matInput formControlName="pen" placeholder="16-digit number" maxlength="16" />
+            <mat-hint>Assigned by UDISE+ — 16 digits</mat-hint>
+            @if (udiseForm.get('pen')?.hasError('pattern') && udiseForm.get('pen')?.touched) {
+            <mat-error>Must be exactly 16 digits</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>APAAR ID (ABC ID)</mat-label>
+            <mat-icon matPrefix>credit_card</mat-icon>
+            <input
+              matInput
+              formControlName="apaarId"
+              placeholder="12-digit number"
+              maxlength="12"
+            />
+            <mat-hint>Academic Bank of Credits — 12 digits</mat-hint>
+            @if (udiseForm.get('apaarId')?.hasError('pattern') && udiseForm.get('apaarId')?.touched)
+            {
+            <mat-error>Must be exactly 12 digits</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>State Student ID</mat-label>
+            <mat-icon matPrefix>numbers</mat-icon>
+            <input matInput formControlName="stateStudentId" placeholder="e.g. SAMAGRA ID" />
+            <mat-hint>State-specific student tracking number</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Aadhaar (Masked)</mat-label>
+            <mat-icon matPrefix>lock</mat-icon>
+            <input
+              matInput
+              formControlName="aadhaarMasked"
+              placeholder="XXXX XXXX 1234"
+              maxlength="14"
+            />
+            <mat-hint>Only last 4 digits — e.g. XXXX XXXX 5678</mat-hint>
+            @if (udiseForm.get('aadhaarMasked')?.hasError('pattern') &&
+            udiseForm.get('aadhaarMasked')?.touched) {
+            <mat-error>Format: XXXX XXXX followed by 4 digits</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="col-full">
+            <mat-label>Name on Aadhaar Card</mat-label>
+            <mat-icon matPrefix>person_pin</mat-icon>
+            <input
+              matInput
+              formControlName="aadhaarName"
+              placeholder="Exact name as printed on Aadhaar"
+            />
+            <mat-hint>May differ from school records — used for APAAR verification</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <!-- Demographic -->
+        <div class="udise-section-header">
+          <mat-icon>people</mat-icon>
+          <span>Demographic Information</span>
+        </div>
+        <div class="form-row-2">
+          <mat-form-field appearance="outline">
+            <mat-label>Social Category</mat-label>
+            <mat-select formControlName="socialCategory">
+              <mat-option [value]="null">Not specified</mat-option>
+              @for (sc of socialCategories; track sc.value) {
+              <mat-option [value]="sc.value">{{ sc.label }}</mat-option>
+              }
+            </mat-select>
+            <mat-hint>Required for reservation & scholarship tracking</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Religion</mat-label>
+            <mat-select formControlName="religion">
+              <mat-option [value]="null">Not specified</mat-option>
+              @for (rel of religions; track rel.value) {
+              <mat-option [value]="rel.value">{{ rel.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Locality Type</mat-label>
+            <mat-select formControlName="localityType">
+              <mat-option value="">Not specified</mat-option>
+              @for (lt of localityTypes; track lt.value) {
+              <mat-option [value]="lt.value">{{ lt.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Mother Tongue Code</mat-label>
+            <mat-icon matPrefix>language</mat-icon>
+            <input
+              matInput
+              type="number"
+              formControlName="motherTongueCode"
+              placeholder="Census language code (e.g. 22 for Hindi)"
+            />
+          </mat-form-field>
+
+          <div class="checkbox-row col-full">
+            <mat-checkbox formControlName="isMinority" color="primary">
+              Belongs to a Religious Minority Community
+            </mat-checkbox>
+            <p class="checkbox-hint">Affects eligibility for PM Scholarship and minority schemes</p>
+          </div>
+
+          <div class="checkbox-row col-full">
+            <mat-checkbox formControlName="isBpl" color="primary">
+              Below Poverty Line (BPL) Family
+            </mat-checkbox>
+            <p class="checkbox-hint">
+              BPL students are eligible for free uniforms, transport subsidies, and scholarships
+            </p>
+          </div>
+        </div>
+
+        <!-- CWSN -->
+        <div class="udise-section-header">
+          <mat-icon>accessibility</mat-icon>
+          <span>Children With Special Needs (CWSN)</span>
+        </div>
+        <div class="form-row-2">
+          <div class="checkbox-row col-full">
+            <mat-checkbox formControlName="isCwsn" color="primary">
+              Student is a Child With Special Needs (CWSN)
+            </mat-checkbox>
+            <p class="checkbox-hint">
+              Schools with CWSN students receive additional government grants
+            </p>
+          </div>
+
+          @if (showCwsnFields()) {
+          <mat-form-field appearance="outline">
+            <mat-label>Type of Disability</mat-label>
+            <mat-select formControlName="disabilityType">
+              <mat-option [value]="null">Not specified</mat-option>
+              @for (dt of disabilityTypes; track dt.value) {
+              <mat-option [value]="dt.value">{{ dt.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <div class="checkbox-row">
+            <mat-checkbox formControlName="hasDisabilityCertificate" color="primary">
+              Has Valid Disability Certificate (UDID Card)
+            </mat-checkbox>
+          </div>
+
+          <mat-form-field appearance="outline" class="col-full">
+            <mat-label>UDID Card Number</mat-label>
+            <mat-icon matPrefix>credit_card</mat-icon>
+            <input
+              matInput
+              formControlName="udidNumber"
+              placeholder="18-character alphanumeric"
+              maxlength="30"
+            />
+          </mat-form-field>
+          }
+        </div>
+
+        <!-- Government Facilities -->
+        <div class="udise-section-header">
+          <mat-icon>volunteer_activism</mat-icon>
+          <span>Government Facilities Received</span>
+        </div>
+        <div class="facilities-grid">
+          @for (facility of facilityOptions; track facility.value) {
+          <button
+            type="button"
+            class="facility-chip"
+            [class.facility-chip--selected]="isFacilitySelected(facility.value)"
+            (click)="toggleFacility(facility.value)"
+          >
+            <mat-icon class="facility-chip__icon">
+              {{ isFacilitySelected(facility.value) ? 'check_circle' : 'radio_button_unchecked' }}
+            </mat-icon>
+            {{ facility.label }}
+          </button>
+          }
+        </div>
+
+        <!-- Verification flags -->
+        <div class="udise-section-header">
+          <mat-icon>verified</mat-icon>
+          <span>Verification Status</span>
+        </div>
+        <div class="form-row-2">
+          <div class="checkbox-row">
+            <mat-checkbox formControlName="isAadhaarVerified" color="primary">
+              Aadhaar Verified by School
+            </mat-checkbox>
+            <p class="checkbox-hint">School has physically verified the student's Aadhaar</p>
+          </div>
+          <div class="checkbox-row">
+            <mat-checkbox formControlName="udiseVerified" color="primary">
+              UDISE+ Data Verified
+            </mat-checkbox>
+            <p class="checkbox-hint">All government IDs confirmed against the UDISE+ portal</p>
+          </div>
         </div>
       </form>
       }
@@ -509,7 +837,6 @@
             </p>
           </div>
         </div>
-
         @if (createdUserId()) {
         <app-student-parents-manager
           [studentId]="createdUserId()!"
@@ -535,12 +862,12 @@
             <mat-icon>check</mat-icon>
             Done
           </button>
-          } @else if (selectedPersona()?.id === 'student' && currentStepId() === 'academic') {
+          } @else if (selectedPersona()?.id === 'student' && currentStepId() === 'udise') {
           <button
             class="step-btn step-btn--primary step-btn--submit"
             type="button"
             (click)="next()"
-            [disabled]="!canProceed() || submitting()"
+            [disabled]="submitting()"
           >
             @if (submitting()) {
             <mat-spinner diameter="18"></mat-spinner>

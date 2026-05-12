@@ -1,0 +1,430 @@
+<div class="docs-shell">
+  <!-- ── Sidebar ─────────────────────────────────────────────────────── -->
+  <aside class="sidebar" [class.sidebar--open]="sidebarOpen()">
+    <div class="sidebar__header">
+      <span class="sidebar__logo">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <rect x="1" y="1" width="8" height="8" rx="2" fill="currentColor" opacity="0.9" />
+          <rect x="11" y="1" width="8" height="8" rx="2" fill="currentColor" opacity="0.5" />
+          <rect x="1" y="11" width="8" height="8" rx="2" fill="currentColor" opacity="0.5" />
+          <rect x="11" y="11" width="8" height="8" rx="2" fill="currentColor" opacity="0.9" />
+        </svg>
+        Attendance Guide
+      </span>
+      <button class="sidebar__close" (click)="sidebarOpen.set(false)" aria-label="Close menu">
+        ✕
+      </button>
+    </div>
+
+    <!-- Search -->
+    <div class="sidebar__search">
+      <svg class="sidebar__search-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.4" />
+        <path d="M9.5 9.5L12 12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+      </svg>
+      <input
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearch()"
+        placeholder="Search statuses..."
+        class="sidebar__search-input"
+        aria-label="Search statuses"
+      />
+    </div>
+
+    <!-- Quick filter -->
+    <div class="sidebar__filters">
+      <button
+        class="filter-pill"
+        [class.filter-pill--active]="activeFilter() === 'all'"
+        (click)="activeFilter.set('all')"
+      >
+        All
+      </button>
+      <button
+        class="filter-pill filter-pill--present"
+        [class.filter-pill--active]="activeFilter() === 'present'"
+        (click)="activeFilter.set('present')"
+      >
+        Present
+      </button>
+      <button
+        class="filter-pill filter-pill--absent"
+        [class.filter-pill--active]="activeFilter() === 'absent'"
+        (click)="activeFilter.set('absent')"
+      >
+        Absent
+      </button>
+      <button
+        class="filter-pill filter-pill--neutral"
+        [class.filter-pill--active]="activeFilter() === 'neutral'"
+        (click)="activeFilter.set('neutral')"
+      >
+        Neutral
+      </button>
+    </div>
+
+    <!-- Nav list -->
+    <nav class="sidebar__nav" aria-label="Status navigation">
+      <div class="nav-group">
+        <div class="nav-group__label">Present-equivalent</div>
+        @for (doc of filteredPresentDocs(); track doc.id) {
+        <a
+          class="nav-item"
+          [class.nav-item--active]="activeStatusId() === doc.id"
+          (click)="scrollTo(doc.id)"
+          [attr.aria-current]="activeStatusId() === doc.id ? 'true' : null"
+        >
+          <span class="nav-item__icon nav-item__icon--present">{{ doc.icon }}</span>
+          <span class="nav-item__label">{{ doc.label }}</span>
+          <span class="nav-item__badge nav-item__badge--present">+1.0</span>
+        </a>
+        }
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group__label">Absent-equivalent</div>
+        @for (doc of filteredAbsentDocs(); track doc.id) {
+        <a
+          class="nav-item"
+          [class.nav-item--active]="activeStatusId() === doc.id"
+          (click)="scrollTo(doc.id)"
+        >
+          <span class="nav-item__icon nav-item__icon--absent">{{ doc.icon }}</span>
+          <span class="nav-item__label">{{ doc.label }}</span>
+          <span class="nav-item__badge nav-item__badge--absent">0</span>
+        </a>
+        }
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group__label">Special / Neutral</div>
+        @for (doc of filteredNeutralDocs(); track doc.id) {
+        <a
+          class="nav-item"
+          [class.nav-item--active]="activeStatusId() === doc.id"
+          (click)="scrollTo(doc.id)"
+        >
+          <span class="nav-item__icon nav-item__icon--neutral">{{ doc.icon }}</span>
+          <span class="nav-item__label">{{ doc.label }}</span>
+          <span class="nav-item__badge nav-item__badge--neutral">−/+</span>
+        </a>
+        }
+      </div>
+    </nav>
+
+    <!-- Formula card -->
+    <div class="formula-card">
+      <div class="formula-card__title">Percentage formula</div>
+      <div class="formula-card__eq">
+        <span class="formula-card__num">P + L + H×0.5</span>
+        <div class="formula-card__divider"></div>
+        <span class="formula-card__den">Working days</span>
+      </div>
+      <div class="formula-card__note">EXCUSED · HOLIDAY · ON_DUTY excluded from denominator</div>
+    </div>
+  </aside>
+
+  <!-- Overlay for mobile -->
+  <div
+    class="overlay"
+    [class.overlay--visible]="sidebarOpen()"
+    (click)="sidebarOpen.set(false)"
+    aria-hidden="true"
+  ></div>
+
+  <!-- ── Main content ──────────────────────────────────────────────── -->
+  <main class="main" id="main-content">
+    <!-- Top bar (mobile) -->
+    <header class="topbar">
+      <button class="topbar__menu-btn" (click)="sidebarOpen.set(true)" aria-label="Open menu">
+        <span></span><span></span><span></span>
+      </button>
+      <span class="topbar__title">Attendance Reference Guide</span>
+      <span class="topbar__version">v2.0</span>
+    </header>
+
+    <!-- Hero section -->
+    <section class="hero">
+      <div class="hero__label">Class Teacher Reference</div>
+      <h1 class="hero__title">Attendance Status Guide</h1>
+      <p class="hero__sub">
+        Everything you need to know about marking attendance accurately — which status to use, when
+        to use it, real classroom examples, and how each status affects the percentage calculation.
+      </p>
+
+      <!-- Status overview cards -->
+      <div class="overview-grid">
+        @for (doc of allDocs; track doc.id) {
+        <button
+          class="overview-card"
+          [class]="'overview-card--' + doc.category"
+          (click)="scrollTo(doc.id)"
+        >
+          <span class="overview-card__icon">{{ doc.icon }}</span>
+          <span class="overview-card__label">{{ doc.label }}</span>
+          <span
+            class="overview-card__effect"
+            [class]="'overview-card__effect--' + doc.affectsPercentage"
+          >
+            {{ effectLabel(doc.affectsPercentage) }}
+          </span>
+        </button>
+        }
+      </div>
+
+      <!-- Legend -->
+      <div class="legend">
+        <div class="legend__item">
+          <span class="legend__dot legend__dot--present"></span>Present-equivalent — counts toward %
+        </div>
+        <div class="legend__item">
+          <span class="legend__dot legend__dot--absent"></span>Absent-equivalent — reduces %
+        </div>
+        <div class="legend__item">
+          <span class="legend__dot legend__dot--neutral"></span>Neutral — excluded from denominator
+        </div>
+      </div>
+    </section>
+
+    <!-- Status detail sections -->
+    <div class="sections">
+      @for (doc of allDocs; track doc.id) {
+      <section class="status-section" [id]="doc.id" [attr.data-category]="doc.category">
+        <!-- Section header -->
+        <div class="status-header" [class]="'status-header--' + doc.category">
+          <div class="status-header__left">
+            <div
+              class="status-header__icon-wrap"
+              [class]="'status-header__icon-wrap--' + doc.category"
+            >
+              {{ doc.icon }}
+            </div>
+            <div>
+              <div class="status-header__meta">
+                <span class="status-id-badge" [class]="'status-id-badge--' + doc.category">
+                  {{ doc.id }}
+                </span>
+                <span class="category-badge" [class]="'category-badge--' + doc.category">
+                  {{ categoryLabel(doc.category) }}
+                </span>
+              </div>
+              <h2 class="status-header__title">{{ doc.label }}</h2>
+              <p class="status-header__tagline">{{ doc.tagline }}</p>
+            </div>
+          </div>
+
+          <!-- Percentage pill -->
+          <div class="pct-pill" [class]="'pct-pill--' + doc.affectsPercentage">
+            <div class="pct-pill__label">Effect on %</div>
+            <div class="pct-pill__value">{{ effectLabel(doc.affectsPercentage) }}</div>
+          </div>
+        </div>
+
+        <!-- Percentage note banner -->
+        <div class="pct-banner" [class]="'pct-banner--' + doc.affectsPercentage">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="pct-banner__icon">
+            <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.4" />
+            <path d="M8 7v4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+            <circle cx="8" cy="5" r="0.8" fill="currentColor" />
+          </svg>
+          {{ doc.percentageNote }}
+        </div>
+
+        <!-- Full description -->
+        <div class="prose">
+          <p class="prose__body">{{ doc.fullDescription }}</p>
+        </div>
+
+        <!-- Half-day callout -->
+        @if (doc.halfDayDetail) {
+        <div class="callout callout--info">
+          <div class="callout__title">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.3" />
+              <path d="M7 6.5v3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+              <circle cx="7" cy="4.5" r="0.7" fill="currentColor" />
+            </svg>
+            Selecting the session
+          </div>
+          <p class="callout__body">
+            After selecting HALF_DAY, you must choose <strong>MORNING</strong> or
+            <strong>AFTERNOON</strong>. MORNING = the student attended the first session and left by
+            or after mid-day. AFTERNOON = the student was absent in the morning but arrived for the
+            second session. This detail appears in the student's attendance record and on the
+            parent-facing report.
+          </p>
+        </div>
+        }
+
+        <!-- Two-column: when to use / when not to -->
+        <div class="when-grid">
+          <div class="when-card when-card--yes">
+            <div class="when-card__header">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.3" />
+                <path
+                  d="M4 7l2 2 4-4"
+                  stroke="currentColor"
+                  stroke-width="1.3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              When to use
+            </div>
+            <ul class="when-card__list">
+              @for (item of doc.whenToUse; track $index) {
+              <li class="when-card__item">{{ item }}</li>
+              }
+            </ul>
+          </div>
+
+          <div class="when-card when-card--no">
+            <div class="when-card__header">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.3" />
+                <path
+                  d="M5 5l4 4M9 5l-4 4"
+                  stroke="currentColor"
+                  stroke-width="1.3"
+                  stroke-linecap="round"
+                />
+              </svg>
+              When NOT to use
+            </div>
+            <ul class="when-card__list">
+              @for (item of doc.whenNotToUse; track $index) {
+              <li class="when-card__item">{{ item }}</li>
+              }
+            </ul>
+          </div>
+        </div>
+
+        <!-- Examples -->
+        <div class="examples">
+          <div class="examples__heading">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect
+                x="1"
+                y="1"
+                width="12"
+                height="12"
+                rx="2.5"
+                stroke="currentColor"
+                stroke-width="1.3"
+              />
+              <path
+                d="M4 4.5h6M4 7h6M4 9.5h4"
+                stroke="currentColor"
+                stroke-width="1.3"
+                stroke-linecap="round"
+              />
+            </svg>
+            Classroom examples
+          </div>
+
+          @for (ex of doc.examples; track $index) {
+          <div class="example-card" [class]="'example-card--' + doc.category">
+            <div class="example-card__number">Example {{ $index + 1 }}</div>
+            <p class="example-card__situation">
+              <span class="example-card__situation-label">Situation:</span> {{ ex.situation }}
+            </p>
+            <div class="example-card__actions">
+              <div class="action-row action-row--correct">
+                <span class="action-row__dot action-row__dot--correct"></span>
+                <div>
+                  <span class="action-row__label action-row__label--correct">Correct</span>
+                  <p class="action-row__text">{{ ex.correct }}</p>
+                </div>
+              </div>
+              @if (ex.incorrect) {
+              <div class="action-row action-row--incorrect">
+                <span class="action-row__dot action-row__dot--incorrect"></span>
+                <div>
+                  <span class="action-row__label action-row__label--incorrect">Incorrect</span>
+                  <p class="action-row__text">{{ ex.incorrect }}</p>
+                </div>
+              </div>
+              } @if (ex.tip) {
+              <div class="action-row action-row--tip">
+                <span class="action-row__dot action-row__dot--tip"></span>
+                <div>
+                  <span class="action-row__label action-row__label--tip">Teacher tip</span>
+                  <p class="action-row__text">{{ ex.tip }}</p>
+                </div>
+              </div>
+              }
+            </div>
+          </div>
+          }
+        </div>
+
+        <!-- Notes guidance -->
+        @if (doc.requiresNote || doc.noteGuidance) {
+        <div class="callout" [class]="doc.requiresNote ? 'callout--warning' : 'callout--soft'">
+          <div class="callout__title">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path
+                d="M7 1L13 12H1L7 1Z"
+                stroke="currentColor"
+                stroke-width="1.3"
+                stroke-linejoin="round"
+              />
+              <path d="M7 5.5v3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+              <circle cx="7" cy="10" r="0.7" fill="currentColor" />
+            </svg>
+            {{ doc.requiresNote ? 'Notes field — required' : 'Notes field — recommended' }}
+          </div>
+          <p class="callout__body">{{ doc.noteGuidance }}</p>
+        </div>
+        }
+
+        <!-- Board policy note -->
+        @if (doc.boardPolicy) {
+        <div class="callout callout--policy">
+          <div class="callout__title">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect
+                x="2"
+                y="1"
+                width="10"
+                height="12"
+                rx="1.5"
+                stroke="currentColor"
+                stroke-width="1.3"
+              />
+              <path
+                d="M4.5 4h5M4.5 6.5h5M4.5 9h3"
+                stroke="currentColor"
+                stroke-width="1.2"
+                stroke-linecap="round"
+              />
+            </svg>
+            Board / Examination policy note
+          </div>
+          <p class="callout__body">{{ doc.boardPolicy }}</p>
+        </div>
+        }
+
+        <!-- Section divider -->
+        <div class="section-divider"></div>
+      </section>
+      }
+
+      <!-- Footer note -->
+      <div class="footer-note">
+        <div class="footer-note__icon">📋</div>
+        <div>
+          <div class="footer-note__title">When in doubt, escalate</div>
+          <p class="footer-note__body">
+            If you are unsure which status to use in an unusual situation, mark ABSENT temporarily
+            and consult the principal or admin office. An incorrect status — especially EXCUSED or
+            SUSPENDED — can have legal and regulatory consequences. It is always safer to use a
+            conservative status and correct it later with documentation than to use a lenient one
+            without authority.
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

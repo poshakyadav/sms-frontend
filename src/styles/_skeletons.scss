@@ -1,0 +1,47 @@
+// src/styles/_skeletons.scss
+// ─────────────────────────────────────────────────────────────────────────────
+// SKELETON / SHIMMER LOADERS — reusable animated placeholder blocks.
+// Import order: after _tokens, before _dark-theme.
+//
+// Two usage patterns:
+//   1. Global utility classes (.skeleton, .skeleton--sm, .skeleton--round)
+//      → available everywhere via styles.scss import.
+//   2. Component SCSS mixin:
+//        @use 'path/to/styles/skeletons' as sk;
+//        .my-el { @include sk.base(); }
+//      → use this in component files; @extend %placeholders cannot cross
+//        Angular's per-component Sass compilation boundary.
+// ─────────────────────────────────────────────────────────────────────────────
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+// ── Mixin — safe to @include inside any component SCSS ───────────────────────
+@mixin base($radius: var(--radius-md)) {
+  background: linear-gradient(
+    90deg,
+    var(--color-hover) 25%,
+    var(--color-divider) 50%,
+    var(--color-hover) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s infinite;
+  border-radius: $radius;
+}
+
+// ── Global utility classes (opt-in) ──────────────────────────────────────────
+.skeleton {
+  @include base();
+}
+.skeleton--sm {
+  @include base(var(--radius-sm));
+}
+.skeleton--round {
+  @include base(9999px);
+}

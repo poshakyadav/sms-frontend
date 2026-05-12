@@ -1,63 +1,89 @@
-// ============================================================
-// _academics-shared.scss
-// Single source of truth for ALL academics module styles.
-// Import this in every academics component SCSS:
+// shared/styles/academics-shared.scss
+// ─────────────────────────────────────────────────────────────────────────────
+// ACADEMICS MODULE — shared styles scoped to the academics feature.
+// Global utilities (layout, buttons, cards, tables, stats, dark-theme) are
+// already available from styles.scss partials — do NOT duplicate them here.
+//
+// Import in any academics component SCSS:
 //   @use '../../../../../shared/styles/academics-shared' as *;
 // (adjust relative path as needed)
-// ============================================================
+// ─────────────────────────────────────────────────────────────────────────────
 
-// ── Page shell ───────────────────────────────────────────────────────────────
+// ── Page shell ────────────────────────────────────────────────────────────────
+// Wraps the full academics page with consistent padding + max-width.
 .page-container,
 .page-layout {
-  padding: 32px 28px;
+  padding: 20px 16px;
   max-width: 1280px;
   margin: 0 auto;
 
-  @media (max-width: 768px) {
-    padding: 20px 16px;
+  @media (min-width: 768px) {
+    padding: 28px 24px;
+  }
+
+  @media (min-width: 1024px) {
+    padding: 32px 28px;
   }
 }
 
-// ── Page header (title + action buttons) ─────────────────────────────────────
+// ── Page header ───────────────────────────────────────────────────────────────
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 32px;
-  gap: 16px;
+  margin-bottom: 24px;
+  gap: 12px;
   flex-wrap: wrap;
+
+  @media (min-width: 768px) {
+    margin-bottom: 32px;
+    gap: 16px;
+  }
 
   .header-left {
     h1 {
       margin: 0 0 4px;
-      font-size: 1.875rem;
+      font-size: 1.5rem;
       font-weight: 700;
       color: var(--color-text-primary);
       letter-spacing: -0.02em;
+
+      @media (min-width: 768px) {
+        font-size: 1.875rem;
+      }
     }
+
     p {
       margin: 0;
-      font-size: 0.9rem;
+      font-size: 0.875rem;
       color: var(--color-text-secondary);
     }
   }
 
   h1 {
     margin: 0;
-    font-size: 1.875rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--color-text-primary);
     letter-spacing: -0.02em;
+
+    @media (min-width: 768px) {
+      font-size: 1.875rem;
+    }
   }
 
   .header-actions {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     align-items: center;
     flex-wrap: wrap;
+
+    @media (min-width: 768px) {
+      gap: 10px;
+    }
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 767px) {
     flex-direction: column;
     align-items: flex-start;
 
@@ -67,27 +93,39 @@
   }
 }
 
-// ── Shared state styles (used by loading, error, empty) ──────────────────────
+// ── State containers (loading / error / empty) ────────────────────────────────
+// Mobile-first centred states.
 %state-base {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 380px;
-  gap: 16px;
+  min-height: 300px;
+  gap: 14px;
   text-align: center;
-  padding: 40px 20px;
+  padding: 32px 16px;
+
+  @media (min-width: 768px) {
+    min-height: 380px;
+    gap: 16px;
+    padding: 40px 20px;
+  }
 }
 
 %state-icon-base {
-  font-size: 72px;
-  height: 72px;
-  width: 72px;
+  font-size: 60px;
+  height: 60px;
+  width: 60px;
   opacity: 0.55;
   color: var(--color-text-muted);
+
+  @media (min-width: 768px) {
+    font-size: 72px;
+    height: 72px;
+    width: 72px;
+  }
 }
 
-// ── Feedback states: loading / error / empty ─────────────────────────────────
 .state-container {
   @extend %state-base;
 
@@ -97,18 +135,21 @@
 
   h2 {
     margin: 0;
-    font-size: 1.35rem;
+    font-size: 1.2rem;
     font-weight: 600;
     color: var(--color-text-primary);
+
+    @media (min-width: 768px) {
+      font-size: 1.35rem;
+    }
   }
 
   p {
     margin: 0;
     color: var(--color-text-secondary);
-    font-size: 0.9rem;
+    font-size: 0.875rem;
   }
 
-  // Error modifier — use class="state-container error"
   &.error {
     .state-icon {
       color: var(--color-error);
@@ -120,7 +161,6 @@
   }
 }
 
-// ── Legacy aliases — flat classes (no compound extends) ───────────────────────
 .loading-container,
 .loading-state {
   @extend %state-base;
@@ -131,15 +171,14 @@
 
   h2 {
     margin: 0;
-    font-size: 1.35rem;
+    font-size: 1.2rem;
     font-weight: 600;
     color: var(--color-text-primary);
   }
-
   p {
     margin: 0;
     color: var(--color-text-secondary);
-    font-size: 0.9rem;
+    font-size: 0.875rem;
   }
 }
 
@@ -155,15 +194,14 @@
 
   h2 {
     margin: 0;
-    font-size: 1.35rem;
+    font-size: 1.2rem;
     font-weight: 600;
     color: var(--color-error);
   }
-
   p {
     margin: 0;
     color: var(--color-text-secondary);
-    font-size: 0.9rem;
+    font-size: 0.875rem;
   }
 }
 
@@ -176,47 +214,44 @@
 
   h2 {
     margin: 0;
-    font-size: 1.35rem;
+    font-size: 1.2rem;
     font-weight: 600;
     color: var(--color-text-primary);
   }
-
   p {
     margin: 0;
     color: var(--color-text-secondary);
-    font-size: 0.9rem;
+    font-size: 0.875rem;
   }
 }
 
-// ── Data table card ───────────────────────────────────────────────────────────
-.table-card,
-.table-container {
-  background: var(--color-bg-card);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  overflow: hidden;
-  border: 1px solid var(--color-border);
-
-  table {
-    width: 100%;
-  }
-}
-
+// ── Angular Material table overrides (academics module) ───────────────────────
+// These must live in a globally-imported file (academics-shared is @use'd by
+// components, so Angular keeps it in component scope — but mat-table styles
+// are global by nature, so these stay here rather than per-component.)
 .mat-mdc-header-cell {
   background: var(--color-hover) !important;
   font-weight: 700 !important;
-  font-size: 0.78rem !important;
+  font-size: 0.72rem !important;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--color-text-secondary) !important;
-  padding: 14px 16px !important;
+  padding: 12px 14px !important;
+
+  @media (min-width: 768px) {
+    padding: 14px 16px !important;
+  }
 }
 
 .mat-mdc-cell {
-  padding: 14px 16px !important;
+  padding: 12px 14px !important;
   color: var(--color-text-primary);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   border-bottom: 1px solid var(--color-divider) !important;
+
+  @media (min-width: 768px) {
+    padding: 14px 16px !important;
+  }
 }
 
 .mat-mdc-row {
@@ -225,83 +260,164 @@
   &:hover {
     background: var(--color-hover) !important;
   }
-
   &:last-child .mat-mdc-cell {
     border-bottom: none !important;
   }
 }
 
-// ── Form page wrapper ─────────────────────────────────────────────────────────
+// ── Tab wrapper ───────────────────────────────────────────────────────────────
+// Wraps mat-tab-group in a card shell. ::ng-deep is required to pierce the
+// Angular view encapsulation for Material internals.
+.tabs-wrapper {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+
+  ::ng-deep {
+    .mat-mdc-tab-header {
+      background: var(--color-hover);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .mat-mdc-tab-labels {
+      padding: 0 4px;
+
+      @media (min-width: 768px) {
+        padding: 0 8px;
+      }
+    }
+
+    .mat-mdc-tab {
+      min-width: 120px;
+      font-weight: 600;
+      font-size: 0.82rem;
+
+      @media (min-width: 768px) {
+        min-width: 160px;
+        font-size: 0.875rem;
+      }
+    }
+
+    .mat-mdc-tab-body-wrapper {
+      min-height: 360px;
+
+      @media (min-width: 768px) {
+        min-height: 400px;
+      }
+    }
+  }
+
+  .tab-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+    margin-right: 6px;
+    vertical-align: middle;
+
+    @media (min-width: 768px) {
+      font-size: 18px;
+      height: 18px;
+      width: 18px;
+      margin-right: 8px;
+    }
+  }
+}
+
+.tab-content {
+  padding: 16px;
+  min-height: 320px;
+
+  @media (min-width: 768px) {
+    padding: 24px;
+    min-height: 360px;
+  }
+}
+
+// ── Form page / card ──────────────────────────────────────────────────────────
 .form-page {
   max-width: 840px;
-  margin: 36px auto;
-  padding: 0 24px;
+  margin: 20px auto;
+  padding: 0 16px;
 
-  @media (max-width: 600px) {
-    padding: 0 16px;
-    margin: 20px auto;
+  @media (min-width: 600px) {
+    margin: 36px auto;
+    padding: 0 24px;
   }
 
   header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 32px;
+    margin-bottom: 24px;
     gap: 16px;
     flex-wrap: wrap;
 
-    h1 {
-      margin: 0;
-      font-size: 1.75rem;
-      font-weight: 700;
-      color: var(--color-text-primary);
+    @media (min-width: 768px) {
+      margin-bottom: 32px;
     }
 
-    @media (max-width: 600px) {
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+
+      @media (min-width: 768px) {
+        font-size: 1.75rem;
+      }
+    }
+
+    @media (max-width: 599px) {
       flex-direction: column;
       align-items: flex-start;
     }
   }
 }
 
-// ── Form card ─────────────────────────────────────────────────────────────────
 .form-card {
   background: var(--color-bg-card);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   border: 1px solid var(--color-border);
-  padding: 36px;
+  padding: 20px 16px;
 
-  @media (max-width: 600px) {
-    padding: 24px 20px;
+  @media (min-width: 600px) {
+    padding: 36px;
   }
 }
 
-// ── Form layout ───────────────────────────────────────────────────────────────
 .form-layout,
 .form-container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
+
+  @media (min-width: 768px) {
+    gap: 20px;
+  }
 }
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: 1fr;
+  gap: 16px;
 
-  @media (max-width: 640px) {
-    grid-template-columns: 1fr;
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
   }
 }
 
 .date-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  grid-template-columns: 1fr;
+  gap: 16px;
 
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
+  @media (min-width: 600px) {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
   }
 }
 
@@ -310,26 +426,32 @@ mat-form-field.full-width {
   width: 100%;
 }
 
-// ── Form actions bar ──────────────────────────────────────────────────────────
 .form-actions {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   margin-top: 8px;
+  flex-wrap: wrap;
 
   button {
-    min-width: 120px;
+    min-width: 100px;
+  }
+
+  @media (min-width: 768px) {
+    gap: 12px;
+    button {
+      min-width: 120px;
+    }
   }
 }
 
-// ── Loading overlay inside form ───────────────────────────────────────────────
 .loading-overlay {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 300px;
+  min-height: 280px;
   gap: 16px;
   color: var(--color-text-secondary);
 }
@@ -338,50 +460,46 @@ mat-form-field.full-width {
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 4px 12px;
+  padding: 3px 10px;
   border-radius: 9999px;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.03em;
+
+  @media (min-width: 768px) {
+    padding: 4px 12px;
+    font-size: 0.78rem;
+  }
 
   &.global {
     background: color-mix(in srgb, var(--color-primary) 12%, transparent);
     color: var(--color-primary-dark);
   }
-
   &.year-specific {
     background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
     color: var(--color-secondary);
   }
-
   &.active {
     background: color-mix(in srgb, var(--color-success) 14%, transparent);
     color: var(--color-success);
   }
-
   &.inactive {
     background: color-mix(in srgb, var(--color-text-muted) 14%, transparent);
     color: var(--color-text-muted);
   }
 }
 
-// ── Mappings bulk form row ────────────────────────────────────────────────────
+// ── Mappings bulk row ─────────────────────────────────────────────────────────
 .mapping-row {
   display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 16px;
+  grid-template-columns: 1fr;
+  gap: 12px;
   align-items: center;
 
-  @media (max-width: 640px) {
-    grid-template-columns: 1fr;
+  @media (min-width: 640px) {
+    grid-template-columns: 1fr 1fr auto;
+    gap: 16px;
   }
-}
-
-// ── Capacity badge ────────────────────────────────────────────────────────────
-.capacity-badge {
-  font-size: 0.8rem;
-  color: var(--color-text-secondary);
-  margin-left: 6px;
 }
 
 // ── Inline add-form card ──────────────────────────────────────────────────────
@@ -389,35 +507,44 @@ mat-form-field.full-width {
   background: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg-card));
   border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
   border-radius: var(--radius-md);
-  padding: 24px;
-  margin-bottom: 28px;
+  padding: 16px;
+  margin-bottom: 20px;
+
+  @media (min-width: 768px) {
+    padding: 24px;
+    margin-bottom: 28px;
+  }
 
   h3 {
-    margin: 0 0 20px;
-    font-size: 1rem;
+    margin: 0 0 16px;
+    font-size: 0.95rem;
     font-weight: 600;
     color: var(--color-text-primary);
+
+    @media (min-width: 768px) {
+      margin-bottom: 20px;
+      font-size: 1rem;
+    }
   }
-}
-
-// ── Responsive table overflow ─────────────────────────────────────────────────
-.overflow-x {
-  overflow-x: auto;
-}
-
-// ── Action button spacing ─────────────────────────────────────────────────────
-.cell-actions {
-  display: flex;
-  gap: 4px;
-  align-items: center;
 }
 
 // ── Section label ─────────────────────────────────────────────────────────────
 .section-label {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
   color: var(--color-text-muted);
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+
+  @media (min-width: 768px) {
+    margin-bottom: 12px;
+  }
+}
+
+// ── Capacity badge ────────────────────────────────────────────────────────────
+.capacity-badge {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  margin-left: 6px;
 }

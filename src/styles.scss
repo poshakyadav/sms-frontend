@@ -9,7 +9,7 @@
 @use '@angular/material' as mat;
 
 // Super Tokens import for super-module components
-@use '../../sms-frontend/src/app/shared/styles/super-shared-style/super-tokens' as *;
+@use './app/shared/styles/super-shared-style/super-tokens' as *;
 
 // ── Shared partials ───────────────────────────────────────────────────────────
 // Import order matters: tokens → skeletons → layout → buttons → cards →

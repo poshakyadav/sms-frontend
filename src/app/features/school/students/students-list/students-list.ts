@@ -25,31 +25,119 @@ import { MatMenuModule } from '@angular/material/menu';
 
 import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../core/services/toast.service';
-import { StudentsService } from '../../../../core/services/students.service';
+import {
+  StudentsService,
+  StudentInClassSection,
+  SOCIAL_CATEGORY_LABELS,
+  RELIGION_LABELS,
+  DISABILITY_TYPE_LABELS,
+  FACILITY_LABELS,
+  PREVIOUS_CLASS_RESULT_LABELS,
+  ENROLLMENT_TYPE_LABELS,
+  SocialCategory,
+  Religion,
+  DisabilityType,
+  FacilityReceived,
+  PreviousClassResult,
+  EnrollmentType,
+} from '../../../../core/services/students.service';
 import { AcademicsService, ClassSection } from '../../../../core/services/academics.service';
 import { PromoteStudentsDialogComponent } from '../promote-students-dialog/promote-students-dialog';
 import { UnenrollStudentDialog } from '../../academics/unenroll/unenroll-student-dialog/unenroll-student-dialog';
 import { AssignRollNumbersDialog } from '../assign-roll-numbers-dialog/assign-roll-numbers-dialog';
 
-export interface StudentInClassSection {
-  id: number;
-  name: string;
-  email: string;
-  phone?: string;
-  gender?: string;
-  dateOfBirth?: string;
-  bloodGroup?: string;
-  avatarUrl?: string;
-  isActive: boolean;
-  rollNumber?: string;
-  admissionDate?: string;
-  enrollmentId: number;
-  classSectionId: number;
-  className: string;
-  sectionName: string;
-  enrollmentDate?: string;
-  academicYearId: number;
+// ── Column group definitions ──────────────────────────────────────────────────
+
+export type ColumnGroup =
+  | 'core'
+  | 'personal'
+  | 'guardian'
+  | 'academic'
+  | 'udise'
+  | 'demographic'
+  | 'socioeconomic'
+  | 'cwsn';
+
+export interface ColumnDef {
+  key: string;
+  label: string;
+  group: ColumnGroup;
+  always?: boolean; // always shown, cannot be toggled
 }
+
+export const ALL_COLUMNS: ColumnDef[] = [
+  // Core (always visible)
+  { key: 'select', label: 'Select', group: 'core', always: true },
+  { key: 'rollNumber', label: 'Roll No.', group: 'core', always: true },
+  { key: 'name', label: 'Student', group: 'core', always: true },
+  { key: 'status', label: 'Status', group: 'core', always: true },
+  // Personal
+  { key: 'gender', label: 'Gender', group: 'personal' },
+  { key: 'dateOfBirth', label: 'Date of Birth', group: 'personal' },
+  { key: 'bloodGroup', label: 'Blood Group', group: 'personal' },
+  { key: 'phone', label: 'Phone', group: 'personal' },
+  // Guardian
+  { key: 'fatherName', label: "Father's Name", group: 'guardian' },
+  { key: 'motherName', label: "Mother's Name", group: 'guardian' },
+  { key: 'guardianName', label: 'Guardian', group: 'guardian' },
+  // Academic
+  { key: 'admissionNumber', label: 'Admission No.', group: 'academic' },
+  { key: 'admissionDate', label: 'Admission Date', group: 'academic' },
+  { key: 'enrollmentType', label: 'Enrollment Type', group: 'academic' },
+  { key: 'previousSchool', label: 'Previous School', group: 'academic' },
+  { key: 'previousClassResult', label: 'Prev. Result', group: 'academic' },
+  // UDISE
+  { key: 'pen', label: 'PEN', group: 'udise' },
+  { key: 'apaarId', label: 'APAAR ID', group: 'udise' },
+  { key: 'stateStudentId', label: 'State Student ID', group: 'udise' },
+  { key: 'aadhaarMasked', label: 'Aadhaar (Masked)', group: 'udise' },
+  { key: 'udiseVerified', label: 'UDISE Verified', group: 'udise' },
+  // Demographic
+  { key: 'socialCategory', label: 'Social Category', group: 'demographic' },
+  { key: 'religion', label: 'Religion', group: 'demographic' },
+  { key: 'isMinority', label: 'Minority', group: 'demographic' },
+  { key: 'localityType', label: 'Locality', group: 'demographic' },
+  // Socio-economic
+  { key: 'isBpl', label: 'BPL', group: 'socioeconomic' },
+  { key: 'facilitiesReceived', label: 'Facilities', group: 'socioeconomic' },
+  // CWSN
+  { key: 'isCwsn', label: 'CWSN', group: 'cwsn' },
+  { key: 'disabilityType', label: 'Disability Type', group: 'cwsn' },
+  // Actions (always)
+  { key: 'actions', label: 'Actions', group: 'core', always: true },
+];
+
+export const COLUMN_GROUP_LABELS: Record<ColumnGroup, string> = {
+  core: 'Core',
+  personal: 'Personal',
+  guardian: 'Guardian / Parent',
+  academic: 'Academic',
+  udise: 'UDISE+ Identity',
+  demographic: 'Demographic',
+  socioeconomic: 'Socio-Economic',
+  cwsn: 'CWSN',
+};
+
+export const COLUMN_GROUP_ICONS: Record<ColumnGroup, string> = {
+  core: 'grid_on',
+  personal: 'person',
+  guardian: 'family_restroom',
+  academic: 'school',
+  udise: 'badge',
+  demographic: 'groups',
+  socioeconomic: 'volunteer_activism',
+  cwsn: 'accessibility_new',
+};
+
+// Default visible columns (beyond the always-true ones)
+const DEFAULT_VISIBLE: string[] = [
+  'gender',
+  'dateOfBirth',
+  'bloodGroup',
+  'phone',
+  'fatherName',
+  'admissionNumber',
+];
 
 @Component({
   selector: 'app-students-list',
@@ -84,31 +172,60 @@ export class StudentsList implements OnInit {
   private toast = inject(ToastService);
   private dialog = inject(MatDialog);
 
-  // ── State ─────────────────────────────────────────────────────────────────
+  // ── State ──────────────────────────────────────────────────────────────────
   classSections = signal<ClassSection[]>([]);
   students = signal<StudentInClassSection[]>([]);
   selectedClassSectionId = signal<number | null>(null);
   selectedStudentIds = signal<Set<number>>(new Set());
-
   loadingClassSections = signal(true);
   loadingStudents = signal(false);
   error = signal<string | null>(null);
   searchQuery = signal('');
 
-  displayedColumns = ['select', 'rollNumber', 'name', 'gender', 'bloodGroup', 'status', 'actions'];
+  // Column visibility state — key → boolean
+  columnVisibility = signal<Record<string, boolean>>(
+    Object.fromEntries(
+      ALL_COLUMNS.filter((c) => !c.always).map((c) => [c.key, DEFAULT_VISIBLE.includes(c.key)])
+    )
+  );
 
-  // ── PBAC ──────────────────────────────────────────────────────────────────
+  // Column group panel open/closed
+  columnPanelOpen = signal(false);
+
+  // Expanded row for UDISE detail drawer
+  expandedRowId = signal<number | null>(null);
+
+  // ── PBAC ───────────────────────────────────────────────────────────────────
   canPromote = computed(() => this.auth.hasPermission('academics.enroll'));
   canUnenroll = computed(() => this.auth.hasPermission('academics.unenroll'));
   canViewFees = computed(() => this.auth.hasPermission('fees.report'));
   canViewAttendance = computed(() => this.auth.hasPermission('attendance.student.view'));
-  // Assign roll numbers requires the same enroll permission (backed by academics.enroll on the API)
   canAssignRollNumbers = computed(() => this.auth.hasPermission('academics.enroll'));
 
-  // ── Computed ──────────────────────────────────────────────────────────────
+  // ── Label helpers (exposed to template) ───────────────────────────────────
+  readonly SOCIAL_CATEGORY_LABELS = SOCIAL_CATEGORY_LABELS;
+  readonly RELIGION_LABELS = RELIGION_LABELS;
+  readonly DISABILITY_TYPE_LABELS = DISABILITY_TYPE_LABELS;
+  readonly FACILITY_LABELS = FACILITY_LABELS;
+  readonly PREVIOUS_CLASS_RESULT_LABELS = PREVIOUS_CLASS_RESULT_LABELS;
+  readonly ENROLLMENT_TYPE_LABELS = ENROLLMENT_TYPE_LABELS;
+  readonly COLUMN_GROUP_LABELS = COLUMN_GROUP_LABELS;
+  readonly COLUMN_GROUP_ICONS = COLUMN_GROUP_ICONS;
+  readonly columnGroups = Object.keys(COLUMN_GROUP_LABELS).filter(
+    (g) => g !== 'core'
+  ) as ColumnGroup[];
+  readonly allColumns = ALL_COLUMNS;
+
+  // ── Computed ───────────────────────────────────────────────────────────────
   selectedClassSection = computed(() =>
     this.classSections().find((cs) => cs.id === this.selectedClassSectionId())
   );
+
+  /** Ordered list of column keys that should currently be shown */
+  displayedColumns = computed<string[]>(() => {
+    const vis = this.columnVisibility();
+    return ALL_COLUMNS.filter((c) => c.always || vis[c.key]).map((c) => c.key);
+  });
 
   filteredStudents = computed(() => {
     const q = this.searchQuery().toLowerCase().trim();
@@ -117,7 +234,11 @@ export class StudentsList implements OnInit {
       (s) =>
         s.name.toLowerCase().includes(q) ||
         s.email.toLowerCase().includes(q) ||
-        (s.rollNumber ?? '').toLowerCase().includes(q)
+        (s.rollNumber ?? '').toLowerCase().includes(q) ||
+        (s.admissionNumber ?? '').toLowerCase().includes(q) ||
+        (s.fatherName ?? '').toLowerCase().includes(q) ||
+        (s.motherName ?? '').toLowerCase().includes(q) ||
+        (s.phone ?? '').includes(q)
     );
   });
 
@@ -134,16 +255,30 @@ export class StudentsList implements OnInit {
   selectedCount = computed(() => this.selectedStudentIds().size);
   totalStudents = computed(() => this.students().length);
   activeStudents = computed(() => this.students().filter((s) => s.isActive).length);
+  cwsnCount = computed(() => this.students().filter((s) => s.isCwsn).length);
+  bplCount = computed(() => this.students().filter((s) => s.isBpl).length);
+  udiseComplete = computed(() => this.students().filter((s) => s.udiseVerified).length);
 
-  // True if ANY student in the current class-section already has a roll number assigned
   hasExistingRollNumbers = computed(() =>
     this.students().some((s) => !!s.rollNumber && s.rollNumber !== '—')
   );
+
+  /** Columns in a given group that are toggleable */
+  columnsInGroup(group: ColumnGroup): ColumnDef[] {
+    return ALL_COLUMNS.filter((c) => c.group === group && !c.always);
+  }
+
+  /** How many columns in a group are currently visible */
+  visibleCountInGroup(group: ColumnGroup): number {
+    const vis = this.columnVisibility();
+    return this.columnsInGroup(group).filter((c) => vis[c.key]).length;
+  }
 
   ngOnInit(): void {
     this.loadClassSections();
   }
 
+  // ── Data loading ───────────────────────────────────────────────────────────
   loadClassSections(): void {
     this.loadingClassSections.set(true);
     this.academicsService.getClassSections().subscribe({
@@ -162,6 +297,7 @@ export class StudentsList implements OnInit {
     this.selectedClassSectionId.set(classSectionId);
     this.selectedStudentIds.set(new Set());
     this.searchQuery.set('');
+    this.expandedRowId.set(null);
     this.loadStudents(classSectionId);
   }
 
@@ -182,7 +318,43 @@ export class StudentsList implements OnInit {
     });
   }
 
-  // ── Selection ─────────────────────────────────────────────────────────────
+  // ── Column visibility ──────────────────────────────────────────────────────
+  toggleColumn(key: string): void {
+    this.columnVisibility.update((vis) => ({ ...vis, [key]: !vis[key] }));
+  }
+
+  isColumnVisible(key: string): boolean {
+    return !!this.columnVisibility()[key];
+  }
+
+  toggleGroupColumns(group: ColumnGroup, show: boolean): void {
+    const cols = this.columnsInGroup(group).map((c) => c.key);
+    this.columnVisibility.update((vis) => {
+      const next = { ...vis };
+      cols.forEach((k) => (next[k] = show));
+      return next;
+    });
+  }
+
+  resetColumns(): void {
+    this.columnVisibility.set(
+      Object.fromEntries(
+        ALL_COLUMNS.filter((c) => !c.always).map((c) => [c.key, DEFAULT_VISIBLE.includes(c.key)])
+      )
+    );
+  }
+
+  // ── Row expand (UDISE detail drawer) ──────────────────────────────────────
+  toggleExpand(id: number, event: Event): void {
+    event.stopPropagation();
+    this.expandedRowId.update((cur) => (cur === id ? null : id));
+  }
+
+  isExpanded(id: number): boolean {
+    return this.expandedRowId() === id;
+  }
+
+  // ── Selection ──────────────────────────────────────────────────────────────
   isSelected(id: number): boolean {
     return this.selectedStudentIds().has(id);
   }
@@ -206,7 +378,7 @@ export class StudentsList implements OnInit {
     this.selectedStudentIds.set(new Set());
   }
 
-  // ── Promote ───────────────────────────────────────────────────────────────
+  // ── Dialogs ────────────────────────────────────────────────────────────────
   openPromoteDialog(studentIds: number[]): void {
     const classSectionId = this.selectedClassSectionId();
     if (!classSectionId) return;
@@ -247,7 +419,6 @@ export class StudentsList implements OnInit {
     this.openPromoteDialog([...this.selectedStudentIds()]);
   }
 
-  // ── Unenroll ──────────────────────────────────────────────────────────────
   openUnenrollDialog(student: StudentInClassSection, event: Event): void {
     event.stopPropagation();
 
@@ -255,20 +426,13 @@ export class StudentsList implements OnInit {
       width: '580px',
       maxWidth: '95vw',
       disableClose: true,
-      data: {
-        studentId: student.id,
-        studentName: student.name,
-      },
+      data: { studentId: student.id, studentName: student.name },
     });
 
     ref.afterClosed().subscribe((result) => {
       if (result?.success) {
         this.toast.success(result.message);
-
-        // Optimistic UI — remove from list immediately (student is no longer enrolled)
         this.students.update((list) => list.filter((s) => s.id !== student.id));
-
-        // Also clean up selection if this student was selected
         this.selectedStudentIds.update((set) => {
           const next = new Set(set);
           next.delete(student.id);
@@ -278,7 +442,6 @@ export class StudentsList implements OnInit {
     });
   }
 
-  // ── Assign Roll Numbers ───────────────────────────────────────────────────
   openAssignRollNumbersDialog(): void {
     const classSectionId = this.selectedClassSectionId();
     const cs = this.selectedClassSection();
@@ -299,12 +462,55 @@ export class StudentsList implements OnInit {
 
     ref.afterClosed().subscribe((result) => {
       if (result?.success) {
-        // Reload so roll numbers are shown immediately in the table
         this.loadStudents(classSectionId);
       }
     });
   }
 
+  // ── Label helpers ──────────────────────────────────────────────────────────
+  getSocialCategoryLabel(val?: SocialCategory | null): string {
+    return val != null ? SOCIAL_CATEGORY_LABELS[val] ?? String(val) : '—';
+  }
+
+  getReligionLabel(val?: Religion | null): string {
+    return val != null ? RELIGION_LABELS[val] ?? String(val) : '—';
+  }
+
+  getDisabilityLabel(val?: DisabilityType | null): string {
+    return val != null ? DISABILITY_TYPE_LABELS[val] ?? String(val) : '—';
+  }
+
+  getFacilityLabel(val: FacilityReceived): string {
+    return FACILITY_LABELS[val] ?? val;
+  }
+
+  getPreviousResultLabel(val?: PreviousClassResult | null): string {
+    return val != null ? PREVIOUS_CLASS_RESULT_LABELS[val] ?? val : '—';
+  }
+
+  getEnrollmentTypeLabel(val?: EnrollmentType | null): string {
+    return val != null ? ENROLLMENT_TYPE_LABELS[val] ?? val : '—';
+  }
+
+  hasMedicalInfo(s: StudentInClassSection): boolean {
+    return !!(s.medicalInfo && s.medicalInfo.trim().length > 0);
+  }
+
+  hasUdiseData(s: StudentInClassSection): boolean {
+    return !!(
+      s.pen ||
+      s.apaarId ||
+      s.stateStudentId ||
+      s.aadhaarMasked ||
+      s.socialCategory ||
+      s.religion ||
+      s.isCwsn ||
+      s.isBpl ||
+      (s.facilitiesReceived && s.facilitiesReceived.length > 0)
+    );
+  }
+
+  // ── Utilities ─────────────────────────────────────────────────────────────
   getInitials(name: string): string {
     return name
       .split(' ')
@@ -312,6 +518,23 @@ export class StudentsList implements OnInit {
       .slice(0, 2)
       .join('')
       .toUpperCase();
+  }
+
+  formatDate(d?: string): string {
+    if (!d) return '—';
+    try {
+      return new Date(d).toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+    } catch {
+      return d;
+    }
+  }
+
+  toggleColumnPanel(): void {
+    this.columnPanelOpen.update((v) => !v);
   }
 
   trackById(_: number, item: StudentInClassSection): number {

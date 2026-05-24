@@ -1,431 +1,567 @@
-<div class="pf-root">
-  <!-- ── Page header ────────────────────────────────────────────── -->
-  <header class="pf-header">
-    <div class="pf-header-inner">
-      <div class="pf-header-title">
-        <div class="pf-header-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path
-              d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-        </div>
-        <div>
-          <h1 class="pf-title">Child's Fee Details</h1>
-          <p class="pf-subtitle">Fee summary and payment records for your child</p>
-        </div>
+<!-- parent-fees.html -->
+<div class="pf-page">
+  <!-- ── Page Header ──────────────────────────────────────────────────────── -->
+  <div class="pf-header">
+    <div class="pf-header__left">
+      <div class="pf-header__icon-wrap">
+        <mat-icon>family_restroom</mat-icon>
       </div>
-    </div>
-  </header>
-
-  <!-- ── No child selected ──────────────────────────────────────── -->
-  @if (!hasActiveChild()) {
-  <div class="pf-no-child">
-    <div class="pf-no-child-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path
-          d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
-      </svg>
-    </div>
-    <h3>No child selected</h3>
-    <p>Please select an active child from the top bar to view their fee details.</p>
-  </div>
-  }
-
-  <!-- ── Loading ────────────────────────────────────────────────── -->
-  @if (hasActiveChild() && loading()) {
-  <div class="pf-loading">
-    <div class="pf-shimmer-wrap">
-      <div class="pf-shimmer pf-shimmer-header"></div>
-      <div class="pf-shimmer-cards">
-        <div class="pf-shimmer pf-shimmer-card"></div>
-        <div class="pf-shimmer pf-shimmer-card"></div>
-        <div class="pf-shimmer pf-shimmer-card"></div>
-      </div>
-      <div class="pf-shimmer pf-shimmer-table"></div>
-    </div>
-  </div>
-  }
-
-  <!-- ── Error ──────────────────────────────────────────────────── -->
-  @if (hasActiveChild() && error() && !loading()) {
-  <div class="pf-error-wrap">
-    <div class="pf-error-card">
-      <div class="pf-error-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 8v4M12 16h.01" stroke-linecap="round" />
-        </svg>
-      </div>
-      <h3>Something went wrong</h3>
-      <p>{{ error() }}</p>
-      <button class="pf-btn-retry" (click)="load()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path
-            d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-        Try again
-      </button>
-    </div>
-  </div>
-  }
-
-  <!-- ── Content ────────────────────────────────────────────────── -->
-  @if (hasActiveChild() && !loading() && !error()) { @if (overviews().length === 0) {
-  <div class="pf-empty">
-    <div class="pf-empty-illus">
-      <svg viewBox="0 0 120 120" fill="none">
-        <circle cx="60" cy="60" r="56" fill="#f1f5f9" />
-        <rect x="30" y="38" width="60" height="44" rx="6" fill="#e2e8f0" />
-        <rect x="38" y="50" width="44" height="6" rx="3" fill="#cbd5e1" />
-        <rect x="38" y="62" width="30" height="6" rx="3" fill="#cbd5e1" />
-        <rect x="38" y="74" width="20" height="4" rx="2" fill="#e2e8f0" />
-      </svg>
-    </div>
-    <h3>No fee records yet</h3>
-    <p>Fee information will appear here once records are created for your child.</p>
-  </div>
-  } @else {
-  <!-- Student identity banner (shown once — same for all year blocks) -->
-  <div class="pf-student-banner">
-    <div class="pf-student-avatar">
-      {{ getInitials(overviews()[0].studentName) }}
-    </div>
-    <div class="pf-student-info">
-      <p class="pf-student-name">{{ overviews()[0].studentName }}</p>
-      <p class="pf-student-email">{{ overviews()[0].studentEmail }}</p>
-    </div>
-  </div>
-
-  <!-- Year tabs -->
-  @if (overviews().length > 1) {
-  <div class="pf-year-tabs-wrap">
-    <div class="pf-year-tabs">
-      @for (ov of overviews(); track ov.academicYearId; let i = $index) {
-      <button
-        class="pf-year-tab"
-        [class.pf-tab-active]="selectedYearIdx() === i"
-        (click)="selectYear(i)"
-      >
-        {{ ov.academicYearName }}
-      </button>
-      }
-    </div>
-  </div>
-  }
-
-  <!-- Selected year overview -->
-  @let ov = overviews()[selectedYearIdx()];
-  <div class="pf-content-wrap">
-    <!-- Class + roll -->
-    <div class="pf-class-row">
-      <span class="pf-class-chip">{{ ov.className }} – {{ ov.sectionName }}</span>
-      @if (ov.rollNumber) {
-      <span class="pf-roll-chip">Roll No. {{ ov.rollNumber }}</span>
-      }
-    </div>
-
-    <!-- ── Stat cards ──────────────────────────────────── -->
-    <div class="pf-stat-grid">
-      <!-- Total Fee -->
-      <div class="pf-stat-card pf-stat-total">
-        <div class="pf-stat-top">
-          <span class="pf-stat-label">Total Fee</span>
-          <div class="pf-stat-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path
-                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"
-                fill="currentColor"
-                stroke="none"
-              />
-            </svg>
-          </div>
-        </div>
-        <p class="pf-stat-value">{{ formatCurrency(ov.totalDue) }}</p>
-        <p class="pf-stat-sub">For {{ ov.academicYearName }}</p>
-      </div>
-
-      <!-- Amount Paid -->
-      <div class="pf-stat-card pf-stat-paid">
-        <div class="pf-stat-top">
-          <span class="pf-stat-label">Amount Paid</span>
-          <div class="pf-stat-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round" />
-              <circle cx="12" cy="12" r="10" />
-            </svg>
-          </div>
-        </div>
-        <p class="pf-stat-value">{{ formatCurrency(ov.totalPaid) }}</p>
-        <p class="pf-stat-sub">{{ ov.collectionRate }}% of total</p>
-      </div>
-
-      <!-- Balance -->
-      <div
-        class="pf-stat-card"
-        [class.pf-stat-clear]="ov.balance <= 0"
-        [class.pf-stat-balance]="ov.balance > 0"
-      >
-        <div class="pf-stat-top">
-          <span class="pf-stat-label">{{ ov.balance <= 0 ? 'Status' : 'Balance Due' }}</span>
-          <div class="pf-stat-icon">
-            @if (ov.balance <= 0) {
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path
-                d="M22 11.08V12a10 10 0 11-5.93-9.14"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <polyline
-                points="22 4 12 14.01 9 11.01"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-            } @else {
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 6v6l4 2" stroke-linecap="round" />
-            </svg>
-            }
-          </div>
-        </div>
-        <p class="pf-stat-value">
-          {{ ov.balance <= 0 ? 'All Clear' : formatCurrency(ov.balance) }}
+      <div>
+        <h1 class="pf-header__title">Child's Fees</h1>
+        <p class="pf-header__subtitle">
+          Fee summary, payment history &amp; due amounts for your child
         </p>
-        <p class="pf-stat-sub">{{ ov.balance <= 0 ? 'No pending dues' : 'Pending payment' }}</p>
       </div>
     </div>
+  </div>
 
-    <!-- Progress ring + bar section -->
-    <div class="pf-progress-section">
-      <div class="pf-ring-wrap">
-        <svg class="pf-ring" viewBox="0 0 80 80">
+  <!-- ── Loading ───────────────────────────────────────────────────────────── -->
+  @if (loading()) {
+  <div class="pf-state">
+    <mat-spinner diameter="44" />
+    <p>Loading fee details…</p>
+  </div>
+  }
+
+  <!-- ── No Child Selected ─────────────────────────────────────────────────── -->
+  @if (!loading() && hasNoChildSelected()) {
+  <div class="pf-no-child">
+    <div class="pf-no-child__icon-wrap">
+      <mat-icon>child_care</mat-icon>
+    </div>
+    <h2 class="pf-no-child__title">No child selected</h2>
+    <p class="pf-no-child__sub">
+      Please select a child from the top navigation to view their fee details.
+    </p>
+    <div class="pf-no-child__hint">
+      <mat-icon>info_outline</mat-icon>
+      <span>Use the child selector in the top navigation bar to switch between your children.</span>
+    </div>
+  </div>
+  }
+
+  <!-- ── Error ─────────────────────────────────────────────────────────────── -->
+  @if (!loading() && error()) {
+  <div class="pf-state pf-state--error">
+    <div class="pf-state__icon-wrap pf-state__icon-wrap--error">
+      <mat-icon>error_outline</mat-icon>
+    </div>
+    <p>{{ error() }}</p>
+    <button mat-stroked-button (click)="load()"><mat-icon>refresh</mat-icon> Retry</button>
+  </div>
+  }
+
+  <!-- ── Empty ─────────────────────────────────────────────────────────────── -->
+  @if (!loading() && !error() && !hasNoChildSelected() && overviews().length === 0) {
+  <div class="pf-state">
+    <div class="pf-state__icon-wrap">
+      <mat-icon>receipt_long</mat-icon>
+    </div>
+    <p class="pf-state__title">No fee records found</p>
+    <p class="pf-state__sub">
+      Fee information will appear here once the school sets up fee structures.
+    </p>
+  </div>
+  }
+
+  <!-- ── Main Content ──────────────────────────────────────────────────────── -->
+  @if (!loading() && !error() && !hasNoChildSelected() && overviews().length > 0) {
+
+  <!-- Child Identity Banner -->
+  @if (activeOverview(); as overview) {
+  <div class="pf-child-banner">
+    <div class="pf-child-banner__avatar">
+      {{ overview.studentName.charAt(0).toUpperCase() }}
+    </div>
+    <div class="pf-child-banner__info">
+      <h2 class="pf-child-banner__name">{{ overview.studentName }}</h2>
+      <p class="pf-child-banner__meta">
+        {{ overview.className }} – {{ overview.sectionName }}
+        @if (overview.rollNumber) {
+        <span class="pf-roll-chip">Roll: {{ overview.rollNumber }}</span>
+        }
+      </p>
+    </div>
+    <div class="pf-child-banner__badge">
+      <mat-icon>verified_user</mat-icon>
+      <span>Parent View</span>
+    </div>
+  </div>
+  }
+
+  <!-- Year Tabs (if multiple years) -->
+  @if (overviews().length > 1) {
+  <div class="pf-year-tabs">
+    @for (o of overviews(); track o.academicYearId; let i = $index) {
+    <button
+      class="pf-year-tab"
+      [class.pf-year-tab--active]="activeYearIndex() === i"
+      (click)="selectYear(i)"
+    >
+      <mat-icon>school</mat-icon>
+      {{ o.academicYearName }}
+    </button>
+    }
+  </div>
+  }
+
+  <!-- Active Year Content -->
+  @if (activeOverview(); as overview) {
+
+  <!-- Overview Grid: Donut + Stats -->
+  <div class="pf-overview-grid">
+    <!-- Collection Rate Donut -->
+    <div class="pf-donut-card">
+      <div class="pf-donut-card__chart-wrap">
+        <svg viewBox="0 0 100 100" class="pf-donut-svg">
           <circle
-            cx="40"
-            cy="40"
-            r="32"
+            cx="50"
+            cy="50"
+            r="40"
             fill="none"
-            stroke="var(--color-divider, #f1f5f9)"
-            stroke-width="8"
+            stroke="var(--color-hover)"
+            stroke-width="10"
           />
-          <circle
-            cx="40"
-            cy="40"
-            r="32"
+          @if (overview.collectionRate > 0) {
+          <path
+            [attr.d]="getDonutPath(overview.collectionRate)"
             fill="none"
-            [attr.stroke]="ov.collectionRate === 100 ? '#16a34a' : 'var(--color-primary, #3b82f6)'"
-            stroke-width="8"
+            [attr.stroke]="
+              overview.collectionRate >= 80
+                ? 'var(--color-success)'
+                : overview.collectionRate >= 50
+                ? 'var(--color-warning)'
+                : 'var(--color-error)'
+            "
+            stroke-width="10"
             stroke-linecap="round"
-            stroke-dasharray="201.06"
-            [attr.stroke-dashoffset]="getDashOffset(ov.collectionRate)"
-            transform="rotate(-90 40 40)"
-            style="transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)"
           />
-          <text
-            x="40"
-            y="37"
-            text-anchor="middle"
-            font-size="14"
-            font-weight="700"
-            fill="var(--color-text-primary, #0f172a)"
-          >
-            {{ ov.collectionRate }}%
+          }
+          <text x="50" y="46" text-anchor="middle" class="pf-donut-pct">
+            {{ overview.collectionRate }}%
           </text>
-          <text
-            x="40"
-            y="50"
-            text-anchor="middle"
-            font-size="8"
-            fill="var(--color-text-secondary, #64748b)"
-          >
-            Paid
-          </text>
+          <text x="50" y="60" text-anchor="middle" class="pf-donut-label">paid</text>
         </svg>
       </div>
-      <div class="pf-progress-info">
-        <h4 class="pf-progress-title">Payment Progress</h4>
-        <div class="pf-progress-track">
-          <div
-            class="pf-progress-fill"
-            [class.pf-fill-complete]="ov.collectionRate === 100"
-            [style.width.%]="ov.collectionRate"
-          ></div>
-        </div>
-        <div class="pf-progress-legend">
-          <span class="pf-legend-item">
-            <span class="pf-legend-dot pf-dot-paid"></span>
-            Paid: {{ formatCurrency(ov.totalPaid) }}
-          </span>
-          <span class="pf-legend-item">
-            <span class="pf-legend-dot pf-dot-due"></span>
-            Remaining: {{ formatCurrency(Math.max(0, ov.balance)) }}
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── Fee breakdown ──────────────────────────────── -->
-    <div class="pf-card">
-      <div class="pf-card-header">
-        <h3 class="pf-card-title">Fee Breakdown</h3>
-        <span class="pf-card-count"
-          >{{ ov.feeBreakdown.length }} item{{ ov.feeBreakdown.length !== 1 ? 's' : '' }}</span
-        >
-      </div>
-
-      <!-- Mobile cards (hidden on desktop) -->
-      <div class="pf-fee-mobile">
-        @for (fee of ov.feeBreakdown; track fee.id) {
-        <div class="pf-fee-mobile-item" [class.pf-fee-overdue]="fee.status === 'OVERDUE'">
-          <div class="pf-fee-mobile-top">
-            <div>
-              <p class="pf-fee-mobile-name">{{ formatFeeType(fee.feeType) }}</p>
-              @if (fee.description) {
-              <p class="pf-fee-mobile-desc">{{ fee.description }}</p>
-              }
-            </div>
-            <span class="pf-status-chip" [class]="'pf-s-' + fee.status.toLowerCase()">{{
-              fee.status
-            }}</span>
-          </div>
-          <div class="pf-fee-mobile-amounts">
-            <div class="pf-amt-item">
-              <span class="pf-amt-label">Total</span>
-              <span class="pf-amt-val">{{ formatCurrency(fee.amount) }}</span>
-            </div>
-            <div class="pf-amt-item">
-              <span class="pf-amt-label">Paid</span>
-              <span class="pf-amt-val pf-amt-green">{{ formatCurrency(fee.amountPaid) }}</span>
-            </div>
-            <div class="pf-amt-item">
-              <span class="pf-amt-label">Balance</span>
-              <span
-                class="pf-amt-val"
-                [class.pf-amt-muted]="fee.balance <= 0"
-                [class.pf-amt-orange]="fee.balance > 0"
-              >
-                {{ fee.balance <= 0 ? '—' : formatCurrency(fee.balance) }}
-              </span>
-            </div>
-          </div>
-          @if (fee.dueDate) {
-          <p class="pf-fee-mobile-due" [class.pf-due-red]="isOverdue(fee.dueDate)">
-            Due: {{ formatDate(fee.dueDate) }}
-          </p>
-          }
-        </div>
+      <div class="pf-donut-card__info">
+        <p class="pf-donut-card__year">{{ overview.academicYearName }}</p>
+        <p class="pf-donut-card__class">{{ overview.className }} – {{ overview.sectionName }}</p>
+        @if (overview.rollNumber) {
+        <p class="pf-donut-card__roll">
+          Roll: <strong>{{ overview.rollNumber }}</strong>
+        </p>
         }
       </div>
+    </div>
 
-      <!-- Desktop table (hidden on mobile) -->
-      <div class="pf-table-wrap pf-table-desktop">
-        <table class="pf-table">
+    <!-- Summary Stats -->
+    <div class="pf-summary-stats">
+      <div class="pf-stat-card">
+        <div class="pf-stat-card__icon pf-stat-card__icon--primary">
+          <mat-icon>receipt_long</mat-icon>
+        </div>
+        <div class="pf-stat-card__body">
+          <span class="pf-stat-card__label">Total Fees</span>
+          <span class="pf-stat-card__value">{{ overview.totalOriginal | paise : 'short' }}</span>
+          @if (overview.totalConcession > 0) {
+          <span class="pf-stat-card__concession">
+            <mat-icon>local_offer</mat-icon>
+            -{{ overview.totalConcession | paise : 'compact' }} concession
+          </span>
+          }
+        </div>
+      </div>
+
+      <div class="pf-stat-card">
+        <div class="pf-stat-card__icon pf-stat-card__icon--info">
+          <mat-icon>pending_actions</mat-icon>
+        </div>
+        <div class="pf-stat-card__body">
+          <span class="pf-stat-card__label">Total Due</span>
+          <span class="pf-stat-card__value">{{ overview.totalDue | paise : 'short' }}</span>
+        </div>
+      </div>
+
+      <div class="pf-stat-card">
+        <div class="pf-stat-card__icon pf-stat-card__icon--success">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <div class="pf-stat-card__body">
+          <span class="pf-stat-card__label">Paid So Far</span>
+          <span class="pf-stat-card__value pf-stat-card__value--success">{{
+            overview.totalPaid | paise : 'short'
+          }}</span>
+        </div>
+      </div>
+
+      <div class="pf-stat-card" [class.pf-stat-card--alert]="overview.balance > 0">
+        <div
+          class="pf-stat-card__icon"
+          [class.pf-stat-card__icon--error]="overview.balance > 0"
+          [class.pf-stat-card__icon--success]="overview.balance <= 0"
+        >
+          <mat-icon>{{ overview.balance > 0 ? 'warning' : 'done_all' }}</mat-icon>
+        </div>
+        <div class="pf-stat-card__body">
+          <span class="pf-stat-card__label">Balance Due</span>
+          <span
+            class="pf-stat-card__value"
+            [class.pf-stat-card__value--error]="overview.balance > 0"
+            [class.pf-stat-card__value--success]="overview.balance <= 0"
+          >
+            {{ overview.balance | paise : 'short' }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alert Banner: Balance Due -->
+  @if (overview.balance > 0) {
+  <div class="pf-alert-banner">
+    <div class="pf-alert-banner__icon">
+      <mat-icon>notification_important</mat-icon>
+    </div>
+    <div class="pf-alert-banner__content">
+      <strong>{{ overview.balance | paise }} is due</strong> for {{ overview.studentName }} in
+      {{ overview.academicYearName }}. Please contact the school's accounts office to make a
+      payment.
+    </div>
+  </div>
+  }
+
+  <!-- ── Standard Fees Section ────────────────────────────────────────── -->
+  @if (structureFees().length > 0) {
+  <div class="pf-section">
+    <button
+      class="pf-section__header"
+      (click)="toggleSection(overview.academicYearId, 'STRUCTURE')"
+    >
+      <div class="pf-section__header-icon pf-section__header-icon--primary">
+        <mat-icon>receipt_long</mat-icon>
+      </div>
+      <div class="pf-section__header-text">
+        <span class="pf-section__title">Standard Fees</span>
+        <span class="pf-section__subtitle">Class-level fees assigned by school</span>
+      </div>
+      <span class="pf-section__count">{{ structureFees().length }}</span>
+      <mat-icon
+        class="pf-section__chevron"
+        [class.rotated]="isSectionExpanded(overview.academicYearId, 'STRUCTURE')"
+      >
+        expand_more
+      </mat-icon>
+    </button>
+
+    @if (isSectionExpanded(overview.academicYearId, 'STRUCTURE')) {
+    <div class="pf-section__body">
+      <!-- Desktop Table -->
+      <div class="pf-fee-table-wrap">
+        <table class="pf-fee-table">
           <thead>
             <tr>
               <th>Fee Type</th>
-              <th class="pf-th-r">Total</th>
-              <th class="pf-th-r">Paid</th>
-              <th class="pf-th-r">Balance</th>
-              <th>Due Date</th>
-              <th>Status</th>
+              <th>Month</th>
+              <th class="text-right">Original</th>
+              <th class="text-right">Concession</th>
+              <th class="text-right">Effective</th>
+              <th class="text-right">Paid</th>
+              <th class="text-right">Balance</th>
+              <th class="text-center">Due Date</th>
+              <th class="text-center">Status</th>
             </tr>
           </thead>
           <tbody>
-            @for (fee of ov.feeBreakdown; track fee.id) {
-            <tr [class.pf-row-overdue]="fee.status === 'OVERDUE'">
+            @for (fee of structureFees(); track trackByFee($index, fee)) {
+            <tr
+              class="pf-fee-row"
+              [class.pf-fee-row--paid]="fee.status === 'PAID'"
+              [class.pf-fee-row--overdue]="fee.status === 'OVERDUE'"
+            >
               <td>
-                <div class="pf-fee-name-wrap">
-                  <span class="pf-fee-name-text">{{ formatFeeType(fee.feeType) }}</span>
-                  @if (fee.isMandatory) {
-                  <span class="pf-mandatory-badge">Required</span>
+                <div class="pf-fee-type-cell">
+                  <span class="pf-fee-type-chip">{{ fee.feeType }}</span>
+                  @if (!fee.isMandatory) {
+                  <span class="pf-optional-tag">Optional</span>
                   }
                 </div>
-                @if (fee.description) {
-                <span class="pf-fee-desc">{{ fee.description }}</span>
+              </td>
+              <td class="cell-muted">{{ formatMonth(fee.feeMonth) }}</td>
+              <td class="text-right amount-cell">{{ fee.originalAmount | paise : 'compact' }}</td>
+              <td class="text-right">
+                @if (fee.concessionAmount > 0) {
+                <span class="pf-concession-text" [matTooltip]="fee.concessionReason || ''">
+                  -{{ fee.concessionAmount | paise : 'compact' }}
+                </span>
+                } @else {
+                <span class="cell-muted">—</span>
                 }
               </td>
-              <td class="pf-td-r">{{ formatCurrency(fee.amount) }}</td>
-              <td class="pf-td-r pf-td-green">{{ formatCurrency(fee.amountPaid) }}</td>
-              <td
-                class="pf-td-r"
-                [class.pf-td-muted]="fee.balance <= 0"
-                [class.pf-td-orange]="fee.balance > 0"
-              >
-                {{ fee.balance <= 0 ? '—' : formatCurrency(fee.balance) }}
+              <td class="text-right amount-cell">{{ fee.effectiveAmount | paise : 'compact' }}</td>
+              <td class="text-right amount-cell text-success">
+                {{ fee.amountPaid | paise : 'compact' }}
               </td>
-              <td class="pf-td-date" [class.pf-td-red]="isOverdue(fee.dueDate)">
+              <td class="text-right amount-cell" [class.text-error]="fee.balance > 0">
+                {{ fee.balance | paise : 'compact' }}
+              </td>
+              <td class="text-center cell-muted">
                 {{ fee.dueDate ? formatDate(fee.dueDate) : '—' }}
+                @if (fee.status === 'OVERDUE') {
+                <span class="pf-overdue-dot" matTooltip="Overdue"></span>
+                }
               </td>
-              <td>
-                <span class="pf-status-chip" [class]="'pf-s-' + fee.status.toLowerCase()">
-                  {{ fee.status }}
+              <td class="text-center">
+                <app-fee-status-badge [status]="fee.status" />
+              </td>
+            </tr>
+            @if (fee.concessionAmount > 0 && fee.concessionReason) {
+            <tr class="pf-concession-note-row">
+              <td colspan="9">
+                <span class="pf-concession-note">
+                  <mat-icon>local_offer</mat-icon>
+                  Concession: {{ fee.concessionReason }}
                 </span>
+              </td>
+            </tr>
+            } }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mobile Cards -->
+      <div class="pf-fee-cards">
+        @for (fee of structureFees(); track trackByFee($index, fee)) {
+        <div
+          class="pf-fee-card"
+          [class.pf-fee-card--overdue]="fee.status === 'OVERDUE'"
+          [class.pf-fee-card--paid]="fee.status === 'PAID'"
+        >
+          <div class="pf-fee-card__top">
+            <span class="pf-fee-type-chip">{{ fee.feeType }}</span>
+            <app-fee-status-badge [status]="fee.status" />
+          </div>
+          <div class="pf-fee-card__month">{{ formatMonth(fee.feeMonth) }}</div>
+          @if (fee.concessionAmount > 0) {
+          <div class="pf-fee-card__concession">
+            <mat-icon>local_offer</mat-icon>
+            -{{ fee.concessionAmount | paise : 'compact' }} concession
+          </div>
+          }
+          <div class="pf-fee-card__amounts">
+            <div class="pf-fee-card__amount-item">
+              <span class="pf-fee-card__amount-label">Due</span>
+              <span class="pf-fee-card__amount-value">{{
+                fee.effectiveAmount | paise : 'compact'
+              }}</span>
+            </div>
+            <div class="pf-fee-card__amount-item">
+              <span class="pf-fee-card__amount-label">Paid</span>
+              <span class="pf-fee-card__amount-value pf-fee-card__amount-value--success">{{
+                fee.amountPaid | paise : 'compact'
+              }}</span>
+            </div>
+            <div class="pf-fee-card__amount-item">
+              <span class="pf-fee-card__amount-label">Balance</span>
+              <span
+                class="pf-fee-card__amount-value"
+                [class.pf-fee-card__amount-value--error]="fee.balance > 0"
+                >{{ fee.balance | paise : 'compact' }}</span
+              >
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- ── Custom Fees (Transport / Hostel) Section ──────────────────────── -->
+  @if (assignmentFees().length > 0) {
+  <div class="pf-section">
+    <button
+      class="pf-section__header"
+      (click)="toggleSection(overview.academicYearId, 'ASSIGNMENT')"
+    >
+      <div class="pf-section__header-icon pf-section__header-icon--secondary">
+        <mat-icon>directions_bus</mat-icon>
+      </div>
+      <div class="pf-section__header-text">
+        <span class="pf-section__title">Custom Fees</span>
+        <span class="pf-section__subtitle">Transport, hostel &amp; other personal fees</span>
+      </div>
+      <span class="pf-section__count">{{ assignmentFees().length }}</span>
+      <mat-icon
+        class="pf-section__chevron"
+        [class.rotated]="isSectionExpanded(overview.academicYearId, 'ASSIGNMENT')"
+      >
+        expand_more
+      </mat-icon>
+    </button>
+
+    @if (isSectionExpanded(overview.academicYearId, 'ASSIGNMENT')) {
+    <div class="pf-section__body">
+      <div class="pf-fee-table-wrap">
+        <table class="pf-fee-table">
+          <thead>
+            <tr>
+              <th>Fee Type</th>
+              <th>Month</th>
+              <th class="text-right">Original</th>
+              <th class="text-right">Concession</th>
+              <th class="text-right">Effective</th>
+              <th class="text-right">Paid</th>
+              <th class="text-right">Balance</th>
+              <th>Description</th>
+              <th class="text-center">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (fee of assignmentFees(); track trackByFee($index, fee)) {
+            <tr
+              class="pf-fee-row"
+              [class.pf-fee-row--paid]="fee.status === 'PAID'"
+              [class.pf-fee-row--overdue]="fee.status === 'OVERDUE'"
+            >
+              <td>
+                <span class="pf-fee-type-chip pf-fee-type-chip--custom">{{ fee.feeType }}</span>
+              </td>
+              <td class="cell-muted">{{ formatMonth(fee.feeMonth) }}</td>
+              <td class="text-right amount-cell">{{ fee.originalAmount | paise : 'compact' }}</td>
+              <td class="text-right">
+                @if (fee.concessionAmount > 0) {
+                <span class="pf-concession-text" [matTooltip]="fee.concessionReason || ''">
+                  -{{ fee.concessionAmount | paise : 'compact' }}
+                </span>
+                } @else {
+                <span class="cell-muted">—</span>
+                }
+              </td>
+              <td class="text-right amount-cell">{{ fee.effectiveAmount | paise : 'compact' }}</td>
+              <td class="text-right amount-cell text-success">
+                {{ fee.amountPaid | paise : 'compact' }}
+              </td>
+              <td class="text-right amount-cell" [class.text-error]="fee.balance > 0">
+                {{ fee.balance | paise : 'compact' }}
+              </td>
+              <td class="cell-muted desc-cell">{{ fee.description || '—' }}</td>
+              <td class="text-center">
+                <app-fee-status-badge [status]="fee.status" />
               </td>
             </tr>
             }
           </tbody>
         </table>
       </div>
-    </div>
 
-    <!-- ── Payment history ────────────────────────────── -->
-    @if (ov.recentPayments.length > 0) {
-    <div class="pf-card">
-      <div class="pf-card-header">
-        <h3 class="pf-card-title">Recent Payments</h3>
-        <span class="pf-card-count"
-          >{{ ov.recentPayments.length }} record{{
-            ov.recentPayments.length !== 1 ? 's' : ''
-          }}</span
+      <!-- Mobile Cards -->
+      <div class="pf-fee-cards">
+        @for (fee of assignmentFees(); track trackByFee($index, fee)) {
+        <div
+          class="pf-fee-card pf-fee-card--custom"
+          [class.pf-fee-card--overdue]="fee.status === 'OVERDUE'"
+          [class.pf-fee-card--paid]="fee.status === 'PAID'"
         >
-      </div>
-      <div class="pf-payments">
-        @for (p of ov.recentPayments; track p.id) {
-        <div class="pf-payment-row">
-          <div class="pf-pay-left">
-            <div class="pf-pay-check">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            </div>
-            <div>
-              <p class="pf-pay-type">{{ formatFeeType(p.feeType) }}</p>
-              <p class="pf-pay-meta">
-                {{ formatDate(p.paymentDate) }} &middot; {{ formatMethod(p.paymentMethod) }}
-              </p>
-              @if (p.notes) {
-              <p class="pf-pay-notes">{{ p.notes }}</p>
-              }
-            </div>
+          <div class="pf-fee-card__top">
+            <span class="pf-fee-type-chip pf-fee-type-chip--custom">{{ fee.feeType }}</span>
+            <app-fee-status-badge [status]="fee.status" />
           </div>
-          <div class="pf-pay-right">
-            <p class="pf-pay-amount">+{{ formatCurrency(p.amountPaid) }}</p>
-            <p class="pf-pay-receipt">{{ p.receiptNumber }}</p>
+          <div class="pf-fee-card__month">{{ formatMonth(fee.feeMonth) }}</div>
+          @if (fee.description) {
+          <p class="pf-fee-card__desc">{{ fee.description }}</p>
+          }
+          <div class="pf-fee-card__amounts">
+            <div class="pf-fee-card__amount-item">
+              <span class="pf-fee-card__amount-label">Due</span>
+              <span class="pf-fee-card__amount-value">{{
+                fee.effectiveAmount | paise : 'compact'
+              }}</span>
+            </div>
+            <div class="pf-fee-card__amount-item">
+              <span class="pf-fee-card__amount-label">Paid</span>
+              <span class="pf-fee-card__amount-value pf-fee-card__amount-value--success">{{
+                fee.amountPaid | paise : 'compact'
+              }}</span>
+            </div>
+            <div class="pf-fee-card__amount-item">
+              <span class="pf-fee-card__amount-label">Balance</span>
+              <span
+                class="pf-fee-card__amount-value"
+                [class.pf-fee-card__amount-value--error]="fee.balance > 0"
+                >{{ fee.balance | paise : 'compact' }}</span
+              >
+            </div>
           </div>
         </div>
         }
       </div>
     </div>
-    } @else {
-    <div class="pf-card pf-no-payments">
-      <div class="pf-no-pay-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <rect x="2" y="5" width="20" height="14" rx="2" />
-          <path d="M2 10h20" stroke-linecap="round" />
-        </svg>
+    }
+  </div>
+  }
+
+  <!-- ── Recent Payments Section ────────────────────────────────────────── -->
+  @if (overview.recentPayments.length > 0) {
+  <div class="pf-section">
+    <button class="pf-section__header" (click)="toggleSection(overview.academicYearId, 'PAYMENTS')">
+      <div class="pf-section__header-icon pf-section__header-icon--success">
+        <mat-icon>payments</mat-icon>
       </div>
-      <p>No payments recorded yet for this academic year.</p>
+      <div class="pf-section__header-text">
+        <span class="pf-section__title">Recent Payments</span>
+        <span class="pf-section__subtitle"
+          >Last {{ overview.recentPayments.length }} transaction{{
+            overview.recentPayments.length !== 1 ? 's' : ''
+          }}</span
+        >
+      </div>
+      <mat-icon
+        class="pf-section__chevron"
+        [class.rotated]="isSectionExpanded(overview.academicYearId, 'PAYMENTS')"
+      >
+        expand_more
+      </mat-icon>
+    </button>
+
+    @if (isSectionExpanded(overview.academicYearId, 'PAYMENTS')) {
+    <div class="pf-section__body">
+      <div class="pf-payment-list">
+        @for (p of overview.recentPayments; track trackByPayment($index, p)) {
+        <div class="pf-payment-row">
+          <div class="pf-payment-row__icon-wrap">
+            <mat-icon>receipt</mat-icon>
+          </div>
+          <div class="pf-payment-row__info">
+            <p class="pf-payment-row__fee-type">{{ p.feeType }}</p>
+            <p class="pf-payment-row__receipt">{{ p.receiptNumber }}</p>
+            @if (p.notes) {
+            <p class="pf-payment-row__notes">{{ p.notes }}</p>
+            }
+          </div>
+          <div class="pf-payment-row__right">
+            <span class="pf-payment-row__amount">{{ p.amountPaid | paise }}</span>
+            <span class="pf-payment-row__date">{{ formatDate(p.paymentDate) }}</span>
+            <span class="pf-payment-row__method">{{ p.paymentMethod }}</span>
+          </div>
+        </div>
+        }
+      </div>
     </div>
     }
   </div>
-  } }
+  }
+
+  <!-- Fully Paid Banner -->
+  @if (overview.balance <= 0 && overview.recentPayments.length > 0) {
+  <div class="pf-paid-banner">
+    <mat-icon>celebration</mat-icon>
+    <div>
+      <p class="pf-paid-banner__title">All fees paid for {{ overview.academicYearName }}!</p>
+      <p class="pf-paid-banner__sub">
+        {{ overview.studentName }} is fully paid up for this academic year.
+      </p>
+    </div>
+  </div>
+  } } }
 </div>

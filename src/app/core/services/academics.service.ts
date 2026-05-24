@@ -209,6 +209,36 @@ export class AcademicsService {
     return this.api.delete<{ message: string }>(`school/academics/classes/${id}`);
   }
 
+  /**
+   * Bulk-create classes in a single request.
+   * Backend deduplicates by name and skips existing ones.
+   */
+  bulkCreateClasses(classes: Partial<Class>[]): Observable<{
+    classes: Class[];
+    skipped: string[];
+    message: string;
+  }> {
+    return this.api.post<{ classes: Class[]; skipped: string[]; message: string }>(
+      'school/academics/classes/bulk',
+      { classes }
+    );
+  }
+
+  /**
+   * Bulk-update classes in a single request.
+   * Each item must include its id.
+   */
+  bulkUpdateClasses(classes: Partial<Class>[]): Observable<{
+    classes: Class[];
+    notFound: number[];
+    message: string;
+  }> {
+    return this.api.put<{ classes: Class[]; notFound: number[]; message: string }>(
+      'school/academics/classes/bulk',
+      { classes }
+    );
+  }
+
   // ── Sections ───────────────────────────────────────────────────────────────
 
   getSections(): Observable<{ sections: Section[] }> {
@@ -247,9 +277,42 @@ export class AcademicsService {
     );
   }
 
-  // ── Was missing — caused TS error in class-sections-list ──────────────────
   deleteClassSection(id: number): Observable<{ message: string }> {
     return this.api.delete<{ message: string }>(`school/academics/class-sections/${id}`);
+  }
+
+  // ── Bulk Class-Sections ────────────────────────────────────────────────────
+
+  /**
+   * Bulk-create class-sections in a single request.
+   * Backend skips combinations that already exist and returns them as `skipped`.
+   */
+  bulkCreateClassSections(rows: Partial<ClassSection>[]): Observable<{
+    classSections: ClassSection[];
+    skipped: string[];
+    message: string;
+  }> {
+    return this.api.post<{
+      classSections: ClassSection[];
+      skipped: string[];
+      message: string;
+    }>('school/academics/class-sections/bulk-create', { rows });
+  }
+
+  /**
+   * Bulk-update class-sections in a single request.
+   * Each item must include its id. Returns notFound IDs.
+   */
+  bulkUpdateClassSections(items: Partial<ClassSection>[]): Observable<{
+    classSections: ClassSection[];
+    notFound: number[];
+    message: string;
+  }> {
+    return this.api.put<{
+      classSections: ClassSection[];
+      notFound: number[];
+      message: string;
+    }>('school/academics/class-sections/bulk-update', { items });
   }
 
   getAvailableClassSections(): Observable<{ available: ClassSection[] }> {

@@ -1,0 +1,460 @@
+<!-- features/school/academics/subjects/subjects-bulk-create/subjects-bulk-create.html -->
+<div class="bulk-page">
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <header class="bulk-header">
+    <div class="bulk-header__left">
+      <button
+        mat-icon-button
+        class="back-btn"
+        (click)="router.navigate(['/school/academics/subjects/list'])"
+        matTooltip="Back to Subjects"
+        aria-label="Back to Subjects"
+      >
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <h1>Bulk Create Subjects</h1>
+        <p class="subtitle">
+          Use Quick Presets to add common Indian school subjects, or enter manually.
+        </p>
+      </div>
+    </div>
+    <div class="bulk-header__actions">
+      <button mat-stroked-button (click)="toggleGuide()" [attr.aria-pressed]="showGuide()">
+        <mat-icon>menu_book</mat-icon>
+        {{ showGuide() ? 'Hide Guide' : 'Field Guide' }}
+      </button>
+      <button
+        mat-stroked-button
+        class="preset-btn"
+        (click)="togglePresets()"
+        [attr.aria-pressed]="showPresets()"
+        [class.preset-btn--active]="showPresets()"
+      >
+        <mat-icon>auto_awesome</mat-icon>
+        Quick Presets
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        [disabled]="form.invalid || submitting() || rowCount === 0"
+        (click)="submit()"
+      >
+        @if (submitting()) {
+        <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+        } @else {
+        <mat-icon>save</mat-icon>
+        } Create {{ rowCount }} {{ rowCount === 1 ? 'Subject' : 'Subjects' }}
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Field Guide ─────────────────────────────────────────────────────── -->
+  @if (showGuide()) {
+  <div class="guide-panel" role="region" aria-label="Field Guide">
+    <div class="guide-panel__title">
+      <mat-icon aria-hidden="true">menu_book</mat-icon>
+      Field Guide — Understanding each column
+    </div>
+    <div class="guide-grid">
+      <div class="guide-card">
+        <div class="guide-card__icon guide-card__icon--primary">
+          <mat-icon aria-hidden="true">subject</mat-icon>
+        </div>
+        <div class="guide-card__body">
+          <strong>Subject Name <span class="required-star">*</span></strong>
+          <p>
+            Full name of the subject (e.g. "Mathematics", "Environmental Studies"). Must be unique
+            within the school.
+          </p>
+        </div>
+      </div>
+      <div class="guide-card">
+        <div class="guide-card__icon guide-card__icon--info">
+          <mat-icon aria-hidden="true">tag</mat-icon>
+        </div>
+        <div class="guide-card__body">
+          <strong>Code</strong>
+          <p>
+            Short identifier (2–10 chars) used in reports and timetables, e.g. "MATH", "PHY". Must
+            be globally unique. Optional.
+          </p>
+        </div>
+      </div>
+      <div class="guide-card">
+        <div class="guide-card__icon guide-card__icon--success">
+          <mat-icon aria-hidden="true">notes</mat-icon>
+        </div>
+        <div class="guide-card__body">
+          <strong>Description</strong>
+          <p>
+            Brief description of the subject scope or purpose. Appears in student-facing views.
+            Optional.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- ── Quick Presets Panel ─────────────────────────────────────────────── -->
+  @if (showPresets()) {
+  <div class="presets-panel" role="region" aria-label="Quick Presets">
+    <!-- Panel Header -->
+    <div class="presets-panel__header">
+      <div class="presets-panel__title">
+        <mat-icon aria-hidden="true">auto_awesome</mat-icon>
+        Quick Presets — Indian School Subjects
+      </div>
+      <p class="presets-panel__hint">
+        Select individual subjects or use <strong>All / None</strong> per group. Click
+        <strong>Apply</strong> to populate the table below.
+      </p>
+
+      <!-- Search bar -->
+      <div class="presets-search-bar" role="search">
+        <mat-icon class="presets-search-bar__icon" aria-hidden="true">search</mat-icon>
+        <input
+          class="presets-search-bar__input"
+          type="search"
+          placeholder="Search subjects by name, code or description…"
+          [value]="presetSearchQuery()"
+          (input)="onPresetSearch($event)"
+          autocomplete="off"
+          aria-label="Search subjects"
+        />
+        @if (presetSearchQuery()) {
+        <button
+          class="presets-search-bar__clear"
+          (click)="clearSearch()"
+          matTooltip="Clear search"
+          aria-label="Clear search"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+        }
+      </div>
+
+      <!-- Global actions row -->
+      <div class="presets-global-actions">
+        <button mat-button class="sel-btn" (click)="selectAllSubjects()">
+          <mat-icon>done_all</mat-icon> Select All
+        </button>
+        <button mat-button class="sel-btn" (click)="clearAllSubjects()">
+          <mat-icon>clear_all</mat-icon> Clear All
+        </button>
+        <span class="presets-global-actions__divider" aria-hidden="true"></span>
+        <button mat-button class="sel-btn" (click)="expandAllGroups()">
+          <mat-icon>unfold_more</mat-icon> Expand All
+        </button>
+        <button mat-button class="sel-btn" (click)="collapseAllGroups()">
+          <mat-icon>unfold_less</mat-icon> Collapse All
+        </button>
+        <span class="preset-total-count" aria-live="polite">
+          {{ previewCount() }} subject{{ previewCount() !== 1 ? 's' : '' }} selected
+        </span>
+      </div>
+    </div>
+
+    <!-- Groups Body -->
+    <div class="presets-body">
+      <!-- Empty search state -->
+      @if (filteredPresetGroups().length === 0) {
+      <div class="presets-empty" role="status">
+        <mat-icon aria-hidden="true">search_off</mat-icon>
+        <p>
+          No subjects match "<strong>{{ presetSearchQuery() }}</strong
+          >"
+        </p>
+        <button mat-stroked-button (click)="clearSearch()">Clear search</button>
+      </div>
+      }
+
+      <!--
+          FIX: Replace the grid-template-rows expand/collapse technique with
+          a simple @if on the chip grid. The chip grid wrapper is removed from
+          DOM when collapsed and added back (with a slide-in animation) when
+          expanded. This is 100% reliable in Angular — no overflow clipping,
+          no 0fr/1fr race conditions, no OnPush scheduling gaps.
+
+          The animation is applied via CSS keyframes on the chip grid itself.
+        -->
+      @for (group of filteredPresetGroups(); track trackByGroupId($index, group)) { @let selectedIds
+      = selectedPresetSubjects(); @let selState = groupSelectionState(); @let isExpanded =
+      expandedGroups().has(group.id); @let groupState = selState.get(group.id); @let groupSelCount =
+      groupState?.selectedCount ?? 0;
+
+      <div class="preset-group" [ngClass]="getColorClass(group.color)">
+        <!-- Group header — toggles expand/collapse -->
+        <button
+          type="button"
+          class="preset-group__header"
+          (click)="toggleGroup(group.id)"
+          [attr.aria-expanded]="isExpanded"
+          [attr.aria-controls]="'group-chips-' + group.id"
+        >
+          <div class="preset-group__title">
+            <mat-icon class="preset-group__icon" aria-hidden="true">{{ group.icon }}</mat-icon>
+            <span>{{ group.label }}</span>
+            <span
+              class="preset-group__count"
+              [attr.aria-label]="group.subjects.length + ' subjects'"
+            >
+              {{ group.subjects.length }}
+            </span>
+            @if (groupSelCount > 0) {
+            <span class="preset-group__selected-badge" aria-live="polite">
+              {{ groupSelCount }} selected
+            </span>
+            }
+          </div>
+          <div class="preset-group__header-right">
+            <button
+              mat-button
+              class="sel-btn"
+              (click)="$event.stopPropagation(); selectAllInGroup(group)"
+              matTooltip="Select all in this group"
+              [attr.aria-label]="'Select all subjects in ' + group.label"
+            >
+              All
+            </button>
+            <button
+              mat-button
+              class="sel-btn"
+              (click)="$event.stopPropagation(); clearAllInGroup(group)"
+              matTooltip="Clear all in this group"
+              [attr.aria-label]="'Clear all subjects in ' + group.label"
+            >
+              None
+            </button>
+            <mat-icon
+              class="preset-group__chevron"
+              [class.preset-group__chevron--open]="isExpanded"
+              aria-hidden="true"
+            >
+              expand_more
+            </mat-icon>
+          </div>
+        </button>
+
+        <!--
+              CHIP GRID — @if controls DOM presence.
+              When isExpanded is true the grid enters the DOM and gets the
+              chip-grid-enter animation. When false it's removed entirely —
+              no overflow clipping needed, no height transitions.
+              This is the simplest, most reliable expand/collapse pattern in Angular.
+            -->
+        @if (isExpanded) {
+        <div
+          class="preset-chip-grid"
+          [id]="'group-chips-' + group.id"
+          role="group"
+          [attr.aria-label]="group.label + ' subjects'"
+        >
+          @for (subject of group.subjects; track trackBySubjectName($index, subject)) { @let
+          isSelected = selectedIds.has(subject.name);
+          <button
+            type="button"
+            class="preset-chip"
+            [class.preset-chip--selected]="isSelected"
+            (click)="togglePresetSubject(subject)"
+            [matTooltip]="subject.description ?? ''"
+            matTooltipPosition="above"
+            matRipple
+            [attr.aria-pressed]="isSelected"
+            [attr.aria-label]="subject.name + (subject.code ? ' (' + subject.code + ')' : '')"
+          >
+            <mat-icon class="preset-chip__check" aria-hidden="true">
+              {{ isSelected ? 'check_circle' : 'radio_button_unchecked' }}
+            </mat-icon>
+            <span class="preset-chip__name">{{ subject.name }}</span>
+            @if (subject.code) {
+            <span class="preset-chip__code" aria-hidden="true">{{ subject.code }}</span>
+            }
+          </button>
+          }
+        </div>
+        }
+      </div>
+      }
+    </div>
+
+    <!-- Panel Footer -->
+    <div class="presets-footer">
+      <div class="presets-footer__preview" aria-live="polite">
+        @if (previewCount() > 0) {
+        <mat-icon aria-hidden="true">playlist_add</mat-icon>
+        Will generate <strong>{{ previewCount() }}</strong> subject{{
+          previewCount() !== 1 ? 's' : ''
+        }}
+        in the table } @else {
+        <mat-icon aria-hidden="true">info</mat-icon>
+        Select subjects above to preview }
+      </div>
+      <div class="presets-footer__btns">
+        <button mat-stroked-button (click)="showPresets.set(false)">Cancel</button>
+        <button
+          mat-raised-button
+          color="primary"
+          [disabled]="previewCount() === 0"
+          (click)="applyPreset()"
+        >
+          <mat-icon>auto_awesome</mat-icon>
+          Apply {{ previewCount() > 0 ? previewCount() + ' Subjects' : '' }}
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- ── Result Banner ───────────────────────────────────────────────────── -->
+  @if (lastResult(); as result) {
+  <div
+    class="result-banner"
+    [class.result-banner--partial]="result.skipped.length > 0 || result.errors.length > 0"
+    role="status"
+    aria-live="polite"
+  >
+    <mat-icon aria-hidden="true">
+      {{ result.skipped.length > 0 || result.errors.length > 0 ? 'warning_amber' : 'check_circle' }}
+    </mat-icon>
+    <div>
+      @if (result.created > 0) {
+      <strong>
+        {{ result.created }} subject{{ result.created !== 1 ? 's' : '' }} created successfully.
+      </strong>
+      } @if (result.skipped.length > 0) {
+      <p class="result-skipped">Skipped (already exist): {{ result.skipped.join(', ') }}</p>
+      } @if (result.errors.length > 0) {
+      <p class="result-errors">Errors: {{ result.errors.join(' · ') }}</p>
+      }
+    </div>
+  </div>
+  }
+
+  <!-- ── Table Card ──────────────────────────────────────────────────────── -->
+  <div class="table-card">
+    <div class="table-toolbar">
+      <span class="table-toolbar__count">
+        <mat-icon aria-hidden="true">view_list</mat-icon>
+        {{ rowCount }} row{{ rowCount !== 1 ? 's' : '' }}
+      </span>
+      <button mat-raised-button color="accent" (click)="addRow()">
+        <mat-icon>add</mat-icon>
+        Add Row
+      </button>
+    </div>
+
+    <div class="table-scroll-wrap" [formGroup]="form">
+      <table class="cs-table" aria-label="Subjects to create">
+        <thead>
+          <tr>
+            <th class="col-num" scope="col">#</th>
+            <th class="col-name" scope="col">Subject Name <span class="required-star">*</span></th>
+            <th class="col-code" scope="col">Code</th>
+            <th class="col-description" scope="col">Description</th>
+            <th class="col-actions" scope="col"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody formArrayName="rows">
+          @for (row of rows.controls; track trackByUid($index, row)) {
+          <tr
+            class="cs-row"
+            [class.cs-row--invalid]="row.invalid && row.touched"
+            [formGroupName]="$index"
+          >
+            <td class="col-num">
+              <span class="row-num" aria-hidden="true">{{ $index + 1 }}</span>
+            </td>
+            <td class="col-name">
+              <mat-form-field appearance="outline" class="field-full">
+                <input
+                  matInput
+                  formControlName="name"
+                  placeholder="e.g. Mathematics"
+                  maxlength="100"
+                  [attr.aria-label]="'Subject name for row ' + ($index + 1)"
+                />
+                @if (fieldError(row.get('name'), 'required')) {
+                <mat-error>Name is required</mat-error>
+                } @if (fieldError(row.get('name'), 'maxlength')) {
+                <mat-error>Max 100 characters</mat-error>
+                }
+              </mat-form-field>
+            </td>
+            <td class="col-code">
+              <mat-form-field appearance="outline" class="field-full">
+                <input
+                  matInput
+                  formControlName="code"
+                  placeholder="e.g. MATH"
+                  maxlength="10"
+                  style="text-transform: uppercase"
+                  [attr.aria-label]="'Subject code for row ' + ($index + 1)"
+                />
+                @if (fieldError(row.get('code'), 'maxlength')) {
+                <mat-error>Max 10 chars</mat-error>
+                }
+              </mat-form-field>
+            </td>
+            <td class="col-description">
+              <mat-form-field appearance="outline" class="field-full">
+                <input
+                  matInput
+                  formControlName="description"
+                  placeholder="Brief description (optional)"
+                  maxlength="500"
+                  [attr.aria-label]="'Description for row ' + ($index + 1)"
+                />
+              </mat-form-field>
+            </td>
+            <td class="col-actions">
+              <button
+                mat-icon-button
+                type="button"
+                color="warn"
+                [disabled]="rows.length === 1"
+                (click)="removeRow($index)"
+                matTooltip="Remove row"
+                [attr.aria-label]="'Remove row ' + ($index + 1)"
+              >
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-footer">
+      <button mat-button class="add-row-btn" (click)="addRow()">
+        <mat-icon>add_circle_outline</mat-icon>
+        Add another row
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Bottom Submit Bar ─────────────────────────────────────────────── -->
+  <div class="submit-bar">
+    <button mat-stroked-button (click)="router.navigate(['/school/academics/subjects/list'])">
+      Cancel
+    </button>
+    <button
+      mat-raised-button
+      color="primary"
+      [disabled]="form.invalid || submitting() || rowCount === 0"
+      (click)="submit()"
+    >
+      <span class="btn-content">
+        @if (submitting()) {
+        <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+        <span>Creating…</span>
+        } @else {
+        <mat-icon>save</mat-icon>
+        <span>Create {{ rowCount }} {{ rowCount === 1 ? 'Subject' : 'Subjects' }}</span>
+        }
+      </span>
+    </button>
+  </div>
+</div>

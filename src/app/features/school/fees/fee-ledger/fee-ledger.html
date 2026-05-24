@@ -1,0 +1,433 @@
+<!-- fee-ledger.html -->
+<div class="page-shell">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header__left">
+      <h1 class="page-title">Student Fee Ledger</h1>
+      <p class="page-subtitle">
+        Complete fee history — structures, assignments, payments &amp; concessions
+      </p>
+    </div>
+  </div>
+
+  <!-- Search & Filter Bar -->
+  <div class="search-card">
+    <div class="search-row">
+      <!-- Student Search -->
+      <div class="student-search-wrap">
+        <div class="student-search-field" [class.focused]="showStudentDropdown()">
+          <mat-icon class="search-field-icon">person_search</mat-icon>
+          <input
+            class="student-search-input"
+            placeholder="Search student by name or email…"
+            [value]="searchQuery()"
+            (input)="onSearchInput($any($event.target).value)"
+            (focus)="showStudentDropdown.set(true)"
+            (blur)="closeDropdown()"
+          />
+          @if (searchQuery()) {
+          <button
+            class="search-clear-btn"
+            (click)="searchQuery.set(''); selectedStudent.set(null); ledger.set([])"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+          }
+        </div>
+
+        <!-- Dropdown -->
+        @if (showStudentDropdown() && filteredStudents().length > 0) {
+        <div class="student-dropdown">
+          @for (s of filteredStudents(); track s.id) {
+          <button class="student-option" (mousedown)="selectStudent(s)">
+            <div class="student-option__avatar">{{ s.name.charAt(0).toUpperCase() }}</div>
+            <div class="student-option__info">
+              <span class="student-option__name">{{ s.name }}</span>
+              <span class="student-option__email">{{ s.email }}</span>
+            </div>
+          </button>
+          }
+        </div>
+        } @if (showStudentDropdown() && searchQuery().trim() && filteredStudents().length === 0) {
+        <div class="student-dropdown student-dropdown--empty">
+          <mat-icon>search_off</mat-icon>
+          <span>No students found</span>
+        </div>
+        }
+      </div>
+
+      <!-- Academic Year -->
+      <mat-form-field appearance="outline" class="year-field">
+        <mat-label>Academic Year</mat-label>
+        <mat-select
+          [ngModel]="selectedAcademicYearId()"
+          (ngModelChange)="selectedAcademicYearId.set($event); onYearChange()"
+        >
+          <mat-option [value]="null">All Years</mat-option>
+          @for (y of academicYears(); track y.id) {
+          <mat-option [value]="y.id">
+            {{ y.name }}
+            @if (y.isCurrent) { <span class="current-tag">(Current)</span> }
+          </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <!-- Placeholder -->
+  @if (!selectedStudent() && !loading()) {
+  <div class="ledger-placeholder">
+    <div class="placeholder-icon">
+      <mat-icon>manage_search</mat-icon>
+    </div>
+    <h2 class="placeholder-title">Search for a student</h2>
+    <p class="placeholder-sub">
+      Type a student's name or email in the search box above to load their complete fee ledger.
+    </p>
+  </div>
+  }
+
+  <!-- Loading -->
+  @if (loading()) {
+  <div class="ledger-loading">
+    <mat-spinner diameter="40" />
+    <p>Loading ledger…</p>
+  </div>
+  }
+
+  <!-- Error -->
+  @if (error()) {
+  <div class="ledger-error">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ error() }}</p>
+    <button mat-stroked-button (click)="loadLedger()">Retry</button>
+  </div>
+  }
+
+  <!-- Empty Ledger -->
+  @if (!loading() && !error() && selectedStudent() && ledger().length === 0) {
+  <div class="ledger-placeholder">
+    <mat-icon>receipt_long</mat-icon>
+    <p>No fee records found for {{ selectedStudent()!.name }}</p>
+  </div>
+  }
+
+  <!-- Ledger Content -->
+  @if (!loading() && !error() && ledger().length > 0) {
+  <div class="ledger-content">
+    <!-- Student Summary Card -->
+    <div class="student-summary-card">
+      <div class="student-summary-card__avatar">
+        {{ selectedStudent()!.name.charAt(0).toUpperCase() }}
+      </div>
+      <div class="student-summary-card__info">
+        <h2 class="student-summary-card__name">{{ selectedStudent()!.name }}</h2>
+        <p class="student-summary-card__email">{{ selectedStudent()!.email }}</p>
+      </div>
+      <div class="student-summary-card__totals">
+        @for (entry of ledger(); track entry.yearId) {
+        <div class="year-total-pill">
+          <span class="year-total-pill__year">{{ entry.academicYearName }}</span>
+          <span class="year-total-pill__balance" [class.paid]="entry.balance <= 0">
+            {{ entry.balance | paise : 'compact' }}
+          </span>
+        </div>
+        }
+      </div>
+    </div>
+
+    <!-- Year Cards -->
+    @for (entry of ledger(); track entry.yearId) {
+    <div class="year-card">
+      <!-- Year Card Header -->
+      <button class="year-card__header" (click)="toggleYear(entry.yearId)">
+        <div class="year-card__header-left">
+          <mat-icon class="year-card__year-icon">school</mat-icon>
+          <div>
+            <div class="year-card__year-name">{{ entry.academicYearName }}</div>
+            <div class="year-card__class-info">
+              {{ entry.className }}-{{ entry.sectionName }}
+              @if (entry.rollNumber) {
+              <span class="roll-chip">{{ entry.rollNumber }}</span>
+              }
+            </div>
+          </div>
+        </div>
+        <div class="year-card__header-stats">
+          <div class="year-stat">
+            <span class="year-stat__label">Total Due</span>
+            <span class="year-stat__value">{{ entry.totalDue | paise : 'compact' }}</span>
+          </div>
+          <div class="year-stat">
+            <span class="year-stat__label">Paid</span>
+            <span class="year-stat__value year-stat__value--success">{{
+              entry.totalPaid | paise : 'compact'
+            }}</span>
+          </div>
+          <div class="year-stat year-stat--balance">
+            <span class="year-stat__label">Balance</span>
+            <span
+              class="year-stat__value"
+              [class.year-stat__value--error]="entry.balance > 0"
+              [class.year-stat__value--success]="entry.balance <= 0"
+            >
+              {{ entry.balance | paise : 'compact' }}
+            </span>
+          </div>
+          <div class="year-stat">
+            <span class="year-stat__label">Rate</span>
+            <span class="year-stat__value year-stat__value--primary"
+              >{{ collectionRate(entry) }}%</span
+            >
+          </div>
+        </div>
+
+        <!-- Collection Rate Bar -->
+        <div class="rate-bar-wrap">
+          <div class="rate-bar">
+            <div class="rate-bar__fill" [style.width.%]="collectionRate(entry)"></div>
+          </div>
+        </div>
+
+        <mat-icon class="year-card__chevron" [class.rotated]="isYearExpanded(entry.yearId)"
+          >expand_more</mat-icon
+        >
+      </button>
+
+      <!-- Year Card Body -->
+      @if (isYearExpanded(entry.yearId)) {
+      <div class="year-card__body">
+        <!-- Standard Fees Section -->
+        @if (entry.details.fees.length > 0) {
+        <div class="ledger-section">
+          <button class="ledger-section__header" (click)="toggleSection(entry.yearId + ':fees')">
+            <mat-icon class="ledger-section__icon ledger-section__icon--primary"
+              >receipt_long</mat-icon
+            >
+            <span class="ledger-section__title">Standard Fees</span>
+            <span class="ledger-section__count">{{ entry.details.fees.length }}</span>
+            <mat-icon
+              class="ledger-section__chevron"
+              [class.rotated]="isSectionExpanded(entry.yearId + ':fees')"
+              >expand_more</mat-icon
+            >
+          </button>
+
+          @if (isSectionExpanded(entry.yearId + ':fees')) {
+          <div class="ledger-table-wrap">
+            <table class="ledger-table">
+              <thead>
+                <tr>
+                  <th>Fee Type</th>
+                  <th>Month</th>
+                  <th class="text-right">Original</th>
+                  <th class="text-right">Concession</th>
+                  <th class="text-right">Effective</th>
+                  <th>Due Date</th>
+                  <th class="text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (fee of entry.details.fees; track fee.id) {
+                <tr class="ledger-row">
+                  <td>
+                    <span class="fee-chip fee-chip--std">{{ fee.feeType }}</span>
+                    @if (!fee.isMandatory) {
+                    <span class="optional-tag">Optional</span>
+                    }
+                  </td>
+                  <td class="cell-muted">{{ formatMonth(fee.feeMonth) }}</td>
+                  <td class="text-right amount-cell">{{ fee.amount | paise : 'compact' }}</td>
+                  <td class="text-right">
+                    @if (fee.concessionAmount > 0) {
+                    <span class="concession-text" [matTooltip]="fee.concessionReason || ''">
+                      -{{ fee.concessionAmount | paise : 'compact' }}
+                    </span>
+                    } @else {
+                    <span class="cell-muted">—</span>
+                    }
+                  </td>
+                  <td class="text-right amount-cell">
+                    {{ fee.effectiveAmount | paise : 'compact' }}
+                  </td>
+                  <td class="cell-muted">
+                    @if (fee.dueDate) {
+                    {{ fee.dueDate | date : 'd MMM yyyy' }}
+                    } @else { — }
+                  </td>
+                  <td class="text-center">
+                    <app-fee-status-badge
+                      [status]="
+                        feeItemStatus(fee.effectiveAmount, fee.concessionAmount, fee.dueDate)
+                      "
+                    />
+                  </td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          }
+        </div>
+        }
+
+        <!-- Custom Fees Section -->
+        @if (entry.details.assignments.length > 0) {
+        <div class="ledger-section">
+          <button
+            class="ledger-section__header"
+            (click)="toggleSection(entry.yearId + ':assignments')"
+          >
+            <mat-icon class="ledger-section__icon ledger-section__icon--secondary"
+              >directions_bus</mat-icon
+            >
+            <span class="ledger-section__title">Custom Fees (Transport / Hostel)</span>
+            <span class="ledger-section__count">{{ entry.details.assignments.length }}</span>
+            <mat-icon
+              class="ledger-section__chevron"
+              [class.rotated]="isSectionExpanded(entry.yearId + ':assignments')"
+              >expand_more</mat-icon
+            >
+          </button>
+
+          @if (isSectionExpanded(entry.yearId + ':assignments')) {
+          <div class="ledger-table-wrap">
+            <table class="ledger-table">
+              <thead>
+                <tr>
+                  <th>Fee Type</th>
+                  <th>Month</th>
+                  <th class="text-right">Original</th>
+                  <th class="text-right">Concession</th>
+                  <th class="text-right">Effective</th>
+                  <th>Description</th>
+                  <th>Due Date</th>
+                  <th class="text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (a of entry.details.assignments; track a.id) {
+                <tr class="ledger-row" [class.ledger-row--cancelled]="a.isCancelled">
+                  <td>
+                    <span class="fee-chip fee-chip--custom">{{ a.feeType }}</span>
+                    @if (a.isCancelled) {
+                    <span class="cancelled-tag">Cancelled</span>
+                    }
+                  </td>
+                  <td class="cell-muted">{{ formatMonth(a.feeMonth) }}</td>
+                  <td class="text-right amount-cell">{{ a.amount | paise : 'compact' }}</td>
+                  <td class="text-right">
+                    @if (a.concessionAmount > 0) {
+                    <span class="concession-text" [matTooltip]="a.concessionReason || ''">
+                      -{{ a.concessionAmount | paise : 'compact' }}
+                    </span>
+                    } @else {
+                    <span class="cell-muted">—</span>
+                    }
+                  </td>
+                  <td class="text-right amount-cell">
+                    {{ a.effectiveAmount | paise : 'compact' }}
+                  </td>
+                  <td class="cell-muted description-cell">{{ a.description || '—' }}</td>
+                  <td class="cell-muted">
+                    @if (a.dueDate) {
+                    {{ a.dueDate | date : 'd MMM yyyy' }}
+                    } @else { — }
+                  </td>
+                  <td class="text-center">
+                    @if (!a.isCancelled) {
+                    <app-fee-status-badge
+                      [status]="feeItemStatus(a.effectiveAmount, a.concessionAmount, a.dueDate)"
+                    />
+                    }
+                  </td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          }
+        </div>
+        }
+
+        <!-- Payment History Section -->
+        <div class="ledger-section">
+          <button
+            class="ledger-section__header"
+            (click)="toggleSection(entry.yearId + ':payments')"
+          >
+            <mat-icon class="ledger-section__icon ledger-section__icon--success">payments</mat-icon>
+            <span class="ledger-section__title">Payment History</span>
+            <span class="ledger-section__count">{{ entry.details.payments.length }}</span>
+            <mat-icon
+              class="ledger-section__chevron"
+              [class.rotated]="isSectionExpanded(entry.yearId + ':payments')"
+              >expand_more</mat-icon
+            >
+          </button>
+
+          @if (isSectionExpanded(entry.yearId + ':payments')) {
+          <div class="payment-history-embed">
+            @if (entry.details.payments.length === 0) {
+            <div class="no-payments">
+              <mat-icon>receipt</mat-icon>
+              <span>No payments recorded</span>
+            </div>
+            } @else {
+            <div class="ph-table-wrap">
+              <table class="ledger-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Receipt #</th>
+                    <th>Fee Type</th>
+                    <th>Month</th>
+                    <th class="text-right">Amount</th>
+                    <th class="text-center">Method</th>
+                    <th class="text-center">Source</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (p of entry.details.payments; track p.id) {
+                  <tr class="ledger-row" [class.ledger-row--void]="p.isVoid">
+                    <td class="cell-muted">{{ p.paymentDate | date : 'd MMM yyyy' }}</td>
+                    <td>
+                      <span class="receipt-mono">{{ p.receiptNumber }}</span>
+                      @if (p.isVoid) { <span class="void-badge">VOID</span> }
+                    </td>
+                    <td>
+                      <span
+                        class="fee-chip fee-chip--{{ p.source === 'STRUCTURE' ? 'std' : 'custom' }}"
+                      >
+                        {{ p.feeType || 'Fee' }}
+                      </span>
+                    </td>
+                    <td class="cell-muted">{{ formatMonth(p.feeMonth) }}</td>
+                    <td class="text-right amount-cell text-success" [class.amount-void]="p.isVoid">
+                      {{ p.amountPaid | paise }}
+                    </td>
+                    <td class="text-center">
+                      <span class="method-pill method-pill--{{ p.paymentMethod.toLowerCase() }}">
+                        {{ p.paymentMethod }}
+                      </span>
+                    </td>
+                    <td class="text-center">
+                      <span class="source-pill">{{ p.source }}</span>
+                    </td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            }
+          </div>
+          }
+        </div>
+      </div>
+      }
+    </div>
+    }
+  </div>
+  }
+</div>

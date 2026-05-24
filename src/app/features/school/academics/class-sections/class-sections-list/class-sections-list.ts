@@ -1,3 +1,4 @@
+// class-sections-list.ts  (UPDATED — adds bulk-create / bulk-edit navigation)
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -6,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { DestroyRef } from '@angular/core';
@@ -26,6 +28,7 @@ import { ConfirmDialog } from '../../../../../shared/components/confirm-dialog/c
     MatIconModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
+    MatMenuModule,
   ],
   templateUrl: './class-sections-list.html',
   styleUrl: './class-sections-list.scss',

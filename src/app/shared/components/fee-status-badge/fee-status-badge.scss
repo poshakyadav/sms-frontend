@@ -1,0 +1,42 @@
+// fee-status-badge.scss
+.fee-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+  white-space: nowrap;
+
+  mat-icon {
+    font-size: 13px;
+    height: 13px;
+    width: 13px;
+  }
+
+  &--paid {
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    color: color-mix(in srgb, var(--color-success) 70%, #000);
+    border-color: color-mix(in srgb, var(--color-success) 22%, transparent);
+  }
+
+  &--partial {
+    background: color-mix(in srgb, var(--color-info) 12%, transparent);
+    color: var(--color-info);
+    border-color: color-mix(in srgb, var(--color-info) 22%, transparent);
+  }
+
+  &--pending {
+    background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+    color: color-mix(in srgb, var(--color-warning) 70%, #000);
+    border-color: color-mix(in srgb, var(--color-warning) 22%, transparent);
+  }
+
+  &--overdue {
+    background: color-mix(in srgb, var(--color-error) 12%, transparent);
+    color: var(--color-error);
+    border-color: color-mix(in srgb, var(--color-error) 22%, transparent);
+  }
+}

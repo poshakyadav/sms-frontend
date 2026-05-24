@@ -1,150 +1,1706 @@
 // user-form/user-form.scss
-// Component-specific styles ONLY.
-// All shared styles (layout, buttons, cards, permissions, dialogs, dark-theme)
-// come from src/styles/_*.scss partials imported via styles.scss.
+// ─────────────────────────────────────────────────────────────────────────────
+// USER FORM — Component-specific styles only.
+// Shared classes (_layout, _buttons, _cards, _permissions, _dialogs) are
+// consumed via the global stylesheet. This file contains ONLY classes that
+// are unique to the uf-* namespace used by this component.
+//
+// Design philosophy:
+//   • Mobile-first (Capacitor / iOS / Android target)
+//   • All colours via CSS custom properties — theme-aware out of the box
+//   • Zero magic numbers — spacing from the 4px base grid
+//   • BEM-ish: .uf-<block>__<element> or .uf-<block>--<modifier>
+// ─────────────────────────────────────────────────────────────────────────────
 
-// ── Roles section — special layout ───────────────────────────────────────────
-.field-input-col {
+// ── Breakpoint shortcuts (local — mirrors _tokens.scss values) ────────────────
+$bp-sm: 420px;
+$bp-md: 640px;
+$bp-lg: 768px;
+$bp-xl: 900px;
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PAGE WRAPPER
+// ══════════════════════════════════════════════════════════════════════════════
+
+.uf-page {
+  min-height: 100vh;
+  background: var(--color-bg-main);
+  padding: 16px;
+  box-sizing: border-box;
+  max-width: 960px;
+  margin: 0 auto;
+
+  @media (min-width: $bp-lg) {
+    padding: 28px 24px;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PAGE HEADER
+// ══════════════════════════════════════════════════════════════════════════════
+
+.uf-page-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 24px;
+
+  @media (min-width: $bp-lg) {
+    gap: 16px;
+    margin-bottom: 32px;
+    align-items: center;
+  }
+}
+
+.uf-back-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  margin-top: 2px;
+
+  mat-icon {
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+  }
+
+  &:hover {
+    background: var(--color-hover);
+    color: var(--color-text-primary);
+    border-color: var(--color-primary);
+  }
+
+  @media (min-width: $bp-lg) {
+    width: 44px;
+    height: 44px;
+    margin-top: 0;
+  }
+}
+
+.uf-header-info {
   flex: 1;
   min-width: 0;
+}
+
+.uf-page-title {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 100%;
-}
-
-.field-wrapper--roles {
-  align-items: flex-start;
-  flex-direction: column;
-  gap: 0;
-}
-
-.field-wrapper--toggle {
-  align-items: center;
-}
-
-.primary-role-badge {
-  display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  background: color-mix(in srgb, var(--color-warning) 8%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent);
+  margin: 0 0 4px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+
+  @media (min-width: $bp-lg) {
+    font-size: 1.5rem;
+    gap: 10px;
+  }
+}
+
+.uf-title-icon {
+  font-size: 20px;
+  height: 20px;
+  width: 20px;
+  color: var(--color-primary);
+  flex-shrink: 0;
+
+  @media (min-width: $bp-lg) {
+    font-size: 24px;
+    height: 24px;
+    width: 24px;
+  }
+}
+
+.uf-page-subtitle {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+
+  @media (min-width: $bp-lg) {
+    font-size: 0.875rem;
+  }
+}
+
+.uf-edit-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
   border-radius: var(--radius-sm);
-  font-size: 0.8rem;
-  flex-wrap: wrap;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+  flex-shrink: 0;
+  margin-top: 2px;
 
   mat-icon {
     font-size: 14px;
     height: 14px;
     width: 14px;
-    color: var(--color-warning);
-    flex-shrink: 0;
-  }
-  span {
-    color: var(--color-text-secondary);
-  }
-  strong {
-    color: var(--color-text-primary);
-    font-weight: 700;
   }
 
-  &__hint {
-    font-size: 0.72rem;
-    color: var(--color-text-muted);
-    font-style: italic;
+  @media (min-width: $bp-lg) {
+    margin-top: 0;
+    padding: 6px 12px;
+    font-size: 0.8rem;
   }
 }
 
-.selected-roles-summary {
+// ══════════════════════════════════════════════════════════════════════════════
+// LOADING STATE
+// ══════════════════════════════════════════════════════════════════════════════
+
+.uf-loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 360px;
+}
+
+.uf-loading-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+
+  span {
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// FORM
+// ══════════════════════════════════════════════════════════════════════════════
+
+.uf-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  @media (min-width: $bp-lg) {
+    gap: 20px;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SECTION CARD
+// ══════════════════════════════════════════════════════════════════════════════
+
+.uf-section {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  // FIX: Remove overflow:hidden — it was clipping the perm-section header
+  // buttons and the "Edit Overrides"/"Cancel" button. Use clip on body only.
+  overflow: visible;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease;
+
+  // Re-clip only the inner body so rounded corners still render
+  &:not(.perm-section) {
+    overflow: hidden;
+  }
+
+  &:hover {
+    box-shadow: var(--shadow-md);
+  }
+
+  &--collapsed {
+    .uf-section-body {
+      display: none;
+    }
+  }
+
+  // Role-specific card variants
+  &--role-card {
+    border-top-width: 2px;
+  }
+
+  &--student {
+    border-top-color: var(--color-success);
+  }
+
+  &--staff {
+    border-top-color: var(--color-primary);
+  }
+
+  &--parent {
+    border-top-color: var(--color-warning);
+  }
+}
+
+// ── Section header (button) ───────────────────────────────────────────────────
+
+.uf-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  // overflow: hidden;
+  gap: 12px;
+  padding: 14px 16px;
+  width: 100%;
+  border: none;
+  background: color-mix(in srgb, var(--color-bg-surface) 60%, var(--color-bg-card));
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.15s ease;
+  border-bottom: 1px solid var(--color-divider);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+
+  &:hover {
+    background: var(--color-hover);
+  }
+
+  // Non-collapsible variant
+  &--no-collapse {
+    cursor: default;
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-bg-surface) 60%, var(--color-bg-card));
+    }
+  }
+
+  @media (min-width: $bp-lg) {
+    padding: 16px 20px;
+  }
+}
+
+.uf-section-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.uf-section-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+
+  @media (min-width: $bp-lg) {
+    width: 40px;
+    height: 40px;
+
+    mat-icon {
+      font-size: 20px;
+      height: 20px;
+      width: 20px;
+    }
+  }
+
+  // Colour variants
+  &--primary {
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    mat-icon {
+      color: var(--color-primary);
+    }
+  }
+  &--teal {
+    background: color-mix(in srgb, #14b8a6 12%, transparent);
+    mat-icon {
+      color: #0d9488;
+    }
+  }
+  &--orange {
+    background: color-mix(in srgb, #f97316 12%, transparent);
+    mat-icon {
+      color: #ea580c;
+    }
+  }
+  &--violet {
+    background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
+    mat-icon {
+      color: var(--color-secondary);
+    }
+  }
+  &--green {
+    background: color-mix(in srgb, var(--color-success) 10%, transparent);
+    mat-icon {
+      color: var(--color-success);
+    }
+  }
+  &--blue {
+    background: color-mix(in srgb, var(--color-info) 12%, transparent);
+    mat-icon {
+      color: var(--color-info);
+    }
+  }
+  &--amber {
+    background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+    mat-icon {
+      color: var(--color-warning);
+    }
+  }
+}
+
+.uf-section-title {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+
+  @media (min-width: $bp-lg) {
+    font-size: 0.95rem;
+  }
+}
+
+.uf-section-sub {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+  font-weight: 400;
+
+  @media (min-width: $bp-lg) {
+    font-size: 0.75rem;
+  }
+}
+
+.uf-section-chevron {
+  font-size: 20px;
+  height: 20px;
+  width: 20px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+// ── Section body ──────────────────────────────────────────────────────────────
+
+.uf-section-body {
+  padding: 16px;
+
+  @media (min-width: $bp-lg) {
+    padding: 20px;
+  }
+}
+
+// ── Sub-section header ────────────────────────────────────────────────────────
+
+.uf-subsection-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 20px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-divider);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-text-muted);
+
+  &:first-child,
+  &:first-of-type {
+    margin-top: 0;
+  }
+
+  mat-icon {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+    color: var(--color-primary);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// GRID LAYOUTS
+// ══════════════════════════════════════════════════════════════════════════════
+
+.uf-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+
+  @media (min-width: $bp-md) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+.uf-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+
+  @media (min-width: $bp-sm) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: $bp-xl) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// FIELD WRAPPER (lock / unlock UX)
+// ══════════════════════════════════════════════════════════════════════════════
+
+.uf-field-wrap {
+  position: relative;
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  flex-wrap: wrap;
 
-  &__label {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--color-text-muted);
-    white-space: nowrap;
-    padding-top: 4px;
+  &--span-2 {
+    grid-column: 1 / -1;
+  }
+
+  &--roles {
+    grid-column: 1 / -1;
+  }
+
+  &--toggle {
+    grid-column: 1 / -1;
+  }
+
+  // ── Lockable checkbox rows ─────────────────────────────────────────────────
+  // Wraps a mat-checkbox + hint text + the edit button.
+  &--checkbox-lockable {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  // Locked visual cue
+  &--locked {
+    .uf-field {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    // Also dim lockable-checkbox content when locked
+    .uf-lockable-checkbox {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+  }
+
+  // Unlocked / active glow
+  &--active {
+    .uf-field {
+      opacity: 1;
+    }
+
+    .uf-lockable-checkbox {
+      opacity: 1;
+    }
   }
 }
 
-.summary-chips {
+.uf-field {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  transition: opacity 0.2s ease;
+}
+
+// ── Lockable checkbox inner wrapper ──────────────────────────────────────────
+// Flex column: checkbox label + hint text. Edit button sits outside.
+.uf-lockable-checkbox {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  background: var(--color-hover);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  min-width: 0;
+  transition: opacity 0.2s ease;
+}
+
+.uf-checkbox-hint {
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+// ── Edit / lock toggle button ─────────────────────────────────────────────────
+
+.uf-edit-btn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  margin-top: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-surface);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  padding: 0;
+  min-width: unset;
+  font-family: inherit;
+
+  mat-icon {
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
+  }
+
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  }
+
+  &--active {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  }
+}
+
+// ── Optional label suffix ─────────────────────────────────────────────────────
+
+.uf-optional {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  margin-left: 4px;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CATEGORY BANNER (edit mode — shows current user's category)
+// ══════════════════════════════════════════════════════════════════════════════
+
+.uf-category-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.5;
+  border: 1px solid transparent;
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+    flex-shrink: 0;
+  }
+
+  em {
+    font-style: normal;
+    font-weight: 700;
+  }
+
+  &--staff {
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    border-color: color-mix(in srgb, var(--color-primary) 18%, transparent);
+    color: color-mix(in srgb, var(--color-primary) 70%, var(--color-text-primary));
+    mat-icon {
+      color: var(--color-primary);
+    }
+  }
+
+  &--student {
+    background: color-mix(in srgb, var(--color-success) 8%, transparent);
+    border-color: color-mix(in srgb, var(--color-success) 18%, transparent);
+    color: color-mix(in srgb, var(--color-success) 60%, var(--color-text-primary));
+    mat-icon {
+      color: var(--color-success);
+    }
+  }
+
+  &--parent {
+    background: color-mix(in srgb, var(--color-warning) 8%, transparent);
+    border-color: color-mix(in srgb, var(--color-warning) 18%, transparent);
+    color: color-mix(in srgb, var(--color-warning) 60%, var(--color-text-primary));
+    mat-icon {
+      color: var(--color-warning);
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ROLES SECTION
+// ══════════════════════════════════════════════════════════════════════════════
+
+.uf-roles-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+// ── Primary role badge (edit mode) ────────────────────────────────────────────
+
+.uf-primary-role-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--color-warning) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent);
+  border-radius: var(--radius-sm);
+
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+    color: var(--color-warning);
+    flex-shrink: 0;
+  }
+}
+
+.uf-primary-role-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.uf-primary-role-name {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--color-warning) 70%, var(--color-text-primary));
+}
+
+// ── Category filter banner (for roles dropdown) ────────────────────────────────
+
+.uf-roles-filter-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.4;
+  border: 1px solid transparent;
+
+  mat-icon {
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
+    flex-shrink: 0;
+  }
+
+  strong {
+    font-weight: 700;
+  }
+
+  &--staff {
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    border-color: color-mix(in srgb, var(--color-primary) 16%, transparent);
+    color: color-mix(in srgb, var(--color-primary) 70%, var(--color-text-primary));
+    mat-icon {
+      color: var(--color-primary);
+    }
+  }
+
+  &--student {
+    background: color-mix(in srgb, var(--color-success) 8%, transparent);
+    border-color: color-mix(in srgb, var(--color-success) 16%, transparent);
+    color: color-mix(in srgb, var(--color-success) 60%, var(--color-text-primary));
+    mat-icon {
+      color: var(--color-success);
+    }
+  }
+
+  &--parent {
+    background: color-mix(in srgb, var(--color-warning) 8%, transparent);
+    border-color: color-mix(in srgb, var(--color-warning) 16%, transparent);
+    color: color-mix(in srgb, var(--color-warning) 60%, var(--color-text-primary));
+    mat-icon {
+      color: var(--color-warning);
+    }
+  }
+}
+
+// ── Role option (inside mat-select) ──────────────────────────────────────────
+
+.uf-role-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.uf-role-option-name {
+  flex: 1;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.uf-role-option-desc {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// Category pills on role options
+.uf-role-cat-pill {
+  padding: 1px 7px;
+  border-radius: 9999px;
+  font-size: 0.64rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+
+  &--primary {
+    background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+    color: color-mix(in srgb, var(--color-warning) 70%, #000);
+  }
+
+  &--staff {
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    color: var(--color-primary);
+  }
+
+  &--student {
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    color: color-mix(in srgb, var(--color-success) 70%, #000);
+  }
+
+  &--parent {
+    background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+    color: color-mix(in srgb, var(--color-warning) 70%, #000);
+  }
+}
+
+// ── Role option rows (inside mat-select multiple) ──────────────────────────────
+
+.uf-role-opt-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.uf-role-opt-name {
+  flex: 1;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.uf-role-opt-chips {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.uf-role-opt-desc {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// ── Selected roles chips summary ──────────────────────────────────────────────
+
+.uf-selected-roles {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-.summary-chip {
+.uf-role-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+
+  &--primary {
+    background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+    color: color-mix(in srgb, var(--color-warning) 70%, #000);
+    border-color: color-mix(in srgb, var(--color-warning) 25%, transparent);
+  }
+}
+
+.uf-role-chip-icon {
+  font-size: 11px;
+  height: 11px;
+  width: 11px;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TOGGLE ROW (Active checkbox)
+// ══════════════════════════════════════════════════════════════════════════════
+
+.uf-toggle-row {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  background: var(--color-hover);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  min-width: 0;
+}
+
+.uf-toggle-hint {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// FACILITY CHIPS GRID
+// ══════════════════════════════════════════════════════════════════════════════
+
+.uf-facilities-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+  grid-column: 1 / -1;
+}
+
+.uf-facility-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  grid-column: 1 / -1;
+}
+
+.uf-facility-edit-hint {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PERMISSION SECTION — Complete override of global perm-* styles
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── 1. Section wrapper — must NOT clip its header ─────────────────────────────
+// The section card uses overflow:visible so the header row's buttons
+// are never clipped regardless of border-radius.
+.perm-section {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  box-shadow: var(--shadow-sm);
+  // CRITICAL: Do NOT set overflow:hidden here — it clips the header buttons.
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &--unlocked {
+    border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+    box-shadow: var(--shadow-md),
+      0 0 0 1px color-mix(in srgb, var(--color-primary) 15%, transparent);
+  }
+}
+
+// ── 2. Section header row ─────────────────────────────────────────────────────
+// Full-width flex row: icon+text on the left, badges+button on the right.
+// Padding is generous so the button is never obscured by the card edge.
+.perm-section-header {
+  display: flex;
+  align-items: center;
+  // Allow wrapping only on very small screens
+  flex-wrap: nowrap;
+  width: auto;
+  gap: 12px;
+  // padding: 14px 16px;
+  border-bottom: 1px solid var(--color-divider);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: color-mix(in srgb, var(--color-bg-surface) 60%, var(--color-bg-card));
+  // Overflow visible so button shadow/outline is not clipped
+  overflow: visible;
+  min-width: 0;
+
+  @media (min-width: $bp-lg) {
+    padding: 16px 20px;
+  }
+
+  // Left side: icon block + text stack
+  .uf-section-header-left {
+    flex: 1;
+    min-width: 0;
+  }
+
+  // Right side: badges + toggle button — never shrinks, never wraps
+  .perm-header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+  }
+}
+
+// ── 3. Permission toggle button (Edit Overrides / Cancel) ─────────────────────
+// Pill button — never clips, always fully visible.
+.perm-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  // Enough horizontal padding so text is readable on all viewport widths
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+  white-space: nowrap; // never break "Edit Overrides" across two lines
+  flex-shrink: 0; // never compress
+
+  mat-icon {
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  }
+
+  &--active {
+    border-color: var(--color-error);
+    color: var(--color-error);
+    background: color-mix(in srgb, var(--color-error) 6%, transparent);
+
+    &:hover {
+      border-color: var(--color-error);
+      color: var(--color-error);
+      background: color-mix(in srgb, var(--color-error) 12%, transparent);
+    }
+  }
+}
+
+// ── 4. Guide bar ──────────────────────────────────────────────────────────────
+.perm-guide-bar {
+  padding: 0 16px 12px;
+  border-bottom: 1px solid var(--color-divider);
+
+  @media (min-width: $bp-lg) {
+    padding: 0 20px 12px;
+  }
+}
+
+// ── 5. Locked body (summary shown when picker is closed) ──────────────────────
+.perm-locked-body {
+  padding: 16px;
+
+  @media (min-width: $bp-lg) {
+    padding: 20px;
+  }
+}
+
+// ── 6. Picker body wrapper ────────────────────────────────────────────────────
+// Prevents the picker from bleeding outside the card.
+.perm-picker-body {
+  padding: 0 16px 16px;
+  // Keep overflow hidden only on the body, not the whole card
+  overflow: hidden;
+
+  @media (min-width: $bp-lg) {
+    padding: 0 20px 20px;
+  }
+}
+
+// ── 7. Legend bar ─────────────────────────────────────────────────────────────
+.perm-legend-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-divider);
+  margin-bottom: 12px;
+}
+
+// ── 8. Permission module list — scrollable container ──────────────────────────
+// CRITICAL FIX: This was the primary cause of invisible rows.
+// The global _permissions.scss sets max-height:480px with overflow-y:auto,
+// which is fine. The bug was that individual .perm-module and .perm-item
+// had no explicit height and were collapsing to 0 due to inherited overflow:hidden.
+.perm-section {
+  .perm-module-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 540px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      width: 5px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: var(--color-border);
+      border-radius: 3px;
+    }
+  }
+
+  // ── 9. Module accordion card ──────────────────────────────────────────────
+  .perm-module {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    // CRITICAL FIX: overflow must be visible (or at minimum not hidden)
+    // so that child rows are not clipped when the accordion expands.
+    overflow: visible;
+    transition: border-color 0.15s ease;
+    background: var(--color-bg-card);
+
+    &--expanded {
+      border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+    }
+  }
+
+  // ── 10. Module header row ─────────────────────────────────────────────────
+  // Single flex line: name | count | deny-badge | chevron
+  .perm-module-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    min-height: 44px; // guaranteed tap target
+    background: color-mix(in srgb, var(--color-bg-surface) 60%, var(--color-bg-card));
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+
+    &:hover {
+      background: var(--color-hover);
+    }
+
+    // Module name — takes all remaining space, truncates
+    &__name {
+      flex: 1;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      text-transform: capitalize;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    // Count pill
+    &__count {
+      flex-shrink: 0;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 9999px;
+      background: var(--color-hover);
+      color: var(--color-text-muted);
+    }
+
+    // Chevron — always last, always visible, rotates on expand
+    &__chevron {
+      flex-shrink: 0;
+      font-size: 18px;
+      height: 18px;
+      width: 18px;
+      color: var(--color-text-muted);
+      transition: transform 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  // Rotate chevron when expanded
+  .perm-module--expanded .perm-module-header__chevron {
+    transform: rotate(180deg);
+  }
+
+  // Deny badge inside module header
+  .perm-module-deny-badge {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 9999px;
+    background: color-mix(in srgb, var(--color-error) 10%, transparent);
+    color: var(--color-error);
+    border: 1px solid color-mix(in srgb, var(--color-error) 18%, transparent);
+    white-space: nowrap;
+
+    mat-icon {
+      font-size: 11px;
+      height: 11px;
+      width: 11px;
+    }
+  }
+
+  // ── 11. Permission item list — THE KEY FIX ────────────────────────────────
+  // Previously these rows were invisible because:
+  //   a) The parent .perm-module had overflow:hidden which collapsed them
+  //   b) The rows had no explicit display/height forcing them visible
+  // Solution: explicit block display + min-height on each row.
+  .perm-item-list {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--color-divider);
+    // CRITICAL: overflow must NOT be hidden — rows must be fully visible
+    overflow: visible;
+  }
+
+  // ── 12. Individual permission row ─────────────────────────────────────────
+  .perm-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    min-height: 48px; // explicit height so row is never collapsed
+    border-bottom: 1px solid var(--color-divider);
+    transition: background 0.12s ease;
+    cursor: pointer;
+    // CRITICAL: visibility must be explicit
+    visibility: visible;
+    opacity: 1;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background: var(--color-hover);
+    }
+
+    // State-based backgrounds
+    &--inherited {
+      background: color-mix(in srgb, var(--color-text-muted) 4%, transparent);
+    }
+    &--granted {
+      background: color-mix(in srgb, var(--color-success) 5%, transparent);
+    }
+    &--denied {
+      background: color-mix(in srgb, var(--color-error) 5%, transparent);
+      opacity: 0.9;
+    }
+    &--none {
+      background: transparent;
+    }
+
+    // Col 1: state indicator — fixed width
+    &__state {
+      flex-shrink: 0;
+      width: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    // Col 2: name + slug — takes remaining space
+    &__info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    &__name {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      // Force visibility
+      display: block;
+      visibility: visible;
+    }
+
+    &__slug {
+      font-size: 0.68rem;
+      color: var(--color-text-muted);
+      font-family: 'Courier New', monospace;
+      background: var(--color-hover);
+      padding: 2px 5px;
+      border-radius: 3px;
+      width: fit-content;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      // Force visibility
+      display: inline-block;
+      visibility: visible;
+    }
+
+    // Col 3: state chip — no grow
+    &__badges {
+      flex-shrink: 0;
+    }
+
+    // Col 4: action button — fixed min-width so Block/Restore never clips
+    &__action {
+      flex-shrink: 0;
+      min-width: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+  }
+
+  // ── 13. Block / Restore action buttons ────────────────────────────────────
+  .perm-action-deny-btn,
+  .perm-action-restore-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    border: 1px solid transparent;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: background 0.15s ease, border-color 0.15s ease;
+
+    mat-icon {
+      font-size: 13px;
+      height: 13px;
+      width: 13px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  .perm-action-deny-btn {
+    background: color-mix(in srgb, var(--color-error) 8%, transparent);
+    border-color: color-mix(in srgb, var(--color-error) 20%, transparent);
+    color: var(--color-error);
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-error) 16%, transparent);
+      border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
+    }
+  }
+
+  .perm-action-restore-btn {
+    background: color-mix(in srgb, var(--color-success) 8%, transparent);
+    border-color: color-mix(in srgb, var(--color-success) 20%, transparent);
+    color: color-mix(in srgb, var(--color-success) 70%, #000);
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-success) 16%, transparent);
+      border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
+    }
+  }
+
+  // ── 14. State indicator elements ──────────────────────────────────────────
+  .perm-state-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: all 0.15s ease;
+
+    mat-icon {
+      font-size: 14px;
+      height: 14px;
+      width: 14px;
+    }
+
+    &--denied {
+      background: color-mix(in srgb, var(--color-error) 15%, transparent);
+      color: var(--color-error);
+
+      &:hover {
+        background: color-mix(in srgb, var(--color-error) 25%, transparent);
+      }
+    }
+  }
+
+  .perm-state-inherited {
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted);
+
+    mat-icon {
+      font-size: 14px;
+      height: 14px;
+      width: 14px;
+    }
+  }
+
+  // ── 15. State chips ───────────────────────────────────────────────────────
+  .perm-state-chip {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+
+    &--inherited {
+      background: color-mix(in srgb, var(--color-text-muted) 12%, transparent);
+      color: var(--color-text-muted);
+    }
+    &--granted {
+      background: color-mix(in srgb, var(--color-success) 12%, transparent);
+      color: color-mix(in srgb, var(--color-success) 70%, #000);
+    }
+    &--denied {
+      background: color-mix(in srgb, var(--color-error) 12%, transparent);
+      color: var(--color-error);
+    }
+  }
+
+  // ── 16. No-results state ──────────────────────────────────────────────────
+  .perm-no-results {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 32px 0;
+    color: var(--color-text-muted);
+    font-size: 0.84rem;
+    text-align: center;
+
+    mat-icon {
+      font-size: 28px;
+      height: 28px;
+      width: 28px;
+      opacity: 0.5;
+    }
+  }
+
+  // ── 17. Action bar (Save / Cancel at the bottom of the picker) ────────────
+  .perm-action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0 0;
+    margin-top: 14px;
+    border-top: 1px solid var(--color-divider);
+    gap: 10px;
+    flex-wrap: wrap;
+
+    &__left {
+      display: flex;
+      align-items: center;
+    }
+
+    &__right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+}
+
+// ── Count chips in legend bar ─────────────────────────────────────────────────
+.perm-count-chip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   padding: 3px 10px;
   border-radius: 9999px;
   font-size: 0.72rem;
-  font-weight: 600;
-  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-  color: var(--color-primary-dark);
-  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+  font-weight: 700;
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  color: color-mix(in srgb, var(--color-success) 70%, #000);
+  border: 1px solid color-mix(in srgb, var(--color-success) 20%, transparent);
 
-  &__lock-icon {
-    font-size: 11px;
-    height: 11px;
-    width: 11px;
+  mat-icon {
+    font-size: 12px;
+    height: 12px;
+    width: 12px;
   }
 
-  &--primary {
-    background: color-mix(in srgb, var(--color-warning) 12%, transparent);
-    color: color-mix(in srgb, var(--color-warning) 70%, #000);
-    border-color: color-mix(in srgb, var(--color-warning) 25%, transparent);
-  }
-}
-
-.active-toggle-row {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-
-  &__hint {
-    margin: 0 0 0 28px;
-    font-size: 0.75rem;
-    color: var(--color-text-muted);
+  &--deny {
+    background: color-mix(in srgb, var(--color-error) 10%, transparent);
+    color: var(--color-error);
+    border-color: color-mix(in srgb, var(--color-error) 20%, transparent);
   }
 }
 
-// ── Role option inside mat-select panel ───────────────────────────────────────
-.role-option-inner {
+// ══════════════════════════════════════════════════════════════════════════════
+// FORM ACTIONS BAR
+// ══════════════════════════════════════════════════════════════════════════════
+
+.uf-form-actions {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 2px 0;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0 8px;
+  flex-wrap: wrap;
+
+  @media (max-width: $bp-sm) {
+    flex-direction: column-reverse;
+
+    button,
+    .uf-cancel-action-btn,
+    .uf-submit-btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
 }
 
-.role-option-main {
-  display: flex;
+.uf-cancel-action-btn {
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: wrap;
+
+  mat-icon {
+    font-size: 17px;
+    height: 17px;
+    width: 17px;
+  }
 }
 
-.role-option-name {
-  font-weight: 600;
-  font-size: 0.87rem;
+.uf-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 140px;
+  justify-content: center;
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
 }
 
-.role-option-desc {
-  font-size: 0.72rem;
-  color: var(--color-text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 280px;
-}
+.uf-section-header perm-section-header{}
 
-// ── Section card accent for role-specific sections ────────────────────────────
-// Gives the student/teacher/parent/staff blocks a subtle secondary accent.
-.role-section .section-header mat-icon {
-  color: var(--color-secondary);
+// ══════════════════════════════════════════════════════════════════════════════
+// DARK MODE — perm section overrides
+// ══════════════════════════════════════════════════════════════════════════════
+// NOTE: The main dark-mode block lives in styles/_dark-theme.scss.
+// These are component-scoped additions that only apply to uf-* and perm-*
+// classes defined in this file.
+
+[data-theme='dark'] {
+  .perm-section {
+    background: var(--color-bg-card);
+    border-color: var(--color-border);
+
+    .perm-module {
+      background: var(--color-bg-card);
+      border-color: var(--color-border);
+
+      &--expanded {
+        border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
+      }
+    }
+
+    .perm-module-header {
+      background: color-mix(in srgb, var(--color-bg-main) 40%, var(--color-bg-card));
+
+      &:hover {
+        background: var(--color-hover);
+      }
+    }
+
+    .perm-item {
+      &--inherited {
+        background: color-mix(in srgb, var(--color-text-muted) 6%, transparent);
+      }
+      &--granted {
+        background: color-mix(in srgb, var(--color-success) 7%, transparent);
+      }
+      &--denied {
+        background: color-mix(in srgb, var(--color-error) 7%, transparent);
+      }
+      &:hover {
+        background: var(--color-hover);
+      }
+    }
+
+    .perm-item__slug {
+      background: color-mix(in srgb, var(--color-bg-main) 60%, transparent);
+    }
+
+    .perm-action-deny-btn {
+      background: color-mix(in srgb, var(--color-error) 10%, transparent);
+      border-color: color-mix(in srgb, var(--color-error) 22%, transparent);
+      color: var(--color-error);
+
+      &:hover {
+        background: color-mix(in srgb, var(--color-error) 18%, transparent);
+      }
+    }
+
+    .perm-action-restore-btn {
+      background: color-mix(in srgb, var(--color-success) 10%, transparent);
+      border-color: color-mix(in srgb, var(--color-success) 22%, transparent);
+      color: color-mix(in srgb, var(--color-success) 90%, #fff);
+
+      &:hover {
+        background: color-mix(in srgb, var(--color-success) 18%, transparent);
+      }
+    }
+  }
+
+  .perm-toggle-btn {
+    background: var(--color-bg-surface);
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+
+    &:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    }
+
+    &--active {
+      border-color: var(--color-error);
+      color: var(--color-error);
+      background: color-mix(in srgb, var(--color-error) 8%, transparent);
+    }
+  }
+
+  .uf-edit-btn {
+    background: var(--color-bg-surface);
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+
+    &:hover,
+    &--active {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    }
+  }
+
+  .uf-toggle-row,
+  .uf-lockable-checkbox {
+    background: var(--color-hover);
+    border-color: var(--color-border);
+  }
+
+  .uf-loading-card {
+    background: var(--color-bg-card);
+    border-color: var(--color-border);
+  }
+
+  .uf-back-btn {
+    background: var(--color-bg-card);
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+
+    &:hover {
+      background: var(--color-hover);
+      border-color: var(--color-primary);
+    }
+  }
+
+  .uf-role-chip {
+    background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+    color: var(--color-primary);
+    border-color: color-mix(in srgb, var(--color-primary) 22%, transparent);
+
+    &--primary {
+      background: color-mix(in srgb, var(--color-warning) 14%, transparent);
+      color: var(--color-warning);
+      border-color: color-mix(in srgb, var(--color-warning) 22%, transparent);
+    }
+  }
+
+  .perm-count-chip {
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    color: color-mix(in srgb, var(--color-success) 90%, #fff);
+    border-color: color-mix(in srgb, var(--color-success) 22%, transparent);
+
+    &--deny {
+      background: color-mix(in srgb, var(--color-error) 12%, transparent);
+      color: var(--color-error);
+      border-color: color-mix(in srgb, var(--color-error) 22%, transparent);
+    }
+  }
 }

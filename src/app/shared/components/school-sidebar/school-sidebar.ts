@@ -1,3 +1,4 @@
+// school-sidebar.ts
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
   Component,
@@ -90,24 +91,24 @@ export const NAV_GROUPS: NavGroup[] = [
         route: '/school/dashboard',
         permissions: ['dashboard.view', 'dashboard.student.view', 'dashboard.parent.view'],
       },
-      {
-        label: 'My Profile',
-        icon: 'account_circle',
-        route: '/school/profile/me',
-        permissions: ['dashboard.view', 'dashboard.student.view', 'dashboard.parent.view'],
-      },
-      {
-        label: 'About Us',
-        icon: 'info',
-        route: '/school/about-us',
-        permissions: ['dashboard.view', 'dashboard.student.view', 'dashboard.parent.view'],
-      },
-      {
-        label: 'School Contact',
-        icon: 'contacts',
-        route: '/school/school-contact',
-        permissions: ['dashboard.view', 'dashboard.student.view', 'dashboard.parent.view'],
-      },
+      // {
+      //   label: 'My Profile',
+      //   icon: 'account_circle',
+      //   route: '/school/profile/me',
+      //   permissions: ['dashboard.view', 'dashboard.student.view', 'dashboard.parent.view'],
+      // },
+      // {
+      //   label: 'About Us',
+      //   icon: 'info',
+      //   route: '/school/about-us',
+      //   permissions: ['dashboard.view', 'dashboard.student.view', 'dashboard.parent.view'],
+      // },
+      // {
+      //   label: 'School Contact',
+      //   icon: 'contacts',
+      //   route: '/school/school-contact',
+      //   permissions: ['dashboard.view', 'dashboard.student.view', 'dashboard.parent.view'],
+      // },
     ],
   },
 
@@ -115,19 +116,35 @@ export const NAV_GROUPS: NavGroup[] = [
     groupLabel: 'Management',
     items: [
       {
-        label: 'Users',
+        label: 'Users & Roles',
         icon: 'manage_accounts',
-        route: '/school/users',
-        permissions: ['users.list'],
+        permissions: ['users.list', 'roles.manage'],
+        children: [
+          {
+            label: 'List Users',
+            route: '/school/users',
+            icon: 'list_alt',
+            permissions: ['users.list'],
+            matchStrategy: 'exact', // so it stays active when on /school/users/edit/123
+          },
+          {
+            label: 'Add Users',
+            route: '/school/users/create',
+            icon: 'person_add',
+            permissions: ['users.create'],
+            matchStrategy: 'exact', // so it doesn't stay active when on /school/users/edit/123
+          },
+          {
+            label: 'Roles',
+            icon: 'admin_panel_settings',
+            route: '/school/roles',
+            permissions: ['roles.manage'],
+          },
+        ],
       },
+
       {
-        label: 'Roles',
-        icon: 'admin_panel_settings',
-        route: '/school/roles',
-        permissions: ['roles.manage'],
-      },
-      {
-        label: 'Students',
+        label: 'Students & Parents',
         icon: 'groups',
         permissions: ['students.list'],
         children: [
@@ -150,14 +167,15 @@ export const NAV_GROUPS: NavGroup[] = [
             // prefix: any deeper page under bulk-upload keeps it active
             matchStrategy: 'prefix',
           },
+          {
+            label: 'Parents',
+            icon: 'family_restroom',
+            route: '/school/parents/link',
+            permissions: ['parents.manage'],
+          },
         ],
       },
-      {
-        label: 'Parents',
-        icon: 'family_restroom',
-        route: '/school/parents/link',
-        permissions: ['parents.manage'],
-      },
+
       {
         label: 'Academics',
         icon: 'school',
@@ -248,19 +266,40 @@ export const NAV_GROUPS: NavGroup[] = [
             permissions: ['fees.structures.manage'],
             matchStrategy: 'prefix',
           },
-          {
-            label: 'Record Payment',
-            route: '/school/fees/payments/record',
-            icon: 'point_of_sale',
-            permissions: ['fees.payments.record'],
-            matchStrategy: 'prefix',
-          },
+          // {
+          //   label: 'Record Payment',
+          //   route: '/school/fees/payments/record',
+          //   icon: 'point_of_sale',
+          //   permissions: ['fees.payments.record'],
+          //   matchStrategy: 'prefix',
+          // },
           {
             label: 'Fee Report',
             route: '/school/fees/report',
             icon: 'summarize',
             permissions: ['fees.report'],
             matchStrategy: 'prefix',
+          },
+          {
+            label: 'Student Fee Detail',
+            route: '/school/fees/student-detail',
+            icon: 'manage_search',
+            permissions: ['fees.report'],
+            matchStrategy: 'prefix',
+          },
+          {
+            label: "Fee Ladger",
+            route: "/school/fees/ledger",
+            icon: 'menu_book',
+            permissions: ['fees.report', 'fees.ledger.view'],
+            matchStrategy: 'prefix',
+          },
+          {
+            label: "Concessions Dashboard",
+            route: "/school/fees/concessions",
+            icon: 'local_offer',
+            permissions: ['fees.report'],
+            matchStrategy: "prefix",
           },
         ],
       },
@@ -596,39 +635,38 @@ export class SchoolSidebar implements OnInit, OnDestroy {
   // }
 
   /**
- * SIDEBAR-SPECIFIC permission check.
- *
- * Differs from auth.hasPermission() in one critical way:
- * the '*' wildcard (School Owner) does NOT match student/parent category slugs.
- *
- * This prevents the "My Academics" and "My Child" sidebar groups from
- * appearing for the School Owner, even though auth.hasPermission('*') = true.
- *
- * auth.hasPermission() is intentionally NOT used here to avoid changing its
- * behaviour globally (route guards and component templates rely on the current
- * wildcard semantics for staff slugs).
- */
-private hasAnyPermission(permissions: string[]): boolean {
-  return permissions.some((slug) => this.canSeeSidebarItem(slug));
-}
-
-private canSeeSidebarItem(slug: string): boolean {
-  const userPerms = this.auth.permissions();
-  const isWildcard = userPerms.includes('*');
-
-  // Wildcard users (School Owner) never see student/parent-only nav items
-  if (isWildcard) {
-    if (STUDENT_ONLY_SLUGS.has(slug) || PARENT_ONLY_SLUGS.has(slug)) {
-      return false;
-    }
-    // Wildcard covers all staff slugs
-    return true;
+   * SIDEBAR-SPECIFIC permission check.
+   *
+   * Differs from auth.hasPermission() in one critical way:
+   * the '*' wildcard (School Owner) does NOT match student/parent category slugs.
+   *
+   * This prevents the "My Academics" and "My Child" sidebar groups from
+   * appearing for the School Owner, even though auth.hasPermission('*') = true.
+   *
+   * auth.hasPermission() is intentionally NOT used here to avoid changing its
+   * behaviour globally (route guards and component templates rely on the current
+   * wildcard semantics for staff slugs).
+   */
+  private hasAnyPermission(permissions: string[]): boolean {
+    return permissions.some((slug) => this.canSeeSidebarItem(slug));
   }
 
-  // Non-wildcard: normal exact match
-  return userPerms.includes(slug);
-}
+  private canSeeSidebarItem(slug: string): boolean {
+    const userPerms = this.auth.permissions();
+    const isWildcard = userPerms.includes('*');
 
+    // Wildcard users (School Owner) never see student/parent-only nav items
+    if (isWildcard) {
+      if (STUDENT_ONLY_SLUGS.has(slug) || PARENT_ONLY_SLUGS.has(slug)) {
+        return false;
+      }
+      // Wildcard covers all staff slugs
+      return true;
+    }
+
+    // Non-wildcard: normal exact match
+    return userPerms.includes(slug);
+  }
 
   /**
    * FIX: autoExpandActive now uses matchesChildRoute (respects matchStrategy)

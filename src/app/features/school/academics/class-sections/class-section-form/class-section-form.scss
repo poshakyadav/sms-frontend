@@ -119,6 +119,25 @@
   }
 }
 
+// ── Custom field wrapper (teacher search dropdown) ─────────────────────────
+.field-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  padding-left: 2px;
+}
+
+.field-optional {
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
 // ── Capacity badge hint inside mat-option ──────────────────────────────────
 
 .capacity-badge {

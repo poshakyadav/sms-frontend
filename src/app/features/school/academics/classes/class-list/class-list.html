@@ -1,3 +1,4 @@
+<!-- class-list.html -->
 <div class="page-container">
   <div class="page-header">
     <div class="header-left">
@@ -6,45 +7,104 @@
     </div>
     <div class="header-actions">
       @if (canManage()) {
-      <!--
-          FIX: Use [routerLink] array binding (canonical Angular form).
-          Plain routerLink="..." works for static strings, but [routerLink]="[...]"
-          is the idiomatic form and avoids potential edge cases with string parsing.
-        -->
-      <button mat-raised-button color="primary" [routerLink]="['/school/academics/classes/new']">
-        <mat-icon>add</mat-icon> New Class
+
+      <!-- ── Single create ──────────────────────────────────────────── -->
+      <button
+        mat-stroked-button
+        [routerLink]="['/school/academics/classes/new']"
+        matTooltip="Create a single class"
+      >
+        <mat-icon>add</mat-icon>
+        New Class
       </button>
+
+      <!-- ── Bulk actions menu ──────────────────────────────────────── -->
+      <button mat-raised-button color="primary" [matMenuTriggerFor]="bulkMenu">
+        <mat-icon>bolt</mat-icon>
+        Bulk Actions
+        <mat-icon iconPositionEnd>expand_more</mat-icon>
+      </button>
+
+      <mat-menu #bulkMenu="matMenu">
+        <button mat-menu-item [routerLink]="['/school/academics/classes/bulk-create']">
+          <mat-icon>add_circle_outline</mat-icon>
+          <span>Bulk Create Classes</span>
+        </button>
+        <button
+          mat-menu-item
+          [routerLink]="['/school/academics/classes/bulk-edit']"
+          [disabled]="classes().length === 0"
+        >
+          <mat-icon>edit_note</mat-icon>
+          <span>Bulk Edit Classes</span>
+        </button>
+      </mat-menu>
+
       }
+
       <button mat-icon-button (click)="loadClasses()" matTooltip="Refresh">
         <mat-icon>refresh</mat-icon>
       </button>
     </div>
   </div>
 
+  <!-- ── Loading ──────────────────────────────────────────────────────── -->
   @if (loading()) {
   <div class="state-container">
     <mat-spinner diameter="48"></mat-spinner>
     <p>Loading classes…</p>
   </div>
-  } @else if (error()) {
+  }
+
+  <!-- ── Error ────────────────────────────────────────────────────────── -->
+  @else if (error()) {
   <div class="state-container error">
     <mat-icon class="state-icon">error_outline</mat-icon>
     <h2>Could not load classes</h2>
     <p>{{ error() }}</p>
     <button mat-raised-button color="primary" (click)="loadClasses()">Retry</button>
   </div>
-  } @else if (classes().length === 0) {
+  }
+
+  <!-- ── Empty ────────────────────────────────────────────────────────── -->
+  @else if (classes().length === 0) {
   <div class="state-container">
     <mat-icon class="state-icon">school</mat-icon>
     <h2>No Classes Yet</h2>
-    <p>Add your first class to get started.</p>
+    <p>Add your first class or use Bulk Create to add several at once.</p>
     @if (canManage()) {
-    <button mat-raised-button color="primary" [routerLink]="['/school/academics/classes/new']">
-      <mat-icon>add</mat-icon> Add First Class
-    </button>
+    <div class="empty-actions">
+      <button mat-stroked-button [routerLink]="['/school/academics/classes/new']">
+        <mat-icon>add</mat-icon>
+        Add Single Class
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        [routerLink]="['/school/academics/classes/bulk-create']"
+      >
+        <mat-icon>bolt</mat-icon>
+        Bulk Create Classes
+      </button>
+    </div>
     }
   </div>
-  } @else {
+  }
+
+  <!-- ── Table ────────────────────────────────────────────────────────── -->
+  @else {
+  <div class="list-meta">
+    <span class="list-meta__count">
+      {{ classes().length }} class{{ classes().length !== 1 ? 'es' : '' }}
+    </span>
+    @if (canManage()) {
+    <a class="list-meta__link" [routerLink]="['/school/academics/classes/bulk-edit']">
+      <mat-icon>edit_note</mat-icon>
+      Edit all at once
+    </a>
+    }
+  </div>
+
   <div class="table-card">
     <table mat-table [dataSource]="classes()" [trackBy]="trackById">
       <ng-container matColumnDef="name">

@@ -1,0 +1,435 @@
+<!-- class-section-bulk-create.html -->
+<div class="bulk-page">
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <header class="bulk-header">
+    <div class="bulk-header__left">
+      <button
+        mat-icon-button
+        class="back-btn"
+        (click)="router.navigate(['/school/academics/class-sections'])"
+        matTooltip="Back to Class-Sections"
+      >
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <h1>Bulk Create Class-Sections</h1>
+        <p class="subtitle">
+          Use Quick Presets to generate all combinations at once, or add rows manually.
+        </p>
+      </div>
+    </div>
+
+    <div class="bulk-header__actions">
+      <button mat-stroked-button (click)="toggleGuide()">
+        <mat-icon>menu_book</mat-icon>
+        {{ showGuide() ? 'Hide Guide' : 'Field Guide' }}
+      </button>
+      <button mat-stroked-button class="preset-btn" (click)="togglePresets()">
+        <mat-icon>auto_awesome</mat-icon>
+        Quick Presets
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        [disabled]="form.invalid || submitting() || rowCount === 0"
+        (click)="submit()"
+      >
+        @if (submitting()) {
+        <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+        } @else {
+        <mat-icon>save</mat-icon>
+        } Create {{ rowCount }} {{ rowCount === 1 ? 'Section' : 'Sections' }}
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Loading ─────────────────────────────────────────────────────────── -->
+  @if (loadingData()) {
+  <div class="state-container">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading classes, sections &amp; teachers…</p>
+  </div>
+  } @else if (loadError()) {
+  <div class="state-container state-container--error">
+    <mat-icon class="state-icon">error_outline</mat-icon>
+    <h2>Failed to load data</h2>
+    <p>{{ loadError() }}</p>
+  </div>
+  } @else {
+
+  <!-- ── Field Guide ──────────────────────────────────────────────────── -->
+  @if (showGuide()) {
+  <div class="guide-panel">
+    <div class="guide-panel__title">
+      <mat-icon>menu_book</mat-icon>
+      Field Guide — Understanding each column
+    </div>
+    <div class="guide-grid">
+      <div class="guide-card">
+        <div class="guide-card__icon guide-card__icon--primary"><mat-icon>class</mat-icon></div>
+        <div class="guide-card__body">
+          <strong>Class</strong>
+          <p>The grade level (e.g. Class 10, Nursery). Each row must belong to a class.</p>
+        </div>
+      </div>
+      <div class="guide-card">
+        <div class="guide-card__icon guide-card__icon--info"><mat-icon>view_stream</mat-icon></div>
+        <div class="guide-card__body">
+          <strong>Section</strong>
+          <p>
+            The division within a class (e.g. A, B, Science). A class + section pair must be unique.
+          </p>
+        </div>
+      </div>
+      <div class="guide-card">
+        <div class="guide-card__icon guide-card__icon--success"><mat-icon>people</mat-icon></div>
+        <div class="guide-card__body">
+          <strong>Capacity</strong>
+          <p>Maximum students allowed. Hard limit: {{ maxCapacity }}.</p>
+        </div>
+      </div>
+      <div class="guide-card">
+        <div class="guide-card__icon guide-card__icon--warning"><mat-icon>person</mat-icon></div>
+        <div class="guide-card__body">
+          <strong>Class Teacher</strong>
+          <p>Assigned homeroom teacher. Type a name to search. Optional.</p>
+        </div>
+      </div>
+      <div class="guide-card">
+        <div class="guide-card__icon guide-card__icon--secondary">
+          <mat-icon>door_front</mat-icon>
+        </div>
+        <div class="guide-card__body">
+          <strong>Room Number</strong>
+          <p>Physical classroom identifier (e.g. "Room 101"). Optional — max 20 chars.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- ── Quick Presets Panel ──────────────────────────────────────────── -->
+  @if (showPresets()) {
+  <div class="presets-panel">
+    <div class="presets-panel__header">
+      <div class="presets-panel__title">
+        <mat-icon>auto_awesome</mat-icon>
+        Quick Presets — Generate all combinations
+      </div>
+      <p class="presets-panel__hint">
+        Select the classes and sections you want, then click <strong>Generate</strong> to auto-fill
+        all class × section combinations into the table below.
+      </p>
+    </div>
+
+    <div class="presets-body">
+      <!-- Classes selector -->
+      <div class="preset-selector">
+        <div class="preset-selector__header">
+          <span class="preset-selector__label">
+            <mat-icon>school</mat-icon>
+            Classes
+            <span class="preset-selector__count">
+              {{ selectedClassIds().size }} / {{ classes().length }} selected
+            </span>
+          </span>
+          <div class="preset-selector__actions">
+            <button mat-button class="sel-btn" (click)="selectAllClasses()">All</button>
+            <button mat-button class="sel-btn" (click)="clearAllClasses()">None</button>
+          </div>
+        </div>
+        <div class="preset-chip-grid">
+          @for (cls of classes(); track cls.id) {
+          <button
+            class="preset-chip"
+            [class.preset-chip--selected]="selectedClassIds().has(cls.id)"
+            (click)="toggleClassSelection(cls.id)"
+            matRipple
+          >
+            <mat-icon class="preset-chip__check">
+              {{ selectedClassIds().has(cls.id) ? 'check_circle' : 'radio_button_unchecked' }}
+            </mat-icon>
+            {{ cls.name }}
+          </button>
+          }
+        </div>
+      </div>
+
+      <!-- Sections selector -->
+      <div class="preset-selector">
+        <div class="preset-selector__header">
+          <span class="preset-selector__label">
+            <mat-icon>view_stream</mat-icon>
+            Sections
+            <span class="preset-selector__count">
+              {{ selectedSectionIds().size }} / {{ sections().length }} selected
+            </span>
+          </span>
+          <div class="preset-selector__actions">
+            <button mat-button class="sel-btn" (click)="selectAllSections()">All</button>
+            <button mat-button class="sel-btn" (click)="clearAllSections()">None</button>
+          </div>
+        </div>
+        <div class="preset-chip-grid">
+          @for (sec of sections(); track sec.id) {
+          <button
+            class="preset-chip"
+            [class.preset-chip--selected]="selectedSectionIds().has(sec.id)"
+            (click)="toggleSectionSelection(sec.id)"
+            matRipple
+          >
+            <mat-icon class="preset-chip__check">
+              {{ selectedSectionIds().has(sec.id) ? 'check_circle' : 'radio_button_unchecked' }}
+            </mat-icon>
+            Section {{ sec.name }}
+          </button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview count + generate -->
+    <div class="presets-footer">
+      <div class="presets-footer__preview">
+        @if (presetRowCount > 0) {
+        <mat-icon>grid_on</mat-icon>
+        Will generate <strong>{{ presetRowCount }}</strong> row{{
+          presetRowCount !== 1 ? 's' : ''
+        }}
+        ({{ selectedClassIds().size }} class{{ selectedClassIds().size !== 1 ? 'es' : '' }} ×
+        {{ selectedSectionIds().size }} section{{ selectedSectionIds().size !== 1 ? 's' : '' }}) }
+        @else {
+        <mat-icon>info</mat-icon>
+        Select at least one class and one section to preview count }
+      </div>
+      <div class="presets-footer__btns">
+        <button mat-stroked-button (click)="showPresets.set(false)">Cancel</button>
+        <button
+          mat-raised-button
+          color="primary"
+          [disabled]="presetRowCount === 0"
+          (click)="applyPreset()"
+        >
+          <mat-icon>auto_awesome</mat-icon>
+          Generate {{ presetRowCount > 0 ? presetRowCount + ' rows' : '' }}
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- ── Result banner ────────────────────────────────────────────────── -->
+  @if (lastResult(); as result) {
+  <div class="result-banner" [class.result-banner--partial]="result.skipped.length > 0">
+    <mat-icon>{{ result.skipped.length > 0 ? 'warning_amber' : 'check_circle' }}</mat-icon>
+    <div>
+      @if (result.created > 0) {
+      <strong>
+        {{ result.created }} class-section{{ result.created !== 1 ? 's' : '' }} created
+        successfully.
+      </strong>
+      } @if (result.skipped.length > 0) {
+      <p class="result-skipped">Skipped (already exist): {{ result.skipped.join(', ') }}</p>
+      }
+    </div>
+  </div>
+  }
+
+  <!-- ── Table card ───────────────────────────────────────────────────── -->
+  <!--
+        FIX (Issue 1 — Column Misalignment):
+        Replaced the custom CSS-grid "table" with a real <table>.
+  
+        Root cause of the misalignment: the grid columns were declared on
+        .cs-table-head and .cs-table-row, but Angular Material's mat-form-field
+        inserts multiple wrapper divs (.mat-mdc-form-field-wrapper, .mat-mdc-text-field-wrapper,
+        etc.) between the grid container and the actual input. Those wrapper divs
+        become implicit grid items, consuming grid columns at the wrong level.
+  
+        A real <table> cell (<td>) is the direct parent of whatever Angular
+        Material renders, so the layout is always correct regardless of how many
+        host-element wrapper divs the component adds.
+  
+        The row-number column in the original header was also missing, which caused
+        a one-column offset for all subsequent header cells.
+      -->
+  <div class="table-card">
+    <div class="table-toolbar">
+      <span class="table-toolbar__count">
+        <mat-icon>view_list</mat-icon>
+        {{ rowCount }} row{{ rowCount !== 1 ? 's' : '' }}
+      </span>
+      <button mat-raised-button color="accent" (click)="addRow()">
+        <mat-icon>add</mat-icon>
+        Add Row
+      </button>
+    </div>
+
+    <div class="table-scroll-wrap" [formGroup]="form">
+      <table class="cs-table" aria-label="Class-sections to create">
+        <thead>
+          <tr>
+            <th class="col-num">#</th>
+            <th class="col-class">Class <span class="required-star">*</span></th>
+            <th class="col-section">Section <span class="required-star">*</span></th>
+            <th class="col-capacity">Capacity</th>
+            <th class="col-teacher">Class Teacher</th>
+            <th class="col-room">Room No.</th>
+            <th class="col-active">Active</th>
+            <th class="col-actions"></th>
+          </tr>
+        </thead>
+
+        <tbody formArrayName="rows">
+          <!--
+                FIX (Issue 3 — Wrong row deleted):
+                Track by the stable `_uid` assigned at FormGroup creation, NOT by $index.
+  
+                With index-based tracking (@for track $index) Angular's differ maps
+                each row to its position. When row 1 of 3 is removed:
+                  - rows[0] stays → DOM node 0 kept   ✓
+                  - rows[1] was rows[2] → DOM node 1 diffed against old node 1 data → wrong!
+                  - DOM node 2 deleted (bottom) even though row 1 was removed
+  
+                With uid-based tracking Angular correctly identifies which DOM node
+                belongs to which FormGroup and removes only that node.
+              -->
+          @for (row of rows.controls; track trackByUid($index, row)) {
+          <tr
+            class="cs-row"
+            [class.cs-row--invalid]="row.invalid && row.touched"
+            [formGroupName]="$index"
+          >
+            <!-- Row number -->
+            <td class="col-num">
+              <span class="row-num">{{ $index + 1 }}</span>
+            </td>
+
+            <!-- Class -->
+            <td class="col-class">
+              <mat-form-field appearance="outline" class="field-full">
+                <mat-select formControlName="classId" placeholder="Select class">
+                  @for (cls of classes(); track cls.id) {
+                  <mat-option [value]="cls.id">{{ cls.name }}</mat-option>
+                  }
+                </mat-select>
+                @if (fieldError(row.get('classId'), 'required')) {
+                <mat-error>Required</mat-error>
+                }
+              </mat-form-field>
+            </td>
+
+            <!-- Section -->
+            <td class="col-section">
+              <mat-form-field appearance="outline" class="field-full">
+                <mat-select formControlName="sectionId" placeholder="Select section">
+                  @for (sec of sections(); track sec.id) {
+                  <mat-option [value]="sec.id">{{ sec.name }}</mat-option>
+                  }
+                </mat-select>
+                @if (fieldError(row.get('sectionId'), 'required')) {
+                <mat-error>Required</mat-error>
+                }
+              </mat-form-field>
+            </td>
+
+            <!-- Capacity -->
+            <td class="col-capacity">
+              <mat-form-field appearance="outline" class="field-full">
+                <input
+                  matInput
+                  type="number"
+                  formControlName="capacity"
+                  min="1"
+                  [max]="maxCapacity"
+                  placeholder="40"
+                />
+                @if ( fieldError(row.get('capacity'), 'min') || fieldError(row.get('capacity'),
+                'max') ) {
+                <mat-error>1–{{ maxCapacity }}</mat-error>
+                }
+              </mat-form-field>
+            </td>
+
+            <!-- Class Teacher (searchable) -->
+            <td class="col-teacher">
+              <app-teacher-search-dropdown
+                [teachers]="teachers()"
+                [selectedTeacherId]="row.get('classTeacherId')?.value"
+                (teacherSelected)="onTeacherSelected($event, $index)"
+              />
+            </td>
+
+            <!-- Room Number -->
+            <td class="col-room">
+              <mat-form-field appearance="outline" class="field-full">
+                <input
+                  matInput
+                  formControlName="roomNumber"
+                  placeholder="e.g. 101"
+                  maxlength="20"
+                />
+              </mat-form-field>
+            </td>
+
+            <!-- Active toggle -->
+            <td class="col-active">
+              <label class="toggle-wrap">
+                <input type="checkbox" formControlName="isActive" class="toggle-input" />
+                <span class="toggle-slider"></span>
+              </label>
+            </td>
+
+            <!-- Delete -->
+            <td class="col-actions">
+              <button
+                mat-icon-button
+                type="button"
+                color="warn"
+                [disabled]="rows.length === 1"
+                (click)="removeRow($index)"
+                matTooltip="Remove row"
+              >
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Add row footer -->
+    <div class="table-footer">
+      <button mat-button class="add-row-btn" (click)="addRow()">
+        <mat-icon>add_circle_outline</mat-icon>
+        Add another row
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Bottom submit bar ────────────────────────────────────────────── -->
+  <div class="submit-bar">
+    <button mat-stroked-button (click)="router.navigate(['/school/academics/class-sections'])">
+      Cancel
+    </button>
+    <button
+      mat-raised-button
+      color="primary"
+      [disabled]="form.invalid || submitting() || rowCount === 0"
+      (click)="submit()"
+    >
+      <span class="btn-content">
+        @if (submitting()) {
+        <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+        <span>Creating…</span>
+        } @else {
+        <mat-icon>save</mat-icon>
+        <span>Create {{ rowCount }} {{ rowCount === 1 ? 'Section' : 'Sections' }}</span>
+        }
+      </span>
+    </button>
+  </div>
+
+  }<!-- end @else -->
+</div>

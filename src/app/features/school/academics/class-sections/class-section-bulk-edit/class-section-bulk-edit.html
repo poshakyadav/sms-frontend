@@ -1,0 +1,273 @@
+<!-- class-section-bulk-edit.html -->
+<div class="edit-page">
+  <!-- ── Header ─────────────────────────────────────────────────────────────── -->
+  <header class="edit-header">
+    <div class="edit-header__left">
+      <button
+        mat-icon-button
+        class="back-btn"
+        (click)="router.navigate(['/school/academics/class-sections'])"
+        matTooltip="Back to Class-Sections"
+      >
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <h1>Bulk Edit Class-Sections</h1>
+        <p class="subtitle">
+          Edit capacity, class teacher and room number for all sections at once. Only changed rows
+          are saved.
+        </p>
+      </div>
+    </div>
+
+    <div class="edit-header__actions">
+      @if (hasChanges()) {
+      <div class="change-badge">
+        <mat-icon>edit_note</mat-icon>
+        {{ dirtyCount() }} unsaved change{{ dirtyCount() !== 1 ? 's' : '' }}
+      </div>
+      <button mat-stroked-button (click)="resetAll()">
+        <mat-icon>restart_alt</mat-icon>
+        Reset All
+      </button>
+      }
+      <button
+        mat-raised-button
+        color="primary"
+        [disabled]="!hasChanges() || form.invalid || submitting()"
+        (click)="submit()"
+      >
+        <span class="btn-content">
+          @if (submitting()) {
+          <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+          <span>Saving…</span>
+          } @else {
+          <mat-icon>save</mat-icon>
+          <span>
+            Save Changes @if (hasChanges()) {
+            <span class="save-count">({{ dirtyCount() }})</span>
+            }
+          </span>
+          }
+        </span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Loading ────────────────────────────────────────────────────────────── -->
+  @if (loading()) {
+  <div class="state-container">
+    <mat-spinner diameter="44"></mat-spinner>
+    <p>Loading class-sections…</p>
+  </div>
+  }
+
+  <!-- ── Error ──────────────────────────────────────────────────────────────── -->
+  @else if (error()) {
+  <div class="state-container state-container--error">
+    <mat-icon class="state-icon">error_outline</mat-icon>
+    <h2>Could not load class-sections</h2>
+    <p>{{ error() }}</p>
+    <button mat-raised-button color="primary" (click)="ngOnInit()">Retry</button>
+  </div>
+  }
+
+  <!-- ── Empty ──────────────────────────────────────────────────────────────── -->
+  @else if (rows.length === 0) {
+  <div class="state-container">
+    <mat-icon class="state-icon">group_work</mat-icon>
+    <h2>No Class-Sections Found</h2>
+    <p>Create some class-sections first using the Bulk Create feature.</p>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="router.navigate(['/school/academics/class-sections/bulk-create'])"
+    >
+      <span class="btn-content">
+        <mat-icon>add</mat-icon>
+        <span>Bulk Create Class-Sections</span>
+      </span>
+    </button>
+  </div>
+  }
+
+  <!-- ── Edit table ─────────────────────────────────────────────────────────── -->
+  @else {
+
+  <!-- Info banner: explain which fields are editable -->
+  <div class="info-banner">
+    <mat-icon>info</mat-icon>
+    <span>
+      <strong>Class</strong> and <strong>Section</strong> are read-only — they define the
+      combination's identity. You can edit <strong>Capacity</strong>,
+      <strong>Class Teacher</strong>, <strong>Room Number</strong>, and <strong>Status</strong>.
+    </span>
+  </div>
+
+  <div class="table-card">
+    <!-- Column headers -->
+    <div class="cs-edit-head">
+      <div class="cse-th cse-th--status"></div>
+      <div class="cse-th cse-th--label">Class – Section</div>
+      <div class="cse-th cse-th--enrolled">Enrolled</div>
+      <div class="cse-th cse-th--capacity">
+        Capacity
+        <span class="th-hint">(max {{ maxCapacity }})</span>
+      </div>
+      <div class="cse-th cse-th--teacher">Class Teacher</div>
+      <div class="cse-th cse-th--room">Room No.</div>
+      <div class="cse-th cse-th--active">Active</div>
+      <div class="cse-th cse-th--undo"></div>
+    </div>
+
+    <!-- Rows -->
+    <div class="cs-edit-body" [formGroup]="form">
+      <ng-container formArrayName="rows">
+        @for (row of rows.controls; track trackById($index, row)) {
+        <div
+          class="cs-edit-row"
+          [class.cs-edit-row--dirty]="isRowDirty($index)"
+          [class.cs-edit-row--invalid]="row.invalid && row.touched"
+          [formGroupName]="$index"
+        >
+          <!-- Dirty indicator dot -->
+          <div class="cse-td cse-td--status">
+            @if (isRowDirty($index)) {
+            <span class="dirty-dot" matTooltip="Unsaved changes"></span>
+            }
+          </div>
+
+          <!-- Class – Section label (read-only) -->
+          <div class="cse-td cse-td--label">
+            <div class="section-label">
+              <span class="section-label__class">{{ originalSections[$index]?.className }}</span>
+              <span class="section-label__sep">–</span>
+              <span class="section-label__section">{{
+                originalSections[$index]?.sectionName
+              }}</span>
+            </div>
+            <span class="id-badge">#{{ row.get('id')?.value }}</span>
+          </div>
+
+          <!-- Enrolled count (read-only info) -->
+          <div class="cse-td cse-td--enrolled">
+            @if (originalSections[$index]?.currentStudents !== undefined) {
+            <span
+              class="enrolled-count"
+              [class.enrolled-count--warn]="
+                (originalSections[$index]?.currentStudents ?? 0) >=
+                (originalSections[$index]?.capacity ?? 0)
+              "
+            >
+              {{ originalSections[$index]?.currentStudents }}
+              <span class="enrolled-count__sep">/</span>
+              {{ originalSections[$index]?.capacity }}
+            </span>
+            } @else {
+            <span class="enrolled-count">—</span>
+            }
+          </div>
+
+          <!-- Capacity -->
+          <div class="cse-td cse-td--capacity">
+            <mat-form-field appearance="outline" class="field-full">
+              <input
+                matInput
+                type="number"
+                formControlName="capacity"
+                min="1"
+                [max]="maxCapacity"
+                [attr.aria-label]="
+                  'Capacity for ' +
+                  originalSections[$index]?.className +
+                  ' ' +
+                  originalSections[$index]?.sectionName
+                "
+              />
+              @if (fieldError(row.get('capacity'), 'min') || fieldError(row.get('capacity'), 'max'))
+              {
+              <mat-error>1–{{ maxCapacity }}</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <!-- Class Teacher (searchable dropdown) -->
+          <div class="cse-td cse-td--teacher">
+            <app-teacher-search-dropdown
+              [teachers]="teachers()"
+              [selectedTeacherId]="row.get('classTeacherId')?.value"
+              (teacherSelected)="onTeacherSelected($event, $index)"
+            />
+          </div>
+
+          <!-- Room Number -->
+          <div class="cse-td cse-td--room">
+            <mat-form-field appearance="outline" class="field-full">
+              <input matInput formControlName="roomNumber" placeholder="e.g. 101" maxlength="20" />
+            </mat-form-field>
+          </div>
+
+          <!-- Active toggle -->
+          <div class="cse-td cse-td--active">
+            <label class="toggle-wrap">
+              <input type="checkbox" formControlName="isActive" class="toggle-input" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <!-- Undo row -->
+          <div class="cse-td cse-td--undo">
+            @if (isRowDirty($index)) {
+            <button
+              mat-icon-button
+              type="button"
+              (click)="resetRow($index)"
+              matTooltip="Undo changes to this row"
+              class="undo-btn"
+            >
+              <mat-icon>undo</mat-icon>
+            </button>
+            }
+          </div>
+        </div>
+        }
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- ── Bottom save bar ────────────────────────────────────────────────────── -->
+  <div class="submit-bar">
+    <p class="submit-hint">
+      @if (hasChanges()) {
+      <mat-icon class="hint-icon hint-icon--info">info</mat-icon>
+      Only {{ dirtyCount() }} changed row{{ dirtyCount() !== 1 ? 's' : '' }} will be sent to the
+      server. } @else {
+      <mat-icon class="hint-icon hint-icon--ok">check_circle</mat-icon>
+      No changes yet — edit any row above to enable save. }
+    </p>
+    <div class="submit-bar__btns">
+      <button mat-stroked-button (click)="router.navigate(['/school/academics/class-sections'])">
+        Cancel
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        [disabled]="!hasChanges() || form.invalid || submitting()"
+        (click)="submit()"
+      >
+        <span class="btn-content">
+          @if (submitting()) {
+          <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+          <span>Saving…</span>
+          } @else {
+          <mat-icon>save</mat-icon>
+          <span>Save Changes</span>
+          }
+        </span>
+      </button>
+    </div>
+  </div>
+
+  }
+  <!-- end @else -->
+</div>

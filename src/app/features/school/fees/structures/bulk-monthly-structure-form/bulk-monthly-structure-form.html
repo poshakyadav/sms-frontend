@@ -1,0 +1,295 @@
+<!-- bulk-monthly-structure-form.html -->
+<div class="modal-shell">
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <div class="modal-header">
+    <div class="modal-header__icon">
+      <mat-icon>calendar_month</mat-icon>
+    </div>
+    <div class="modal-header__content">
+      <h2 class="modal-title">Bulk Monthly Fee Setup</h2>
+      <p class="modal-subtitle">Create the same fee structure for every month in a date range</p>
+    </div>
+    <button mat-icon-button class="modal-close" (click)="close()" matTooltip="Close">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- ── Body ────────────────────────────────────────────────────────────── -->
+  <div class="modal-body">
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <!-- Academic Year + Class Section -->
+      <div class="form-row form-row--2col">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Academic Year</mat-label>
+          <mat-select formControlName="academicYearId">
+            @for (y of academicYears(); track y.id) {
+            <mat-option [value]="y.id">
+              {{ y.name }}
+              @if (y.isCurrent) {
+              <span class="current-tag">(Current)</span>
+              }
+            </mat-option>
+            }
+          </mat-select>
+          @if (isRequired('academicYearId')) {
+          <mat-error>Required</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Class – Section</mat-label>
+          <mat-select formControlName="classSectionId">
+            @for (cs of classSections(); track cs.id) {
+            <mat-option [value]="cs.id">{{ cs.className }} – {{ cs.sectionName }}</mat-option>
+            }
+          </mat-select>
+          @if (isRequired('classSectionId')) {
+          <mat-error>Required</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <!-- Fee Type -->
+      <div class="form-group">
+        <mat-form-field appearance="outline" class="form-field full-width">
+          <mat-label>Fee Type</mat-label>
+          <input matInput formControlName="feeType" placeholder="e.g. TUITION" />
+          @if (hasError('feeType', 'required')) {
+          <mat-error>Fee type is required</mat-error>
+          } @if (hasError('feeType', 'minlength')) {
+          <mat-error>Minimum 2 characters</mat-error>
+          }
+        </mat-form-field>
+        <div class="suggestion-chips">
+          @for (s of feeTypeSuggestions; track s) {
+          <button
+            type="button"
+            class="suggestion-chip"
+            [class.suggestion-chip--active]="form.get('feeType')?.value === s"
+            (click)="selectFeeType(s)"
+          >
+            {{ s }}
+          </button>
+          }
+        </div>
+      </div>
+
+      <!-- Monthly Amount -->
+      <mat-form-field appearance="outline" class="form-field full-width">
+        <mat-label>Monthly Amount — same for all months</mat-label>
+        <span matPrefix>₹&nbsp;</span>
+        <input matInput type="number" formControlName="amountRupees" min="1" placeholder="0" />
+        @if (hasError('amountRupees', 'required')) {
+        <mat-error>Amount is required</mat-error>
+        } @if (hasError('amountRupees', 'min')) {
+        <mat-error>Amount must be greater than 0</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- ── Month Range Picker ─────────────────────────────────────────── -->
+      <div class="month-range-section">
+        <div class="month-range-label">
+          <mat-icon>date_range</mat-icon>
+          <span>Month Range</span>
+          <span class="month-range-label__hint"
+            >Select the start and end months for bulk creation</span
+          >
+        </div>
+
+        <div class="month-range-grid">
+          <!-- Start Month Picker -->
+          <div
+            class="month-picker-card"
+            [class.month-picker-card--error]="
+              isRequired('startMonthNum') || isRequired('startYear')
+            "
+          >
+            <div class="month-picker-card__head">
+              <mat-icon>play_arrow</mat-icon>
+              <span>Start Month</span>
+            </div>
+            <div class="month-picker-card__selects">
+              <mat-form-field appearance="outline" class="month-select month-select--month">
+                <mat-label>Month</mat-label>
+                <mat-select formControlName="startMonthNum">
+                  @for (m of monthOptions; track m.value) {
+                  <mat-option [value]="m.value">{{ m.label }}</mat-option>
+                  }
+                </mat-select>
+                @if (isRequired('startMonthNum')) {
+                <mat-error>Required</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="month-select month-select--year">
+                <mat-label>Year</mat-label>
+                <mat-select formControlName="startYear">
+                  @for (y of yearOptions; track y) {
+                  <mat-option [value]="y">{{ y }}</mat-option>
+                  }
+                </mat-select>
+                @if (isRequired('startYear')) {
+                <mat-error>Required</mat-error>
+                }
+              </mat-form-field>
+            </div>
+            @if (startMonthValue()) {
+            <div class="month-picker-card__preview">
+              <mat-icon>event</mat-icon>
+              {{ startMonthValue() | date : 'MMMM yyyy' }}
+            </div>
+            }
+          </div>
+
+          <!-- Arrow Divider -->
+          <div class="month-range-arrow">
+            <mat-icon>arrow_forward</mat-icon>
+          </div>
+
+          <!-- End Month Picker -->
+          <div
+            class="month-picker-card"
+            [class.month-picker-card--error]="
+              isRequired('endMonthNum') || isRequired('endYear') || rangeError()
+            "
+          >
+            <div class="month-picker-card__head">
+              <mat-icon>stop</mat-icon>
+              <span>End Month</span>
+            </div>
+            <div class="month-picker-card__selects">
+              <mat-form-field appearance="outline" class="month-select month-select--month">
+                <mat-label>Month</mat-label>
+                <mat-select formControlName="endMonthNum">
+                  @for (m of monthOptions; track m.value) {
+                  <mat-option [value]="m.value">{{ m.label }}</mat-option>
+                  }
+                </mat-select>
+                @if (isRequired('endMonthNum')) {
+                <mat-error>Required</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="month-select month-select--year">
+                <mat-label>Year</mat-label>
+                <mat-select formControlName="endYear">
+                  @for (y of yearOptions; track y) {
+                  <mat-option [value]="y">{{ y }}</mat-option>
+                  }
+                </mat-select>
+                @if (isRequired('endYear')) {
+                <mat-error>Required</mat-error>
+                }
+              </mat-form-field>
+            </div>
+            @if (endMonthValue()) {
+            <div class="month-picker-card__preview">
+              <mat-icon>event</mat-icon>
+              {{ endMonthValue() | date : 'MMMM yyyy' }}
+            </div>
+            }
+          </div>
+        </div>
+        <!-- /.month-range-grid -->
+
+        <!-- Range error inline -->
+        @if (rangeError()) {
+        <div class="month-range-inline-error">
+          <mat-icon>error_outline</mat-icon>
+          End month must be on or after the start month.
+        </div>
+        }
+      </div>
+      <!-- /.month-range-section -->
+
+      <!-- Due Day of Month -->
+      <mat-form-field appearance="outline" class="form-field full-width">
+        <mat-label>Due Day of Month (optional)</mat-label>
+        <input
+          matInput
+          type="number"
+          formControlName="dueDayOfMonth"
+          min="1"
+          max="28"
+          placeholder="e.g. 10"
+        />
+        <mat-hint>Enter 1–28. Leave blank for no due date.</mat-hint>
+        @if (hasError('dueDayOfMonth', 'min') || hasError('dueDayOfMonth', 'max')) {
+        <mat-error>Must be between 1 and 28</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Mandatory Toggle -->
+      <div class="toggle-row">
+        <div class="toggle-row__label">
+          <span class="toggle-label">Mandatory Fee</span>
+          <span class="toggle-hint">Applied to all created months</span>
+        </div>
+        <mat-slide-toggle formControlName="isMandatory" color="primary" />
+      </div>
+
+      <!-- Description -->
+      <mat-form-field appearance="outline" class="form-field full-width">
+        <mat-label>Description (optional)</mat-label>
+        <textarea
+          matInput
+          formControlName="description"
+          rows="2"
+          placeholder="Notes for all created structures…"
+        ></textarea>
+      </mat-form-field>
+
+      <!-- Month Preview -->
+      @if (monthPreview().length > 0) {
+      <div class="month-preview">
+        <div class="month-preview__header">
+          <mat-icon>preview</mat-icon>
+          <span
+            >{{ monthPreview().length }} structure{{ monthPreview().length === 1 ? '' : 's' }} will
+            be created</span
+          >
+        </div>
+        <div class="month-preview__tags">
+          @for (m of monthPreview(); track m) {
+          <span class="month-tag">{{ m }}</span>
+          }
+        </div>
+      </div>
+      }
+
+      <!-- Error Banner -->
+      @if (error()) {
+      <div class="form-error-banner">
+        <mat-icon>error_outline</mat-icon>
+        {{ error() }}
+      </div>
+      }
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button type="button" mat-stroked-button (click)="close()" [disabled]="saving()">
+          Cancel
+        </button>
+        <button
+          type="submit"
+          mat-flat-button
+          color="primary"
+          [disabled]="saving() || monthPreview().length === 0 || rangeError()"
+        >
+          @if (saving()) {
+          <mat-spinner diameter="16" />
+          Creating… } @else {
+          <ng-container>
+            <mat-icon>add</mat-icon>
+          </ng-container>
+          Create {{ monthPreview().length > 0 ? monthPreview().length : '' }} Structure{{
+            monthPreview().length === 1 ? '' : 's'
+          }}
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+  <!-- /.modal-body -->
+</div>
+<!-- /.modal-shell -->

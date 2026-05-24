@@ -1,0 +1,175 @@
+<div class="payment-history">
+  <!-- Header -->
+  <div class="ph-header">
+    <div class="ph-header__left">
+      <mat-icon class="ph-header__icon">receipt_long</mat-icon>
+      <div>
+        <h3 class="ph-header__title">Payment History</h3>
+        @if (history().length > 0) {
+        <p class="ph-header__sub">
+          {{ history().length }} transaction{{ history().length !== 1 ? 's' : '' }}
+        </p>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+  <div class="ph-state">
+    <mat-spinner diameter="32" />
+    <span>Loading payment history…</span>
+  </div>
+  }
+
+  <!-- Error -->
+  @if (error()) {
+  <div class="ph-state ph-state--error">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ error() }}</span>
+    <button mat-stroked-button (click)="load()">Retry</button>
+  </div>
+  }
+
+  <!-- Empty -->
+  @if (!loading() && !error() && history().length === 0) {
+  <div class="ph-state ph-state--empty">
+    <mat-icon>receipt</mat-icon>
+    <p>No payments recorded yet</p>
+  </div>
+  }
+
+  <!-- Table -->
+  @if (!loading() && !error() && history().length > 0) {
+  <div class="ph-table-wrap">
+    <table class="ph-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Receipt #</th>
+          <th>Fee Type</th>
+          <th>Month</th>
+          <th class="text-right">Amount</th>
+          <th class="text-center">Method</th>
+          <th class="text-center">Source</th>
+          @if (canVoid) {
+          <th class="text-center">Action</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of history(); track p.id) {
+        <tr class="ph-row" [class.ph-row--voided]="p.isVoid">
+          <td class="cell-date">
+            {{ p.paymentDate | date : 'd MMM yyyy' }}
+          </td>
+          <td>
+            <span class="receipt-chip" [class.receipt-chip--void]="p.isVoid">
+              {{ p.receiptNumber }}
+            </span>
+            @if (p.isVoid) {
+            <span class="void-badge">VOID</span>
+            }
+          </td>
+          <td>
+            <span
+              class="fee-type-chip fee-type-chip--{{ p.source === 'STRUCTURE' ? 'std' : 'custom' }}"
+            >
+              {{ p.feeType }}
+            </span>
+          </td>
+          <td class="cell-muted">{{ formatMonth(p.feeMonth) }}</td>
+          <td class="text-right amount-cell" [class.amount-void]="p.isVoid">
+            {{ p.amountPaid | paise }}
+          </td>
+          <td class="text-center">
+            <span class="method-badge method-badge--{{ p.paymentMethod.toLowerCase() }}">
+              <mat-icon>{{ methodIcon(p.paymentMethod) }}</mat-icon>
+              {{ methodLabel(p.paymentMethod) }}
+            </span>
+          </td>
+          <td class="text-center">
+            <span class="source-badge source-badge--{{ p.source.toLowerCase() }}">
+              {{ p.source === 'STRUCTURE' ? 'Standard' : 'Custom' }}
+            </span>
+          </td>
+          @if (canVoid) {
+          <td class="text-center">
+            @if (!p.isVoid) {
+            <button
+              mat-icon-button
+              class="void-btn"
+              matTooltip="Void Payment"
+              (click)="openVoidDialog(p)"
+            >
+              <mat-icon>block</mat-icon>
+            </button>
+            }
+          </td>
+          }
+        </tr>
+        @if (p.notes) {
+        <tr class="ph-notes-row">
+          <td [attr.colspan]="canVoid ? 8 : 7">
+            <span class="notes-text">
+              <mat-icon>notes</mat-icon>
+              {{ p.notes }}
+            </span>
+          </td>
+        </tr>
+        } }
+      </tbody>
+    </table>
+  </div>
+  }
+
+  <!-- Void Confirmation Dialog (inline) -->
+  @if (voidingPayment()) {
+  <div class="void-overlay" (click)="cancelVoid()">
+    <div class="void-dialog" (click)="$event.stopPropagation()">
+      <div class="void-dialog__header">
+        <div class="void-dialog__icon">
+          <mat-icon>block</mat-icon>
+        </div>
+        <div>
+          <h3>Void Payment</h3>
+          <p>Receipt: {{ voidingPayment()!.receiptNumber }}</p>
+        </div>
+      </div>
+      <div class="void-dialog__body">
+        <p class="void-dialog__amount">
+          Amount: <strong>{{ voidingPayment()!.amountPaid | paise }}</strong>
+        </p>
+        <div class="void-dialog__reason-wrap">
+          <label class="void-dialog__label"
+            >Reason for voiding <span class="required">*</span></label
+          >
+          <textarea
+            class="void-dialog__textarea"
+            [(ngModel)]="voidReason"
+            placeholder="Enter reason (min 5 characters)…"
+            rows="3"
+          ></textarea>
+        </div>
+      </div>
+      <div class="void-dialog__footer">
+        <button mat-stroked-button (click)="cancelVoid()" [disabled]="voidSaving()">Cancel</button>
+        <button
+          mat-flat-button
+          color="warn"
+          [disabled]="voidSaving() || voidReason.trim().length < 5"
+          (click)="confirmVoid()"
+        >
+          @if (voidSaving()) {
+          <mat-spinner diameter="16" />
+          Voiding… } @else {
+          <ng-container>
+            <mat-icon>block</mat-icon>
+          </ng-container>
+          Void Payment }
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+</div>

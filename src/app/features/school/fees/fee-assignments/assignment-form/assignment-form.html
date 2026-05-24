@@ -1,0 +1,134 @@
+<!-- assignment-form.html -->
+<div class="modal-shell">
+  <!-- Header -->
+  <div class="modal-header">
+    <div class="modal-header__icon">
+      <mat-icon>add_road</mat-icon>
+    </div>
+    <div class="modal-header__content">
+      <h2 class="modal-title">Assign Custom Fee</h2>
+      <p class="modal-subtitle">
+        @if (data.studentName) {
+        {{ data.studentName }}
+        } @else { Assign transport, hostel or other custom fee to this student }
+      </p>
+    </div>
+    <button mat-icon-button class="modal-close" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="modal-body">
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <!-- Academic Year -->
+      <mat-form-field appearance="outline" class="form-field full-width">
+        <mat-label>Academic Year</mat-label>
+        <mat-select formControlName="academicYearId">
+          @for (y of academicYears(); track y.id) {
+          <mat-option [value]="y.id">
+            {{ y.name }}
+            @if (y.isCurrent) { <span class="current-tag">(Current)</span> }
+          </mat-option>
+          }
+        </mat-select>
+        @if (form.get('academicYearId')?.invalid && form.get('academicYearId')?.touched) {
+        <mat-error>Academic year is required</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Fee Type with suggestions -->
+      <div class="form-group">
+        <mat-form-field appearance="outline" class="form-field full-width">
+          <mat-label>Fee Type</mat-label>
+          <input matInput formControlName="feeType" placeholder="e.g. TRANSPORT, HOSTEL, SPORTS" />
+          @if (form.get('feeType')?.invalid && form.get('feeType')?.touched) {
+          <mat-error>Fee type is required</mat-error>
+          }
+        </mat-form-field>
+        <div class="suggestion-chips">
+          @for (s of feeTypeSuggestions; track s) {
+          <button
+            type="button"
+            class="suggestion-chip"
+            [class.suggestion-chip--active]="form.get('feeType')?.value === s"
+            (click)="selectFeeType(s)"
+          >
+            {{ s }}
+          </button>
+          }
+        </div>
+      </div>
+
+      <!-- Amount -->
+      <mat-form-field appearance="outline" class="form-field full-width">
+        <mat-label>Amount (₹)</mat-label>
+        <span matPrefix>₹&nbsp;</span>
+        <input matInput type="number" formControlName="amountRupees" min="1" placeholder="0" />
+        @if (form.get('amountRupees')?.hasError('required') && form.get('amountRupees')?.touched) {
+        <mat-error>Amount is required</mat-error>
+        } @if (form.get('amountRupees')?.hasError('min')) {
+        <mat-error>Amount must be greater than 0</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Fee Month + Due Date row -->
+      <div class="form-row form-row--2col">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Fee Month (optional)</mat-label>
+          <input matInput type="month" formControlName="feeMonth" />
+          <mat-hint>Leave blank for one-time fees</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Due Date (optional)</mat-label>
+          <input matInput type="date" formControlName="dueDate" />
+        </mat-form-field>
+      </div>
+
+      <!-- Description -->
+      <mat-form-field appearance="outline" class="form-field full-width">
+        <mat-label>Description (optional)</mat-label>
+        <textarea
+          matInput
+          formControlName="description"
+          rows="2"
+          placeholder="e.g. Zone 3 – Kidwai Nagar route, ~8km"
+        ></textarea>
+      </mat-form-field>
+
+      <!-- Mandatory toggle -->
+      <div class="toggle-row">
+        <div class="toggle-row__label">
+          <span class="toggle-label">Mandatory Fee</span>
+          <span class="toggle-hint">Student must pay before result processing</span>
+        </div>
+        <mat-slide-toggle formControlName="isMandatory" color="primary" />
+      </div>
+
+      <!-- Error -->
+      @if (error()) {
+      <div class="form-error-banner">
+        <mat-icon>error_outline</mat-icon>
+        {{ error() }}
+      </div>
+      }
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button type="button" mat-stroked-button (click)="close()" [disabled]="saving()">
+          Cancel
+        </button>
+        <button type="submit" mat-flat-button color="primary" [disabled]="saving()">
+          @if (saving()) {
+          <mat-spinner diameter="16" />
+          Saving… } @else {
+          <ng-container>
+            <mat-icon>add_road</mat-icon>
+            Assign Fee
+          </ng-container>
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

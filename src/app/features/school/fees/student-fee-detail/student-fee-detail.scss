@@ -1,0 +1,1041 @@
+// student-fee-detail.scss
+// ─────────────────────────────────────────────────────────────────────────────
+// Full-page staff tool: search a student → view their fee summary across all
+// academic years → manage assignments, concessions, payments via tabs.
+//
+// Uses the project's shared CSS custom properties (tokens.scss / styles.scss).
+// Breakpoints from _tokens.scss: $bp-md 640px, $bp-lg 768px, $bp-xl 900px.
+// ─────────────────────────────────────────────────────────────────────────────
+
+:host {
+  display: block;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAGE SHELL
+// ─────────────────────────────────────────────────────────────────────────────
+
+.sfd-page {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAGE HEADER
+// ─────────────────────────────────────────────────────────────────────────────
+
+.sfd-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+
+  &__text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+}
+
+.sfd-back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+
+  mat-icon {
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+  }
+
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  }
+}
+
+.sfd-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 2px;
+  letter-spacing: -0.01em;
+}
+
+.sfd-subtitle {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.sfd-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+  }
+
+  &--concession {
+    color: var(--color-success) !important;
+    border-color: color-mix(in srgb, var(--color-success) 35%, transparent) !important;
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-success) 8%, transparent) !important;
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SEARCH CARD
+// ─────────────────────────────────────────────────────────────────────────────
+
+.sfd-search-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.sfd-search-wrap {
+  position: relative;
+
+  &--focused .sfd-search-field {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
+  }
+}
+
+.sfd-search-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--color-bg-main);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0 12px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sfd-search-icon {
+  font-size: 18px;
+  height: 18px;
+  width: 18px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.sfd-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+  padding: 11px 0;
+  font-family: inherit;
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+}
+
+.sfd-search-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+  }
+
+  &:hover {
+    background: var(--color-hover);
+    color: var(--color-text-primary);
+  }
+}
+
+// ── Student Dropdown ──────────────────────────────────────────────────────────
+
+.sfd-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 200;
+  max-height: 300px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+
+  &--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px 16px;
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+
+    mat-icon {
+      font-size: 20px;
+      height: 20px;
+      width: 20px;
+      opacity: 0.5;
+    }
+  }
+}
+
+.sfd-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s ease;
+  border-bottom: 1px solid var(--color-divider);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: var(--color-hover);
+  }
+}
+
+.sfd-dropdown-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  font-size: 0.82rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sfd-dropdown-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sfd-dropdown-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sfd-dropdown-email {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sfd-dropdown-arrow {
+  font-size: 16px;
+  height: 16px;
+  width: 16px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+// ── Search hint ───────────────────────────────────────────────────────────────
+
+.sfd-search-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 0;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+
+  mat-icon {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+    flex-shrink: 0;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PLACEHOLDER STATE
+// ─────────────────────────────────────────────────────────────────────────────
+
+.sfd-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 48px 24px 56px;
+  background: var(--color-bg-card);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+
+  &__icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    mat-icon {
+      font-size: 36px;
+      height: 36px;
+      width: 36px;
+      color: var(--color-primary);
+      opacity: 0.55;
+    }
+  }
+
+  &__title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin: 0;
+  }
+
+  &__sub {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    max-width: 440px;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  &__features {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    width: 100%;
+    max-width: 560px;
+    margin-top: 8px;
+
+    @media (max-width: 480px) {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// ── Feature cards in placeholder ──────────────────────────────────────────────
+
+.sfd-feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--color-bg-main);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  text-align: left;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+
+  &:hover {
+    border-color: var(--color-primary);
+    transform: translateY(-1px);
+  }
+
+  &__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    mat-icon {
+      font-size: 18px;
+      height: 18px;
+      width: 18px;
+    }
+
+    &--primary {
+      background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+      mat-icon {
+        color: var(--color-primary);
+      }
+    }
+    &--success {
+      background: color-mix(in srgb, var(--color-success) 10%, transparent);
+      mat-icon {
+        color: var(--color-success);
+      }
+    }
+    &--info {
+      background: color-mix(in srgb, var(--color-info) 10%, transparent);
+      mat-icon {
+        color: var(--color-info);
+      }
+    }
+    &--warning {
+      background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+      mat-icon {
+        color: var(--color-warning);
+      }
+    }
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__desc {
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INTERMEDIATE STATES (loading / error / no enrollments)
+// ─────────────────────────────────────────────────────────────────────────────
+
+.sfd-loading,
+.sfd-error,
+.sfd-no-enrollments {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 56px 24px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  text-align: center;
+  color: var(--color-text-muted);
+
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+  }
+
+  mat-icon {
+    font-size: 40px;
+    height: 40px;
+    width: 40px;
+    opacity: 0.35;
+  }
+}
+
+.sfd-error {
+  color: var(--color-error);
+
+  mat-icon {
+    opacity: 1;
+    color: var(--color-error);
+  }
+}
+
+.sfd-no-enrollments {
+  &__avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    color: var(--color-primary);
+    font-size: 1.4rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin: 0 0 2px;
+  }
+
+  &__sub {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin: 0 0 4px !important;
+  }
+
+  &__msg {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: color-mix(in srgb, var(--color-info) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-info) 18%, transparent);
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
+    color: color-mix(in srgb, var(--color-info) 70%, var(--color-text-primary));
+    max-width: 420px;
+
+    mat-icon {
+      font-size: 18px;
+      height: 18px;
+      width: 18px;
+      color: var(--color-info);
+      opacity: 1;
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STUDENT IDENTITY BANNER
+// ─────────────────────────────────────────────────────────────────────────────
+
+.sfd-student-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.15s ease;
+
+  &:hover {
+    box-shadow: var(--shadow-md);
+  }
+
+  &__avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    color: var(--color-primary);
+    font-size: 1.15rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 2px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  &__name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__email {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+// ── Enrollment year pills ─────────────────────────────────────────────────────
+
+.sfd-enrollment-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.sfd-enrollment-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-main);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.18s ease;
+  min-width: 110px;
+
+  &:hover {
+    border-color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+  }
+
+  &--active {
+    border-color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 20%, transparent);
+  }
+
+  // Dim pills where no enrollment id was resolved (historical ledger-only)
+  &--no-id {
+    opacity: 0.7;
+    cursor: default;
+    &:hover {
+      border-color: var(--color-border);
+      background: var(--color-bg-main);
+    }
+  }
+
+  &__year {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-primary);
+    white-space: nowrap;
+  }
+
+  &__class {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+  }
+
+  &__badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 9999px;
+    white-space: nowrap;
+
+    &--due {
+      background: color-mix(in srgb, var(--color-error) 10%, transparent);
+      color: var(--color-error);
+    }
+    &--paid {
+      background: color-mix(in srgb, var(--color-success) 10%, transparent);
+      color: color-mix(in srgb, var(--color-success) 70%, #000);
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ENROLLMENT DETAIL SECTION
+// ─────────────────────────────────────────────────────────────────────────────
+
+.sfd-enrollment-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+// ── Summary strip ─────────────────────────────────────────────────────────────
+
+.sfd-summary-strip {
+  display: flex;
+  align-items: stretch;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  border-bottom: none;
+  overflow: hidden;
+  flex-wrap: wrap;
+  box-shadow: var(--shadow-sm);
+}
+
+.sfd-summary-strip__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  flex: 1;
+  min-width: 150px;
+  border-right: 1px solid var(--color-divider);
+  transition: background 0.15s ease;
+
+  &:last-child {
+    border-right: none;
+  }
+
+  &--alert {
+    background: color-mix(in srgb, var(--color-error) 4%, transparent);
+  }
+
+  &:hover {
+    background: var(--color-hover);
+  }
+
+  @media (max-width: 640px) {
+    min-width: calc(50% - 1px);
+
+    &:nth-child(2n) {
+      border-right: none;
+    }
+    &:not(:last-child) {
+      border-bottom: 1px solid var(--color-divider);
+    }
+  }
+}
+
+.sfd-summary-strip__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+
+  &--primary {
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    mat-icon {
+      color: var(--color-primary);
+    }
+  }
+  &--info {
+    background: color-mix(in srgb, var(--color-info) 10%, transparent);
+    mat-icon {
+      color: var(--color-info);
+    }
+  }
+  &--success {
+    background: color-mix(in srgb, var(--color-success) 10%, transparent);
+    mat-icon {
+      color: var(--color-success);
+    }
+  }
+  &--error {
+    background: color-mix(in srgb, var(--color-error) 10%, transparent);
+    mat-icon {
+      color: var(--color-error);
+    }
+  }
+}
+
+.sfd-summary-strip__content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sfd-summary-strip__label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.sfd-summary-strip__value {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+
+  &--success {
+    color: var(--color-success);
+  }
+  &--error {
+    color: var(--color-error);
+  }
+}
+
+// ── Roll number chip inside summary strip ─────────────────────────────────────
+
+.sfd-roll-chip {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  background: var(--color-hover);
+  color: var(--color-text-muted);
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--color-border);
+}
+
+// ── Collection rate mini-bar ───────────────────────────────────────────────────
+
+.sfd-rate-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 18px;
+  flex: 1;
+  min-width: 150px;
+
+  @media (max-width: 640px) {
+    min-width: 100%;
+    border-top: 1px solid var(--color-divider);
+  }
+}
+
+.sfd-rate-item__label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-text-muted);
+}
+
+.sfd-rate-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sfd-rate-bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--color-hover);
+  overflow: hidden;
+
+  &__fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease, background 0.3s ease;
+  }
+}
+
+.sfd-rate-bar__pct {
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  min-width: 36px;
+  text-align: right;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TAB GROUP
+// ─────────────────────────────────────────────────────────────────────────────
+
+.sfd-tab-group {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+
+  // Override Material tab header background
+  ::ng-deep .mat-mdc-tab-header {
+    background: color-mix(in srgb, var(--color-bg-main) 50%, var(--color-bg-card));
+    border-bottom: 1px solid var(--color-divider);
+  }
+
+  ::ng-deep .mat-mdc-tab-body-wrapper {
+    flex: 1;
+  }
+
+  // Remove default Material ink bar ripple padding
+  ::ng-deep .mat-mdc-tab-label-container {
+    padding: 0 4px;
+  }
+}
+
+.sfd-tab-icon {
+  font-size: 16px;
+  height: 16px;
+  width: 16px;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.sfd-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  min-width: 20px;
+  padding: 0 5px;
+  border-radius: 9px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  margin-left: 6px;
+
+  &--error {
+    background: color-mix(in srgb, var(--color-error) 12%, transparent);
+    color: var(--color-error);
+  }
+}
+
+.sfd-tab-content {
+  padding: 20px;
+  min-height: 200px;
+
+  &--flush {
+    padding: 0;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NO ENROLLMENT ID STATE
+// ─────────────────────────────────────────────────────────────────────────────
+
+.sfd-no-enrollment-id {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px 20px;
+  background: color-mix(in srgb, var(--color-warning) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  border-top: none;
+  font-size: 0.875rem;
+  color: color-mix(in srgb, var(--color-warning) 55%, var(--color-text-primary));
+  line-height: 1.6;
+
+  mat-icon {
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+    color: var(--color-warning);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RESPONSIVE OVERRIDES
+// ─────────────────────────────────────────────────────────────────────────────
+
+@media (max-width: 768px) {
+  .sfd-header {
+    gap: 10px;
+
+    &__actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+
+  .sfd-title {
+    font-size: 1.2rem;
+  }
+
+  .sfd-student-banner {
+    gap: 12px;
+    padding: 14px 16px;
+
+    &__avatar {
+      width: 44px;
+      height: 44px;
+      font-size: 1rem;
+    }
+  }
+
+  .sfd-enrollment-pills {
+    width: 100%;
+  }
+
+  .sfd-tab-content {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sfd-enrollment-pill {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .sfd-placeholder__features {
+    grid-template-columns: 1fr;
+  }
+}

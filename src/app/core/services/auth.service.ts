@@ -268,11 +268,6 @@ export class AuthService {
       return throwError(() => new Error('No refresh token'));
     }
 
-    if (this.isRefreshing) return this.refreshSubject.asObservable();
-
-    this.isRefreshing = true;
-    this.refreshSubject.next(null);
-
     const isSchool = this.userType() === 'school';
     const endpoint = isSchool ? 'school/auth/refresh' : 'auth/refresh';
 
@@ -299,32 +294,19 @@ export class AuthService {
             }
           }
 
-          // ── also persist role from refreshed token ─────────────────
-          // The original code never updated userRole on refresh, so if a page
-          // reload triggered a token refresh before loadAuthState ran, the role
-          // signal would be wrong until the next full page load.
           if (isSchool && decoded?.role) {
             this.userRole.set(decoded.role);
             localStorage.setItem(KEYS.USER_ROLE, decoded.role);
           }
 
-          // ── NEW: update schoolInfo cache from refresh response ────────────
-          // The backend now returns fresh school branding on every refresh.
-          // This means if the owner updates name/logo/shortName, all other
-          // logged-in users see the change on their next token refresh —
-          // no re-login required.
           if (isSchool && res.school) {
             this.saveSchoolBrandingToStorage(res.school, decoded?.schoolCode ?? null);
           }
-
-          this.refreshSubject.next(res.access_token);
-          this.isRefreshing = false;
+          // No more refreshSubject.next() here — interceptor handles that
         }),
         catchError((err) => {
-          this.isRefreshing = false;
-          this.refreshSubject.error(err);
-          this.logout();
-          this.toast.error('Session expired. Please log in again.');
+          // Don't logout here — interceptor's catchError does it
+          // (avoids double-logout if interceptor and service both call it)
           return throwError(() => err);
         })
       );
@@ -436,7 +418,7 @@ export class AuthService {
         email: branding.email ?? existing?.email ?? '',
         logoUrl: branding.logoUrl !== undefined ? branding.logoUrl : existing?.logoUrl ?? null,
         tagline: branding.tagline !== undefined ? branding.tagline : existing?.tagline ?? null,
-        theme: branding.theme !== undefined ? branding.theme : existing?.theme ?? null, 
+        theme: branding.theme !== undefined ? branding.theme : existing?.theme ?? null,
       };
       localStorage.setItem(KEYS.SCHOOL_INFO, JSON.stringify(updated));
     } catch {

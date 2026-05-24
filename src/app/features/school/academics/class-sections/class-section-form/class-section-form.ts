@@ -13,6 +13,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { forkJoin } from 'rxjs';
 import { AcademicsService, ClassSection } from '../../../../../core/services/academics.service';
 import { ToastService } from '../../../../../core/services/toast.service';
+import { TeacherSearchDropdownComponent } from '../teacher-search-dropdown/teacher-search-dropdown';
 
 /** Hard cap enforced on both frontend and backend. */
 const MAX_CAPACITY = 50;
@@ -29,6 +30,7 @@ const MAX_CAPACITY = 50;
     MatButtonModule,
     MatProgressSpinnerModule,
     MatIconModule,
+    TeacherSearchDropdownComponent,
   ],
   templateUrl: './class-section-form.html',
   styleUrl: './class-section-form.scss',
@@ -195,7 +197,14 @@ export class ClassSectionForm implements OnInit {
     });
   }
 
+  
+
   // ── Template helpers ───────────────────────────────────────────────────────
+
+  onTeacherSelected(id: number | null): void {
+    this.form.get('classTeacherId')!.setValue(id);
+  }
+
   get classControl() {
     return this.form.get('classId');
   }

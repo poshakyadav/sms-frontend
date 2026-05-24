@@ -1,0 +1,763 @@
+// fee-ledger.scss
+:host {
+  display: block;
+}
+
+.page-shell {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 20px;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 4px;
+}
+
+.page-subtitle {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+// ── Search Card ───────────────────────────────────────────────────────────────
+.search-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.student-search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 260px;
+  max-width: 480px;
+}
+
+.student-search-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-bg-main);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-sm);
+  padding: 0 10px;
+  transition: border-color 0.15s;
+
+  &.focused {
+    border-color: var(--color-primary);
+  }
+}
+
+.search-field-icon {
+  font-size: 18px;
+  height: 18px;
+  width: 18px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.student-search-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.875rem;
+  color: var(--color-text-primary);
+  padding: 10px 0;
+  flex: 1;
+  font-family: inherit;
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+}
+
+.search-clear-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+  }
+  &:hover {
+    color: var(--color-text-primary);
+  }
+}
+
+.student-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  z-index: 200;
+  max-height: 280px;
+  overflow-y: auto;
+
+  &--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 20px;
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+
+    mat-icon {
+      font-size: 18px;
+      height: 18px;
+      width: 18px;
+    }
+  }
+}
+
+.student-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s;
+  font-family: inherit;
+
+  &:hover {
+    background: var(--color-hover);
+  }
+  &:not(:last-child) {
+    border-bottom: 1px solid var(--color-divider);
+  }
+
+  &__avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    color: var(--color-primary);
+    font-size: 0.78rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  &__name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+  &__email {
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+  }
+}
+
+.year-field {
+  min-width: 200px;
+}
+
+.current-tag {
+  font-size: 0.7rem;
+  color: var(--color-primary);
+  font-weight: 700;
+  margin-left: 4px;
+}
+
+// ── Placeholder / Loading / Error ─────────────────────────────────────────────
+.ledger-placeholder,
+.ledger-loading,
+.ledger-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 72px 24px;
+  color: var(--color-text-muted);
+  text-align: center;
+  background: var(--color-bg-card);
+  border: 1px dashed var(--color-divider);
+  border-radius: var(--radius-md);
+
+  mat-icon {
+    font-size: 48px;
+    height: 48px;
+    width: 48px;
+    opacity: 0.35;
+  }
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+  }
+}
+
+.placeholder-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  mat-icon {
+    font-size: 36px;
+    height: 36px;
+    width: 36px;
+    color: var(--color-primary);
+    opacity: 0.5;
+  }
+}
+
+.placeholder-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.placeholder-sub {
+  max-width: 380px;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.ledger-error {
+  color: var(--color-error);
+  mat-icon {
+    color: var(--color-error);
+    opacity: 1;
+  }
+}
+
+// ── Student Summary Card ───────────────────────────────────────────────────────
+.student-summary-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+
+  &__avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    color: var(--color-primary);
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+  }
+  &__name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin: 0 0 2px;
+  }
+  &__email {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  &__totals {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+}
+
+.year-total-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-hover);
+  border: 1px solid var(--color-divider);
+
+  &__year {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+  }
+  &__balance {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--color-error);
+    &.paid {
+      color: var(--color-success);
+    }
+  }
+}
+
+// ── Year Card ─────────────────────────────────────────────────────────────────
+.year-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.year-card__header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 20px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.15s;
+  flex-wrap: wrap;
+
+  &:hover {
+    background: var(--color-hover);
+  }
+}
+
+.year-card__header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.year-card__year-icon {
+  font-size: 22px;
+  height: 22px;
+  width: 22px;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.year-card__year-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.year-card__class-info {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.year-card__header-stats {
+  display: flex;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.year-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-end;
+
+  &__label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+  }
+  &__value {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+  &__value--success {
+    color: var(--color-success);
+  }
+  &__value--error {
+    color: var(--color-error);
+  }
+  &__value--primary {
+    color: var(--color-primary);
+  }
+}
+
+.rate-bar-wrap {
+  flex: 1;
+  min-width: 80px;
+  max-width: 120px;
+}
+.rate-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-hover);
+  overflow: hidden;
+
+  &__fill {
+    height: 100%;
+    background: var(--color-primary);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+}
+
+.year-card__chevron {
+  font-size: 20px;
+  height: 20px;
+  width: 20px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+
+  &.rotated {
+    transform: rotate(180deg);
+  }
+}
+
+.year-card__body {
+  border-top: 1px solid var(--color-divider);
+}
+
+// ── Ledger Sections ───────────────────────────────────────────────────────────
+.ledger-section {
+  border-bottom: 1px solid var(--color-divider);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 16px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    transition: background 0.15s;
+
+    &:hover {
+      background: var(--color-hover);
+    }
+  }
+
+  &__icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+    flex-shrink: 0;
+
+    &--primary {
+      color: var(--color-primary);
+    }
+    &--secondary {
+      color: var(--color-secondary);
+    }
+    &--success {
+      color: var(--color-success);
+    }
+  }
+
+  &__title {
+    flex: 1;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+
+  &__count {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 9999px;
+    background: var(--color-hover);
+    color: var(--color-text-muted);
+  }
+
+  &__chevron {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+    color: var(--color-text-muted);
+    transition: transform 0.2s ease;
+
+    &.rotated {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+.ledger-table-wrap {
+  overflow-x: auto;
+}
+
+.ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 560px;
+  font-size: 0.82rem;
+
+  thead tr {
+    background: color-mix(in srgb, var(--color-hover) 50%, transparent);
+  }
+
+  th {
+    padding: 7px 12px;
+    font-size: 0.66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+    text-align: left;
+    border-bottom: 1px solid var(--color-divider);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--color-divider);
+    vertical-align: middle;
+    color: var(--color-text-primary);
+  }
+}
+
+.ledger-row {
+  transition: background 0.12s;
+
+  &:hover {
+    background: var(--color-hover);
+  }
+  &:last-child td {
+    border-bottom: none;
+  }
+
+  &--cancelled {
+    opacity: 0.55;
+    td {
+      text-decoration: line-through;
+    }
+  }
+  &--void {
+    opacity: 0.6;
+  }
+}
+
+.text-right {
+  text-align: right;
+}
+.text-center {
+  text-align: center;
+}
+.text-success {
+  color: var(--color-success);
+}
+.text-error {
+  color: var(--color-error);
+}
+.cell-muted {
+  color: var(--color-text-muted);
+}
+
+.amount-cell {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.amount-void {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+.fee-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.72rem;
+  font-weight: 700;
+
+  &--std {
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    color: var(--color-primary);
+  }
+  &--custom {
+    background: color-mix(in srgb, var(--color-secondary) 10%, transparent);
+    color: var(--color-secondary);
+  }
+}
+
+.concession-text {
+  color: var(--color-success);
+  font-weight: 600;
+  cursor: help;
+  text-decoration: underline dotted;
+}
+
+.optional-tag {
+  margin-left: 5px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  background: var(--color-hover);
+  color: var(--color-text-muted);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.cancelled-tag {
+  margin-left: 5px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
+  color: var(--color-error);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.description-cell {
+  max-width: 200px;
+  font-size: 0.75rem;
+}
+
+.receipt-mono {
+  font-family: 'Courier New', monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: var(--color-hover);
+  color: var(--color-text-secondary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--color-divider);
+}
+
+.void-badge {
+  margin-left: 5px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
+  color: var(--color-error);
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid color-mix(in srgb, var(--color-error) 20%, transparent);
+}
+
+.method-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+
+  &--cash {
+    background: color-mix(in srgb, var(--color-success) 10%, transparent);
+    color: color-mix(in srgb, var(--color-success) 70%, #000);
+  }
+  &--check {
+    background: color-mix(in srgb, var(--color-info) 10%, transparent);
+    color: var(--color-info);
+  }
+  &--bank_transfer {
+    background: color-mix(in srgb, var(--color-secondary) 10%, transparent);
+    color: var(--color-secondary);
+  }
+}
+
+.source-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: var(--color-hover);
+  color: var(--color-text-muted);
+}
+
+.no-payments {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 16px;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+    opacity: 0.5;
+  }
+}
+
+.payment-history-embed {
+  /* wraps payment section */
+}
+
+@media (max-width: 768px) {
+  .page-shell {
+    padding: 16px;
+  }
+  .search-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .student-search-wrap {
+    max-width: 100%;
+  }
+  .year-card__header-stats {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}

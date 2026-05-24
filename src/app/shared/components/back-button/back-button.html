@@ -1,0 +1,30 @@
+<!-- back-button.component.html -->
+
+<!-- ── Variant: icon only ─────────────────────────────────────────────────── -->
+@if (variant() === 'icon') {
+<button
+  class="back-btn back-btn--icon"
+  type="button"
+  [attr.aria-label]="label()"
+  [matTooltip]="label()"
+  matTooltipPosition="below"
+  (click)="navigate()"
+>
+  <mat-icon class="back-btn__icon">arrow_back</mat-icon>
+</button>
+}
+
+<!-- ── Variant: icon + text (default) ────────────────────────────────────── -->
+@if (variant() === 'text') {
+<button
+  class="back-btn back-btn--text"
+  mat-stroked-button
+  type="button"
+  [matTooltip]="label()"
+  matTooltipPosition="below"
+  (click)="navigate()"
+>
+  <mat-icon class="back-btn__icon">arrow_back</mat-icon>
+  {{ label() }}
+</button>
+}

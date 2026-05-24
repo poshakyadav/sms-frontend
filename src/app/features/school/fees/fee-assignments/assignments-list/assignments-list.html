@@ -1,0 +1,248 @@
+<!-- assignments-list.html -->
+<div class="al-wrap">
+  <!-- Header -->
+  <div class="al-header">
+    <div class="al-header__left">
+      <mat-icon class="al-header__icon">add_road</mat-icon>
+      <div>
+        <h3 class="al-header__title">Custom Fee Assignments</h3>
+        @if (!loading() && assignments().length > 0) {
+        <p class="al-header__sub">
+          {{ activeCount }} active @if (totalBalance > 0) { · Balance:
+          {{ totalBalance | paise : 'compact' }}
+          }
+        </p>
+        }
+      </div>
+    </div>
+
+    <div class="al-header__right">
+      <!-- Show cancelled toggle -->
+      <div class="cancelled-toggle">
+        <mat-slide-toggle
+          [checked]="showCancelled()"
+          (change)="onShowCancelledToggle($event.checked)"
+          color="primary"
+        >
+          <span class="toggle-label">Show Cancelled</span>
+        </mat-slide-toggle>
+      </div>
+
+      @if (canManage) {
+      <button
+        mat-stroked-button
+        class="add-btn add-btn--bulk"
+        matTooltip="Bulk monthly assignment (e.g. full year transport)"
+        (click)="openBulkAssignment()"
+      >
+        <mat-icon>date_range</mat-icon>
+        Bulk Monthly
+      </button>
+      <button mat-flat-button color="primary" class="add-btn" (click)="openAddAssignment()">
+        <mat-icon>add</mat-icon>
+        Add Fee
+      </button>
+      }
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+  <div class="al-state">
+    <mat-spinner diameter="28" />
+    <span>Loading assignments…</span>
+  </div>
+  }
+
+  <!-- Error -->
+  @if (error()) {
+  <div class="al-state al-state--error">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ error() }}</span>
+    <button mat-stroked-button (click)="load()">Retry</button>
+  </div>
+  }
+
+  <!-- Empty -->
+  @if (!loading() && !error() && assignments().length === 0) {
+  <div class="al-state al-state--empty">
+    <mat-icon>directions_bus</mat-icon>
+    <p>No custom fee assignments</p>
+    @if (canManage) {
+    <p class="al-empty-hint">Add transport, hostel, or other custom fees for this student.</p>
+    }
+  </div>
+  }
+
+  <!-- Assignments table -->
+  @if (!loading() && !error() && assignments().length > 0) {
+  <div class="al-table-wrap">
+    <table class="al-table">
+      <thead>
+        <tr>
+          <th>Fee Type</th>
+          <th>Month</th>
+          <th class="text-right">Original</th>
+          <th class="text-right">Concession</th>
+          <th class="text-right">Effective</th>
+          <th class="text-right">Paid</th>
+          <th class="text-right">Balance</th>
+          <th>Due Date</th>
+          <th class="text-center">Status</th>
+          @if (canManage || canPay) {
+          <th class="text-center">Actions</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (a of assignments(); track trackById($index, a)) {
+        <!-- Main Row -->
+        <tr class="al-row" [class.al-row--cancelled]="a.isCancelled">
+          <td>
+            <div class="fee-type-cell">
+              <span class="fee-type-chip" [class.fee-type-chip--cancelled]="a.isCancelled">
+                {{ a.feeType }}
+              </span>
+              @if (a.isCancelled) {
+              <span class="cancelled-badge">Cancelled</span>
+              } @if (!a.isMandatory) {
+              <span class="optional-badge">Optional</span>
+              }
+            </div>
+            @if (a.description) {
+            <p class="fee-desc">{{ a.description }}</p>
+            }
+          </td>
+          <td class="cell-muted">{{ formatMonth(a.feeMonth) }}</td>
+          <td class="text-right amount-cell">{{ a.amount | paise : 'compact' }}</td>
+          <td class="text-right">
+            @if (a.concessionAmount > 0) {
+            <span class="concession-amount" [matTooltip]="a.concessionReason || ''">
+              <mat-icon>local_offer</mat-icon>
+              -{{ a.concessionAmount | paise : 'compact' }}
+            </span>
+            } @else {
+            <span class="cell-muted">—</span>
+            }
+          </td>
+          <td class="text-right amount-cell">{{ a.effectiveAmount | paise : 'compact' }}</td>
+          <td class="text-right amount-cell text-success">
+            {{ a.amountPaid | paise : 'compact' }}
+          </td>
+          <td class="text-right amount-cell" [class.text-error]="a.balance > 0">
+            {{ a.balance | paise : 'compact' }}
+          </td>
+          <td class="cell-muted cell-date">
+            @if (a.dueDate) {
+            {{ a.dueDate | date : 'd MMM yy' }}
+            } @else { — }
+          </td>
+          <td class="text-center">
+            @if (!a.isCancelled) {
+            <app-fee-status-badge [status]="a.status" />
+            }
+          </td>
+          @if (canManage || canPay) {
+          <td class="text-center">
+            @if (!a.isCancelled) {
+            <div class="action-btns">
+              @if (canPay && a.balance > 0) {
+              <button
+                mat-icon-button
+                class="action-btn action-btn--pay"
+                matTooltip="Record Payment"
+                (click)="openPay(a)"
+              >
+                <mat-icon>payments</mat-icon>
+              </button>
+              } @if (canManage) {
+              <button
+                mat-icon-button
+                class="action-btn action-btn--concession"
+                matTooltip="Add Concession"
+                (click)="openConcession(a)"
+              >
+                <mat-icon>local_offer</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                class="action-btn action-btn--cancel"
+                matTooltip="Cancel Assignment"
+                (click)="startCancel(a)"
+              >
+                <mat-icon>cancel</mat-icon>
+              </button>
+              }
+            </div>
+            }
+          </td>
+          }
+        </tr>
+
+        <!-- Inline cancel confirmation row -->
+        @if (cancellingId() === a.id) {
+        <tr class="cancel-confirm-row">
+          <td [attr.colspan]="canManage || canPay ? 10 : 9">
+            <div class="cancel-confirm">
+              <mat-icon class="cancel-confirm__icon">warning_amber</mat-icon>
+              <div class="cancel-confirm__content">
+                <p class="cancel-confirm__label">
+                  Cancel <strong>{{ a.feeType }}</strong> @if (a.feeMonth) { for
+                  {{ formatMonth(a.feeMonth) }} }? This cannot be undone.
+                </p>
+                <div class="cancel-confirm__input-row">
+                  <input
+                    class="cancel-reason-input"
+                    type="text"
+                    placeholder="Reason (min 5 characters) *"
+                    [value]="cancelReason()"
+                    (input)="cancelReason.set($any($event.target).value)"
+                  />
+                  <button
+                    mat-flat-button
+                    color="warn"
+                    class="confirm-btn"
+                    [disabled]="cancelReason().trim().length < 5"
+                    (click)="confirmCancel(a)"
+                  >
+                    Confirm Cancel
+                  </button>
+                  <button mat-stroked-button (click)="cancelCancel()">Back</button>
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>
+        }
+
+        <!-- Concession reason row if applicable -->
+        @if (!a.isCancelled && a.concessionAmount > 0 && a.concessionReason) {
+        <tr class="concession-note-row">
+          <td [attr.colspan]="canManage || canPay ? 10 : 9">
+            <div class="concession-note">
+              <mat-icon>local_offer</mat-icon>
+              <span>Concession reason: {{ a.concessionReason }}</span>
+            </div>
+          </td>
+        </tr>
+        } }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Summary footer -->
+  @if (activeCount > 0) {
+  <div class="al-summary">
+    <div class="al-summary__item">
+      <span class="al-summary__label">Active Assignments</span>
+      <span class="al-summary__value">{{ activeCount }}</span>
+    </div>
+    <div class="al-summary__item al-summary__item--balance">
+      <span class="al-summary__label">Total Balance</span>
+      <span class="al-summary__value" [class.al-summary__value--error]="totalBalance > 0">
+        {{ totalBalance | paise : 'compact' }}
+      </span>
+    </div>
+  </div>
+  } }
+</div>

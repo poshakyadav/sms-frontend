@@ -538,4 +538,384 @@
   .dialog-footer {
     border-top-color: var(--color-divider);
   }
+
+  // ── user-creation-hub: Searchable custom dropdowns ────────────────────────
+
+  .searchable-select-container {
+    background: var(--color-bg-surface);
+    border-color: var(--color-border);
+
+    &:focus-within {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 14%, transparent);
+    }
+  }
+
+  .searchable-select-search-row {
+    background: color-mix(in srgb, var(--color-bg-main) 40%, var(--color-bg-surface));
+    border-bottom-color: var(--color-border);
+  }
+
+  .searchable-select-input {
+    color: var(--color-text-primary);
+    &::placeholder {
+      color: var(--color-text-muted);
+    }
+  }
+
+  .searchable-clear-btn {
+    color: var(--color-text-muted);
+    &:hover {
+      background: var(--color-hover);
+      color: var(--color-text-primary);
+    }
+  }
+
+  .searchable-selected-badge {
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    border-bottom-color: color-mix(in srgb, var(--color-primary) 18%, transparent);
+    color: var(--color-primary);
+
+    &--language {
+      background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
+      border-bottom-color: color-mix(in srgb, var(--color-secondary) 18%, transparent);
+      color: var(--color-secondary);
+    }
+  }
+
+  .options-group-header {
+    background: color-mix(in srgb, var(--color-bg-main) 60%, var(--color-bg-surface));
+    color: var(--color-text-muted);
+
+    mat-icon {
+      color: var(--color-primary);
+    }
+    &.options-group-header--ut mat-icon {
+      color: var(--color-secondary);
+    }
+  }
+
+  .searchable-option-btn {
+    color: var(--color-text-primary);
+
+    &:hover:not(.is-selected) {
+      background: var(--color-hover);
+    }
+
+    &.is-selected {
+      background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+      color: var(--color-primary);
+
+      .option-code-badge {
+        background: var(--color-primary);
+        color: var(--color-on-primary);
+      }
+    }
+  }
+
+  .option-code-badge {
+    background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+    color: var(--color-primary);
+
+    &--ut {
+      background: color-mix(in srgb, var(--color-secondary) 14%, transparent);
+      color: var(--color-secondary);
+    }
+
+    &--lang {
+      background: color-mix(in srgb, var(--color-info) 14%, transparent);
+      color: var(--color-info);
+    }
+  }
+
+  .option-script {
+    color: var(--color-text-muted);
+  }
+
+  .searchable-no-results {
+    color: var(--color-text-muted);
+  }
+
+  // ── user-creation-hub: Aadhaar split input ────────────────────────────────
+
+  .aadhaar-input-row {
+    background: var(--color-bg-surface);
+    border-color: var(--color-border);
+
+    &:focus-within {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 14%, transparent);
+    }
+  }
+
+  .aadhaar-prefix-block {
+    background: color-mix(in srgb, var(--color-bg-main) 50%, var(--color-bg-surface));
+    border-right-color: var(--color-border);
+  }
+
+  .aadhaar-prefix-text {
+    color: var(--color-text-muted);
+  }
+
+  .aadhaar-last4-input {
+    color: var(--color-text-primary);
+    caret-color: var(--color-primary);
+    &::placeholder {
+      color: var(--color-text-muted);
+    }
+  }
+
+  .aadhaar-preview-text strong {
+    color: var(--color-text-primary);
+  }
+
+  .aadhaar-security-note {
+    color: var(--color-text-muted);
+  }
+
+  // ── Shared _cards additions: code-badge dark overrides ────────────────────
+
+  .code-badge {
+    background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+    color: var(--color-primary);
+    border-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
+
+    &.code-badge--ut {
+      background: color-mix(in srgb, var(--color-secondary) 14%, transparent);
+      color: var(--color-secondary);
+      border-color: color-mix(in srgb, var(--color-secondary) 20%, transparent);
+    }
+
+    &.code-badge--lang {
+      background: color-mix(in srgb, var(--color-info) 14%, transparent);
+      color: var(--color-info);
+      border-color: color-mix(in srgb, var(--color-info) 20%, transparent);
+    }
+  }
+
+  .aadhaar-security-chip {
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    color: color-mix(in srgb, var(--color-success) 90%, #fff);
+    border-color: color-mix(in srgb, var(--color-success) 22%, transparent);
+  }
+
+  .step-info-banner {
+    &--blue {
+      background: color-mix(in srgb, var(--color-info) 10%, transparent);
+      border-color: color-mix(in srgb, var(--color-info) 22%, transparent);
+    }
+    &--amber {
+      background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+      border-color: color-mix(in srgb, var(--color-warning) 22%, transparent);
+    }
+    &--green {
+      background: color-mix(in srgb, var(--color-success) 10%, transparent);
+      border-color: color-mix(in srgb, var(--color-success) 22%, transparent);
+    }
+  }
+
+  // ── user-form: uf-* component dark overrides ─────────────────────────────────
+
+  // Section headers
+  // .uf-section-header already picks up var(--color-bg-surface/card) from tokens.
+
+  // Category banners — colours adapt automatically via color-mix on updated vars.
+  // No additional overrides needed beyond what the CSS custom property cascade provides.
+
+  // Primary role badge
+  // .uf-primary-role-badge → warning colours already redefined in dark tokens.
+
+  // Edit button
+  .uf-edit-btn {
+    background: var(--color-bg-surface) !important;
+    border-color: var(--color-border) !important;
+    color: var(--color-text-secondary) !important;
+
+    &:hover,
+    &--active {
+      border-color: var(--color-primary) !important;
+      color: var(--color-primary) !important;
+      background: color-mix(in srgb, var(--color-primary) 10%, transparent) !important;
+    }
+  }
+
+  // Toggle row
+  .uf-toggle-row {
+    background: var(--color-hover);
+    border-color: var(--color-border);
+  }
+
+  // Loading card
+  .uf-loading-card {
+    background: var(--color-bg-card);
+    border-color: var(--color-border);
+  }
+
+  // Back button
+  .uf-back-btn {
+    background: var(--color-bg-card);
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+
+    &:hover {
+      background: var(--color-hover);
+      border-color: var(--color-primary);
+      color: var(--color-text-primary);
+    }
+  }
+
+  // Role chips
+  .uf-role-chip {
+    background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+    color: var(--color-primary);
+    border-color: color-mix(in srgb, var(--color-primary) 22%, transparent);
+
+    &--primary {
+      background: color-mix(in srgb, var(--color-warning) 14%, transparent);
+      color: var(--color-warning);
+      border-color: color-mix(in srgb, var(--color-warning) 22%, transparent);
+    }
+  }
+
+  // perm-count-chip
+  .perm-count-chip {
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    color: color-mix(in srgb, var(--color-success) 90%, #fff);
+    border-color: color-mix(in srgb, var(--color-success) 22%, transparent);
+
+    &--deny {
+      background: color-mix(in srgb, var(--color-error) 12%, transparent);
+      color: var(--color-error);
+      border-color: color-mix(in srgb, var(--color-error) 22%, transparent);
+    }
+  }
+
+  // ── Mat raised/flat/stroked buttons — explicit container colour fixes ─────────
+  // Component-scoped :host-context cannot override MDC button tokens reliably;
+  // these must live here in the global dark-theme partial to win specificity.
+
+  .mat-mdc-raised-button.mat-primary {
+    --mdc-protected-button-container-color: var(--color-primary) !important;
+    --mdc-protected-button-label-text-color: var(--color-on-primary) !important;
+    background-color: var(--color-primary) !important;
+    color: var(--color-on-primary) !important;
+
+    .mat-icon,
+    mat-icon {
+      color: var(--color-on-primary) !important;
+    }
+  }
+
+  .mat-mdc-raised-button.mat-accent {
+    --mdc-protected-button-container-color: var(--color-secondary) !important;
+    --mdc-protected-button-label-text-color: var(--color-on-secondary) !important;
+    background-color: var(--color-secondary) !important;
+    color: var(--color-on-secondary) !important;
+
+    .mat-icon,
+    mat-icon {
+      color: var(--color-on-secondary) !important;
+    }
+  }
+
+  .mat-mdc-raised-button.mat-warn {
+    --mdc-protected-button-container-color: var(--color-error) !important;
+    --mdc-protected-button-label-text-color: #ffffff !important;
+    background-color: var(--color-error) !important;
+    color: #ffffff !important;
+  }
+
+  // ── Mat Form Field — fix overlapping label/placeholder in dark mode ───────────
+  // In dark mode, the resting mat-label overlaps with the input placeholder
+  // because the label background blends into the dark surface, making both
+  // appear simultaneously. Force correct notch/label rendering.
+
+  .mat-mdc-form-field {
+    // Ensure the floating label notch background matches the card surface
+    .mdc-notched-outline__notch {
+      background: transparent !important;
+    }
+
+    // Resting label — must be clearly visible above the input line
+    .mdc-floating-label:not(.mdc-floating-label--float-above) {
+      color: var(--color-text-muted) !important;
+    }
+
+    // When label is floating (focused or has value), use primary colour
+    .mdc-floating-label--float-above {
+      color: var(--color-text-secondary) !important;
+    }
+
+    &.mat-focused .mdc-floating-label--float-above {
+      color: var(--color-primary) !important;
+    }
+
+    // Hide the native placeholder when label is in resting position
+    // (label itself acts as the placeholder visually)
+    input.mat-mdc-input-element::placeholder {
+      color: transparent !important;
+      opacity: 0 !important;
+    }
+
+    // Show placeholder only when label has floated above
+    &.mat-mdc-form-field-should-float input.mat-mdc-input-element::placeholder,
+    &:focus-within input.mat-mdc-input-element::placeholder {
+      color: var(--color-text-muted) !important;
+      opacity: 1 !important;
+    }
+  }
+
+  // =========================
+
+  // ── Mat Tab Group — fix invisible tab labels in dark mode ────────────────────
+  --mat-tab-header-label-text-color: var(--color-text-secondary);
+  --mat-tab-header-inactive-label-text-color: var(--color-text-secondary);
+  --mat-tab-header-active-label-text-color: var(--color-primary);
+  --mat-tab-header-active-focus-label-text-color: var(--color-primary);
+  --mat-tab-header-active-hover-label-text-color: var(--color-primary);
+  --mat-tab-header-inactive-focus-label-text-color: var(--color-text-primary);
+  --mat-tab-header-inactive-hover-label-text-color: var(--color-text-primary);
+
+  // Active indicator (underline) colour
+  --mat-tab-header-active-indicator-color: var(--color-primary);
+
+  // Tab header background
+  --mat-tab-header-divider-color: var(--color-border);
+
+  .mat-mdc-tab-group,
+  .mat-mdc-tab-nav-bar {
+    // Tab header surface
+    .mat-mdc-tab-header {
+      background: color-mix(in srgb, var(--color-bg-surface) 60%, var(--color-bg-card));
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    // All tab label text
+    .mat-mdc-tab .mdc-tab__text-label,
+    .mat-mdc-tab-link .mdc-tab__text-label {
+      color: var(--color-text-secondary) !important;
+      transition: color 0.2s ease;
+    }
+
+    // Active tab label
+    .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label,
+    .mat-mdc-tab-link.mdc-tab--active .mdc-tab__text-label {
+      color: var(--color-primary) !important;
+    }
+
+    // Hover state
+    .mat-mdc-tab:hover:not(.mdc-tab--active) .mdc-tab__text-label {
+      color: var(--color-text-primary) !important;
+    }
+
+    // Active indicator bar
+    .mdc-tab-indicator__content--underline {
+      border-color: var(--color-primary) !important;
+    }
+
+    // Ripple overlay
+    .mat-mdc-tab .mat-ripple-element {
+      background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    }
+  }
 }

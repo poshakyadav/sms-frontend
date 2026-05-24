@@ -1,3 +1,4 @@
+// class-list.ts
 import { Component, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -6,9 +7,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DestroyRef } from '@angular/core';
 import { signal } from '@angular/core';
 import { AcademicsService, Class } from '../../../../../core/services/academics.service';
@@ -27,6 +29,7 @@ import { ConfirmDialog } from '../../../../../shared/components/confirm-dialog/c
     MatIconModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
+    MatMenuModule,
   ],
   templateUrl: './class-list.html',
   styleUrl: './class-list.scss',
@@ -39,7 +42,7 @@ export class ClassList implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly destroyRef = inject(DestroyRef);
 
-  // ── State signals ──────────────────────────────────────────────────────────
+  // ── State ──────────────────────────────────────────────────────────────────
   classes = signal<Class[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
@@ -50,8 +53,6 @@ export class ClassList implements OnInit {
   readonly displayedColumns = ['name', 'level', 'sort_order', 'actions'] as const;
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────
-  // Moved data loading out of constructor into ngOnInit.
-  // Constructors should only handle DI — side effects belong in lifecycle hooks.
   ngOnInit(): void {
     this.loadClasses();
   }

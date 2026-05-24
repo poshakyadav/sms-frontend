@@ -1,12 +1,12 @@
+<!-- academics-year-form.html -->
+
 <div class="form-page">
   <header>
     <div>
       <h1>{{ isEdit() ? 'Edit' : 'New' }} Academic Year</h1>
       <p class="subtitle">Define the session name and start/end dates</p>
     </div>
-    <button mat-stroked-button (click)="router.navigate(['/school/academics/years'])">
-      <mat-icon>arrow_back</mat-icon> Back
-    </button>
+    <app-back-button fallbackUrl="/school/academics/years" />
   </header>
 
   <div class="form-card">
@@ -39,6 +39,7 @@
             formControlName="startDate"
             (dateChange)="onStartDateChange($event.value)"
           />
+          <mat-hint>Format: DD/MM/YYYY</mat-hint>
           <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
           <mat-datepicker #startPicker></mat-datepicker>
           @if (form.get('startDate')?.errors?.['required'] && form.get('startDate')?.touched) {
@@ -49,6 +50,7 @@
         <mat-form-field appearance="outline">
           <mat-label>End Date</mat-label>
           <input matInput [matDatepicker]="endPicker" formControlName="endDate" />
+          <mat-hint>Format: DD/MM/YYYY</mat-hint>
           <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
           <mat-datepicker #endPicker></mat-datepicker>
           @if (form.get('endDate')?.errors?.['required'] && form.get('endDate')?.touched) {

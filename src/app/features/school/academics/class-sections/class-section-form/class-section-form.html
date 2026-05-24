@@ -85,15 +85,16 @@
       </mat-form-field>
 
       <!-- Class Teacher (optional) -->
-      <mat-form-field appearance="outline">
-        <mat-label>Class Teacher (optional)</mat-label>
-        <mat-select formControlName="classTeacherId">
-          <mat-option [value]="null">— Not assigned —</mat-option>
-          @for (t of teachers(); track t.id) {
-          <mat-option [value]="t.id">{{ t.name }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+      <div class="field-wrap">
+        <label class="field-label"
+          >Class Teacher <span class="field-optional">(optional)</span></label
+        >
+        <app-teacher-search-dropdown
+          [teachers]="teachers()"
+          [selectedTeacherId]="form.get('classTeacherId')!.value"
+          (teacherSelected)="onTeacherSelected($event)"
+        ></app-teacher-search-dropdown>
+      </div>
 
       <!-- Room Number (optional) -->
       <mat-form-field appearance="outline">

@@ -1,188 +1,241 @@
-<!-- record-payment.html (UPDATED) -->
-<div class="record-payment-page">
-  <!-- ══════════════════════════════════════════════════════════════════ -->
-  <!-- HEADER                                                             -->
-  <!-- ══════════════════════════════════════════════════════════════════ -->
-  <div class="page-header">
-    <div class="header-left">
-      <h1>Record Fee Payment</h1>
-      <p>Select a class-section, then click <strong>Pay</strong> next to a student</p>
+<!-- record-payment.html -->
+<div class="modal-shell">
+  <!-- Header -->
+  <div class="modal-header">
+    <div class="modal-header__icon">
+      <mat-icon>payments</mat-icon>
     </div>
+    <div class="modal-header__content">
+      <h2 class="modal-title">Record Payment</h2>
+      @if (data.studentName) {
+      <p class="modal-subtitle">
+        {{ data.studentName }}
+        @if (data.className) { — {{ data.className
+        }}{{ data.sectionName ? '-' + data.sectionName : '' }} }
+      </p>
+      }
+    </div>
+    <button mat-icon-button class="modal-close" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════════════ -->
-  <!-- CLASS-SECTION SELECTOR                                             -->
-  <!-- ══════════════════════════════════════════════════════════════════ -->
-  <div class="controls-card">
-    @if (pageLoading()) {
-    <div class="inline-loading">
-      <mat-spinner diameter="20"></mat-spinner>
-      <span>Loading class sections…</span>
-    </div>
-    } @else {
-    <div class="controls-row">
-      <mat-form-field appearance="outline">
-        <mat-label>Class — Section</mat-label>
-        <mat-select (selectionChange)="onClassSectionChange($event.value)">
-          @for (cs of classSections(); track cs.id) {
-          <mat-option [value]="cs.id">{{ cs.className }} – {{ cs.sectionName }}</mat-option>
-          }
-        </mat-select>
-        <mat-icon matPrefix>class</mat-icon>
-      </mat-form-field>
+  <div class="modal-body">
+    <!-- Loading -->
+    @if (loading()) {
+    <div class="state-center">
+      <mat-spinner diameter="36" />
+      <span>Loading due fees…</span>
     </div>
     }
-  </div>
 
-  <!-- ══════════════════════════════════════════════════════════════════ -->
-  <!-- STUDENT LIST AREA                                                  -->
-  <!-- ══════════════════════════════════════════════════════════════════ -->
-
-  @if (studentsLoading()) {
-  <div class="state-container">
-    <mat-spinner diameter="40"></mat-spinner>
-    <p>Loading students…</p>
-  </div>
-
-  } @else if (!selectedClassSectionId()) {
-  <div class="state-container">
-    <mat-icon class="state-icon">school</mat-icon>
-    <h2>Select a Class-Section</h2>
-    <p>Choose a class-section above to view enrolled students and their fee balances.</p>
-  </div>
-
-  } @else if (error()) {
-  <div class="state-container error">
-    <mat-icon class="state-icon">error_outline</mat-icon>
-    <h2>Failed to Load</h2>
-    <p>{{ error() }}</p>
-    <button mat-raised-button color="primary" (click)="loadClassSections()">Retry</button>
-  </div>
-
-  } @else if (students().length === 0) {
-  <div class="state-container">
-    <mat-icon class="state-icon">group</mat-icon>
-    <h2>No Students Found</h2>
-    <p>No active enrollments in the selected class-section.</p>
-  </div>
-
-  } @else {
-
-  <!-- ── Summary strip ──────────────────────────────────────────────── -->
-  <div class="stats-grid">
-    <div class="stat-card primary">
-      <div class="stat-label">Total Assigned</div>
-      <div class="stat-value">₹{{ totalAssigned() | number }}</div>
+    <!-- Error -->
+    @if (!loading() && error()) {
+    <div class="error-banner">
+      <mat-icon>error_outline</mat-icon>
+      {{ error() }}
+      <button mat-stroked-button (click)="loadDueFees()">Retry</button>
     </div>
-    <div class="stat-card success">
-      <div class="stat-label">Collected</div>
-      <div class="stat-value">₹{{ totalCollected() | number }}</div>
+    }
+
+    <!-- Payment content -->
+    @if (!loading() && dueFees()) {
+
+    <!-- Summary strip -->
+    <div class="summary-strip">
+      <div class="summary-item">
+        <span class="summary-label">Total Due</span>
+        <span class="summary-value">{{ dueFees()!.totalDue | paise }}</span>
+      </div>
+      <div class="summary-item">
+        <span class="summary-label">Already Paid</span>
+        <span class="summary-value summary-value--success">{{ dueFees()!.totalPaid | paise }}</span>
+      </div>
+      @if (dueFees()!.totalConcession > 0) {
+      <div class="summary-item">
+        <span class="summary-label">Concession</span>
+        <span class="summary-value summary-value--info"
+          >-{{ dueFees()!.totalConcession | paise }}</span
+        >
+      </div>
+      }
+      <div class="summary-item summary-item--balance">
+        <span class="summary-label">Balance Due</span>
+        <span
+          class="summary-value summary-value--{{ dueFees()!.balanceDue > 0 ? 'error' : 'success' }}"
+        >
+          {{ dueFees()!.balanceDue | paise }}
+        </span>
+      </div>
     </div>
-    <div class="stat-card error">
-      <div class="stat-label">Pending Balance</div>
-      <div class="stat-value">₹{{ totalBalance() | number }}</div>
+
+    @if (rows().length === 0) {
+    <div class="state-center state-center--empty">
+      <mat-icon>check_circle_outline</mat-icon>
+      <span>All fees are paid up!</span>
     </div>
-    <div class="stat-card">
-      <div class="stat-label">Students</div>
-      <div class="stat-value">{{ students().length }}</div>
+    } @else {
+
+    <!-- Standard Fees Section -->
+    @if (rows() | feeRowFilter: 'STRUCTURE'; as structureRows) { @if (structureRows.length > 0) {
+    <div class="section-label">
+      <mat-icon>receipt_long</mat-icon>
+      Standard Fees ({{ structureRows.length }})
     </div>
+    <div class="rows-table">
+      <div class="rows-table__head">
+        <span>Fee Type</span>
+        <span>Month</span>
+        <span class="text-right">Effective</span>
+        <span class="text-right">Paid</span>
+        <span class="text-right">Remaining</span>
+        <span class="text-right">Pay Now (₹)</span>
+      </div>
+      @for (row of structureRows; track row.item.id) {
+      <div class="rows-table__row" [class.row--error]="row.error">
+        <span>
+          <span class="fee-chip fee-chip--std">{{ row.item.feeType }}</span>
+        </span>
+        <span class="cell-muted">{{ formatMonth(row.item.feeMonth) }}</span>
+        <span class="text-right">{{ row.item.effectiveAmount | paise : 'compact' }}</span>
+        <span class="text-right text-success">{{ row.item.paid | paise : 'compact' }}</span>
+        <span class="text-right" [class.text-error]="row.item.remaining > 0">
+          {{ row.item.remaining | paise : 'compact' }}
+        </span>
+        <span class="text-right">
+          <div class="pay-input-wrap">
+            <span class="pay-prefix">₹</span>
+            <input
+              class="pay-input"
+              type="number"
+              [value]="row.amountToPayRupees"
+              [max]="row.maxRupees"
+              min="0"
+              step="0.01"
+              (input)="onAmountChange(row, +$any($event.target).value)"
+            />
+          </div>
+          @if (row.error) {
+          <span class="row-error">{{ row.error }}</span>
+          }
+        </span>
+      </div>
+      }
+    </div>
+    } }
+
+    <!-- Custom Fee Assignments Section -->
+    @if (rows() | feeRowFilter: 'ASSIGNMENT'; as assignmentRows) { @if (assignmentRows.length > 0) {
+    <div class="section-label">
+      <mat-icon>directions_bus</mat-icon>
+      Custom Fees — Transport / Hostel ({{ assignmentRows.length }})
+    </div>
+    <div class="rows-table">
+      <div class="rows-table__head">
+        <span>Fee Type</span>
+        <span>Month</span>
+        <span class="text-right">Effective</span>
+        <span class="text-right">Paid</span>
+        <span class="text-right">Remaining</span>
+        <span class="text-right">Pay Now (₹)</span>
+      </div>
+      @for (row of assignmentRows; track row.item.id) {
+      <div class="rows-table__row" [class.row--error]="row.error">
+        <span>
+          <span class="fee-chip fee-chip--custom">{{ row.item.feeType }}</span>
+        </span>
+        <span class="cell-muted">{{ formatMonth(row.item.feeMonth) }}</span>
+        <span class="text-right">{{ row.item.effectiveAmount | paise : 'compact' }}</span>
+        <span class="text-right text-success">{{ row.item.paid | paise : 'compact' }}</span>
+        <span class="text-right" [class.text-error]="row.item.remaining > 0">
+          {{ row.item.remaining | paise : 'compact' }}
+        </span>
+        <span class="text-right">
+          <div class="pay-input-wrap">
+            <span class="pay-prefix">₹</span>
+            <input
+              class="pay-input"
+              type="number"
+              [value]="row.amountToPayRupees"
+              [max]="row.maxRupees"
+              min="0"
+              step="0.01"
+              (input)="onAmountChange(row, +$any($event.target).value)"
+            />
+          </div>
+          @if (row.error) {
+          <span class="row-error">{{ row.error }}</span>
+          }
+        </span>
+      </div>
+      }
+    </div>
+    } }
+
+    <!-- Payment method selector -->
+    <div class="method-section">
+      <div class="method-label">Payment Method</div>
+      <div class="method-pills">
+        @for (m of paymentMethods; track m.value) {
+        <button
+          type="button"
+          class="method-pill"
+          [class.method-pill--active]="selectedMethod() === m.value"
+          (click)="selectedMethod.set(m.value)"
+        >
+          <mat-icon>{{ m.icon }}</mat-icon>
+          {{ m.label }}
+        </button>
+        }
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="notes-row">
+      <mat-form-field appearance="outline" class="notes-field">
+        <mat-label>Notes (optional)</mat-label>
+        <input
+          matInput
+          [value]="notes()"
+          (input)="notes.set($any($event.target).value)"
+          placeholder="Reference number, remarks…"
+        />
+      </mat-form-field>
+    </div>
+
+    <!-- Total + Submit -->
+    @if (error()) {
+    <div class="form-error-banner">
+      <mat-icon>error_outline</mat-icon>
+      {{ error() }}
+    </div>
+    } } }
   </div>
 
-  <!-- ── Students table ─────────────────────────────────────────────── -->
-  <div class="table-card">
-    <div class="table-scroll">
-      <table mat-table [dataSource]="students()">
-        <ng-container matColumnDef="rollNumber">
-          <th mat-header-cell *matHeaderCellDef>Roll No</th>
-          <td mat-cell *matCellDef="let s">{{ s.rollNumber || '—' }}</td>
+  <!-- Footer -->
+  @if (!loading() && rows().length > 0) {
+  <div class="modal-footer">
+    <div class="footer-total">
+      <span class="footer-total__label">Total to Pay</span>
+      <span class="footer-total__value">{{ totalToPay() | paise }}</span>
+    </div>
+    <div class="footer-actions">
+      <button mat-stroked-button (click)="close()" [disabled]="saving()">Cancel</button>
+      <button
+        mat-flat-button
+        color="primary"
+        [disabled]="saving() || hasErrors() || totalToPay() === 0"
+        (click)="submit()"
+      >
+        @if (saving()) {
+        <mat-spinner diameter="16" />
+        Recording… } @else {
+        <ng-container>
+          <mat-icon>payments</mat-icon>
         </ng-container>
-
-        <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef>Student Name</th>
-          <td mat-cell *matCellDef="let s">
-            <strong>{{ s.name }}</strong>
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="totalAssigned">
-          <th mat-header-cell *matHeaderCellDef>Total Fees</th>
-          <td mat-cell *matCellDef="let s">
-            <span class="amount-cell">₹{{ s.totalAssigned | number }}</span>
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="totalPaid">
-          <th mat-header-cell *matHeaderCellDef>Paid</th>
-          <td mat-cell *matCellDef="let s">
-            <span class="amount-cell paid">₹{{ s.totalPaid | number }}</span>
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="balance">
-          <th mat-header-cell *matHeaderCellDef>Balance Due</th>
-          <td mat-cell *matCellDef="let s">
-            <span
-              class="amount-cell"
-              [class.positive]="s.balance > 0"
-              [class.paid]="s.balance === 0"
-              >₹{{ s.balance | number }}</span
-            >
-            @if (s.balance === 0) {
-            <span class="status-badge paid" style="margin-left: 8px">Cleared</span>
-            }
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef></th>
-          <td mat-cell *matCellDef="let s">
-            <div class="cell-actions">
-              @if (s.balance > 0) {
-              <button
-                mat-raised-button
-                color="primary"
-                (click)="openPaymentDialog(s)"
-                matTooltip="Record a payment"
-              >
-                <mat-icon>payments</mat-icon> Pay
-              </button>
-              }
-              <button
-                mat-icon-button
-                (click)="viewPaymentHistory(s.enrollmentId)"
-                matTooltip="View payment history"
-              >
-                <mat-icon>history</mat-icon>
-              </button>
-              <button mat-icon-button (click)="viewLedger(s.id)" matTooltip="View full ledger">
-                <mat-icon>account_balance_wallet</mat-icon>
-              </button>
-            </div>
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr
-          mat-row
-          *matRowDef="let row; columns: displayedColumns"
-          [class.row-paid]="row.balance === 0"
-          [class.row-overdue]="row.balance > 0"
-        ></tr>
-      </table>
+        Record Payment }
+      </button>
     </div>
   </div>
-
   }
-  <!-- END of student-list @if/@else chain -->
 </div>
-
-<!-- ══════════════════════════════════════════════════════════════════════ -->
-<!-- PAYMENT DIALOG (portal-rendered, outside page scroll context)         -->
-<!-- ══════════════════════════════════════════════════════════════════════ -->
-@if (dialogStudent()) {
-<app-fee-payment-dialog
-  [student]="dialogStudent()!"
-  (closed)="onDialogClosed()"
-  (paymentRecorded)="onPaymentRecorded()"
-/>
-}

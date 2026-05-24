@@ -1,4 +1,4 @@
-// class-sections-list.scss
+// class-sections-list.scss 
 // Class-Sections List — production-grade, themed SCSS
 
 .page-container {
@@ -55,6 +55,45 @@
   @media (max-width: 480px) {
     width: 100%;
     justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+}
+
+// ── List meta row ────────────────────────────────────────────────────────────
+
+.list-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  &__count {
+    font-size: 0.84rem;
+    color: var(--color-text-muted);
+    font-weight: 500;
+  }
+
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    transition: background 0.12s ease;
+
+    mat-icon {
+      font-size: 15px;
+      height: 15px;
+      width: 15px;
+    }
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    }
   }
 }
 
@@ -101,6 +140,16 @@
   color: var(--color-text-muted) !important;
 }
 
+// ── Empty actions ────────────────────────────────────────────────────────────
+
+.empty-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 4px;
+}
+
 // ── Table card ──────────────────────────────────────────────────────────────
 
 .table-card {
@@ -110,7 +159,6 @@
   box-shadow: var(--shadow-sm);
   overflow: hidden;
 
-  // Horizontal scroll on small viewports
   &.overflow-x {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -125,14 +173,14 @@
   }
 
   th.mat-mdc-header-cell {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--color-text-muted);
     border-bottom: 1px solid var(--color-border);
     padding: 12px 16px;
-    background: var(--color-bg-surface);
+    background: var(--color-hover);
     white-space: nowrap;
 
     &:first-child {
@@ -171,7 +219,67 @@
   }
 }
 
-// ── Status badge ────────────────────────────────────────────────────────────
+// ── Section badge ─────────────────────────────────────────────────────────────
+
+.section-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
+// ── Enrolled chip ─────────────────────────────────────────────────────────────
+
+.enrolled-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  &--ok {
+    background: color-mix(in srgb, var(--color-success) 10%, transparent);
+    color: color-mix(in srgb, var(--color-success) 70%, #000);
+    border: 1px solid color-mix(in srgb, var(--color-success) 20%, transparent);
+  }
+
+  &--full {
+    background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+    color: color-mix(in srgb, var(--color-warning) 70%, #000);
+    border: 1px solid color-mix(in srgb, var(--color-warning) 22%, transparent);
+  }
+}
+
+// ── Teacher cell ──────────────────────────────────────────────────────────────
+
+.teacher-cell {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.teacher-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
+  color: var(--color-secondary);
+  font-size: 0.68rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+// ── Status badge ─────────────────────────────────────────────────────────────
 
 .badge {
   display: inline-flex;
@@ -195,14 +303,11 @@
   }
 }
 
-// ── Enrollment count (warn when full) ───────────────────────────────────────
+// ── Misc ──────────────────────────────────────────────────────────────────────
 
-.text-warn {
-  color: var(--color-warning);
-  font-weight: 600;
+.text-muted {
+  color: var(--color-text-muted);
 }
-
-// ── Actions ─────────────────────────────────────────────────────────────────
 
 .cell-actions {
   display: flex;

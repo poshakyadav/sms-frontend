@@ -1,215 +1,513 @@
-<div class="sf-root">
-  <!-- ── Page header ─────────────────────────────────────────────── -->
-  <header class="sf-header">
-    <div class="sf-header-inner">
-      <div class="sf-header-title">
-        <div class="sf-header-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <rect x="2" y="5" width="20" height="14" rx="2" />
-            <path d="M2 10h20" />
-            <path d="M6 15h4M14 15h4" stroke-linecap="round" />
-          </svg>
-        </div>
-        <div>
-          <h1 class="sf-title">My Fees</h1>
-          <p class="sf-subtitle">Fee summary &amp; payment history</p>
-        </div>
+<!-- student-fees.html -->
+<div class="sf-page">
+  <!-- ── Page Header ──────────────────────────────────────────────────────── -->
+  <div class="sf-header">
+    <div class="sf-header__left">
+      <div class="sf-header__icon-wrap">
+        <mat-icon>account_balance_wallet</mat-icon>
+      </div>
+      <div>
+        <h1 class="sf-header__title">My Fees</h1>
+        <p class="sf-header__subtitle">Your fee summary, payment history &amp; due amounts</p>
       </div>
     </div>
-  </header>
+  </div>
 
-  <!-- ── Loading ────────────────────────────────────────────────── -->
+  <!-- ── Loading ───────────────────────────────────────────────────────────── -->
   @if (loading()) {
-  <div class="sf-loading">
-    <div class="sf-spinner"></div>
-    <p>Loading fee details…</p>
+  <div class="sf-state">
+    <mat-spinner diameter="44" />
+    <p>Loading your fee details…</p>
   </div>
   }
 
-  <!-- ── Error ──────────────────────────────────────────────────── -->
-  @if (error() && !loading()) {
-  <div class="sf-error-card">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 8v4M12 16h.01" stroke-linecap="round" />
-    </svg>
+  <!-- ── Error ─────────────────────────────────────────────────────────────── -->
+  @if (!loading() && error()) {
+  <div class="sf-state sf-state--error">
+    <div class="sf-state__icon-wrap sf-state__icon-wrap--error">
+      <mat-icon>error_outline</mat-icon>
+    </div>
     <p>{{ error() }}</p>
-    <button class="sf-btn-retry" (click)="load()">Try again</button>
+    <button mat-stroked-button (click)="load()"><mat-icon>refresh</mat-icon> Retry</button>
   </div>
   }
 
-  <!-- ── Content ────────────────────────────────────────────────── -->
-  @if (!loading() && !error()) { @if (overviews().length === 0) {
-  <div class="sf-empty">
-    <div class="sf-empty-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path
-          d="M9 12h6M9 16h6M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
-      </svg>
+  <!-- ── Empty ─────────────────────────────────────────────────────────────── -->
+  @if (!loading() && !error() && overviews().length === 0) {
+  <div class="sf-state">
+    <div class="sf-state__icon-wrap">
+      <mat-icon>receipt_long</mat-icon>
     </div>
-    <h3>No fee records found</h3>
-    <p>Fee information will appear here once your account is fully set up.</p>
+    <p class="sf-state__title">No fee records found</p>
+    <p class="sf-state__sub">
+      Your fee information will appear here once your school sets up fee structures for your class.
+    </p>
   </div>
-  } @else { @for (overview of overviews(); track overview.academicYearId) {
-  <section class="sf-year-block">
-    <!-- Year badge + class info -->
-    <div class="sf-year-header">
-      <span class="sf-year-badge">{{ overview.academicYearName }}</span>
-      <span class="sf-class-tag">{{ overview.className }} – {{ overview.sectionName }}</span>
-      @if (overview.rollNumber) {
-      <span class="sf-roll">Roll No. {{ overview.rollNumber }}</span>
-      }
+  }
+
+  <!-- ── Main Content ──────────────────────────────────────────────────────── -->
+  @if (!loading() && !error() && overviews().length > 0) {
+
+  <!-- Year Tabs -->
+  @if (overviews().length > 1) {
+  <div class="sf-year-tabs">
+    @for (o of overviews(); track o.academicYearId; let i = $index) {
+    <button
+      class="sf-year-tab"
+      [class.sf-year-tab--active]="activeYearIndex() === i"
+      (click)="selectYear(i)"
+    >
+      <mat-icon>school</mat-icon>
+      {{ o.academicYearName }}
+    </button>
+    }
+  </div>
+  }
+
+  <!-- Active Year Overview -->
+  @if (activeOverview(); as overview) {
+
+  <!-- Student Info + Summary Cards Row -->
+  <div class="sf-overview-grid">
+    <!-- Collection Rate Donut -->
+    <div class="sf-donut-card">
+      <div class="sf-donut-card__chart-wrap">
+        <svg viewBox="0 0 100 100" class="sf-donut-svg">
+          <!-- Background ring -->
+          <circle
+            cx="50"
+            cy="50"
+            r="40"
+            fill="none"
+            stroke="var(--color-hover)"
+            stroke-width="10"
+          />
+          <!-- Progress arc -->
+          @if (overview.collectionRate > 0) {
+          <path
+            [attr.d]="getDonutPath(overview.collectionRate)"
+            fill="none"
+            [attr.stroke]="
+              overview.collectionRate >= 80
+                ? 'var(--color-success)'
+                : overview.collectionRate >= 50
+                ? 'var(--color-warning)'
+                : 'var(--color-error)'
+            "
+            stroke-width="10"
+            stroke-linecap="round"
+          />
+          }
+          <!-- Center text -->
+          <text x="50" y="46" text-anchor="middle" class="sf-donut-pct">
+            {{ overview.collectionRate }}%
+          </text>
+          <text x="50" y="60" text-anchor="middle" class="sf-donut-label">paid</text>
+        </svg>
+      </div>
+      <div class="sf-donut-card__info">
+        <p class="sf-donut-card__year">{{ overview.academicYearName }}</p>
+        <p class="sf-donut-card__class">{{ overview.className }} – {{ overview.sectionName }}</p>
+        @if (overview.rollNumber) {
+        <p class="sf-donut-card__roll">
+          Roll: <strong>{{ overview.rollNumber }}</strong>
+        </p>
+        }
+      </div>
     </div>
 
-    <!-- ── Summary cards ──────────────────────────────── -->
-    <div class="sf-summary-grid">
-      <div class="sf-summary-card sf-card-due">
-        <div class="sf-card-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 6v6l4 2" stroke-linecap="round" />
-          </svg>
+    <!-- Summary Stats -->
+    <div class="sf-summary-stats">
+      <div class="sf-stat-card">
+        <div class="sf-stat-card__icon sf-stat-card__icon--primary">
+          <mat-icon>receipt_long</mat-icon>
         </div>
-        <div class="sf-card-content">
-          <p class="sf-card-label">Total Fee</p>
-          <p class="sf-card-value">{{ formatCurrency(overview.totalDue) }}</p>
-        </div>
-      </div>
-
-      <div class="sf-summary-card sf-card-paid">
-        <div class="sf-card-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path
-              d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-        </div>
-        <div class="sf-card-content">
-          <p class="sf-card-label">Amount Paid</p>
-          <p class="sf-card-value">{{ formatCurrency(overview.totalPaid) }}</p>
+        <div class="sf-stat-card__body">
+          <span class="sf-stat-card__label">Total Fees</span>
+          <span class="sf-stat-card__value">{{ overview.totalOriginal | paise : 'short' }}</span>
+          @if (overview.totalConcession > 0) {
+          <span class="sf-stat-card__concession">
+            <mat-icon>local_offer</mat-icon>
+            -{{ overview.totalConcession | paise : 'compact' }} concession
+          </span>
+          }
         </div>
       </div>
 
-      <div
-        class="sf-summary-card"
-        [class.sf-card-clear]="overview.balance <= 0"
-        [class.sf-card-balance]="overview.balance > 0"
-      >
-        <div class="sf-card-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <rect x="2" y="7" width="20" height="14" rx="2" />
-            <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" stroke-linecap="round" />
-          </svg>
+      <div class="sf-stat-card">
+        <div class="sf-stat-card__icon sf-stat-card__icon--info">
+          <mat-icon>pending_actions</mat-icon>
         </div>
-        <div class="sf-card-content">
-          <p class="sf-card-label">{{ overview.balance <= 0 ? 'Fully Paid' : 'Balance Due' }}</p>
-          <p class="sf-card-value">
-            {{ overview.balance <= 0 ? '✓ Cleared' : formatCurrency(overview.balance) }}
-          </p>
+        <div class="sf-stat-card__body">
+          <span class="sf-stat-card__label">Total Due</span>
+          <span class="sf-stat-card__value">{{ overview.totalDue | paise : 'short' }}</span>
         </div>
       </div>
-    </div>
 
-    <!-- ── Progress bar ───────────────────────────────── -->
-    <div class="sf-progress-wrap">
-      <div class="sf-progress-label">
-        <span>Payment Progress</span>
-        <span class="sf-progress-pct">{{ overview.collectionRate }}%</span>
+      <div class="sf-stat-card">
+        <div class="sf-stat-card__icon sf-stat-card__icon--success">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <div class="sf-stat-card__body">
+          <span class="sf-stat-card__label">Paid So Far</span>
+          <span class="sf-stat-card__value sf-stat-card__value--success">{{
+            overview.totalPaid | paise : 'short'
+          }}</span>
+        </div>
       </div>
-      <div class="sf-progress-track">
+
+      <div class="sf-stat-card" [class.sf-stat-card--alert]="overview.balance > 0">
         <div
-          class="sf-progress-fill"
-          [class.sf-fill-full]="overview.collectionRate === 100"
-          [style.width.%]="overview.collectionRate"
-        ></div>
+          class="sf-stat-card__icon"
+          [class.sf-stat-card__icon--error]="overview.balance > 0"
+          [class.sf-stat-card__icon--success]="overview.balance <= 0"
+        >
+          <mat-icon>{{ overview.balance > 0 ? 'warning' : 'done_all' }}</mat-icon>
+        </div>
+        <div class="sf-stat-card__body">
+          <span class="sf-stat-card__label">Balance Due</span>
+          <span
+            class="sf-stat-card__value"
+            [class.sf-stat-card__value--error]="overview.balance > 0"
+            [class.sf-stat-card__value--success]="overview.balance <= 0"
+          >
+            {{ overview.balance | paise : 'short' }}
+          </span>
+        </div>
       </div>
     </div>
+  </div>
 
-    <!-- ── Fee breakdown table ────────────────────────── -->
-    <div class="sf-section">
-      <h3 class="sf-section-title">Fee Breakdown</h3>
-      <div class="sf-table-wrap">
-        <table class="sf-table">
+  <!-- ── Standard Fees Section ────────────────────────────────────────── -->
+  @if (structureFees().length > 0) {
+  <div class="sf-section">
+    <button
+      class="sf-section__header"
+      (click)="toggleSection(overview.academicYearId, 'STRUCTURE')"
+    >
+      <div class="sf-section__header-icon sf-section__header-icon--primary">
+        <mat-icon>receipt_long</mat-icon>
+      </div>
+      <div class="sf-section__header-text">
+        <span class="sf-section__title">Standard Fees</span>
+        <span class="sf-section__subtitle">Class-level fees assigned by school</span>
+      </div>
+      <span class="sf-section__count">{{ structureFees().length }}</span>
+      <mat-icon
+        class="sf-section__chevron"
+        [class.rotated]="isSectionExpanded(overview.academicYearId, 'STRUCTURE')"
+      >
+        expand_more
+      </mat-icon>
+    </button>
+
+    @if (isSectionExpanded(overview.academicYearId, 'STRUCTURE')) {
+    <div class="sf-section__body">
+      <!-- Mobile: cards; Desktop: table -->
+      <div class="sf-fee-table-wrap">
+        <table class="sf-fee-table">
           <thead>
             <tr>
               <th>Fee Type</th>
-              <th class="sf-th-right">Amount</th>
-              <th class="sf-th-right">Paid</th>
-              <th class="sf-th-right">Balance</th>
-              <th>Due Date</th>
-              <th>Status</th>
+              <th>Month</th>
+              <th class="text-right">Original</th>
+              <th class="text-right">Concession</th>
+              <th class="text-right">Effective</th>
+              <th class="text-right">Paid</th>
+              <th class="text-right">Balance</th>
+              <th class="text-center">Due Date</th>
+              <th class="text-center">Status</th>
             </tr>
           </thead>
           <tbody>
-            @for (fee of overview.feeBreakdown; track fee.id) {
-            <tr class="sf-tr" [class.sf-tr-overdue]="fee.status === 'OVERDUE'">
+            @for (fee of structureFees(); track trackByFee($index, fee)) {
+            <tr
+              class="sf-fee-row"
+              [class.sf-fee-row--paid]="fee.status === 'PAID'"
+              [class.sf-fee-row--overdue]="fee.status === 'OVERDUE'"
+            >
               <td>
-                <div class="sf-fee-type">
-                  <span class="sf-fee-name">{{ formatFeeType(fee.feeType) }}</span>
-                  @if (fee.isMandatory) {
-                  <span class="sf-mandatory-dot" title="Mandatory"></span>
+                <div class="sf-fee-type-cell">
+                  <span class="sf-fee-type-chip">{{ fee.feeType }}</span>
+                  @if (!fee.isMandatory) {
+                  <span class="sf-optional-tag">Optional</span>
                   }
                 </div>
-                @if (fee.description) {
-                <span class="sf-fee-desc">{{ fee.description }}</span>
+              </td>
+              <td class="cell-muted">{{ formatMonth(fee.feeMonth) }}</td>
+              <td class="text-right amount-cell">{{ fee.originalAmount | paise : 'compact' }}</td>
+              <td class="text-right">
+                @if (fee.concessionAmount > 0) {
+                <span class="sf-concession-text" [matTooltip]="fee.concessionReason || ''">
+                  -{{ fee.concessionAmount | paise : 'compact' }}
+                </span>
+                } @else {
+                <span class="cell-muted">—</span>
                 }
               </td>
-              <td class="sf-td-right">{{ formatCurrency(fee.amount) }}</td>
-              <td class="sf-td-right sf-paid-amt">{{ formatCurrency(fee.amountPaid) }}</td>
-              <td class="sf-td-right" [class.sf-bal-zero]="fee.balance <= 0">
-                {{ fee.balance <= 0 ? '—' : formatCurrency(fee.balance) }}
+              <td class="text-right amount-cell">{{ fee.effectiveAmount | paise : 'compact' }}</td>
+              <td class="text-right amount-cell text-success">
+                {{ fee.amountPaid | paise : 'compact' }}
               </td>
-              <td class="sf-due-date" [class.sf-date-overdue]="isOverdue(fee.dueDate)">
+              <td class="text-right amount-cell" [class.text-error]="fee.balance > 0">
+                {{ fee.balance | paise : 'compact' }}
+              </td>
+              <td class="text-center cell-muted">
                 {{ fee.dueDate ? formatDate(fee.dueDate) : '—' }}
+                @if (fee.status === 'OVERDUE') {
+                <span class="sf-overdue-dot" matTooltip="Overdue"></span>
+                }
               </td>
-              <td>
-                <span class="sf-status-chip" [class]="'sf-status-' + fee.status.toLowerCase()">
-                  {{ fee.status }}
+              <td class="text-center">
+                <app-fee-status-badge [status]="fee.status" />
+              </td>
+            </tr>
+            @if (fee.concessionAmount > 0 && fee.concessionReason) {
+            <tr class="sf-concession-note-row">
+              <td colspan="9">
+                <span class="sf-concession-note">
+                  <mat-icon>local_offer</mat-icon>
+                  Concession: {{ fee.concessionReason }}
                 </span>
               </td>
             </tr>
-            }
+            } }
           </tbody>
         </table>
       </div>
-    </div>
 
-    <!-- ── Payment history ────────────────────────────── -->
-    @if (overview.recentPayments.length > 0) {
-    <div class="sf-section">
-      <h3 class="sf-section-title">Payment History</h3>
-      <div class="sf-payments-list">
-        @for (payment of overview.recentPayments; track payment.id) {
-        <div class="sf-payment-row">
-          <div class="sf-payment-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
+      <!-- Mobile card view -->
+      <div class="sf-fee-cards">
+        @for (fee of structureFees(); track trackByFee($index, fee)) {
+        <div
+          class="sf-fee-card"
+          [class.sf-fee-card--overdue]="fee.status === 'OVERDUE'"
+          [class.sf-fee-card--paid]="fee.status === 'PAID'"
+        >
+          <div class="sf-fee-card__top">
+            <span class="sf-fee-type-chip">{{ fee.feeType }}</span>
+            <app-fee-status-badge [status]="fee.status" />
           </div>
-          <div class="sf-payment-info">
-            <p class="sf-payment-label">{{ formatFeeType(payment.feeType) }}</p>
-            <p class="sf-payment-meta">
-              {{ formatDate(payment.paymentDate) }} &middot;
-              {{ formatMethod(payment.paymentMethod) }}
-            </p>
-            @if (payment.notes) {
-            <p class="sf-payment-notes">{{ payment.notes }}</p>
-            }
+          <div class="sf-fee-card__month">{{ formatMonth(fee.feeMonth) }}</div>
+          @if (fee.concessionAmount > 0) {
+          <div class="sf-fee-card__concession">
+            <mat-icon>local_offer</mat-icon>
+            Concession: -{{ fee.concessionAmount | paise : 'compact' }}
           </div>
-          <div class="sf-payment-right">
-            <p class="sf-payment-amount">{{ formatCurrency(payment.amountPaid) }}</p>
-            <p class="sf-payment-receipt">{{ payment.receiptNumber }}</p>
+          }
+          <div class="sf-fee-card__amounts">
+            <div class="sf-fee-card__amount-item">
+              <span class="sf-fee-card__amount-label">Due</span>
+              <span class="sf-fee-card__amount-value">{{
+                fee.effectiveAmount | paise : 'compact'
+              }}</span>
+            </div>
+            <div class="sf-fee-card__amount-item">
+              <span class="sf-fee-card__amount-label">Paid</span>
+              <span class="sf-fee-card__amount-value sf-fee-card__amount-value--success">{{
+                fee.amountPaid | paise : 'compact'
+              }}</span>
+            </div>
+            <div class="sf-fee-card__amount-item">
+              <span class="sf-fee-card__amount-label">Balance</span>
+              <span
+                class="sf-fee-card__amount-value"
+                [class.sf-fee-card__amount-value--error]="fee.balance > 0"
+                >{{ fee.balance | paise : 'compact' }}</span
+              >
+            </div>
           </div>
         </div>
         }
       </div>
     </div>
     }
-  </section>
+  </div>
+  }
+
+  <!-- ── Custom Fees (Transport / Hostel) Section ──────────────────────── -->
+  @if (assignmentFees().length > 0) {
+  <div class="sf-section">
+    <button
+      class="sf-section__header"
+      (click)="toggleSection(overview.academicYearId, 'ASSIGNMENT')"
+    >
+      <div class="sf-section__header-icon sf-section__header-icon--secondary">
+        <mat-icon>directions_bus</mat-icon>
+      </div>
+      <div class="sf-section__header-text">
+        <span class="sf-section__title">Custom Fees</span>
+        <span class="sf-section__subtitle">Transport, hostel &amp; other personal fees</span>
+      </div>
+      <span class="sf-section__count">{{ assignmentFees().length }}</span>
+      <mat-icon
+        class="sf-section__chevron"
+        [class.rotated]="isSectionExpanded(overview.academicYearId, 'ASSIGNMENT')"
+      >
+        expand_more
+      </mat-icon>
+    </button>
+
+    @if (isSectionExpanded(overview.academicYearId, 'ASSIGNMENT')) {
+    <div class="sf-section__body">
+      <div class="sf-fee-table-wrap">
+        <table class="sf-fee-table">
+          <thead>
+            <tr>
+              <th>Fee Type</th>
+              <th>Month</th>
+              <th class="text-right">Original</th>
+              <th class="text-right">Concession</th>
+              <th class="text-right">Effective</th>
+              <th class="text-right">Paid</th>
+              <th class="text-right">Balance</th>
+              <th>Description</th>
+              <th class="text-center">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (fee of assignmentFees(); track trackByFee($index, fee)) {
+            <tr
+              class="sf-fee-row"
+              [class.sf-fee-row--paid]="fee.status === 'PAID'"
+              [class.sf-fee-row--overdue]="fee.status === 'OVERDUE'"
+            >
+              <td>
+                <span class="sf-fee-type-chip sf-fee-type-chip--custom">{{ fee.feeType }}</span>
+              </td>
+              <td class="cell-muted">{{ formatMonth(fee.feeMonth) }}</td>
+              <td class="text-right amount-cell">{{ fee.originalAmount | paise : 'compact' }}</td>
+              <td class="text-right">
+                @if (fee.concessionAmount > 0) {
+                <span class="sf-concession-text" [matTooltip]="fee.concessionReason || ''">
+                  -{{ fee.concessionAmount | paise : 'compact' }}
+                </span>
+                } @else {
+                <span class="cell-muted">—</span>
+                }
+              </td>
+              <td class="text-right amount-cell">{{ fee.effectiveAmount | paise : 'compact' }}</td>
+              <td class="text-right amount-cell text-success">
+                {{ fee.amountPaid | paise : 'compact' }}
+              </td>
+              <td class="text-right amount-cell" [class.text-error]="fee.balance > 0">
+                {{ fee.balance | paise : 'compact' }}
+              </td>
+              <td class="cell-muted desc-cell">{{ fee.description || '—' }}</td>
+              <td class="text-center">
+                <app-fee-status-badge [status]="fee.status" />
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mobile cards -->
+      <div class="sf-fee-cards">
+        @for (fee of assignmentFees(); track trackByFee($index, fee)) {
+        <div
+          class="sf-fee-card sf-fee-card--custom"
+          [class.sf-fee-card--overdue]="fee.status === 'OVERDUE'"
+          [class.sf-fee-card--paid]="fee.status === 'PAID'"
+        >
+          <div class="sf-fee-card__top">
+            <span class="sf-fee-type-chip sf-fee-type-chip--custom">{{ fee.feeType }}</span>
+            <app-fee-status-badge [status]="fee.status" />
+          </div>
+          <div class="sf-fee-card__month">{{ formatMonth(fee.feeMonth) }}</div>
+          @if (fee.description) {
+          <p class="sf-fee-card__desc">{{ fee.description }}</p>
+          }
+          <div class="sf-fee-card__amounts">
+            <div class="sf-fee-card__amount-item">
+              <span class="sf-fee-card__amount-label">Due</span>
+              <span class="sf-fee-card__amount-value">{{
+                fee.effectiveAmount | paise : 'compact'
+              }}</span>
+            </div>
+            <div class="sf-fee-card__amount-item">
+              <span class="sf-fee-card__amount-label">Paid</span>
+              <span class="sf-fee-card__amount-value sf-fee-card__amount-value--success">{{
+                fee.amountPaid | paise : 'compact'
+              }}</span>
+            </div>
+            <div class="sf-fee-card__amount-item">
+              <span class="sf-fee-card__amount-label">Balance</span>
+              <span
+                class="sf-fee-card__amount-value"
+                [class.sf-fee-card__amount-value--error]="fee.balance > 0"
+                >{{ fee.balance | paise : 'compact' }}</span
+              >
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- ── Recent Payments Section ────────────────────────────────────────── -->
+  @if (overview.recentPayments.length > 0) {
+  <div class="sf-section">
+    <button class="sf-section__header" (click)="toggleSection(overview.academicYearId, 'PAYMENTS')">
+      <div class="sf-section__header-icon sf-section__header-icon--success">
+        <mat-icon>payments</mat-icon>
+      </div>
+      <div class="sf-section__header-text">
+        <span class="sf-section__title">Recent Payments</span>
+        <span class="sf-section__subtitle"
+          >Last {{ overview.recentPayments.length }} transaction{{
+            overview.recentPayments.length !== 1 ? 's' : ''
+          }}</span
+        >
+      </div>
+      <mat-icon
+        class="sf-section__chevron"
+        [class.rotated]="isSectionExpanded(overview.academicYearId, 'PAYMENTS')"
+      >
+        expand_more
+      </mat-icon>
+    </button>
+
+    @if (isSectionExpanded(overview.academicYearId, 'PAYMENTS')) {
+    <div class="sf-section__body">
+      <div class="sf-payment-list">
+        @for (p of overview.recentPayments; track trackByPayment($index, p)) {
+        <div class="sf-payment-row">
+          <div class="sf-payment-row__icon-wrap">
+            <mat-icon>receipt</mat-icon>
+          </div>
+          <div class="sf-payment-row__info">
+            <p class="sf-payment-row__fee-type">{{ p.feeType }}</p>
+            <p class="sf-payment-row__receipt">{{ p.receiptNumber }}</p>
+            @if (p.notes) {
+            <p class="sf-payment-row__notes">{{ p.notes }}</p>
+            }
+          </div>
+          <div class="sf-payment-row__right">
+            <span class="sf-payment-row__amount">{{ p.amountPaid | paise }}</span>
+            <span class="sf-payment-row__date">{{ formatDate(p.paymentDate) }}</span>
+            <span class="sf-payment-row__method">{{ p.paymentMethod }}</span>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- Fully paid congratulations state -->
+  @if (overview.balance <= 0 && overview.recentPayments.length > 0) {
+  <div class="sf-paid-banner">
+    <mat-icon>celebration</mat-icon>
+    <div>
+      <p class="sf-paid-banner__title">All fees paid for {{ overview.academicYearName }}!</p>
+      <p class="sf-paid-banner__sub">Great job keeping up with your fee payments.</p>
+    </div>
+  </div>
   } } }
 </div>

@@ -1,0 +1,83 @@
+// back-button.component.scss
+
+.back-btn {
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.18s ease;
+
+  &:hover:not([disabled]) .back-btn__icon {
+    transform: translateX(-3px);
+  }
+
+  &__icon {
+    font-size: 18px !important;
+    width: 18px !important;
+    height: 18px !important;
+    line-height: 1 !important;
+    transition: transform 0.18s ease;
+    flex-shrink: 0;
+  }
+}
+
+// ── Variant: icon + text (mat-stroked-button) ─────────────────────────────────
+
+.back-btn--text {
+  padding: 0 14px !important;
+  height: 38px !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  border-radius: var(--radius-sm) !important;
+  white-space: nowrap;
+
+  // Angular Material MDC places content inside this span —
+  // override it to flex-row so icon and label sit side by side
+  ::ng-deep .mdc-button__label {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px;
+    line-height: 1;
+  }
+
+  @media (max-width: 480px) {
+    padding: 0 10px !important;
+    height: 36px !important;
+    font-size: 0.82rem !important;
+  }
+}
+
+.mat-mdc-outlined-button>.mat-icon{
+    // margin-left: 0;
+    margin-right: 2px;
+  }
+
+// ── Variant: icon only ────────────────────────────────────────────────────────
+
+.back-btn--icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm) !important;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  padding: 0;
+
+  &:hover:not([disabled]) {
+    background: var(--color-hover);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+
+  &:active:not([disabled]) {
+    background: var(--color-active);
+    transform: scale(0.95);
+  }
+
+  @media (max-width: 480px) {
+    width: 34px;
+    height: 34px;
+  }
+}

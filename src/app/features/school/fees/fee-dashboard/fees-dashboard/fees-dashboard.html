@@ -1,0 +1,354 @@
+<!-- fees-dashboard.html -->
+<div class="dashboard-shell">
+  <!-- Page Header -->
+  <div class="dash-header">
+    <div class="dash-header__left">
+      <div class="dash-header__icon-wrap">
+        <mat-icon>account_balance_wallet</mat-icon>
+      </div>
+      <div>
+        <h1 class="dash-header__title">Fees Dashboard</h1>
+        <p class="dash-header__subtitle">School-wide fee collection overview</p>
+      </div>
+    </div>
+    <div class="dash-header__filters">
+      <mat-form-field appearance="outline" class="dash-filter-field">
+        <mat-label>Academic Year</mat-label>
+        <mat-select [ngModel]="selectedAcademicYearId()" (ngModelChange)="onYearChange($event)">
+          @for (y of academicYears(); track y.id) {
+          <mat-option [value]="y.id">
+            {{ y.name }}
+            @if (y.isCurrent) { <span class="current-tag">(Current)</span> }
+          </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="dash-filter-field">
+        <mat-label>Class-Section</mat-label>
+        <mat-select
+          [ngModel]="selectedClassSectionId()"
+          (ngModelChange)="onClassSectionChange($event)"
+        >
+          <mat-option [value]="null">All Classes</mat-option>
+          @for (cs of classSections(); track cs.id) {
+          <mat-option [value]="cs.id">{{ cs.className }} – {{ cs.sectionName }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (loadingDashboard()) {
+  <div class="dash-loading">
+    <mat-spinner diameter="40" />
+    <p>Loading dashboard…</p>
+  </div>
+  }
+
+  <!-- Error -->
+  @if (errorDashboard() && !loadingDashboard()) {
+  <div class="dash-error">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ errorDashboard() }}</p>
+    <button mat-stroked-button (click)="loadDashboard()">Retry</button>
+  </div>
+  }
+
+  <!-- Dashboard Content -->
+  @if (!loadingDashboard() && !errorDashboard() && dashboard(); as d) {
+
+  <!-- Grand Summary Strip -->
+  <div class="grand-summary">
+    <div class="grand-summary__item grand-summary__item--primary">
+      <div class="grand-summary__icon">
+        <mat-icon>receipt_long</mat-icon>
+      </div>
+      <div class="grand-summary__content">
+        <span class="grand-summary__label">Grand Total Assigned</span>
+        <span class="grand-summary__value">{{ d.grandTotalAssigned | paise : 'short' }}</span>
+      </div>
+    </div>
+    <div class="grand-summary__item grand-summary__item--success">
+      <div class="grand-summary__icon">
+        <mat-icon>check_circle</mat-icon>
+      </div>
+      <div class="grand-summary__content">
+        <span class="grand-summary__label">Total Collected</span>
+        <span class="grand-summary__value">{{ d.grandTotalCollected | paise : 'short' }}</span>
+      </div>
+    </div>
+    <div class="grand-summary__item grand-summary__item--warning">
+      <div class="grand-summary__icon">
+        <mat-icon>pending</mat-icon>
+      </div>
+      <div class="grand-summary__content">
+        <span class="grand-summary__label">Outstanding</span>
+        <span class="grand-summary__value">{{ d.grandTotalOutstanding | paise : 'short' }}</span>
+      </div>
+    </div>
+    <div class="grand-summary__item" [class.grand-summary__item--error]="d.totalOverdue > 0">
+      <div class="grand-summary__icon">
+        <mat-icon>warning</mat-icon>
+      </div>
+      <div class="grand-summary__content">
+        <span class="grand-summary__label">Total Overdue</span>
+        <span class="grand-summary__value">{{ d.totalOverdue | paise : 'short' }}</span>
+      </div>
+    </div>
+    <!-- Collection Rate Card -->
+    <div class="grand-summary__item grand-summary__item--rate">
+      <div class="grand-summary__icon">
+        <mat-icon>donut_large</mat-icon>
+      </div>
+      <div class="grand-summary__content">
+        <span class="grand-summary__label">Collection Rate</span>
+        <div class="rate-display">
+          <span class="rate-display__value">{{ d.collectionRate }}%</span>
+          <div class="rate-bar">
+            <div class="rate-bar__fill" [style.width.%]="d.collectionRate"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Today Collected -->
+    <div class="grand-summary__item grand-summary__item--today">
+      <div class="grand-summary__icon">
+        <mat-icon>today</mat-icon>
+      </div>
+      <div class="grand-summary__content">
+        <span class="grand-summary__label">Today Collected</span>
+        <span class="grand-summary__value">{{ d.todayCollected | paise : 'compact' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Two column layout: Standard Fees + Custom Fees -->
+  <div class="fees-split">
+    <!-- Standard Fees Card -->
+    <div class="fee-type-card fee-type-card--standard">
+      <div class="fee-type-card__header">
+        <mat-icon>receipt_long</mat-icon>
+        <h3>Standard Fees</h3>
+        <span class="fee-type-badge fee-type-badge--standard">Class-Section Level</span>
+      </div>
+      <div class="fee-type-card__stats">
+        <div class="fee-stat">
+          <span class="fee-stat__label">Assigned</span>
+          <span class="fee-stat__value">{{ d.totalEffectiveAssigned | paise : 'compact' }}</span>
+        </div>
+        <div class="fee-stat">
+          <span class="fee-stat__label">Collected</span>
+          <span class="fee-stat__value fee-stat__value--success">{{
+            d.totalCollected | paise : 'compact'
+          }}</span>
+        </div>
+        <div class="fee-stat">
+          <span class="fee-stat__label">Outstanding</span>
+          <span class="fee-stat__value fee-stat__value--warning">{{
+            d.totalOutstanding | paise : 'compact'
+          }}</span>
+        </div>
+        @if (d.totalConcession > 0) {
+        <div class="fee-stat">
+          <span class="fee-stat__label">Concessions</span>
+          <span class="fee-stat__value fee-stat__value--info"
+            >-{{ d.totalConcession | paise : 'compact' }}</span
+          >
+        </div>
+        }
+      </div>
+      <div class="fee-type-card__actions">
+        <button mat-stroked-button (click)="navigateTo('structures')">
+          <mat-icon>settings</mat-icon> Manage Structures
+        </button>
+        <button mat-stroked-button (click)="navigateTo('report')">
+          <mat-icon>bar_chart</mat-icon> View Report
+        </button>
+      </div>
+    </div>
+
+    <!-- Custom Fees Card -->
+    <div class="fee-type-card fee-type-card--custom">
+      <div class="fee-type-card__header">
+        <mat-icon>directions_bus</mat-icon>
+        <h3>Custom Fees</h3>
+        <span class="fee-type-badge fee-type-badge--custom">Transport / Hostel</span>
+      </div>
+      <div class="fee-type-card__stats">
+        <div class="fee-stat">
+          <span class="fee-stat__label">Assigned</span>
+          <span class="fee-stat__value">{{ d.totalCustomEffective | paise : 'compact' }}</span>
+        </div>
+        <div class="fee-stat">
+          <span class="fee-stat__label">Collected</span>
+          <span class="fee-stat__value fee-stat__value--success">{{
+            d.totalCustomCollected | paise : 'compact'
+          }}</span>
+        </div>
+        <div class="fee-stat">
+          <span class="fee-stat__label">Outstanding</span>
+          <span class="fee-stat__value fee-stat__value--warning">{{
+            d.totalCustomOutstanding | paise : 'compact'
+          }}</span>
+        </div>
+        @if (d.totalCustomConcession > 0) {
+        <div class="fee-stat">
+          <span class="fee-stat__label">Concessions</span>
+          <span class="fee-stat__value fee-stat__value--info"
+            >-{{ d.totalCustomConcession | paise : 'compact' }}</span
+          >
+        </div>
+        }
+      </div>
+      <div class="fee-type-card__actions">
+        <button mat-stroked-button (click)="navigateTo('concessions')">
+          <mat-icon>local_offer</mat-icon> View Concessions
+        </button>
+        <button mat-stroked-button (click)="navigateTo('ledger')">
+          <mat-icon>book</mat-icon> Student Ledger
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Collection Trend Chart -->
+  <div class="trend-card">
+    <div class="trend-card__header">
+      <div class="trend-card__title-row">
+        <mat-icon>trending_up</mat-icon>
+        <h3>Collection Trend</h3>
+        <span class="trend-card__subtitle">Last 30 days</span>
+      </div>
+    </div>
+
+    @if (loadingTrend()) {
+    <div class="trend-card__loading">
+      <mat-spinner diameter="28" />
+    </div>
+    } @else if (trend().length === 0) {
+    <div class="trend-card__empty">
+      <mat-icon>bar_chart</mat-icon>
+      <p>No collection data for the selected period</p>
+    </div>
+    } @else {
+    <div class="trend-chart">
+      @for (point of trend(); track point.date) {
+      <div
+        class="trend-bar-wrap"
+        [matTooltip]="formatTrendDate(point.date) + ' — ' + (point.amount | paise)"
+      >
+        <div class="trend-bar" [style.height.%]="trendBarHeight(point.amount)"></div>
+        <span class="trend-bar-label">{{ formatTrendDate(point.date) }}</span>
+      </div>
+      }
+    </div>
+    }
+  </div>
+
+  <!-- Class-Section Breakdown Table -->
+  <div class="breakdown-card">
+    <div class="breakdown-card__header">
+      <div class="breakdown-card__title-row">
+        <mat-icon>grid_view</mat-icon>
+        <h3>Class-Section Breakdown</h3>
+      </div>
+    </div>
+
+    @if (loadingBreakdown()) {
+    <div class="breakdown-loading">
+      <mat-spinner diameter="28" />
+    </div>
+    } @else if (breakdown().length === 0) {
+    <div class="breakdown-empty">
+      <mat-icon>class</mat-icon>
+      <p>No breakdown data available</p>
+    </div>
+    } @else {
+    <div class="breakdown-table-wrap">
+      <table class="breakdown-table">
+        <thead>
+          <tr>
+            <th>Class–Section</th>
+            <th class="text-right">Assigned</th>
+            <th class="text-right">Collected</th>
+            <th class="text-right">Outstanding</th>
+            <th>Collection %</th>
+            <th class="text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of breakdown(); track $index) {
+          <tr class="breakdown-row">
+            <td>
+              <div class="class-label">
+                <span class="class-badge">{{ row.className }}</span>
+                <span class="section-badge">{{ row.sectionName }}</span>
+              </div>
+            </td>
+            <td class="text-right amount-cell">{{ row.totalAssigned | paise : 'compact' }}</td>
+            <td class="text-right amount-cell text-success">
+              {{ row.totalCollected | paise : 'compact' }}
+            </td>
+            <td
+              class="text-right amount-cell"
+              [class.text-error]="row.totalAssigned - row.totalCollected > 0"
+            >
+              {{ row.totalAssigned - row.totalCollected | paise : 'compact' }}
+            </td>
+            <td>
+              <div class="breakdown-rate">
+                <div class="breakdown-rate__bar">
+                  <div
+                    class="breakdown-rate__fill"
+                    [style.width.%]="breakdownCollectionRate(row)"
+                    [class.breakdown-rate__fill--good]="breakdownCollectionRate(row) >= 80"
+                    [class.breakdown-rate__fill--warn]="
+                      breakdownCollectionRate(row) >= 50 && breakdownCollectionRate(row) < 80
+                    "
+                    [class.breakdown-rate__fill--bad]="breakdownCollectionRate(row) < 50"
+                  ></div>
+                </div>
+                <span class="breakdown-rate__pct">{{ breakdownCollectionRate(row) }}%</span>
+              </div>
+            </td>
+            <td class="text-center">
+              <button
+                mat-icon-button
+                matTooltip="View Report"
+                class="breakdown-action-btn"
+                (click)="navigateToReport(row)"
+              >
+                <mat-icon>open_in_new</mat-icon>
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </div>
+
+  <!-- Quick Nav Cards -->
+  <div class="quick-nav">
+    <button class="quick-nav-card" (click)="navigateTo('structures')">
+      <mat-icon>receipt_long</mat-icon>
+      <span>Fee Structures</span>
+    </button>
+    <button class="quick-nav-card" (click)="navigateTo('report')">
+      <mat-icon>bar_chart</mat-icon>
+      <span>Fee Report</span>
+    </button>
+    <button class="quick-nav-card" (click)="navigateTo('concessions')">
+      <mat-icon>local_offer</mat-icon>
+      <span>Concessions</span>
+    </button>
+    <button class="quick-nav-card" (click)="navigateTo('ledger')">
+      <mat-icon>book</mat-icon>
+      <span>Student Ledger</span>
+    </button>
+  </div>
+  }
+</div>

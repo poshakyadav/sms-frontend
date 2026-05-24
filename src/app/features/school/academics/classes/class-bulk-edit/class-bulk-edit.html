@@ -1,0 +1,219 @@
+<!-- class-bulk-edit.html -->
+<div class="edit-page">
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <header class="edit-header">
+    <div class="edit-header__left">
+      <button
+        mat-icon-button
+        class="back-btn"
+        (click)="router.navigate(['/school/academics/classes'])"
+        matTooltip="Back to Classes"
+      >
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <h1>Bulk Edit Classes</h1>
+        <p class="subtitle">Edit all classes at once. Only changed rows will be saved.</p>
+      </div>
+    </div>
+
+    <div class="edit-header__actions">
+      @if (hasChanges()) {
+      <div class="change-badge">
+        <mat-icon>edit_note</mat-icon>
+        {{ dirtyCount() }} unsaved change{{ dirtyCount() !== 1 ? 's' : '' }}
+      </div>
+      <button mat-stroked-button (click)="resetAll()">
+        <mat-icon>restart_alt</mat-icon>
+        Reset All
+      </button>
+      }
+
+      <button
+        mat-raised-button
+        color="primary"
+        [disabled]="!hasChanges() || form.invalid || submitting()"
+        (click)="submit()"
+      >
+        <!-- FIX: each branch is self-contained with icon + text inside btn-content
+               so Material MDC's flex label always has both nodes together. -->
+        <span class="btn-content">
+          @if (submitting()) {
+          <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+          <span>Saving…</span>
+          } @else {
+          <mat-icon>save</mat-icon>
+          <span>
+            Save Changes @if (hasChanges()) {
+            <span class="save-count">({{ dirtyCount() }})</span>
+            }
+          </span>
+          }
+        </span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Loading ────────────────────────────────────────────────────────── -->
+  @if (loading()) {
+  <div class="state-container">
+    <mat-spinner diameter="44"></mat-spinner>
+    <p>Loading classes…</p>
+  </div>
+  }
+
+  <!-- ── Error ──────────────────────────────────────────────────────────── -->
+  @else if (error()) {
+  <div class="state-container state-container--error">
+    <mat-icon class="state-icon">error_outline</mat-icon>
+    <h2>Could not load classes</h2>
+    <p>{{ error() }}</p>
+    <button mat-raised-button color="primary" (click)="loadClasses()">Retry</button>
+  </div>
+  }
+
+  <!-- ── Empty ──────────────────────────────────────────────────────────── -->
+  @else if (rows.length === 0) {
+  <div class="state-container">
+    <mat-icon class="state-icon">school</mat-icon>
+    <h2>No Classes Found</h2>
+    <p>Create some classes first using the Bulk Create feature.</p>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="router.navigate(['/school/academics/classes/bulk-create'])"
+    >
+      <span class="btn-content">
+        <mat-icon>add</mat-icon>
+        <span>Bulk Create Classes</span>
+      </span>
+    </button>
+  </div>
+  }
+
+  <!-- ── Edit table ─────────────────────────────────────────────────────── -->
+  @else {
+  <div class="table-card">
+    <!-- Column headers -->
+    <div class="table-head">
+      <div class="th th--status"></div>
+      <div class="th th--id">ID</div>
+      <div class="th th--name">Class Name <span class="required-star">*</span></div>
+      <div class="th th--level">
+        Level
+        <span class="th-hint">(0 = Pre-Primary, 1–15)</span>
+      </div>
+      <div class="th th--sort">Sort Order</div>
+      <div class="th th--actions"></div>
+    </div>
+
+    <!-- Rows -->
+    <div class="table-body" [formGroup]="form">
+      <ng-container formArrayName="rows">
+        @for (row of rows.controls; track trackById($index, row)) {
+        <div
+          class="table-row"
+          [class.table-row--dirty]="isRowDirty($index)"
+          [class.table-row--invalid]="row.invalid && row.touched"
+          [formGroupName]="$index"
+        >
+          <!-- Dirty indicator -->
+          <div class="td td--status">
+            @if (isRowDirty($index)) {
+            <span class="dirty-dot" matTooltip="Unsaved changes"></span>
+            }
+          </div>
+
+          <!-- ID badge -->
+          <div class="td td--id">
+            <span class="id-badge">#{{ row.get('id')?.value }}</span>
+          </div>
+
+          <!-- Name -->
+          <div class="td td--name">
+            <mat-form-field appearance="outline" class="field-full">
+              <input
+                matInput
+                formControlName="name"
+                placeholder="Class name"
+                [attr.aria-label]="'Name for class ' + row.get('id')?.value"
+              />
+              @if (fieldError(row.get('name'), 'required')) {
+              <mat-error>Name is required</mat-error>
+              } @if (fieldError(row.get('name'), 'maxlength')) {
+              <mat-error>Max 50 characters</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <!-- Level -->
+          <div class="td td--level">
+            <mat-form-field appearance="outline" class="field-full">
+              <input matInput type="number" formControlName="level" min="0" max="15" />
+              @if (fieldError(row.get('level'), 'min') || fieldError(row.get('level'), 'max')) {
+              <mat-error>0 – 15</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <!-- Sort Order -->
+          <div class="td td--sort">
+            <mat-form-field appearance="outline" class="field-full">
+              <input matInput type="number" formControlName="sort_order" min="0" max="100" />
+            </mat-form-field>
+          </div>
+
+          <!-- Actions -->
+          <div class="td td--actions">
+            @if (isRowDirty($index)) {
+            <button
+              mat-icon-button
+              type="button"
+              (click)="resetRow($index)"
+              matTooltip="Undo changes to this row"
+              class="reset-btn"
+            >
+              <mat-icon>undo</mat-icon>
+            </button>
+            }
+          </div>
+        </div>
+        }
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- ── Bottom save bar ──────────────────────────────────────────────── -->
+  <div class="submit-bar">
+    <p class="submit-hint">
+      @if (hasChanges()) {
+      <mat-icon class="hint-icon">info</mat-icon>
+      Only {{ dirtyCount() }} changed row{{ dirtyCount() !== 1 ? 's' : '' }} will be sent to the
+      server. } @else {
+      <mat-icon class="hint-icon">check_circle</mat-icon>
+      No changes yet — edit any row above to enable save. }
+    </p>
+    <div class="submit-bar__btns">
+      <button mat-stroked-button (click)="router.navigate(['/school/academics/classes'])">
+        Cancel
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        [disabled]="!hasChanges() || form.invalid || submitting()"
+        (click)="submit()"
+      >
+        <span class="btn-content">
+          @if (submitting()) {
+          <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+          <span>Saving…</span>
+          } @else {
+          <mat-icon>save</mat-icon>
+          <span>Save Changes</span>
+          }
+        </span>
+      </button>
+    </div>
+  </div>
+  }
+</div>

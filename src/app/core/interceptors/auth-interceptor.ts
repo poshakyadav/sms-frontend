@@ -1,5 +1,4 @@
 // src/app/core/interceptors/auth-interceptor.ts
-// Passes X-Active-Child-Id header automatically for parent-facing API calls
 
 import {
   HttpInterceptorFn,
@@ -8,10 +7,58 @@ import {
   HttpErrorResponse,
 } from '@angular/common/http';
 import { inject, PLATFORM_ID } from '@angular/core';
-import { catchError, switchMap, throwError } from 'rxjs';
+import { catchError, filter, switchMap, take, throwError, BehaviorSubject, Observable } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { ParentService } from '../services/parent.service';
 import { isPlatformBrowser } from '@angular/common';
+
+// ── Module-level refresh state (shared across all interceptor invocations) ───
+// These MUST be outside the function so all concurrent requests share the same
+// queue. If declared inside the fn, each request gets its own copy.
+let isRefreshing = false;
+const refreshToken$ = new BehaviorSubject<string | null>(null);
+
+// ── Helper: build headers object ─────────────────────────────────────────────
+function buildHeaders(
+  token: string,
+  req: HttpRequest<unknown>,
+  auth: AuthService,
+  parentService: ParentService
+): Record<string, string> {
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token}`,
+  };
+
+  const schoolCode = auth.getSchoolCode();
+  if (schoolCode && req.url.includes('school/')) {
+    headers['X-School-Code'] = schoolCode;
+  }
+
+  if (
+    auth.userRole() === 'STUDENT_PARENT' &&
+    req.url.includes('school/') &&
+    !req.url.includes('/auth/')
+  ) {
+    const activeChildId = parentService.activeChildId();
+    if (activeChildId !== null) {
+      headers['X-Active-Child-Id'] = String(activeChildId);
+    }
+  }
+
+  return headers;
+}
+
+// ── Helper: clone request with new token ─────────────────────────────────────
+function addToken(
+  req: HttpRequest<unknown>,
+  token: string,
+  auth: AuthService,
+  parentService: ParentService
+): HttpRequest<unknown> {
+  return req.clone({
+    setHeaders: buildHeaders(token, req, auth, parentService),
+  });
+}
 
 export const authInterceptor: HttpInterceptorFn = (
   req: HttpRequest<unknown>,
@@ -19,93 +66,69 @@ export const authInterceptor: HttpInterceptorFn = (
 ) => {
   const auth = inject(AuthService);
   const parentService = inject(ParentService);
-
   const platformId = inject(PLATFORM_ID);
 
-  // ── SSR guard: never attempt token attachment on the server ─────────────
-  // On the server there is no localStorage, so getAccessToken() returns null
-  // and the request goes out unauthenticated. That unauthenticated response
-  // then gets transfer-cached and re-used in the browser, making it look like
-  // every authenticated request returns empty data.
+  // ── SSR guard ────────────────────────────────────────────────────────────
   if (!isPlatformBrowser(platformId)) {
     return next(req);
   }
 
-  // ── Build headers ────────────────────────────────────────────────────────
+  // ── Attach token to outgoing request ─────────────────────────────────────
   const token = auth.getAccessToken();
-  let authReq = req;
-
-  if (token) {
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${token}`,
-    };
-
-    // School requests need X-School-Code header (required for refresh endpoint)
-    const schoolCode = auth.getSchoolCode();
-    if (schoolCode && req.url.includes('school/')) {
-      headers['X-School-Code'] = schoolCode;
-    }
-
-    // Pass X-Active-Child-Id for parent-facing API calls.
-    // This allows the backend to scope data to the currently selected child
-    // without requiring the parent to pass studentId in every request body.
-    // Only attached when:
-    //   1. The user role is STUDENT_PARENT
-    //   2. There is an active child selected
-    //   3. The request is to a school endpoint
-    if (
-      auth.userRole() === 'STUDENT_PARENT' &&
-      req.url.includes('school/') &&
-      !req.url.includes('/auth/')
-    ) {
-      const activeChildId = parentService.activeChildId();
-      if (activeChildId !== null) {
-        headers['X-Active-Child-Id'] = String(activeChildId);
-      }
-    }
-
-    authReq = req.clone({ setHeaders: headers });
-  }
+  const authReq = token ? addToken(req, token, auth, parentService) : req;
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      // ── 401: Token expired → attempt refresh ──────────────────────────
+      // ── Only handle 401s, and never for auth endpoints ───────────────────
       if (
-        error.status === 401 &&
-        !req.url.includes('/auth/login') &&
-        !req.url.includes('/auth/refresh')
+        error.status !== 401 ||
+        req.url.includes('/auth/login') ||
+        req.url.includes('/auth/refresh')
       ) {
-        return auth.refresh().pipe(
-          switchMap((refreshRes: any) => {
-            const newToken = refreshRes.access_token ?? auth.getAccessToken();
-            const schoolCode = auth.getSchoolCode();
-            const activeChildId = parentService.activeChildId();
-
-            const retryHeaders: Record<string, string> = {
-              Authorization: `Bearer ${newToken}`,
-            };
-
-            if (schoolCode && req.url.includes('school/')) {
-              retryHeaders['X-School-Code'] = schoolCode;
-            }
-
-            if (
-              auth.userRole() === 'STUDENT_PARENT' &&
-              req.url.includes('school/') &&
-              !req.url.includes('/auth/') &&
-              activeChildId !== null
-            ) {
-              retryHeaders['X-Active-Child-Id'] = String(activeChildId);
-            }
-
-            const retryReq = req.clone({ setHeaders: retryHeaders });
-            return next(retryReq);
-          }),
-          catchError((refreshErr) => throwError(() => refreshErr))
-        );
+        return throwError(() => error);
       }
 
-      return throwError(() => error);
+      return handle401(req, next, auth, parentService);
     })
   );
 };
+
+// ── Core refresh + retry logic ───────────────────────────────────────────────
+function handle401(
+  req: HttpRequest<unknown>,
+  next: HttpHandlerFn,
+  auth: AuthService,
+  parentService: ParentService
+): Observable<any> {
+  if (isRefreshing) {
+    // ── Queue: wait for the in-progress refresh to complete, then retry ────
+    // filter(Boolean) skips the initial null and the null emitted when refresh
+    // starts, so queued requests only unblock once a real token arrives.
+    return refreshToken$.pipe(
+      filter((token): token is string => token !== null),
+      take(1),
+      switchMap((newToken) => next(addToken(req, newToken, auth, parentService)))
+    );
+  }
+
+  // ── This request is the first 401 — start the refresh ───────────────────
+  isRefreshing = true;
+  refreshToken$.next(null); // signal "refresh in progress" to queued requests
+
+  return auth.refresh().pipe(
+    switchMap((res: any) => {
+      isRefreshing = false;
+      const newToken = res.access_token ?? auth.getAccessToken()!;
+      refreshToken$.next(newToken); // unblock all queued requests
+      return next(addToken(req, newToken, auth, parentService));
+    }),
+    catchError((refreshErr) => {
+      // ── Refresh failed: reset state, logout immediately ──────────────────
+      // auth.logout() navigates to /login, so the user never sees a broken page.
+      isRefreshing = false;
+      refreshToken$.next(null);
+      auth.logout(); // clears localStorage + navigates to /login
+      return throwError(() => refreshErr);
+    })
+  );
+}

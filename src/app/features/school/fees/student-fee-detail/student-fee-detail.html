@@ -1,0 +1,378 @@
+<!-- student-fee-detail.html -->
+<div class="sfd-page">
+  <!-- ── Page Header ──────────────────────────────────────────────────────── -->
+  <div class="sfd-header">
+    <button class="sfd-back-btn" (click)="clearSearch()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div class="sfd-header__text">
+      <h1 class="sfd-title">Student Fee Management</h1>
+      <p class="sfd-subtitle">
+        Search a student to manage their fees, assignments, and concessions
+      </p>
+    </div>
+    @if (selectedStudent() && selectedEnrollment()?.id) {
+    <div class="sfd-header__actions">
+      <button
+        mat-stroked-button
+        class="sfd-action-btn sfd-action-btn--concession"
+        (click)="openAddConcession()"
+      >
+        <mat-icon>local_offer</mat-icon>
+        Add Concession
+      </button>
+      <button mat-flat-button color="primary" class="sfd-action-btn" (click)="openRecordPayment()">
+        <mat-icon>payments</mat-icon>
+        Record Payment
+      </button>
+    </div>
+    }
+  </div>
+
+  <!-- ── Search Bar ─────────────────────────────────────────────────────────── -->
+  <div class="sfd-search-card">
+    <div class="sfd-search-wrap" [class.sfd-search-wrap--focused]="showDropdown()">
+      <div class="sfd-search-field">
+        <mat-icon class="sfd-search-icon">
+          @if (searching()) { sync } @else { person_search }
+        </mat-icon>
+        <input
+          class="sfd-search-input"
+          placeholder="Search student by name or email…"
+          [value]="searchQuery()"
+          (input)="onSearchInput($any($event.target).value)"
+          (focus)="showDropdown.set(students().length > 0)"
+          (blur)="closeDropdown()"
+          autocomplete="off"
+        />
+        @if (searchQuery()) {
+        <button class="sfd-search-clear" (click)="clearSearch()">
+          <mat-icon>close</mat-icon>
+        </button>
+        }
+      </div>
+
+      <!-- Student Dropdown -->
+      @if (showDropdown() && students().length > 0) {
+      <div class="sfd-dropdown">
+        @for (s of students(); track trackByStudent($index, s)) {
+        <button class="sfd-dropdown-item" (mousedown)="selectStudent(s)">
+          <div class="sfd-dropdown-avatar">
+            {{ s.name.charAt(0).toUpperCase() }}
+          </div>
+          <div class="sfd-dropdown-info">
+            <span class="sfd-dropdown-name">{{ s.name }}</span>
+            <span class="sfd-dropdown-email">{{ s.email }}</span>
+          </div>
+          <mat-icon class="sfd-dropdown-arrow">chevron_right</mat-icon>
+        </button>
+        }
+      </div>
+      } @if (showDropdown() && searchQuery().trim() && students().length === 0 && !searching()) {
+      <div class="sfd-dropdown sfd-dropdown--empty">
+        <mat-icon>search_off</mat-icon>
+        <span>No students found for "{{ searchQuery() }}"</span>
+      </div>
+      }
+    </div>
+
+    <!-- Search hint -->
+    @if (!selectedStudent()) {
+    <p class="sfd-search-hint">
+      <mat-icon>info_outline</mat-icon>
+      Type at least 2 characters to search
+    </p>
+    }
+  </div>
+
+  <!-- ── Placeholder ────────────────────────────────────────────────────────── -->
+  @if (!selectedStudent()) {
+  <div class="sfd-placeholder">
+    <div class="sfd-placeholder__icon">
+      <mat-icon>manage_accounts</mat-icon>
+    </div>
+    <h2 class="sfd-placeholder__title">Select a student to get started</h2>
+    <p class="sfd-placeholder__sub">
+      Search by name or email to view and manage a student's complete fee profile — fee assignments,
+      concessions, payment history, and outstanding dues.
+    </p>
+
+    <div class="sfd-placeholder__features">
+      <div class="sfd-feature">
+        <div class="sfd-feature__icon sfd-feature__icon--primary">
+          <mat-icon>add_road</mat-icon>
+        </div>
+        <div class="sfd-feature__text">
+          <span class="sfd-feature__label">Custom Fee Assignments</span>
+          <span class="sfd-feature__desc">Transport, hostel, sports, and more</span>
+        </div>
+      </div>
+      <div class="sfd-feature">
+        <div class="sfd-feature__icon sfd-feature__icon--success">
+          <mat-icon>local_offer</mat-icon>
+        </div>
+        <div class="sfd-feature__text">
+          <span class="sfd-feature__label">Concessions</span>
+          <span class="sfd-feature__desc">Percentage or fixed discounts</span>
+        </div>
+      </div>
+      <div class="sfd-feature">
+        <div class="sfd-feature__icon sfd-feature__icon--info">
+          <mat-icon>receipt_long</mat-icon>
+        </div>
+        <div class="sfd-feature__text">
+          <span class="sfd-feature__label">Payment History</span>
+          <span class="sfd-feature__desc">All receipts with void option</span>
+        </div>
+      </div>
+      <div class="sfd-feature">
+        <div class="sfd-feature__icon sfd-feature__icon--warning">
+          <mat-icon>pending_actions</mat-icon>
+        </div>
+        <div class="sfd-feature__text">
+          <span class="sfd-feature__label">Due Fees</span>
+          <span class="sfd-feature__desc">Real-time outstanding balance</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- ── Student Selected: Loading Enrollments ─────────────────────────────── -->
+  @if (selectedStudent() && loadingEnrollments()) {
+  <div class="sfd-loading">
+    <mat-spinner diameter="36" />
+    <p>Loading {{ selectedStudent()!.name }}'s fee records…</p>
+  </div>
+  }
+
+  <!-- ── Student Selected: Error ────────────────────────────────────────────── -->
+  @if (selectedStudent() && errorEnrollments() && !loadingEnrollments()) {
+  <div class="sfd-error">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ errorEnrollments() }}</p>
+    <!-- FIX: was referencing private method; now calls the public loadStudentById -->
+    <button mat-stroked-button (click)="loadStudentById(selectedStudent()!.id)">Retry</button>
+  </div>
+  }
+
+  <!-- ── Student Selected: No Enrollments ──────────────────────────────────── -->
+  @if (selectedStudent() && !loadingEnrollments() && !errorEnrollments() && enrollments().length ===
+  0) {
+  <div class="sfd-no-enrollments">
+    <div class="sfd-no-enrollments__avatar">
+      {{ selectedStudent()!.name.charAt(0).toUpperCase() }}
+    </div>
+    <h2>{{ selectedStudent()!.name }}</h2>
+    <p class="sfd-no-enrollments__sub">{{ selectedStudent()!.email }}</p>
+    <div class="sfd-no-enrollments__msg">
+      <mat-icon>school</mat-icon>
+      <span>This student has no active enrollments. Enroll the student in a class first.</span>
+    </div>
+  </div>
+  }
+
+  <!-- ── Main Content ───────────────────────────────────────────────────────── -->
+  @if (selectedStudent() && !loadingEnrollments() && enrollments().length > 0) {
+
+  <!-- Student Identity Banner -->
+  <div class="sfd-student-banner">
+    <div class="sfd-student-banner__avatar">
+      {{ selectedStudent()!.name.charAt(0).toUpperCase() }}
+    </div>
+    <div class="sfd-student-banner__info">
+      <h2 class="sfd-student-banner__name">{{ selectedStudent()!.name }}</h2>
+      <p class="sfd-student-banner__email">{{ selectedStudent()!.email }}</p>
+    </div>
+    <!-- Enrollment Year Pills -->
+    <div class="sfd-enrollment-pills">
+      @for (e of enrollments(); track trackByEnrollment($index, e)) {
+      <button
+        class="sfd-enrollment-pill"
+        [class.sfd-enrollment-pill--active]="
+          selectedEnrollment()?.academicYearId === e.academicYearId
+        "
+        [class.sfd-enrollment-pill--no-id]="e.id === null"
+        (click)="selectEnrollment(e)"
+      >
+        <span class="sfd-enrollment-pill__year">{{ e.academicYearName }}</span>
+        <span class="sfd-enrollment-pill__class">{{ e.className }}–{{ e.sectionName }}</span>
+        @if (e.balance > 0) {
+        <span class="sfd-enrollment-pill__badge sfd-enrollment-pill__badge--due">
+          {{ e.balance | paise : 'compact' }} due
+        </span>
+        } @else {
+        <span class="sfd-enrollment-pill__badge sfd-enrollment-pill__badge--paid"> Paid </span>
+        }
+      </button>
+      }
+    </div>
+  </div>
+
+  <!-- Active Enrollment Detail -->
+  @if (selectedEnrollment(); as enrollment) {
+  <div class="sfd-enrollment-detail">
+    <!-- Enrollment Summary Strip -->
+    <div class="sfd-summary-strip">
+      <div class="sfd-summary-strip__item">
+        <div class="sfd-summary-strip__icon sfd-summary-strip__icon--primary">
+          <mat-icon>school</mat-icon>
+        </div>
+        <div class="sfd-summary-strip__content">
+          <span class="sfd-summary-strip__label">Class</span>
+          <span class="sfd-summary-strip__value">
+            {{ enrollment.className }}–{{ enrollment.sectionName }}
+            @if (enrollment.rollNumber) {
+            <span class="sfd-roll-chip">{{ enrollment.rollNumber }}</span>
+            }
+          </span>
+        </div>
+      </div>
+      <div class="sfd-summary-strip__item">
+        <div class="sfd-summary-strip__icon sfd-summary-strip__icon--info">
+          <mat-icon>receipt_long</mat-icon>
+        </div>
+        <div class="sfd-summary-strip__content">
+          <span class="sfd-summary-strip__label">Total Due</span>
+          <span class="sfd-summary-strip__value">{{
+            enrollment.totalDue | paise : 'compact'
+          }}</span>
+        </div>
+      </div>
+      <div class="sfd-summary-strip__item">
+        <div class="sfd-summary-strip__icon sfd-summary-strip__icon--success">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <div class="sfd-summary-strip__content">
+          <span class="sfd-summary-strip__label">Collected</span>
+          <span class="sfd-summary-strip__value sfd-summary-strip__value--success">
+            {{ enrollment.totalPaid | paise : 'compact' }}
+          </span>
+        </div>
+      </div>
+      <div
+        class="sfd-summary-strip__item"
+        [class.sfd-summary-strip__item--alert]="enrollment.balance > 0"
+      >
+        <div
+          class="sfd-summary-strip__icon"
+          [class.sfd-summary-strip__icon--error]="enrollment.balance > 0"
+          [class.sfd-summary-strip__icon--success]="enrollment.balance <= 0"
+        >
+          <mat-icon>{{ enrollment.balance > 0 ? 'warning' : 'done_all' }}</mat-icon>
+        </div>
+        <div class="sfd-summary-strip__content">
+          <span class="sfd-summary-strip__label">Balance</span>
+          <span
+            class="sfd-summary-strip__value"
+            [class.sfd-summary-strip__value--error]="enrollment.balance > 0"
+            [class.sfd-summary-strip__value--success]="enrollment.balance <= 0"
+          >
+            {{ enrollment.balance | paise : 'compact' }}
+          </span>
+        </div>
+      </div>
+      <!-- Collection Rate mini-bar -->
+      <div class="sfd-rate-item">
+        <span class="sfd-rate-item__label">Collection Rate</span>
+        <div class="sfd-rate-bar-wrap">
+          <div class="sfd-rate-bar">
+            <div
+              class="sfd-rate-bar__fill"
+              [style.width.%]="enrollment.collectionRate"
+              [style.background]="getCollectionRateColor(enrollment.collectionRate)"
+            ></div>
+          </div>
+          <span
+            class="sfd-rate-bar__pct"
+            [style.color]="getCollectionRateColor(enrollment.collectionRate)"
+          >
+            {{ enrollment.collectionRate }}%
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FIX: guard tabs on valid enrollmentId — without it, child components
+               receive null and make requests to /due-fees/null, /assignments/null etc. -->
+    @if (enrollment.id !== null) {
+
+    <!-- Tabbed Panels -->
+    <mat-tab-group class="sfd-tab-group" animationDuration="200ms" disableRipple>
+      <!-- Tab 1: Due Fees -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="sfd-tab-icon">pending_actions</mat-icon>
+          Due Fees @if (enrollment.balance > 0) {
+          <span class="sfd-tab-badge sfd-tab-badge--error">
+            {{ enrollment.balance | paise : 'compact' }}
+          </span>
+          }
+        </ng-template>
+        <div class="sfd-tab-content">
+          <app-due-fees-panel
+            [enrollmentId]="enrollment.id"
+            [showPayButton]="true"
+            (payNow)="onPayNow($event)"
+          />
+        </div>
+      </mat-tab>
+
+      <!-- Tab 2: Custom Fee Assignments -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="sfd-tab-icon">add_road</mat-icon>
+          Custom Fees
+        </ng-template>
+        <div class="sfd-tab-content sfd-tab-content--flush">
+          <app-assignments-list
+            [enrollmentId]="enrollment.id"
+            [studentName]="selectedStudent()!.name"
+            [academicYearId]="enrollment.academicYearId"
+            [canManage]="true"
+            [canPay]="true"
+            (changed)="onAssignmentsChanged()"
+          />
+        </div>
+      </mat-tab>
+
+      <!-- Tab 3: Concessions -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="sfd-tab-icon">local_offer</mat-icon>
+          Concessions
+        </ng-template>
+        <div class="sfd-tab-content sfd-tab-content--flush">
+          <app-concessions-list
+            [enrollmentId]="enrollment.id"
+            [canRevoke]="true"
+            (revoked)="onAssignmentsChanged()"
+          />
+        </div>
+      </mat-tab>
+
+      <!-- Tab 4: Payment History -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="sfd-tab-icon">receipt_long</mat-icon>
+          Payment History
+        </ng-template>
+        <div class="sfd-tab-content sfd-tab-content--flush">
+          <app-payment-history [enrollmentId]="enrollment.id" [canVoid]="true" />
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+
+    } @else {
+    <!-- No enrollment ID: ledger data exists but can't drill into sub-panels -->
+    <div class="sfd-no-enrollment-id">
+      <mat-icon>info_outline</mat-icon>
+      <p>
+        Fee summary is available above, but detailed management requires an active enrollment
+        record. The student may have been unenrolled.
+      </p>
+    </div>
+    }
+  </div>
+  } }
+</div>

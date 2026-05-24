@@ -1,183 +1,242 @@
-<div class="fee-form-page">
-  <!-- ── Header ─────────────────────────────────────────────────────── -->
-  <div class="page-header">
-    <div class="header-left">
-      <h1>{{ isEdit() ? 'Edit' : 'New' }} Fee Structure</h1>
-      <p>
-        {{
-          isEdit()
-            ? 'Update fee details for this class-section'
-            : 'Define a new fee for a class-section'
-        }}
+<!-- fee-structure-form.html -->
+<div class="modal-shell">
+  <!-- Header -->
+  <div class="modal-header">
+    <div class="modal-header__icon">
+      <mat-icon>{{ isEdit ? 'edit' : 'add_circle' }}</mat-icon>
+    </div>
+    <div class="modal-header__content">
+      <h2 class="modal-title">{{ isEdit ? 'Edit Fee Structure' : 'Add Fee Structure' }}</h2>
+      <p class="modal-subtitle">
+        {{ isEdit ? 'Update the fee details below' : 'Define a new fee for a class-section' }}
       </p>
     </div>
-    <div class="header-actions">
-      <button mat-stroked-button (click)="router.navigate(['/school/fees/structures'])">
-        <mat-icon>arrow_back</mat-icon> Back
-      </button>
-    </div>
+    <button mat-icon-button class="modal-close" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
   </div>
 
-  @if (pageLoading()) {
-  <div class="loading-overlay">
-    <mat-spinner diameter="44"></mat-spinner>
-    <p>Loading…</p>
-  </div>
-  } @else {
-
-  <div class="form-card">
-    <form [formGroup]="form" (ngSubmit)="onSubmit()">
-      <!-- ── Section: Academic Context ────────────────────────────── -->
-      <div class="form-section">
-        <div class="form-section-title">Academic Context</div>
-        <div class="form-grid">
-          <mat-form-field appearance="outline">
-            <mat-label>Academic Year</mat-label>
-            <mat-select formControlName="academicYearId" required>
-              @for (year of academicYears(); track year.id) {
-              <mat-option [value]="year.id">
-                {{ year.name }}
-                @if (year.isCurrent) {
-                <span class="current-badge"> (Current)</span>
-                }
-              </mat-option>
+  <!-- Form -->
+  <div class="modal-body">
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <!-- Academic Year + Class Section row -->
+      <div class="form-row form-row--2col">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Academic Year</mat-label>
+          <mat-select formControlName="academicYearId">
+            @for (y of academicYears(); track y.id) {
+            <mat-option [value]="y.id">
+              {{ y.name }}
+              @if (y.isCurrent) {
+              <span class="current-tag">(Current)</span>
               }
-            </mat-select>
-            <mat-icon matPrefix>calendar_today</mat-icon>
-            <mat-error>Academic year is required</mat-error>
-          </mat-form-field>
+            </mat-option>
+            }
+          </mat-select>
+          @if (form.get('academicYearId')?.hasError('required') &&
+          form.get('academicYearId')?.touched) {
+          <mat-error>Academic year is required</mat-error>
+          }
+        </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Class — Section</mat-label>
-            <mat-select formControlName="classSectionId" required>
-              @for (cs of classSections(); track cs.id) {
-              <mat-option [value]="cs.id"> {{ cs.className }} – {{ cs.sectionName }} </mat-option>
-              }
-            </mat-select>
-            <mat-icon matPrefix>class</mat-icon>
-            <mat-error>Class-section is required</mat-error>
-          </mat-form-field>
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Class – Section</mat-label>
+          <mat-select formControlName="classSectionId">
+            @for (cs of classSections(); track cs.id) {
+            <mat-option [value]="cs.id">{{ cs.className }} – {{ cs.sectionName }}</mat-option>
+            }
+          </mat-select>
+          @if (form.get('classSectionId')?.hasError('required') &&
+          form.get('classSectionId')?.touched) {
+          <mat-error>Class-section is required</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <!-- Fee Type with quick-select chips -->
+      <div class="form-group">
+        <mat-form-field appearance="outline" class="form-field full-width">
+          <mat-label>Fee Type</mat-label>
+          <input matInput formControlName="feeType" placeholder="e.g. TUITION, LIBRARY, EXAM" />
+          @if (form.get('feeType')?.hasError('required') && form.get('feeType')?.touched) {
+          <mat-error>Fee type is required</mat-error>
+          }
+        </mat-form-field>
+        <div class="suggestion-chips">
+          @for (s of feeTypeSuggestions; track s) {
+          <button
+            type="button"
+            class="suggestion-chip"
+            [class.suggestion-chip--active]="form.get('feeType')?.value === s"
+            (click)="selectFeeType(s)"
+          >
+            {{ s }}
+          </button>
+          }
         </div>
       </div>
 
-      <!-- ── Section: Fee Details ──────────────────────────────────── -->
-      <div class="form-section">
-        <div class="form-section-title">Fee Details</div>
+      <!-- Amount + Fee Month row -->
+      <div class="form-row form-row--2col">
+        <!-- Amount -->
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Amount (₹)</mat-label>
+          <span matPrefix>₹&nbsp;</span>
+          <input matInput type="number" formControlName="amountRupees" min="1" placeholder="0" />
+          @if (form.get('amountRupees')?.hasError('required') && form.get('amountRupees')?.touched)
+          {
+          <mat-error>Amount is required</mat-error>
+          } @if (form.get('amountRupees')?.hasError('min')) {
+          <mat-error>Amount must be greater than 0</mat-error>
+          }
+        </mat-form-field>
 
-        <!-- Row 1: Fee Type (full-width so chips have room below) -->
-        <div class="fee-type-row">
-          <mat-form-field appearance="outline" class="fee-type-field">
-            <mat-label>Fee Type</mat-label>
-            <input
-              matInput
-              formControlName="feeType"
-              placeholder="e.g. Tuition, Sports, Lab…"
-              required
-              autocomplete="off"
-            />
-            <mat-icon matPrefix>label</mat-icon>
-            <mat-hint>Enter any fee type name or use a quick-fill below</mat-hint>
-            <mat-error>Fee type is required (min 3 characters)</mat-error>
-          </mat-form-field>
+        <!-- ── Custom Month Picker ── -->
+        <div class="month-picker-wrapper">
+          <label class="month-picker-label"
+            >Fee Month <span class="optional-label">(optional)</span></label
+          >
 
-          <!-- Quick-fill suggestion chips — placed OUTSIDE the form-field -->
-          <div class="fee-type-suggestions">
-            <span class="suggestions-label">Quick fill:</span>
-            @for (suggestion of feeTypeSuggestions; track suggestion) {
+          <!-- Trigger button -->
+          <button
+            type="button"
+            class="month-trigger"
+            [class.month-trigger--has-value]="form.get('feeMonth')?.value"
+            [class.month-trigger--open]="monthPickerOpen()"
+            (click)="toggleMonthPicker()"
+          >
+            <mat-icon class="month-trigger__icon">calendar_month</mat-icon>
+            <span class="month-trigger__text">
+              @if (feeMonthDisplay) {
+              {{ feeMonthDisplay }}
+              } @else {
+              <span class="month-trigger__placeholder">Select month</span>
+              }
+            </span>
+            @if (form.get('feeMonth')?.value) {
             <button
               type="button"
-              class="chip"
-              (click)="setFeeType(suggestion)"
-              [class.chip--active]="form.get('feeType')?.value === suggestion"
+              class="month-clear-btn"
+              (click)="clearFeeMonth($event)"
+              aria-label="Clear fee month"
             >
-              {{ suggestion }}
+              <mat-icon>close</mat-icon>
             </button>
+            } @else {
+            <mat-icon
+              class="month-trigger__chevron"
+              [class.month-trigger__chevron--open]="monthPickerOpen()"
+            >
+              expand_more
+            </mat-icon>
             }
+          </button>
+
+          <!-- Dropdown panel -->
+          @if (monthPickerOpen()) {
+          <!-- Backdrop to close on outside click -->
+          <div class="month-backdrop" (click)="closeMonthPicker()"></div>
+
+          <div class="month-panel" role="dialog" aria-label="Select fee month">
+            <!-- Year navigation -->
+            <div class="month-panel__header">
+              <button
+                type="button"
+                class="month-nav-btn"
+                (click)="prevYear()"
+                aria-label="Previous year"
+              >
+                <mat-icon>chevron_left</mat-icon>
+              </button>
+              <span class="month-panel__year">{{ pickerYear() }}</span>
+              <button
+                type="button"
+                class="month-nav-btn"
+                (click)="nextYear()"
+                aria-label="Next year"
+              >
+                <mat-icon>chevron_right</mat-icon>
+              </button>
+            </div>
+
+            <!-- Month grid -->
+            <div class="month-grid">
+              @for (name of monthNames; track name; let i = $index) {
+              <button
+                type="button"
+                class="month-cell"
+                [class.month-cell--selected]="isMonthSelected(i)"
+                (click)="selectMonth(i)"
+              >
+                {{ name.slice(0, 3) }}
+              </button>
+              }
+            </div>
+
+            <p class="month-panel__hint">Leave blank for one-time fees</p>
           </div>
-        </div>
-
-        <!-- Row 2: Amount + Due Date -->
-        <div class="form-grid form-grid--two-col">
-          <!-- Amount — always a compact number field, never looks like textarea -->
-          <mat-form-field appearance="outline">
-            <mat-label>Amount (₹)</mat-label>
-            <input
-              matInput
-              type="number"
-              inputmode="numeric"
-              formControlName="amount"
-              placeholder="0"
-              required
-              min="1"
-              step="1"
-            />
-            <span matTextPrefix>₹&nbsp;</span>
-            <mat-hint>Enter amount in Rupees</mat-hint>
-            <mat-error>Enter a valid amount (min ₹1)</mat-error>
-          </mat-form-field>
-
-          <!-- Due Date — DD/MM/YYYY format via IndianDateAdapter -->
-          <mat-form-field appearance="outline">
-            <mat-label>Due Date</mat-label>
-            <input
-              matInput
-              [matDatepicker]="dueDatePicker"
-              formControlName="dueDate"
-              placeholder="DD/MM/YYYY"
-              readonly
-            />
-            <mat-datepicker-toggle matIconSuffix [for]="dueDatePicker"></mat-datepicker-toggle>
-            <mat-datepicker #dueDatePicker></mat-datepicker>
-            <mat-hint>Optional — leave blank for no due date</mat-hint>
-          </mat-form-field>
-        </div>
-
-        <!-- Row 3: Mandatory toggle -->
-        <div class="toggle-row">
-          <mat-slide-toggle formControlName="isMandatory" color="primary">
-            Mandatory for all students in this class-section
-          </mat-slide-toggle>
+          }
         </div>
       </div>
 
-      <!-- ── Description ──────────────────────────────────────────── -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Description (optional)</mat-label>
+      <!-- Due Date — Material Datepicker with IndianDateAdapter (DD/MM/YYYY) -->
+      <mat-form-field appearance="outline" class="form-field full-width">
+        <mat-label>Due Date <span class="optional-label-inline">(optional)</span></mat-label>
+        <input
+          matInput
+          [matDatepicker]="dueDatePicker"
+          formControlName="dueDateObj"
+          placeholder="DD/MM/YYYY"
+          readonly
+        />
+        <mat-hint>Leave blank if no fixed due date</mat-hint>
+        <mat-datepicker-toggle matIconSuffix [for]="dueDatePicker">
+          <mat-icon matDatepickerToggleIcon>event</mat-icon>
+        </mat-datepicker-toggle>
+        <mat-datepicker #dueDatePicker></mat-datepicker>
+      </mat-form-field>
+
+      <!-- Mandatory toggle -->
+      <div class="toggle-row">
+        <div class="toggle-row__label">
+          <span class="toggle-label">Mandatory Fee</span>
+          <span class="toggle-hint">Mandatory fees must be paid before student can proceed</span>
+        </div>
+        <mat-slide-toggle formControlName="isMandatory" color="primary" />
+      </div>
+
+      <!-- Description -->
+      <mat-form-field appearance="outline" class="form-field full-width">
+        <mat-label>Description <span class="optional-label-inline">(optional)</span></mat-label>
         <textarea
           matInput
           formControlName="description"
-          rows="3"
-          placeholder="Add any notes about this fee…"
+          rows="2"
+          placeholder="Additional notes…"
         ></textarea>
-        <mat-hint>Internal note — not shown to students</mat-hint>
       </mat-form-field>
 
-      <!-- ── Actions ──────────────────────────────────────────────── -->
-      <div class="form-actions">
-        <button
-          mat-stroked-button
-          type="button"
-          (click)="router.navigate(['/school/fees/structures'])"
-        >
+      <!-- Error -->
+      @if (error()) {
+      <div class="form-error-banner">
+        <mat-icon>error_outline</mat-icon>
+        {{ error() }}
+      </div>
+      }
+
+      <!-- Footer actions -->
+      <div class="modal-footer">
+        <button type="button" mat-stroked-button (click)="close()" [disabled]="saving()">
           Cancel
         </button>
-        <button
-          mat-raised-button
-          color="primary"
-          type="submit"
-          [disabled]="form.invalid || submitting()"
-        >
-          @if (submitting()) {
-          <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+        <button type="submit" mat-flat-button color="primary" [disabled]="saving()">
+          @if (saving()) {
+          <mat-spinner diameter="16" />
           Saving… } @else {
-          <ng-container>
-            <mat-icon>save</mat-icon>
-            {{ isEdit() ? 'Update Structure' : 'Create Structure' }}
-          </ng-container>
+          {{ isEdit ? 'Save Changes' : 'Create Structure' }}
           }
         </button>
       </div>
     </form>
   </div>
-  }
 </div>

@@ -1,0 +1,503 @@
+// concessions-dashboard.scss
+:host {
+  display: block;
+}
+
+.page-shell {
+  padding: 24px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+// ── Page header ────────────────────────────────────────────────────────────
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  &__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    mat-icon {
+      font-size: 22px;
+      height: 22px;
+      width: 22px;
+      color: var(--color-success);
+    }
+  }
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 3px;
+}
+
+.page-subtitle {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+// ── Filters card ──────────────────────────────────────────────────────────
+.filters-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.filters-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.filter-field {
+  flex: 1;
+  min-width: 160px;
+  max-width: 260px;
+}
+
+.toggle-filter {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-divider);
+}
+
+.search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-bg-main);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-sm);
+  padding: 0 12px;
+  flex: 1;
+  max-width: 400px;
+  transition: border-color 0.15s;
+
+  &:focus-within {
+    border-color: var(--color-primary);
+  }
+}
+
+.search-icon {
+  font-size: 16px;
+  height: 16px;
+  width: 16px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.search-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.875rem;
+  color: var(--color-text-primary);
+  padding: 9px 0;
+  width: 100%;
+  font-family: inherit;
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+}
+
+.result-count {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  margin-left: auto;
+}
+
+.current-tag {
+  font-size: 0.7rem;
+  color: var(--color-primary);
+  font-weight: 700;
+  margin-left: 4px;
+}
+
+// ── Summary banner ────────────────────────────────────────────────────────
+.summary-banner {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.summary-banner__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 180px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  box-shadow: var(--shadow-sm);
+
+  &--primary {
+    border-left: 3px solid var(--color-success);
+  }
+}
+
+.summary-banner__icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+    color: var(--color-success);
+  }
+
+  &--success {
+    background: color-mix(in srgb, var(--color-success) 10%, transparent);
+    mat-icon {
+      color: var(--color-success);
+    }
+  }
+
+  &--muted {
+    background: var(--color-hover);
+    mat-icon {
+      color: var(--color-text-muted);
+    }
+  }
+}
+
+.summary-banner__content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.summary-banner__label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.summary-banner__value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+// ── State containers ──────────────────────────────────────────────────────
+.state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 64px 24px;
+  color: var(--color-text-muted);
+  text-align: center;
+
+  mat-icon {
+    font-size: 48px;
+    height: 48px;
+    width: 48px;
+    opacity: 0.35;
+  }
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+  }
+
+  &.state-error {
+    color: var(--color-error);
+    mat-icon {
+      opacity: 1;
+    }
+  }
+  &.state-empty mat-icon {
+    color: var(--color-success);
+  }
+}
+
+.state-empty__title {
+  font-size: 1rem !important;
+  font-weight: 700;
+  color: var(--color-text-primary) !important;
+}
+
+.state-empty__sub {
+  color: var(--color-text-muted);
+  max-width: 360px;
+}
+
+// ── Data table ────────────────────────────────────────────────────────────
+.table-wrapper {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1100px;
+  font-size: 0.83rem;
+
+  thead tr {
+    background: color-mix(in srgb, var(--color-success) 4%, var(--color-bg-card));
+    border-bottom: 2px solid var(--color-divider);
+  }
+
+  th {
+    padding: 10px 12px;
+    font-size: 0.67rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-text-muted);
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--color-divider);
+    vertical-align: middle;
+    color: var(--color-text-primary);
+  }
+}
+
+.data-row {
+  transition: background 0.12s ease;
+
+  &:hover {
+    background: var(--color-hover);
+  }
+  &:last-child td {
+    border-bottom: none;
+  }
+
+  &--revoked {
+    opacity: 0.55;
+  }
+}
+
+.text-right {
+  text-align: right;
+}
+.text-center {
+  text-align: center;
+}
+.text-success {
+  color: var(--color-success);
+}
+.text-error {
+  color: var(--color-error);
+}
+.cell-muted {
+  color: var(--color-text-muted);
+}
+.amount-cell {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+// ── Student cell ──────────────────────────────────────────────────────────
+.student-cell {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.student-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.student-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.student-name {
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.student-class {
+  font-size: 0.68rem;
+  color: var(--color-text-muted);
+}
+
+// ── Source badge ──────────────────────────────────────────────────────────
+.source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  white-space: nowrap;
+
+  mat-icon {
+    font-size: 11px;
+    height: 11px;
+    width: 11px;
+  }
+
+  &--structure {
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    color: var(--color-primary);
+  }
+  &--assignment {
+    background: color-mix(in srgb, var(--color-secondary) 10%, transparent);
+    color: var(--color-secondary);
+  }
+}
+
+// ── Fee type chip ─────────────────────────────────────────────────────────
+.fee-type-chip {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-info) 10%, transparent);
+  color: var(--color-info);
+}
+
+// ── Concession value chip ─────────────────────────────────────────────────
+.concession-value-chip {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  color: color-mix(in srgb, var(--color-success) 70%, #000);
+}
+
+// ── Reason cell ───────────────────────────────────────────────────────────
+.reason-cell {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  cursor: default;
+}
+
+.approved-cell {
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+// ── Status badge ──────────────────────────────────────────────────────────
+.status-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+
+  &--active {
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    color: color-mix(in srgb, var(--color-success) 70%, #000);
+  }
+
+  &--revoked {
+    background: var(--color-hover);
+    color: var(--color-text-muted);
+  }
+}
+
+// ── Revoke button ─────────────────────────────────────────────────────────
+.revoke-btn {
+  color: var(--color-error) !important;
+  width: 30px !important;
+  height: 30px !important;
+
+  mat-icon {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-error) 10%, transparent) !important;
+  }
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .page-shell {
+    padding: 16px;
+  }
+  .filters-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filter-field {
+    max-width: 100%;
+  }
+  .summary-banner {
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,451 @@
+// assignments-list.scss
+:host {
+  display: block;
+}
+
+// ── Header ────────────────────────────────────────────────────────────────────
+.al-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-divider);
+  background: color-mix(in srgb, var(--color-secondary) 4%, var(--color-bg-card));
+  flex-wrap: wrap;
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__icon {
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+    color: var(--color-secondary);
+    flex-shrink: 0;
+  }
+
+  &__title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin: 0;
+  }
+
+  &__sub {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+}
+
+.cancelled-toggle {
+  display: flex;
+  align-items: center;
+}
+
+.toggle-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  font-weight: 600;
+
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+  }
+
+  &--bulk {
+    color: var(--color-secondary) !important;
+    border-color: color-mix(in srgb, var(--color-secondary) 35%, transparent) !important;
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-secondary) 8%, transparent) !important;
+    }
+  }
+}
+
+// ── State ─────────────────────────────────────────────────────────────────────
+.al-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 36px 16px;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  text-align: center;
+
+  mat-icon {
+    font-size: 32px;
+    height: 32px;
+    width: 32px;
+    opacity: 0.35;
+  }
+
+  p {
+    margin: 0;
+  }
+
+  &--error {
+    color: var(--color-error);
+    mat-icon {
+      opacity: 1;
+      color: var(--color-error);
+    }
+  }
+
+  &--empty mat-icon {
+    color: var(--color-secondary);
+    opacity: 0.3;
+  }
+}
+
+.al-empty-hint {
+  font-size: 0.78rem !important;
+  color: var(--color-text-muted) !important;
+  max-width: 320px;
+}
+
+// ── Table ─────────────────────────────────────────────────────────────────────
+.al-table-wrap {
+  overflow-x: auto;
+}
+
+.al-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  min-width: 760px;
+
+  thead tr {
+    background: color-mix(in srgb, var(--color-hover) 60%, transparent);
+    border-bottom: 1px solid var(--color-divider);
+  }
+
+  th {
+    padding: 8px 12px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--color-divider);
+    vertical-align: middle;
+    color: var(--color-text-primary);
+  }
+}
+
+.al-row {
+  transition: background 0.12s ease;
+
+  &:hover {
+    background: var(--color-hover);
+  }
+  &:last-child td {
+    border-bottom: none;
+  }
+
+  &--cancelled {
+    opacity: 0.55;
+
+    td {
+      text-decoration: line-through;
+    }
+  }
+}
+
+.text-right {
+  text-align: right;
+}
+.text-center {
+  text-align: center;
+}
+.text-success {
+  color: var(--color-success);
+}
+.text-error {
+  color: var(--color-error);
+}
+.cell-muted {
+  color: var(--color-text-muted);
+}
+.cell-date {
+  white-space: nowrap;
+  font-size: 0.78rem;
+}
+.amount-cell {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+// ── Fee type cell ─────────────────────────────────────────────────────────────
+.fee-type-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.fee-type-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--color-secondary) 10%, transparent);
+  color: var(--color-secondary);
+
+  &--cancelled {
+    background: var(--color-hover);
+    color: var(--color-text-muted);
+    text-decoration: line-through;
+  }
+}
+
+.cancelled-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
+  color: var(--color-error);
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid color-mix(in srgb, var(--color-error) 20%, transparent);
+}
+
+.optional-badge {
+  font-size: 0.62rem;
+  font-weight: 600;
+  background: var(--color-hover);
+  color: var(--color-text-muted);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.fee-desc {
+  font-size: 0.68rem;
+  color: var(--color-text-muted);
+  margin: 2px 0 0;
+  font-style: italic;
+}
+
+// ── Concession amount ─────────────────────────────────────────────────────────
+.concession-amount {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-success);
+  cursor: help;
+
+  mat-icon {
+    font-size: 11px;
+    height: 11px;
+    width: 11px;
+  }
+}
+
+// ── Action buttons ────────────────────────────────────────────────────────────
+.action-btns {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.action-btn {
+  width: 28px !important;
+  height: 28px !important;
+  line-height: 28px !important;
+
+  mat-icon {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+  }
+
+  &--pay {
+    color: var(--color-primary) !important;
+    &:hover {
+      background: color-mix(in srgb, var(--color-primary) 10%, transparent) !important;
+    }
+  }
+
+  &--concession {
+    color: var(--color-success) !important;
+    &:hover {
+      background: color-mix(in srgb, var(--color-success) 10%, transparent) !important;
+    }
+  }
+
+  &--cancel {
+    color: var(--color-error) !important;
+    &:hover {
+      background: color-mix(in srgb, var(--color-error) 10%, transparent) !important;
+    }
+  }
+}
+
+// ── Cancel confirmation row ───────────────────────────────────────────────────
+.cancel-confirm-row td {
+  padding: 0;
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.cancel-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  background: color-mix(in srgb, var(--color-error) 5%, transparent);
+  border-left: 3px solid var(--color-error);
+
+  &__icon {
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+    color: var(--color-warning);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  &__content {
+    flex: 1;
+  }
+
+  &__label {
+    font-size: 0.82rem;
+    color: var(--color-text-primary);
+    margin: 0 0 10px;
+  }
+
+  &__input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+}
+
+.cancel-reason-input {
+  flex: 1;
+  min-width: 200px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  font-family: inherit;
+  color: var(--color-text-primary);
+  background: var(--color-bg-main);
+  outline: none;
+  transition: border-color 0.15s;
+
+  &:focus {
+    border-color: var(--color-error);
+  }
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+}
+
+.confirm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+// ── Concession note row ───────────────────────────────────────────────────────
+.concession-note-row td {
+  padding: 0 12px 8px;
+}
+
+.concession-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 8%, transparent);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-style: italic;
+
+  mat-icon {
+    font-size: 12px;
+    height: 12px;
+    width: 12px;
+  }
+}
+
+// ── Summary footer ────────────────────────────────────────────────────────────
+.al-summary {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-top: 2px solid var(--color-divider);
+  background: color-mix(in srgb, var(--color-hover) 40%, transparent);
+
+  &__item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 14px;
+    border-right: 1px solid var(--color-divider);
+
+    &:last-child {
+      border-right: none;
+    }
+
+    &--balance {
+      font-weight: 700;
+    }
+  }
+
+  &__label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+  }
+
+  &__value {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    font-variant-numeric: tabular-nums;
+
+    &--error {
+      color: var(--color-error);
+    }
+  }
+}

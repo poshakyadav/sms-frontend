@@ -1,4 +1,4 @@
-// enrollment-management.ts — UPDATED with enrollment status badges + detail dialog
+// enrollment-management.ts 
 
 import {
   ChangeDetectionStrategy,

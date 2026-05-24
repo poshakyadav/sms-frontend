@@ -1,344 +1,274 @@
-<!-- fee-report.html — full replacement -->
-
-<div class="fee-report-page">
-  <!-- ══════════════════════════════════════════════════════════════════════
-       PAGE HEADER
-       ══════════════════════════════════════════════════════════════════════ -->
+<!-- fee-report.html -->
+<div class="page-shell">
+  <!-- Page Header -->
   <div class="page-header">
-    <div class="header-left">
-      <h1>Fee Collection Report</h1>
-      <p>Select a class-section to view payment status for all enrolled students</p>
+    <div class="page-header__left">
+      <h1 class="page-title">Fee Collection Report</h1>
+      <p class="page-subtitle">Per-student fee status, balances, and quick actions</p>
     </div>
-    <div class="header-actions">
-      @if (selectedClassSectionId()) {
-      <button
-        mat-stroked-button
-        (click)="loadReport()"
-        [disabled]="reportLoading()"
-        class="refresh-btn"
-      >
-        <mat-icon>refresh</mat-icon>
-        Refresh
+    @if (report().length > 0) {
+    <div class="page-header__actions">
+      <button mat-stroked-button class="export-btn" (click)="exportCsv()">
+        <mat-icon>download</mat-icon>
+        Export CSV
       </button>
-      }
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════════════════════════════════════
-       FILTERS CARD
-       ══════════════════════════════════════════════════════════════════════ -->
-  <div class="controls-card">
-    @if (filtersLoading()) {
-    <div class="filters-loading">
-      <mat-spinner diameter="18"></mat-spinner>
-      <span>Loading filters…</span>
-    </div>
-    } @else {
-    <div class="controls-row">
-      <!-- Class-Section selector (primary filter) -->
-      <mat-form-field appearance="outline" class="filter-field filter-field--primary">
-        <mat-label>Class — Section</mat-label>
-        <mat-select
-          [ngModel]="selectedClassSectionId()"
-          (ngModelChange)="onClassSectionChange($event)"
-        >
-          <mat-option [value]="null">— Select a class-section —</mat-option>
-          @for (cs of classSections(); track cs.id) {
-          <mat-option [value]="cs.id">
-            {{ cs.className }} – {{ cs.sectionName }}
-            @if (cs.currentStudents != null) {
-            <span class="option-count">({{ cs.currentStudents }})</span>
-            }
-          </mat-option>
-          }
-        </mat-select>
-        <mat-icon matPrefix>class</mat-icon>
-      </mat-form-field>
-
-      <!-- Academic year selector -->
-      <mat-form-field appearance="outline" class="filter-field">
-        <mat-label>Academic Year</mat-label>
-        <mat-select
-          [ngModel]="selectedAcademicYearId()"
-          (ngModelChange)="onAcademicYearChange($event)"
-        >
-          <mat-option [value]="null">All years</mat-option>
-          @for (y of academicYears(); track y.id) {
-          <mat-option [value]="y.id">
-            {{ y.name }}
-            @if (y.isCurrent) { <span class="option-current">• Current</span> }
-          </mat-option>
-          }
-        </mat-select>
-        <mat-icon matPrefix>calendar_today</mat-icon>
-      </mat-form-field>
-
-      <!-- Overdue toggle -->
-      <div class="filter-toggle">
-        <mat-slide-toggle
-          [ngModel]="overdueOnly()"
-          (ngModelChange)="onOverdueToggle($event)"
-          color="warn"
-          [disabled]="!selectedClassSectionId()"
-        >
-          Outstanding only
-        </mat-slide-toggle>
-      </div>
     </div>
     }
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
-       REPORT LOADING
-       ══════════════════════════════════════════════════════════════════════ -->
-  @if (reportLoading()) {
-  <div class="state-container">
-    <mat-spinner diameter="44"></mat-spinner>
-    <p>
-      Generating report for <strong>{{ selectedClassSectionLabel() }}</strong
-      >…
-    </p>
-  </div>
-  }
+  <!-- Filters Bar -->
+  <div class="filters-card">
+    <div class="filters-row">
+      <mat-form-field appearance="outline" class="filter-field filter-field--wide">
+        <mat-label>Class – Section</mat-label>
+        <mat-select
+          [ngModel]="selectedClassSectionId()"
+          (ngModelChange)="onClassSectionChange($event)"
+        >
+          <mat-option [value]="null" disabled>Select class-section</mat-option>
+          @for (cs of classSections(); track cs.id) {
+          <mat-option [value]="cs.id"> {{ cs.className }} – {{ cs.sectionName }} </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
-       ERROR
-       ══════════════════════════════════════════════════════════════════════ -->
-  @else if (error()) {
-  <div class="state-container error">
-    <mat-icon class="state-icon">error_outline</mat-icon>
-    <h2>Failed to Generate Report</h2>
-    <p>{{ error() }}</p>
-    <button mat-raised-button color="primary" (click)="loadReport()">Retry</button>
-  </div>
-  }
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Academic Year</mat-label>
+        <mat-select
+          [ngModel]="selectedAcademicYearId()"
+          (ngModelChange)="selectedAcademicYearId.set($event); onYearChange()"
+        >
+          @for (y of academicYears(); track y.id) {
+          <mat-option [value]="y.id">
+            {{ y.name }}
+            @if (y.isCurrent) { <span class="current-tag">(Current)</span> }
+          </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
-       PROMPT — no class-section selected yet
-       ══════════════════════════════════════════════════════════════════════ -->
-  @else if (!selectedClassSectionId()) {
-  <div class="state-container state-prompt">
-    <div class="prompt-icon-wrap">
-      <mat-icon class="prompt-icon">assessment</mat-icon>
-    </div>
-    <h2>Select a class-section</h2>
-    <p>Choose a class and section from the filter above to generate the fee collection report.</p>
-  </div>
-  }
-
-  <!-- ══════════════════════════════════════════════════════════════════════
-       EMPTY (class-section selected but 0 results)
-       ══════════════════════════════════════════════════════════════════════ -->
-  @else if (hasQueried() && report().length === 0) {
-  <div class="state-container">
-    <mat-icon class="state-icon">inbox</mat-icon>
-    <h2>No records found</h2>
-    <p>
-      @if (overdueOnly()) { No students in <strong>{{ selectedClassSectionLabel() }}</strong> have
-      outstanding fees. } @else { No active enrolled students found in
-      <strong>{{ selectedClassSectionLabel() }}</strong
-      >. }
-    </p>
-  </div>
-  }
-
-  <!-- ══════════════════════════════════════════════════════════════════════
-       RESULTS
-       ══════════════════════════════════════════════════════════════════════ -->
-  @else if (report().length > 0) {
-
-  <!-- Context strip -->
-  <div class="report-context">
-    <div class="context-label">
-      <mat-icon>class</mat-icon>
-      {{ selectedClassSectionLabel() }}
-      @if (report()[0]?.academicYearName) {
-      <span class="context-year">• {{ report()[0].academicYearName }}</span>
-      }
-    </div>
-    <div class="context-meta">
-      {{ report().length }} students @if (overdueOnly()) {
-      <span class="context-filtered">(filtered: outstanding only)</span>
-      }
-    </div>
-  </div>
-
-  <!-- KPI summary strip -->
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-label">Total students</div>
-      <div class="stat-value">{{ report().length }}</div>
-      <div class="stat-sub">enrolled in this section</div>
-    </div>
-
-    <div class="stat-card primary">
-      <div class="stat-label">Total assigned</div>
-      <div class="stat-value">₹{{ totalDue() | number }}</div>
-      <div class="stat-sub">fee structures × students</div>
-    </div>
-
-    <div class="stat-card success">
-      <div class="stat-label">Total collected</div>
-      <div class="stat-value">₹{{ totalPaid() | number }}</div>
-      <div class="stat-sub">{{ paidCount() }} student(s) fully paid</div>
-    </div>
-
-    <div class="stat-card" [class.error]="totalBalance() > 0" [class.success]="totalBalance() <= 0">
-      <div class="stat-label">Outstanding</div>
-      <div class="stat-value">₹{{ totalBalance() | number }}</div>
-      <div class="stat-sub">{{ overdueCount() }} student(s) with balance due</div>
-    </div>
-
-    <div class="stat-card info">
-      <div class="stat-label">Collection rate</div>
-      <div class="stat-value">{{ collectionRate() }}%</div>
-      <div class="stat-sub progress-wrap">
-        <div class="mini-bar">
-          <div class="mini-bar-fill" [style.width.%]="collectionRate()"></div>
-        </div>
+      <div class="overdue-toggle">
+        <mat-slide-toggle
+          [checked]="overdueOnly()"
+          (change)="overdueOnly.set($event.checked); onOverdueToggle()"
+          color="warn"
+        >
+          Overdue Only
+        </mat-slide-toggle>
       </div>
     </div>
+
+    @if (report().length > 0) {
+    <div class="search-row">
+      <div class="search-wrap">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input
+          class="search-input"
+          placeholder="Search by name or roll number…"
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
+        />
+      </div>
+      <span class="result-count">{{ filteredReport().length }} students</span>
+    </div>
+    }
   </div>
 
-  <!-- Data table -->
-  <div class="table-card">
-    <div class="table-header-row">
-      <span class="table-title">Student breakdown</span>
-      <span class="table-hint">Click a row to view full ledger</span>
+  <!-- Placeholder: no class selected -->
+  @if (!selectedClassSectionId() && !loading()) {
+  <div class="state-container state-placeholder">
+    <div class="placeholder-icon">
+      <mat-icon>class</mat-icon>
     </div>
-    <div class="table-scroll">
-      <table mat-table [dataSource]="report()" class="report-table">
-        <!-- Roll Number -->
-        <ng-container matColumnDef="rollNumber">
-          <th mat-header-cell *matHeaderCellDef>Roll no.</th>
-          <td mat-cell *matCellDef="let item">
-            @if (item.rollNumber) {
-            <span class="roll-pill">{{ item.rollNumber }}</span>
-            } @else {
-            <span class="text-muted">—</span>
-            }
-          </td>
-        </ng-container>
+    <p class="placeholder-title">Select a class-section to view the report</p>
+    <p class="placeholder-sub">
+      Choose a class and section from the dropdown above to load the fee collection report.
+    </p>
+  </div>
+  }
 
-        <!-- Student Name -->
-        <ng-container matColumnDef="studentName">
-          <th mat-header-cell *matHeaderCellDef>Student</th>
-          <td mat-cell *matCellDef="let item">
-            <div class="student-cell">
-              <div class="student-avatar">
-                {{ (item.studentName + '').charAt(0).toUpperCase() }}
-              </div>
+  <!-- Loading -->
+  @if (loading()) {
+  <div class="state-container">
+    <mat-spinner diameter="40" />
+    <p>Loading fee report…</p>
+  </div>
+  }
 
-              <div class="student-info">
-                <span class="student-name">{{ item.studentName }}</span>
-                <span class="student-id">#{{ item.studentId }}</span>
-              </div>
-            </div>
-          </td>
-        </ng-container>
+  <!-- Error -->
+  @if (error()) {
+  <div class="state-container state-error">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ error() }}</p>
+    <button mat-stroked-button (click)="loadReport()">Retry</button>
+  </div>
+  }
 
-        <!-- Class-Section -->
-        <ng-container matColumnDef="classSection">
-          <th mat-header-cell *matHeaderCellDef>Class / Section</th>
-          <td mat-cell *matCellDef="let item">
-            <span class="class-chip">{{ item.className }} – {{ item.sectionName }}</span>
-          </td>
-        </ng-container>
-
-        <!-- Total Due -->
-        <ng-container matColumnDef="totalDue">
-          <th mat-header-cell *matHeaderCellDef>Assigned</th>
-          <td mat-cell *matCellDef="let item">
-            <span class="amount-cell">₹{{ item.totalDue | number }}</span>
-          </td>
-        </ng-container>
-
-        <!-- Total Paid -->
-        <ng-container matColumnDef="totalPaid">
-          <th mat-header-cell *matHeaderCellDef>Paid</th>
-          <td mat-cell *matCellDef="let item">
-            <span class="amount-cell paid">₹{{ item.totalPaid | number }}</span>
-          </td>
-        </ng-container>
-
-        <!-- Balance -->
-        <ng-container matColumnDef="balance">
-          <th mat-header-cell *matHeaderCellDef>Balance due</th>
-          <td mat-cell *matCellDef="let item">
-            <span
-              class="amount-cell"
-              [class.positive]="item.balance > 0"
-              [class.paid]="item.balance <= 0"
-            >
-              ₹{{ item.balance | number }}
-            </span>
-          </td>
-        </ng-container>
-
-        <!-- Status -->
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef>Status</th>
-          <td mat-cell *matCellDef="let item">
-            <span
-              class="status-badge"
-              [class.paid]="item.balance <= 0"
-              [class.due]="item.balance > 0"
-            >
-              {{ getStatus(item.balance) }}
-            </span>
-          </td>
-        </ng-container>
-
-        <!-- Actions -->
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef></th>
-          <td mat-cell *matCellDef="let item">
-            <div class="cell-actions">
-              <button
-                mat-icon-button
-                (click)="viewLedger(item.studentId); $event.stopPropagation()"
-                matTooltip="View full ledger"
-                class="action-btn"
-              >
-                <mat-icon>account_balance_wallet</mat-icon>
-              </button>
-              <button
-                mat-icon-button
-                (click)="viewPaymentHistory(item.enrollmentId); $event.stopPropagation()"
-                matTooltip="Payment history"
-                class="action-btn"
-              >
-                <mat-icon>receipt_long</mat-icon>
-              </button>
-            </div>
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-        <tr
-          mat-row
-          *matRowDef="let row; columns: displayedColumns"
-          [class.row-overdue]="row.balance > 0"
-          [class.row-paid]="row.balance <= 0"
-          (click)="viewLedger(row.studentId)"
-          class="clickable-row"
-        ></tr>
-      </table>
+  <!-- Summary Bar -->
+  @if (!loading() && !error() && report().length > 0) {
+  <div class="summary-strip">
+    <div class="summary-item">
+      <span class="summary-item__label">Students</span>
+      <span class="summary-item__value">{{ summaryStats().totalStudents }}</span>
     </div>
-
-    <!-- Table footer totals -->
-    <div class="table-footer">
-      <span class="footer-label">{{ report().length }} students</span>
-      <span class="footer-spacer"></span>
-      <span class="footer-total">
-        Total: ₹{{ totalDue() | number }} assigned &nbsp;•&nbsp; ₹{{ totalPaid() | number }}
-        collected &nbsp;•&nbsp;
-        <strong [class.footer-due]="totalBalance() > 0" [class.footer-paid]="totalBalance() <= 0">
-          ₹{{ totalBalance() | number }} outstanding
-        </strong>
+    <div class="summary-item">
+      <span class="summary-item__label">Total Due</span>
+      <span class="summary-item__value">{{ summaryStats().totalDue | paise : 'short' }}</span>
+    </div>
+    <div class="summary-item summary-item--success">
+      <span class="summary-item__label">Collected</span>
+      <span class="summary-item__value">{{ summaryStats().totalCollected | paise : 'short' }}</span>
+    </div>
+    <div class="summary-item summary-item--error">
+      <span class="summary-item__label">Outstanding</span>
+      <span class="summary-item__value">{{
+        summaryStats().totalOutstanding | paise : 'short'
+      }}</span>
+    </div>
+    @if (summaryStats().totalConcessions > 0) {
+    <div class="summary-item summary-item--info">
+      <span class="summary-item__label">Concessions</span>
+      <span class="summary-item__value">{{
+        summaryStats().totalConcessions | paise : 'short'
+      }}</span>
+    </div>
+    } @if (summaryStats().totalDue > 0) {
+    <div class="summary-item summary-item--rate">
+      <span class="summary-item__label">Collection Rate</span>
+      <span class="summary-item__value">
+        {{
+          summaryStats().totalDue > 0
+            ? ((summaryStats().totalCollected / summaryStats().totalDue) * 100 | number : '1.0-0')
+            : 0
+        }}%
       </span>
     </div>
+    }
   </div>
+  }
 
+  <!-- Empty State -->
+  @if (!loading() && !error() && selectedClassSectionId() && report().length === 0) {
+  <div class="state-container state-empty">
+    <mat-icon>receipt_long</mat-icon>
+    <p>No students found for the selected class-section.</p>
+  </div>
+  }
+
+  <!-- Report Table -->
+  @if (!loading() && !error() && filteredReport().length > 0) {
+  <div class="report-table-wrapper">
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th class="col-student">Student</th>
+          <th class="col-fees text-right">Standard Fee</th>
+          <th class="col-fees text-right">Std Paid</th>
+          <th class="col-fees text-right">Std Balance</th>
+          <th class="col-fees text-right">Custom Fee</th>
+          <th class="col-fees text-right">Cust Paid</th>
+          <th class="col-fees text-right">Cust Balance</th>
+          <th class="col-balance text-right">Overall Balance</th>
+          <th class="col-actions text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of filteredReport(); track trackById($index, row)) {
+        <tr
+          class="report-row"
+          [class.report-row--paid]="isPaid(row)"
+          [class.report-row--overdue]="isOverdue(row)"
+        >
+          <!-- Student Cell -->
+          <td class="col-student">
+            <div class="student-cell">
+              <div class="student-avatar">
+                {{ row.studentName.charAt(0).toUpperCase() }}
+              </div>
+              <div class="student-info">
+                <span class="student-name">{{ row.studentName }}</span>
+                @if (row.rollNumber) {
+                <span class="roll-chip">{{ row.rollNumber }}</span>
+                }
+              </div>
+            </div>
+          </td>
+
+          <!-- Standard Fees -->
+          <td class="text-right amount-cell">{{ row.totalDue | paise : 'compact' }}</td>
+          <td class="text-right amount-cell text-success">
+            {{ row.totalPaid | paise : 'compact' }}
+          </td>
+          <td class="text-right amount-cell" [class.text-error]="row.balance > 0">
+            {{ row.balance | paise : 'compact' }}
+          </td>
+
+          <!-- Custom Fees -->
+          <td class="text-right amount-cell cell-muted">
+            {{ row.customFeeEffective | paise : 'compact' }}
+          </td>
+          <td class="text-right amount-cell text-success">
+            {{ row.customFeePaid | paise : 'compact' }}
+          </td>
+          <td class="text-right amount-cell" [class.text-error]="row.customFeeBalance > 0">
+            {{ row.customFeeBalance | paise : 'compact' }}
+          </td>
+
+          <!-- Overall Balance -->
+          <td class="text-right">
+            <span
+              class="balance-chip"
+              [class.balance-chip--paid]="isPaid(row)"
+              [class.balance-chip--overdue]="isOverdue(row)"
+            >
+              {{ overallBalance(row) | paise : 'compact' }}
+            </span>
+          </td>
+
+          <!-- Actions -->
+          <td class="col-actions text-center">
+            <div class="action-btns">
+              @if (overallBalance(row) > 0) {
+              <button
+                mat-icon-button
+                class="action-btn action-btn--pay"
+                matTooltip="Record Payment"
+                (click)="openRecordPayment(row)"
+              >
+                <mat-icon>payments</mat-icon>
+              </button>
+              }
+              <button
+                mat-icon-button
+                class="action-btn action-btn--concession"
+                matTooltip="Add Concession"
+                (click)="openAddConcession(row)"
+              >
+                <mat-icon>local_offer</mat-icon>
+              </button>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Concession detail row if applicable -->
+        @if ((row.totalConcession + row.customFeeConcession) > 0) {
+        <tr class="concession-detail-row">
+          <td colspan="9">
+            <div class="concession-detail">
+              <mat-icon>local_offer</mat-icon>
+              <span>
+                Concession applied: Std ₹{{ row.totalConcession / 100 | number : '1.0-2' }} @if
+                (row.customFeeConcession > 0) { + Custom ₹{{
+                  row.customFeeConcession / 100 | number : '1.0-2'
+                }}
+                }
+              </span>
+            </div>
+          </td>
+        </tr>
+        } }
+      </tbody>
+    </table>
+  </div>
   }
 </div>

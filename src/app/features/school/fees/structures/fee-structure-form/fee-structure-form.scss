@@ -1,477 +1,471 @@
 // fee-structure-form.scss
-// Production-grade styles — fixes:
-//   1. Dark mode placeholder text invisible
-//   2. Fee-type chips overlapping the field above
-//   3. Amount field rendered like a textarea
-//   4. DD/MM/YYYY date placeholder visible in both modes
-
-// ─── Page Shell ──────────────────────────────────────────────────────────────
-
-.fee-form-page {
-  min-height: 100vh;
-  background-color: var(--color-bg-main);
-  padding: 2rem 1.5rem 4rem;
-  transition: background-color 0.2s ease;
-
-  @media (min-width: 768px) {
-    padding: 2.5rem 2.5rem 4rem;
-  }
-
-  @media (min-width: 1200px) {
-    padding: 2.5rem 3rem 4rem;
-    max-width: 960px;
-    margin-inline: auto;
-  }
+.modal-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 90vh;
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
-// ─── Page Header ─────────────────────────────────────────────────────────────
-
-.page-header {
+// ── Modal header ──────────────────────────────────────────────────────────────
+.modal-header {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 1.25rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
+  gap: 14px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--color-divider);
+  flex-shrink: 0;
 
-  .header-left {
-    h1 {
-      margin: 0 0 0.25rem;
-      font-size: 1.625rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: var(--color-text-primary);
-      line-height: 1.2;
-    }
-
-    p {
-      margin: 0;
-      font-size: 0.9rem;
-      color: var(--color-text-secondary);
-      line-height: 1.5;
-    }
-  }
-
-  .header-actions {
+  &__icon {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
     flex-shrink: 0;
 
-    button[mat-stroked-button] {
-      color: var(--color-text-secondary);
-      border-color: var(--color-border);
-      border-radius: var(--radius-sm);
-      font-weight: 500;
-      font-size: 0.875rem;
-      display: flex;
-      align-items: center;
-      gap: 0.375rem;
-      transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+    mat-icon {
+      font-size: 20px;
+      height: 20px;
+      width: 20px;
+      color: var(--color-primary);
+    }
+  }
 
-      &:hover {
-        color: var(--color-text-primary);
-        border-color: var(--color-text-secondary);
-        background-color: var(--color-hover);
-      }
+  &__content {
+    flex: 1;
+  }
+}
 
-      mat-icon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-      }
+.modal-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 2px;
+}
+
+.modal-subtitle {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.modal-close {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+// ── Modal body ────────────────────────────────────────────────────────────────
+.modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+// ── Form layout ───────────────────────────────────────────────────────────────
+.form-row {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 4px;
+
+  &--2col {
+    align-items: flex-start;
+
+    .form-field {
+      flex: 1;
     }
   }
 }
 
-// ─── Loading State ────────────────────────────────────────────────────────────
-
-.loading-overlay {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  min-height: 280px;
-  background-color: var(--color-bg-surface);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
-
-  p {
-    margin: 0;
-    font-size: 0.9rem;
-    color: var(--color-text-secondary);
-  }
-
-  mat-spinner {
-    --mdc-circular-progress-active-indicator-color: var(--color-primary);
-  }
+.form-group {
+  margin-bottom: 8px;
 }
 
-// ─── Form Card ────────────────────────────────────────────────────────────────
-
-.form-card {
-  background-color: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  padding: 2rem;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
-
-  @media (min-width: 768px) {
-    padding: 2.5rem;
-  }
-}
-
-// ─── Form Sections ────────────────────────────────────────────────────────────
-
-.form-section {
-  margin-bottom: 2rem;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid var(--color-divider);
-
-  &:last-of-type {
-    border-bottom: none;
-    margin-bottom: 1.5rem;
-    padding-bottom: 0;
-  }
-}
-
-.form-section-title {
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-primary);
-  margin-bottom: 1.25rem;
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-
-  &::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(to right, var(--color-border), transparent);
-  }
-}
-
-// ─── Form Grid ────────────────────────────────────────────────────────────────
-
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.25rem;
-
-  @media (min-width: 600px) {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.form-grid--two-col {
-  // Same as .form-grid but explicit — ensures amount+date never stack weirdly
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.25rem;
-  margin-top: 1.25rem;
-
-  @media (min-width: 600px) {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-// ─── Fee Type Row ─────────────────────────────────────────────────────────────
-// Full-width column so chips render cleanly below without overlapping any sibling
-
-.fee-type-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  // No negative margin — chips sit naturally below the field
-}
-
-.fee-type-field {
+.form-field {
   width: 100%;
+
+  &.full-width {
+    display: block;
+    width: 100%;
+    margin-bottom: 8px;
+  }
 }
 
-// ─── Fee Type Suggestion Chips ────────────────────────────────────────────────
-// Rendered OUTSIDE the mat-form-field so they never bleed into adjacent fields.
-// Use <button type="button"> elements to avoid accidental form submission.
+// ── Optional label variants ───────────────────────────────────────────────────
+.optional-label {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  margin-left: 2px;
+}
 
-.fee-type-suggestions {
+// Inline variant for use inside mat-label text
+.optional-label-inline {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+// ── Suggestion chips ──────────────────────────────────────────────────────────
+.suggestion-chips {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 0.375rem;
-  // Small top spacing to separate from the hint text of the field above
-  padding: 0.5rem 0 0.125rem;
+  gap: 6px;
+  margin-bottom: 12px;
+  margin-top: -4px;
+}
 
-  .suggestions-label {
-    font-size: 0.72rem;
-    font-weight: 500;
-    color: var(--color-text-muted);
-    white-space: nowrap;
-    cursor: default;
-    line-height: 1.4;
+.suggestion-chip {
+  padding: 3px 10px;
+  border-radius: 9999px;
+  border: 1px solid var(--color-divider);
+  background: var(--color-hover);
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
   }
 
-  .chip {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.2rem 0.7rem;
-    border-radius: 100px;
-    border: 1px solid var(--color-border);
-    font-size: 0.75rem;
-    font-weight: 500;
-    font-family: inherit;
-    color: var(--color-text-secondary);
-    background-color: var(--color-bg-main);
-    cursor: pointer;
-    transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
-    user-select: none;
-    // Reset button defaults
+  &--active {
+    border-color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    color: var(--color-primary);
+    font-weight: 700;
+  }
+}
+
+// ── Custom Month Picker ───────────────────────────────────────────────────────
+.month-picker-wrapper {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  // Match the visual height of an outlined mat-form-field so the row aligns
+  min-width: 0;
+}
+
+.month-picker-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  padding-left: 2px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+// Trigger — mimics the outlined mat-form-field appearance
+.month-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 56px; // same as outlined mat-form-field default
+  padding: 0 14px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  text-align: left;
+
+  &:hover {
+    border-color: var(--color-text-primary);
+  }
+
+  &--open,
+  &:focus-visible {
+    border-color: var(--color-primary);
     outline: none;
-    line-height: 1.6;
+    box-shadow: 0 0 0 1px var(--color-primary);
+  }
 
-    &:hover {
-      border-color: var(--color-primary);
-      color: var(--color-primary);
-      background-color: var(--color-active);
-    }
+  &--has-value {
+    color: var(--color-text-primary);
+    border-color: var(--color-border);
+  }
 
-    &:focus-visible {
-      outline: 2px solid var(--color-primary);
-      outline-offset: 1px;
-    }
+  &__icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+  }
 
-    // Visually highlight the currently selected chip
-    &.chip--active {
-      border-color: var(--color-primary);
-      color: var(--color-primary);
-      background-color: var(--color-active);
+  &__text {
+    flex: 1;
+    font-size: 0.9rem;
+    color: var(--color-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__placeholder {
+    color: var(--color-text-muted);
+  }
+
+  &__chevron {
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+    color: var(--color-text-muted);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+
+    &--open {
+      transform: rotate(180deg);
     }
   }
 }
 
-// ─── Toggle Row ───────────────────────────────────────────────────────────────
+// Clear button inside trigger
+.month-clear-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: var(--color-hover);
+  border-radius: 50%;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
 
+  mat-icon {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-error) 12%, transparent);
+    color: var(--color-error);
+  }
+}
+
+// Invisible backdrop to capture outside clicks
+.month-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+}
+
+// Drop-down panel
+.month-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 12px;
+  animation: month-panel-enter 0.15s cubic-bezier(0.34, 1.2, 0.64, 1);
+
+  @keyframes month-panel-enter {
+    from {
+      opacity: 0;
+      transform: translateY(-6px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  &__year {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+
+  &__hint {
+    margin: 8px 0 0;
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    text-align: center;
+  }
+}
+
+.month-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  }
+}
+
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.month-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.12s ease;
+
+  &:hover:not(.month-cell--selected) {
+    background: var(--color-hover);
+    color: var(--color-text-primary);
+    border-color: var(--color-divider);
+  }
+
+  &--selected {
+    background: var(--color-primary);
+    color: #fff;
+    border-color: var(--color-primary);
+    font-weight: 700;
+  }
+}
+
+// ── Toggle row ────────────────────────────────────────────────────────────────
 .toggle-row {
   display: flex;
   align-items: center;
-  min-height: 48px;
-  margin-top: 0.5rem;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+  background: var(--color-bg-main);
 
-  mat-slide-toggle {
-    --mdc-switch-selected-track-color: var(--color-primary);
-    --mdc-switch-selected-handle-color: var(--color-on-primary);
-    --mdc-switch-selected-hover-track-color: var(--color-primary-light);
-    --mdc-switch-selected-pressed-track-color: var(--color-primary-dark);
-    --mdc-switch-unselected-track-color: var(--color-border);
-    font-size: 0.9rem;
-    color: var(--color-text-primary);
+  &__label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
 }
 
-// ─── Material Form Field Global Overrides ─────────────────────────────────────
-// Applied to ALL mat-form-fields inside this component.
-// Key fix: --mdc-outlined-text-field-input-placeholder-color for dark mode.
-
-mat-form-field {
-  width: 100%;
-
-  &.mat-mdc-form-field {
-    // ── Border colours ──
-    --mdc-outlined-text-field-outline-color: var(--color-border);
-    --mdc-outlined-text-field-hover-outline-color: var(--color-primary-light);
-    --mdc-outlined-text-field-focus-outline-color: var(--color-primary);
-
-    // ── Label colours ──
-    --mdc-outlined-text-field-label-text-color: var(--color-text-secondary);
-    --mdc-outlined-text-field-hover-label-text-color: var(--color-text-primary);
-    --mdc-outlined-text-field-focus-label-text-color: var(--color-primary);
-
-    // ── Input text colour ──
-    --mdc-outlined-text-field-input-text-color: var(--color-text-primary);
-
-    // ── FIX: Placeholder text colour — was invisible in dark mode ──────────
-    // Angular Material's MDC tokens don't automatically inherit --color-text-muted
-    // in dark mode. We must set both tokens explicitly.
-    --mdc-outlined-text-field-input-placeholder-color: var(--color-text-muted);
-    // Also cover the disabled/unfocused state placeholder
-    --mat-form-field-disabled-placeholder-color: var(--color-text-muted);
-
-    // ── Typography ──
-    --mat-form-field-container-text-size: 0.9375rem;
-    --mat-form-field-outlined-label-text-populated-size: 0.75rem;
-
-    // ── Animated border (Drizzle approach — targets the notch) ──
-    .mdc-notched-outline__leading,
-    .mdc-notched-outline__notch,
-    .mdc-notched-outline__trailing {
-      border-color: var(--color-border) !important;
-      transition: border-color 0.15s ease;
-    }
-
-    &:not(.mat-form-field-disabled):hover {
-      .mdc-notched-outline__leading,
-      .mdc-notched-outline__notch,
-      .mdc-notched-outline__trailing {
-        border-color: var(--color-primary-light) !important;
-      }
-    }
-
-    &.mat-focused {
-      .mdc-notched-outline__leading,
-      .mdc-notched-outline__notch,
-      .mdc-notched-outline__trailing {
-        border-color: var(--color-primary) !important;
-      }
-    }
-
-    // ── Prefix icons ──
-    .mat-mdc-form-field-icon-prefix {
-      color: var(--color-text-muted);
-      padding-inline-end: 4px;
-
-      mat-icon {
-        font-size: 20px;
-        width: 20px;
-        height: 20px;
-      }
-    }
-
-    // ── Text prefix (₹ symbol) ──
-    .mat-mdc-form-field-text-prefix {
-      color: var(--color-text-secondary);
-      font-weight: 600;
-      padding-inline-end: 2px;
-    }
-
-    // ── Hint text ──
-    .mat-mdc-form-field-hint {
-      color: var(--color-text-muted);
-      font-size: 0.78rem;
-    }
-
-    // ── Error text ──
-    mat-error {
-      font-size: 0.78rem;
-    }
-  }
+.toggle-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
 }
 
-// ─── Amount field — enforce single-line, compact height ──────────────────────
-// Prevents number inputs from being styled like textareas by some browsers.
-
-input[type='number'] {
-  -moz-appearance: textfield; // Firefox: hide spin buttons
-
-  &::-webkit-outer-spin-button,
-  &::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
+.toggle-hint {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
 }
 
-// ─── Full-width Textarea ─────────────────────────────────────────────────────
-
-mat-form-field.full-width {
-  width: 100%;
-  margin-bottom: 0.25rem;
-
-  textarea {
-    resize: vertical;
-    min-height: 80px;
-    line-height: 1.6;
-    color: var(--color-text-primary);
-  }
-}
-
-// ─── Current Academic Year Badge ─────────────────────────────────────────────
-
-.current-badge {
-  color: var(--color-success);
-  font-size: 0.85em;
-}
-
-// ─── Form Actions ─────────────────────────────────────────────────────────────
-
-.form-actions {
+// ── Error banner ──────────────────────────────────────────────────────────────
+.form-error-banner {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 0.875rem;
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--color-divider);
-  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-error) 25%, transparent);
+  border-radius: var(--radius-sm);
+  color: var(--color-error);
+  font-size: 0.82rem;
+  margin-bottom: 12px;
 
-  // Cancel button
-  button[mat-stroked-button] {
-    color: var(--color-text-secondary);
-    border-color: var(--color-border);
-    border-radius: var(--radius-sm);
-    font-weight: 500;
-    font-size: 0.9rem;
-    min-width: 100px;
-    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
-
-    &:hover {
-      color: var(--color-text-primary);
-      border-color: var(--color-text-secondary);
-      background-color: var(--color-hover);
-    }
-  }
-
-  // Save / Submit button
-  button[mat-raised-button][color='primary'] {
-    background-color: var(--color-primary);
-    color: var(--color-on-primary);
-    border-radius: var(--radius-sm);
-    font-weight: 600;
-    font-size: 0.9rem;
-    min-width: 160px;
-    box-shadow: var(--shadow-sm);
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    transition: background-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
-
-    &:hover:not(:disabled) {
-      background-color: var(--color-primary-dark);
-      box-shadow: var(--shadow-md);
-    }
-
-    &:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-
-    mat-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-    }
-  }
-
-  @media (max-width: 480px) {
-    flex-direction: column-reverse;
-    align-items: stretch;
-
-    button {
-      width: 100%;
-      justify-content: center;
-    }
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+    flex-shrink: 0;
   }
 }
 
-// ─── Spinner inside button ────────────────────────────────────────────────────
+// ── Modal footer ──────────────────────────────────────────────────────────────
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 8px;
 
-.btn-spinner {
-  --mdc-circular-progress-active-indicator-color: var(--color-on-primary);
-  display: inline-flex !important;
-  vertical-align: middle;
-  margin-right: 6px;
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+  }
+
+  mat-spinner {
+    display: inline-flex;
+  }
+}
+
+.current-tag {
+  font-size: 0.7rem;
+  color: var(--color-primary);
+  font-weight: 700;
+  margin-left: 4px;
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+@media (max-width: 600px) {
+  .form-row--2col {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .month-picker-wrapper {
+    width: 100%;
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
 }

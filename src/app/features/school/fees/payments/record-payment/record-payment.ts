@@ -1,20 +1,46 @@
-// record-payment.ts  (UPDATED — uses FeePaymentDialog)
+// features/school/fees/fee-payments/record-payment/record-payment.ts
+import {
+  Component,
+  OnInit,
+  Inject,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTableModule } from '@angular/material/table';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { Router } from '@angular/router';
-import { AcademicsService, ClassSection } from '../../../../../core/services/academics.service';
-import { EnrolledStudent, FeesService } from '../../../../../core/services/fees.service';
-import { ToastService } from '../../../../../core/services/toast.service';
-import { FeePaymentDialog } from '../fee-payment-dialog/fee-payment-dialog';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { DueFeeItem, DueFeesResponse, FeesService, PaymentMethod } from '../../../../../core/services/fees.service';
+import { PaisePipe } from '../../../../../shared/pipes/paise-pipe';
+import { FeeStatusBadge } from '../../../../../shared/components/fee-status-badge/fee-status-badge';
+import { FeeRowFilterPipe } from '../../../../../shared/pipes/fee-row-filter-pipe';
+
+
+export interface RecordPaymentData {
+  enrollmentId: number;
+  studentName?: string;
+  className?: string;
+  sectionName?: string;
+}
+
+interface PayableRow {
+  item: DueFeeItem;
+  source: 'STRUCTURE' | 'ASSIGNMENT';
+  amountToPayRupees: number;
+  maxRupees: number;
+  error: string | null;
+}
+
+const PAYMENT_METHODS: { value: PaymentMethod; label: string; icon: string }[] = [
+  { value: 'CASH', label: 'Cash', icon: 'payments' },
+  { value: 'CHECK', label: 'Cheque', icon: 'receipt' },
+  { value: 'BANK_TRANSFER', label: 'Bank Transfer', icon: 'account_balance' },
+];
 
 @Component({
   selector: 'app-record-payment',
@@ -22,109 +48,155 @@ import { FeePaymentDialog } from '../fee-payment-dialog/fee-payment-dialog';
   imports: [
     CommonModule,
     FormsModule,
-    ReactiveFormsModule,
-    MatTableModule,
+    MatDialogModule,
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatFormFieldModule,
     MatInputModule,
-    MatSelectModule,
-    MatTooltipModule,
-    FeePaymentDialog,
+    MatFormFieldModule,
+    PaisePipe,
+    // FeeStatusBadge,
+    FeeRowFilterPipe
+    
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './record-payment.html',
   styleUrl: './record-payment.scss',
 })
-export class RecordPayment implements OnInit {
-  private router = inject(Router);
-  private feesService = inject(FeesService);
-  private academicsService = inject(AcademicsService);
-  private toast = inject(ToastService);
-
-  // ── Data ─────────────────────────────────────────────────────────────────
-  classSections = signal<ClassSection[]>([]);
-  students = signal<EnrolledStudent[]>([]);
-
-  // ── UI state ──────────────────────────────────────────────────────────────
-  pageLoading = signal(true);
-  studentsLoading = signal(false);
+export class RecordPaymentComponent implements OnInit {
+  loading = signal(false);
+  saving = signal(false);
   error = signal<string | null>(null);
+  dueFees = signal<DueFeesResponse | null>(null);
 
-  // ── Selection ─────────────────────────────────────────────────────────────
-  selectedClassSectionId = signal<number | null>(null);
+  rows = signal<PayableRow[]>([]);
+  selectedMethod = signal<PaymentMethod>('CASH');
+  notes = signal('');
 
-  // ── Dialog ────────────────────────────────────────────────────────────────
-  dialogStudent = signal<EnrolledStudent | null>(null);
+  paymentMethods = PAYMENT_METHODS;
 
-  displayedColumns = ['rollNumber', 'name', 'totalAssigned', 'totalPaid', 'balance', 'actions'];
+  totalToPay = computed(() => {
+    return this.rows().reduce((sum, r) => {
+      const paise = Math.round((r.amountToPayRupees || 0) * 100);
+      return sum + paise;
+    }, 0);
+  });
 
-  totalBalance = computed(() => this.students().reduce((s, r) => s + (r.balance ?? 0), 0));
-  totalCollected = computed(() => this.students().reduce((s, r) => s + (r.totalPaid ?? 0), 0));
-  totalAssigned = computed(() => this.students().reduce((s, r) => s + (r.totalAssigned ?? 0), 0));
+  hasErrors = computed(() => this.rows().some((r) => r.error !== null));
 
-  ngOnInit() {
-    this.loadClassSections();
+  constructor(
+    private fees: FeesService,
+    public dialogRef: MatDialogRef<RecordPaymentComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: RecordPaymentData
+  ) {}
+
+  ngOnInit(): void {
+    this.loadDueFees();
   }
 
-  loadClassSections() {
-    this.pageLoading.set(true);
-    this.academicsService.getClassSections().subscribe({
-      next: (res) => {
-        this.classSections.set(res.classSections ?? []);
-        this.pageLoading.set(false);
-      },
-      error: (err) => {
-        this.error.set(err?.error?.error ?? err?.message ?? 'Failed to load class sections');
-        this.pageLoading.set(false);
-      },
-    });
-  }
-
-  onClassSectionChange(classSectionId: number) {
-    this.dialogStudent.set(null);
-    this.selectedClassSectionId.set(classSectionId);
-    this.loadStudents(classSectionId);
-  }
-
-  loadStudents(classSectionId: number) {
-    this.studentsLoading.set(true);
+  loadDueFees(): void {
+    this.loading.set(true);
     this.error.set(null);
-    this.students.set([]);
-    this.feesService.getStudentsByClassSection(classSectionId).subscribe({
+    this.fees.getDueFeesForEnrollment(this.data.enrollmentId).subscribe({
       next: (res) => {
-        this.students.set(res.students ?? []);
-        this.studentsLoading.set(false);
+        this.dueFees.set(res);
+        this.buildRows(res);
+        this.loading.set(false);
       },
       error: (err) => {
-        this.error.set(err?.error?.error ?? err?.message ?? 'Failed to load students');
-        this.studentsLoading.set(false);
+        this.error.set(err?.error?.error ?? 'Failed to load due fees');
+        this.loading.set(false);
       },
     });
   }
 
-  // ── Dialog control ────────────────────────────────────────────────────────
-  openPaymentDialog(student: EnrolledStudent) {
-    this.dialogStudent.set(student);
+  buildRows(res: DueFeesResponse): void {
+    const structureRows: PayableRow[] = res.fees
+      .filter((f) => f.remaining > 0)
+      .map((f) => ({
+        item: f,
+        source: 'STRUCTURE' as const,
+        amountToPayRupees: f.remaining / 100,
+        maxRupees: f.remaining / 100,
+        error: null,
+      }));
+
+    const assignmentRows: PayableRow[] = res.assignments
+      .filter((a) => a.remaining > 0)
+      .map((a) => ({
+        item: a,
+        source: 'ASSIGNMENT' as const,
+        amountToPayRupees: a.remaining / 100,
+        maxRupees: a.remaining / 100,
+        error: null,
+      }));
+
+    this.rows.set([...structureRows, ...assignmentRows]);
   }
 
-  onDialogClosed() {
-    this.dialogStudent.set(null);
-  }
-
-  onPaymentRecorded() {
-    // Dialog emits this before closing — reload table
-    if (this.selectedClassSectionId()) {
-      this.loadStudents(this.selectedClassSectionId()!);
+  onAmountChange(row: PayableRow, val: number): void {
+    row.amountToPayRupees = val;
+    if (val > row.maxRupees) {
+      row.error = `Max is ₹${row.maxRupees.toFixed(2)}`;
+    } else if (val < 0) {
+      row.error = 'Cannot be negative';
+    } else {
+      row.error = null;
     }
+    // trigger change detection
+    this.rows.update((list) => [...list]);
   }
 
-  // ── Navigation ────────────────────────────────────────────────────────────
-  viewPaymentHistory(enrollmentId: number) {
-    this.router.navigate(['/school/fees/payments-history', enrollmentId]);
+  submit(): void {
+    if (this.hasErrors()) return;
+    const payableRows = this.rows().filter((r) => (r.amountToPayRupees || 0) > 0);
+    if (payableRows.length === 0) {
+      this.error.set('Enter at least one payment amount');
+      return;
+    }
+
+    const payments = payableRows.map((r) => {
+      const obj: any = { amountPaid: Math.round(r.amountToPayRupees * 100) };
+      if (r.source === 'STRUCTURE') obj.feeStructureId = r.item.id;
+      else obj.studentFeeAssignmentId = r.item.id;
+      return obj;
+    });
+
+    this.saving.set(true);
+    this.error.set(null);
+
+    this.fees.recordFeePayment({
+      enrollmentId: this.data.enrollmentId,
+      paymentMethod: this.selectedMethod(),
+      notes: this.notes() || undefined,
+      payments,
+    }).subscribe({
+      next: (res) => {
+        this.saving.set(false);
+        this.dialogRef.close(res);
+      },
+      error: (err) => {
+        this.error.set(err?.error?.error ?? 'Failed to record payment');
+        this.saving.set(false);
+      },
+    });
   }
 
-  viewLedger(studentId: number) {
-    this.router.navigate(['/school/fees/ledger', studentId]);
+  formatMonth(feeMonth: string | null): string {
+    if (!feeMonth) return '—';
+    const [y, m] = feeMonth.split('-');
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${months[parseInt(m) - 1]} ${y}`;
+  }
+
+  statusOf(item: DueFeeItem): 'PAID' | 'PARTIAL' | 'PENDING' | 'OVERDUE' {
+    if (item.remaining <= 0) return 'PAID';
+    if (item.paid > 0) return 'PARTIAL';
+    if (item.dueDate && item.dueDate < new Date().toISOString().split('T')[0]) return 'OVERDUE';
+    return 'PENDING';
+  }
+
+  close(): void {
+    this.dialogRef.close(null);
   }
 }

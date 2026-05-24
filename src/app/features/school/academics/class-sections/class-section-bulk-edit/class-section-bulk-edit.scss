@@ -1,0 +1,504 @@
+// class-section-bulk-edit.scss
+// Bulk Class-Section Editor — production-grade, uses shared design tokens
+
+.edit-page {
+  padding: 28px 32px;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  @media (max-width: 768px) {
+    padding: 16px;
+    gap: 14px;
+  }
+}
+
+// ── Header ─────────────────────────────────────────────────────────────────────
+
+.edit-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 1.625rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+
+    @media (max-width: 480px) {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+}
+
+.back-btn {
+  flex-shrink: 0;
+  color: var(--color-text-secondary) !important;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.change-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 22%, transparent);
+  color: color-mix(in srgb, var(--color-warning) 70%, #000);
+  font-size: 0.8rem;
+  font-weight: 700;
+
+  mat-icon {
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
+  }
+}
+
+// ── State containers ───────────────────────────────────────────────────────────
+
+.state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 14px;
+  padding: 56px 24px;
+  background: var(--color-bg-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+
+  p {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--color-text-secondary);
+  }
+  h2 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
+  &--error {
+    border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
+    background: color-mix(in srgb, var(--color-error) 3%, var(--color-bg-surface));
+
+    .state-icon {
+      color: var(--color-error) !important;
+    }
+  }
+}
+
+.state-icon {
+  font-size: 48px !important;
+  width: 48px !important;
+  height: 48px !important;
+  color: var(--color-text-muted) !important;
+}
+
+// ── Info banner ────────────────────────────────────────────────────────────────
+
+.info-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  background: color-mix(in srgb, var(--color-info) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-info) 18%, transparent);
+  border-radius: var(--radius-md);
+  font-size: 0.84rem;
+  color: color-mix(in srgb, var(--color-info) 70%, var(--color-text-primary));
+  line-height: 1.6;
+
+  mat-icon {
+    font-size: 17px;
+    height: 17px;
+    width: 17px;
+    color: var(--color-info);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  strong {
+    font-weight: 700;
+  }
+}
+
+// ── Table card ─────────────────────────────────────────────────────────────────
+
+.table-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+// ── Grid table layout ──────────────────────────────────────────────────────────
+// Columns: dirty-dot | class-section label | enrolled | capacity | teacher | room | active | undo
+
+.cs-edit-head,
+.cs-edit-row {
+  display: grid;
+  grid-template-columns:
+    18px /* dirty dot */
+    180px /* class–section label */
+    72px /* enrolled */
+    100px /* capacity */
+    1fr /* teacher — takes remaining space */
+    110px /* room */
+    64px /* active */
+    44px; /* undo */
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: 16px 160px 64px 88px 1fr 96px 56px 40px;
+    gap: 8px;
+    padding: 0 14px;
+  }
+
+  @media (max-width: 900px) {
+    /* Responsive card layout */
+    display: block;
+    padding: 14px 16px;
+  }
+}
+
+.cs-edit-head {
+  background: var(--color-hover);
+  border-bottom: 1px solid var(--color-border);
+  padding-top: 10px;
+  padding-bottom: 10px;
+
+  @media (max-width: 900px) {
+    display: none;
+  }
+}
+
+.cse-th {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+
+  .th-hint {
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--color-text-muted);
+    opacity: 0.7;
+    font-size: 0.62rem;
+    display: block;
+    margin-top: 1px;
+  }
+}
+
+.cs-edit-body {
+  overflow-x: auto;
+
+  @media (min-width: 901px) {
+    min-width: 860px;
+  }
+}
+
+// ── Edit row ───────────────────────────────────────────────────────────────────
+
+.cs-edit-row {
+  border-bottom: 1px solid var(--color-divider);
+  min-height: 72px;
+  transition: background 0.12s ease;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: var(--color-hover);
+  }
+
+  &--dirty {
+    background: color-mix(in srgb, var(--color-warning) 4%, transparent) !important;
+    border-left: 3px solid var(--color-warning);
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-warning) 6%, transparent) !important;
+    }
+  }
+
+  &--invalid {
+    background: color-mix(in srgb, var(--color-error) 3%, transparent) !important;
+  }
+
+  @media (max-width: 900px) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 14px 16px;
+    border-left: none;
+
+    &--dirty {
+      border-left: 3px solid var(--color-warning);
+      padding-left: 13px;
+    }
+  }
+}
+
+.cse-td {
+  min-width: 0;
+
+  .field-full {
+    width: 100%;
+  }
+}
+
+// ── Dirty dot ─────────────────────────────────────────────────────────────────
+
+.dirty-dot {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-warning);
+  animation: pulse-dot 1.8s ease-in-out infinite;
+  margin: 0 auto;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.7);
+  }
+}
+
+// ── Section label (read-only) ──────────────────────────────────────────────────
+
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+
+  &__class {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+
+  &__sep {
+    color: var(--color-text-muted);
+    font-weight: 400;
+  }
+
+  &__section {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+}
+
+.id-badge {
+  display: inline-block;
+  margin-top: 3px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  background: var(--color-hover);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+
+// ── Enrolled count ─────────────────────────────────────────────────────────────
+
+.enrolled-count {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+
+  &__sep {
+    color: var(--color-text-muted);
+    margin: 0 1px;
+  }
+
+  &--warn {
+    color: var(--color-warning);
+  }
+}
+
+// ── Toggle switch ──────────────────────────────────────────────────────────────
+
+.toggle-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  background: var(--color-border);
+  border-radius: 100px;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: white;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.toggle-input:checked + .toggle-slider {
+  background: var(--color-primary);
+
+  &::after {
+    transform: translateX(16px);
+  }
+}
+
+// ── Undo button ────────────────────────────────────────────────────────────────
+
+.undo-btn {
+  color: var(--color-warning) !important;
+  opacity: 0.85;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 1;
+    background: color-mix(in srgb, var(--color-warning) 10%, transparent) !important;
+  }
+}
+
+// ── Submit bar ─────────────────────────────────────────────────────────────────
+
+.submit-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  flex-wrap: wrap;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  &__btns {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+
+    @media (max-width: 480px) {
+      flex-direction: column-reverse;
+      button {
+        width: 100%;
+      }
+    }
+  }
+}
+
+.submit-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--color-text-secondary);
+  flex: 1;
+  min-width: 0;
+}
+
+.hint-icon {
+  font-size: 17px !important;
+  height: 17px !important;
+  width: 17px !important;
+  flex-shrink: 0;
+
+  &--info {
+    color: var(--color-info);
+  }
+  &--ok {
+    color: var(--color-success);
+  }
+}
+
+.btn-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-spinner {
+  display: inline-block;
+}
+
+.save-count {
+  font-weight: 400;
+  opacity: 0.8;
+  margin-left: 2px;
+}

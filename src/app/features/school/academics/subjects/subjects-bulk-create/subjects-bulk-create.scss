@@ -1,0 +1,1053 @@
+// features/school/academics/subjects/subjects-bulk-create/subjects-bulk-create.scss
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAGE SHELL
+// ─────────────────────────────────────────────────────────────────────────────
+
+.bulk-page {
+  padding: 20px 16px 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  // Prevents overflow-visible children from inflating the ancestor
+  // scroll container's scroll-height.
+  overflow-x: clip;
+
+  @media (min-width: 768px) {
+    padding: 28px 24px 48px;
+    gap: 24px;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HEADER
+// ─────────────────────────────────────────────────────────────────────────────
+
+.bulk-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  &__left {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      letter-spacing: -0.025em;
+      line-height: 1.2;
+
+      @media (min-width: 768px) {
+        font-size: 1.75rem;
+      }
+    }
+
+    .subtitle {
+      margin: 0;
+      font-size: 0.875rem;
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .back-btn {
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 767px) {
+    flex-direction: column;
+
+    &__actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+}
+
+.preset-btn {
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-card)) !important;
+  border-color: color-mix(in srgb, var(--color-primary) 30%, transparent) !important;
+  color: var(--color-primary) !important;
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-primary) 14%, var(--color-bg-card)) !important;
+  }
+
+  &--active {
+    background: color-mix(in srgb, var(--color-primary) 16%, var(--color-bg-card)) !important;
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent) !important;
+  }
+}
+
+.btn-spinner {
+  display: inline-flex;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.btn-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.required-star {
+  color: var(--color-error);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FIELD GUIDE PANEL
+// ─────────────────────────────────────────────────────────────────────────────
+
+.guide-panel {
+  background: color-mix(in srgb, var(--color-info) 5%, var(--color-bg-card));
+  border: 1px solid color-mix(in srgb, var(--color-info) 20%, transparent);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  animation: panel-fade-in 0.2s ease;
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 16px;
+
+    mat-icon {
+      color: var(--color-info);
+      font-size: 20px;
+      height: 20px;
+      width: 20px;
+    }
+  }
+}
+
+.guide-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+
+  @media (min-width: 560px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.guide-card {
+  display: flex;
+  gap: 12px;
+  padding: 14px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+
+  &__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    mat-icon {
+      font-size: 18px;
+      height: 18px;
+      width: 18px;
+    }
+
+    &--primary {
+      background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+      mat-icon {
+        color: var(--color-primary);
+      }
+    }
+    &--info {
+      background: color-mix(in srgb, var(--color-info) 12%, transparent);
+      mat-icon {
+        color: var(--color-info);
+      }
+    }
+    &--success {
+      background: color-mix(in srgb, var(--color-success) 12%, transparent);
+      mat-icon {
+        color: var(--color-success);
+      }
+    }
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+
+    strong {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      margin-bottom: 4px;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.775rem;
+      color: var(--color-text-secondary);
+      line-height: 1.55;
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PANEL ANIMATIONS
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// KEY FIX: All panel animations use opacity-only fades — NO translateY.
+//
+// translateY on a panel that contains overflow:visible children (the preset
+// groups and chip grids) causes the browser to calculate scroll-height based
+// on the element's *animated* position. During the translateY(-6px) start
+// frame, the entire panel content is shifted upward, and when the animation
+// completes the browser has already committed extra scroll space below the
+// panel's natural bottom edge — producing the blank scroll region.
+//
+// Opacity-only animation: the element always occupies its correct layout
+// position from frame 0. The scroll container never sees any overflow, so
+// no phantom scroll space is ever created.
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
+@keyframes panel-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// Chip grid uses the same opacity-only pattern (unchanged from previous fix).
+@keyframes chip-grid-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PRESETS PANEL
+// ─────────────────────────────────────────────────────────────────────────────
+
+.presets-panel {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  // overflow:hidden here is SAFE — this element does not directly contain
+  // chip grids. It contains: __header, .presets-body (which has its own
+  // overflow-y:auto scroll), and .presets-footer. None of these need to
+  // visually escape the panel's bounds. overflow:hidden restores the
+  // border-radius clip and — critically — prevents this element's own
+  // animated paint area from contributing to the page scroll height.
+  overflow: hidden;
+  // Fade only — no translateY (see animation comment above).
+  animation: panel-fade-in 0.22s ease;
+
+  &__header {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--color-divider);
+    background: var(--color-hover);
+    // No border-radius needed here — parent overflow:hidden handles the clip.
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 5px;
+
+    mat-icon {
+      color: var(--color-primary);
+      font-size: 20px;
+      height: 20px;
+      width: 20px;
+    }
+  }
+
+  &__hint {
+    margin: 0 0 14px;
+    font-size: 0.845rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+  }
+}
+
+// ── Search bar ────────────────────────────────────────────────────────────────
+
+.presets-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-bg-card);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0 12px;
+  margin-bottom: 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
+  }
+
+  &__icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+  }
+
+  &__input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 0.875rem;
+    color: var(--color-text-primary);
+    padding: 10px 0;
+    font-family: inherit;
+
+    &::placeholder {
+      color: var(--color-text-muted);
+    }
+  }
+
+  &__clear {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+    transition: color 0.12s, background 0.12s;
+
+    &:hover {
+      color: var(--color-text-primary);
+      background: var(--color-hover);
+    }
+
+    mat-icon {
+      font-size: 16px;
+      height: 16px;
+      width: 16px;
+    }
+  }
+}
+
+// ── Global actions row ────────────────────────────────────────────────────────
+
+.presets-global-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+  min-height: 36px;
+
+  &__divider {
+    width: 1px;
+    height: 16px;
+    background: var(--color-border);
+    margin: 0 4px;
+    flex-shrink: 0;
+  }
+}
+
+.preset-total-count {
+  margin-left: auto;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
+  white-space: nowrap;
+}
+
+.sel-btn {
+  font-size: 0.775rem !important;
+  font-weight: 600 !important;
+  color: var(--color-text-secondary) !important;
+  min-width: unset !important;
+  padding: 0 8px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+
+  mat-icon {
+    font-size: 16px !important;
+    height: 16px !important;
+    width: 16px !important;
+    margin-right: 4px !important;
+  }
+
+  &:hover {
+    color: var(--color-primary) !important;
+    background: color-mix(in srgb, var(--color-primary) 6%, transparent) !important;
+  }
+}
+
+// ── Presets body ──────────────────────────────────────────────────────────────
+
+.presets-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 580px;
+  // This element is the scroll container for preset groups. overflow-y:auto
+  // gives it an independent scroll context, meaning chip grids that extend
+  // beyond a group's visual border stay inside *this* scroll container's
+  // paint area — they never escape to the page scroll container above.
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+
+  @media (min-width: 768px) {
+    padding: 16px 20px;
+  }
+
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 3px;
+  }
+}
+
+// ── Empty search state ────────────────────────────────────────────────────────
+
+.presets-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 48px 24px;
+  color: var(--color-text-muted);
+
+  mat-icon {
+    font-size: 42px;
+    height: 42px;
+    width: 42px;
+    opacity: 0.35;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+    text-align: center;
+    color: var(--color-text-secondary);
+
+    strong {
+      color: var(--color-text-primary);
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PRESET GROUP
+// ─────────────────────────────────────────────────────────────────────────────
+
+.preset-group {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  // overflow:visible on .preset-group is still needed so chip grids are not
+  // clipped. This is safe because .presets-body (the scroll container above)
+  // absorbs any overflow within its own scroll viewport — it never leaks
+  // to the page-level scroll container.
+  overflow: visible;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
+  }
+
+  // ── Group header ────────────────────────────────────────────────────────
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    gap: 8px;
+    flex-wrap: nowrap;
+    width: 100%;
+    border: none;
+    background: var(--color-hover);
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    transition: background 0.14s ease;
+    user-select: none;
+    border-radius: var(--radius-md);
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-primary) 5%, var(--color-hover));
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -2px;
+    }
+  }
+
+  &__header-right {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.845rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+    flex-shrink: 0;
+  }
+
+  &__count {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    background: var(--color-bg-card);
+    padding: 2px 8px;
+    border-radius: 9999px;
+    border: 1px solid var(--color-border);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  &__selected-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    padding: 2px 8px;
+    border-radius: 9999px;
+    border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  &__chevron {
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+    color: var(--color-text-muted);
+    transform: rotate(-90deg);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease;
+    flex-shrink: 0;
+
+    &--open {
+      transform: rotate(0deg);
+      color: var(--color-primary);
+    }
+  }
+
+  // ── Colour variants ──────────────────────────────────────────────────────
+
+  @mixin group-color($color-var) {
+    .preset-group__header {
+      background: color-mix(in srgb, #{$color-var} 5%, var(--color-hover));
+      &:hover {
+        background: color-mix(in srgb, #{$color-var} 9%, var(--color-hover));
+      }
+    }
+    .preset-group__icon {
+      color: #{$color-var};
+    }
+    .preset-chip--selected {
+      background: color-mix(in srgb, #{$color-var} 13%, transparent);
+      border-color: #{$color-var};
+      color: #{$color-var};
+    }
+  }
+
+  &--primary {
+    @include group-color(var(--color-primary));
+  }
+  &--success {
+    @include group-color(var(--color-success));
+  }
+  &--info {
+    @include group-color(var(--color-info));
+  }
+  &--secondary {
+    @include group-color(var(--color-secondary));
+  }
+
+  &--warning {
+    .preset-group__header {
+      background: color-mix(in srgb, var(--color-warning) 5%, var(--color-hover));
+      &:hover {
+        background: color-mix(in srgb, var(--color-warning) 9%, var(--color-hover));
+      }
+    }
+    .preset-group__icon {
+      color: var(--color-warning);
+    }
+    .preset-chip--selected {
+      background: color-mix(in srgb, var(--color-warning) 13%, transparent);
+      border-color: var(--color-warning);
+      color: color-mix(in srgb, var(--color-warning) 75%, #000);
+    }
+  }
+
+  &--error {
+    .preset-group__header {
+      background: color-mix(in srgb, var(--color-error) 5%, var(--color-hover));
+      &:hover {
+        background: color-mix(in srgb, var(--color-error) 9%, var(--color-hover));
+      }
+    }
+    .preset-group__icon {
+      color: var(--color-error);
+    }
+    .preset-chip--selected {
+      background: color-mix(in srgb, var(--color-error) 13%, transparent);
+      border-color: var(--color-error);
+      color: var(--color-error);
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CHIP GRID
+// ─────────────────────────────────────────────────────────────────────────────
+
+.preset-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px;
+  background: var(--color-bg-card);
+  border-top: 1px solid var(--color-divider);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  animation: chip-grid-enter 0.22s ease-out both;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INDIVIDUAL CHIP
+// ─────────────────────────────────────────────────────────────────────────────
+
+.preset-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px 5px 7px;
+  border-radius: 9999px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.14s ease, background 0.14s ease, color 0.14s ease,
+    box-shadow 0.14s ease, transform 0.1s ease;
+  position: relative;
+
+  &:hover:not(.preset-chip--selected) {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.97);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  &--selected {
+    border-width: 1.5px;
+    font-weight: 600;
+    box-shadow: 0 1px 5px color-mix(in srgb, currentColor 18%, transparent);
+    transform: none;
+  }
+
+  &__check {
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
+    flex-shrink: 0;
+    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    .preset-chip--selected & {
+      transform: scale(1.1);
+    }
+  }
+
+  &__name {
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  &__code {
+    font-size: 0.67rem;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    background: color-mix(in srgb, currentColor 10%, transparent);
+    padding: 1px 5px;
+    border-radius: 3px;
+    opacity: 0.8;
+    white-space: nowrap;
+    letter-spacing: 0.03em;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PRESETS FOOTER
+// ─────────────────────────────────────────────────────────────────────────────
+
+.presets-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-top: 1px solid var(--color-divider);
+  background: var(--color-hover);
+  gap: 12px;
+  flex-wrap: wrap;
+  // No border-radius needed — parent .presets-panel overflow:hidden clips it.
+
+  &__preview {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.845rem;
+    color: var(--color-text-secondary);
+
+    mat-icon {
+      font-size: 18px;
+      height: 18px;
+      width: 18px;
+      color: var(--color-primary);
+    }
+
+    strong {
+      color: var(--color-text-primary);
+    }
+  }
+
+  &__btns {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+
+    @media (max-width: 480px) {
+      width: 100%;
+      button {
+        flex: 1;
+      }
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RESULT BANNER
+// ─────────────────────────────────────────────────────────────────────────────
+
+.result-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-success) 8%, var(--color-bg-card));
+  border: 1px solid color-mix(in srgb, var(--color-success) 25%, transparent);
+  animation: panel-fade-in 0.2s ease;
+
+  mat-icon {
+    color: var(--color-success);
+    font-size: 22px;
+    height: 22px;
+    width: 22px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  strong {
+    display: block;
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+    margin-bottom: 3px;
+  }
+
+  &--partial {
+    background: color-mix(in srgb, var(--color-warning) 8%, var(--color-bg-card));
+    border-color: color-mix(in srgb, var(--color-warning) 25%, transparent);
+    mat-icon {
+      color: var(--color-warning);
+    }
+  }
+}
+
+.result-skipped {
+  margin: 4px 0 0;
+  font-size: 0.815rem;
+  color: var(--color-text-secondary);
+}
+
+.result-errors {
+  margin: 4px 0 0;
+  font-size: 0.815rem;
+  color: var(--color-error);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TABLE CARD
+// ─────────────────────────────────────────────────────────────────────────────
+
+.table-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-divider);
+  background: var(--color-hover);
+
+  &__count {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.845rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+
+    mat-icon {
+      font-size: 18px;
+      height: 18px;
+      width: 18px;
+    }
+  }
+}
+
+.table-scroll-wrap {
+  overflow-x: auto;
+
+  &::-webkit-scrollbar {
+    height: 5px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 3px;
+  }
+}
+
+// ── Table ────────────────────────────────────────────────────────────────────
+
+.cs-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 700px;
+
+  thead tr {
+    background: var(--color-hover);
+  }
+
+  th {
+    padding: 11px 14px;
+    font-size: 0.695rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-text-secondary);
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+    white-space: nowrap;
+  }
+}
+
+// ── Column widths ─────────────────────────────────────────────────────────────
+
+.col-num {
+  width: 48px;
+  text-align: center;
+}
+.col-name {
+  min-width: 220px;
+  width: 28%;
+}
+.col-code {
+  width: 140px;
+}
+.col-description {
+  min-width: 260px;
+}
+.col-actions {
+  width: 56px;
+  text-align: center;
+}
+
+// ── Row ───────────────────────────────────────────────────────────────────────
+
+.cs-row {
+  transition: background 0.12s ease;
+  border-bottom: 1px solid var(--color-divider);
+
+  &:last-child {
+    border-bottom: none;
+  }
+  &:hover {
+    background: var(--color-hover);
+  }
+  &--invalid {
+    background: color-mix(in srgb, var(--color-error) 3%, transparent);
+  }
+
+  td {
+    padding: 8px 14px;
+    vertical-align: top;
+  }
+
+  .field-full {
+    width: 100%;
+
+    ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+
+    &.mat-form-field-invalid ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+      display: block;
+    }
+  }
+}
+
+.row-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-hover));
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin: 0 auto;
+  margin-top: 16px;
+  flex-shrink: 0;
+}
+
+// ── Table footer ──────────────────────────────────────────────────────────────
+
+.table-footer {
+  padding: 10px 14px;
+  border-top: 1px solid var(--color-divider);
+  background: var(--color-hover);
+}
+
+.add-row-btn {
+  color: var(--color-primary) !important;
+  font-size: 0.845rem !important;
+  font-weight: 600 !important;
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+    margin-right: 4px;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BOTTOM SUBMIT BAR
+// ─────────────────────────────────────────────────────────────────────────────
+
+.submit-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 20px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  flex-wrap: wrap;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    button {
+      width: 100%;
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCREEN READER ONLY UTILITY
+// ─────────────────────────────────────────────────────────────────────────────
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

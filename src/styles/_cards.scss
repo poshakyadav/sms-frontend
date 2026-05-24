@@ -338,3 +338,166 @@
   color: var(--color-text-muted);
   margin-left: 4px;
 }
+
+// ── Searchable select wrapper (used in user-creation-hub — State & MotherTongue) ──
+// These are GLOBAL classes so other future list pages can reuse the widget.
+// The widget renders its own border+search box without depending on mat-form-field.
+
+.searchable-select-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.searchable-select-widget-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: default;
+  user-select: none;
+
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+  }
+
+  .widget-label-hint {
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: var(--color-text-muted);
+    margin-left: 2px;
+  }
+}
+
+// ── Info card: amber variant (used in UDISE step, user-creation-hub) ──────────
+// Adds to the existing .info-card + .info-card--blue pattern in _cards.scss.
+
+// (Already present as .info-card--amber — no duplication needed.)
+
+// ── Aadhaar security chip ─────────────────────────────────────────────────────
+// Reusable everywhere a masked-ID security note is needed (fee receipts, reports, etc.)
+
+.aadhaar-security-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  color: color-mix(in srgb, var(--color-success) 70%, #000);
+  border: 1px solid color-mix(in srgb, var(--color-success) 20%, transparent);
+
+  mat-icon {
+    font-size: 12px;
+    height: 12px;
+    width: 12px;
+    flex-shrink: 0;
+  }
+}
+
+// ── Code / number badge (generic — state codes, language codes, roll numbers) ──
+// Supplements the existing .roll-chip for use with non-roll identifiers.
+
+.code-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.03em;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+
+  &.code-badge--ut {
+    background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
+    color: var(--color-secondary);
+    border-color: color-mix(in srgb, var(--color-secondary) 18%, transparent);
+  }
+
+  &.code-badge--lang {
+    background: color-mix(in srgb, var(--color-info) 12%, transparent);
+    color: var(--color-info);
+    border-color: color-mix(in srgb, var(--color-info) 18%, transparent);
+  }
+
+  &.code-badge--muted {
+    background: color-mix(in srgb, var(--color-text-muted) 10%, transparent);
+    color: var(--color-text-muted);
+    border-color: transparent;
+  }
+}
+
+// ── Step info card (used across all stepper steps) ────────────────────────────
+// Variant of .info-card tuned for wizard/stepper UI where the header is bolder.
+
+.step-info-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  margin-bottom: 18px;
+  font-size: 0.83rem;
+  line-height: 1.6;
+  border: 1px solid transparent;
+
+  mat-icon {
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .step-info-banner__title {
+    display: block;
+    font-weight: 700;
+    font-size: 0.88rem;
+    margin-bottom: 3px;
+  }
+
+  p {
+    margin: 0;
+    opacity: 0.9;
+  }
+
+  // Colour modifiers
+  &--blue {
+    background: color-mix(in srgb, var(--color-info) 8%, transparent);
+    border-color: color-mix(in srgb, var(--color-info) 20%, transparent);
+    color: color-mix(in srgb, var(--color-info) 70%, var(--color-text-primary));
+    mat-icon {
+      color: var(--color-info);
+    }
+  }
+
+  &--amber {
+    background: color-mix(in srgb, var(--color-warning) 8%, transparent);
+    border-color: color-mix(in srgb, var(--color-warning) 20%, transparent);
+    color: color-mix(in srgb, var(--color-warning) 60%, var(--color-text-primary));
+    mat-icon {
+      color: var(--color-warning);
+    }
+  }
+
+  &--green {
+    background: color-mix(in srgb, var(--color-success) 8%, transparent);
+    border-color: color-mix(in srgb, var(--color-success) 20%, transparent);
+    color: color-mix(in srgb, var(--color-success) 60%, var(--color-text-primary));
+    mat-icon {
+      color: var(--color-success);
+    }
+  }
+}

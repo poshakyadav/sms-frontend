@@ -15,6 +15,7 @@ import { SchoolSubject, SubjectsService } from '../../../../../core/services/sub
 import { AuthService } from '../../../../../core/services/auth.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { ConfirmDialog } from '../../../../../shared/components/confirm-dialog/confirm-dialog';
+import { MatMenuModule } from '@angular/material/menu';
 
 @Component({
   selector: 'app-subjects-list',
@@ -22,7 +23,7 @@ import { ConfirmDialog } from '../../../../../shared/components/confirm-dialog/c
   imports: [
     CommonModule,
     FormsModule,
-    RouterLink, // ← replaces RouterModule (precise import)
+    RouterLink, 
     MatTableModule,
     MatButtonModule,
     MatIconModule,
@@ -30,6 +31,7 @@ import { ConfirmDialog } from '../../../../../shared/components/confirm-dialog/c
     MatFormFieldModule,
     MatInputModule,
     MatTooltipModule,
+    MatMenuModule,
   ],
   templateUrl: './subjects-list.html',
   styleUrl: './subjects-list.scss',

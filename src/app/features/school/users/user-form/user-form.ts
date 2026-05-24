@@ -1,11 +1,9 @@
 // user-form/user-form.ts
-// UPDATED: Added guardian fields (fatherName, motherName, guardianName, guardianRelation)
-// UPDATED: Added full UDISE+ student fields (pen, apaarId, socialCategory, isCwsn, etc.)
-// UPDATED: Added admissionNumber, enrollmentType, previousClassResult to student section
-// UPDATED: 3-state permission model (inherited / granted / denied)
+// PRODUCTION-GRADE — Mobile-first, category-filtered roles, full UDISE+,
+// 3-state permission model, confirm-before-save.
 
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, computed, inject, OnInit, signal, Pipe, PipeTransform } from '@angular/core';
+import { Component, computed, inject, OnInit, Pipe, PipeTransform, signal } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -24,25 +22,26 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpParams } from '@angular/common/http';
+import { INDIAN_DATE_PROVIDERS } from '../../../../core/adapters/indian-date-adapter';
 import { ApiService } from '../../../../core/services/api.service';
+import { Permission, RoleCategory, RolesService } from '../../../../core/services/roles.service';
+import { ToastService } from '../../../../core/services/toast.service';
 import {
   CreateUserPayload,
-  SchoolUser,
-  UpdateUserPayload,
-  UsersService,
-  UserPermission,
-  SOCIAL_CATEGORY_LABELS,
-  RELIGION_LABELS,
   DISABILITY_TYPE_LABELS,
+  DisabilityType,
   FACILITY_LABELS,
   FacilityReceived,
-  SocialCategory,
   Religion,
-  DisabilityType,
+  RELIGION_LABELS,
+  SOCIAL_CATEGORY_LABELS,
+  SocialCategory,
+  UpdateUserPayload,
+  UsersService,
 } from '../../../../core/services/users.service';
-import { ToastService } from '../../../../core/services/toast.service';
-import { RolesService, RoleCategory, Permission } from '../../../../core/services/roles.service';
-import { INDIAN_DATE_PROVIDERS } from '../../../../core/adapters/indian-date-adapter';
+
+// ── Types ──────────────────────────────────────────────────────────────────────
 
 interface RoleOption {
   id: number;
@@ -67,6 +66,12 @@ interface PermModuleGroup {
 
 export type PermissionState = 'inherited' | 'granted' | 'denied' | 'none';
 
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+/**
+ * Derives the RoleCategory from a primaryRole name string.
+ * Maps STUDENT → student, STUDENT_PARENT → parent, everything else → staff.
+ */
 function derivePermissionCategory(primaryRole: string): RoleCategory {
   const upper = primaryRole.toUpperCase().trim();
   if (upper === 'STUDENT') return 'student';
@@ -74,12 +79,27 @@ function derivePermissionCategory(primaryRole: string): RoleCategory {
   return 'staff';
 }
 
+/**
+ * Maps a primaryRole name to the RoleCategory used for filtering the
+ * "Additional Roles" dropdown. Mirrors the backend's category system:
+ *   staff category   → roles with category='staff'
+ *   student category → roles with category='student'
+ *   parent category  → roles with category='parent'
+ */
+function primaryRoleToCategory(primaryRole: string): RoleCategory {
+  return derivePermissionCategory(primaryRole);
+}
+
+// ── Pipe ───────────────────────────────────────────────────────────────────────
+
 @Pipe({ name: 'findById', standalone: true, pure: false })
 export class FindByIdPipe implements PipeTransform {
   transform(items: RoleOption[], id: number): RoleOption | undefined {
     return items.find((r) => r.id === id);
   }
 }
+
+// ── Component ──────────────────────────────────────────────────────────────────
 
 @Component({
   selector: 'app-user-form',
@@ -104,6 +124,7 @@ export class FindByIdPipe implements PipeTransform {
   styleUrl: './user-form.scss',
 })
 export class UserForm implements OnInit {
+  // ── DI ──────────────────────────────────────────────────────────────────────
   private route = inject(ActivatedRoute);
   readonly router = inject(Router);
   private fb = inject(FormBuilder);
@@ -113,12 +134,15 @@ export class UserForm implements OnInit {
   private toast = inject(ToastService);
   private datePipe = inject(DatePipe);
 
-  // ── State ──────────────────────────────────────────────────────────────────
+  // ── Core state ───────────────────────────────────────────────────────────────
   isEdit = signal(false);
   userId = signal<number | null>(null);
   loading = signal(false);
   submitting = signal(false);
+
+  /** All roles of the user's category (drives the Additional Roles dropdown). */
   availableRoles = signal<RoleOption[]>([]);
+  loadingRoles = signal(false);
 
   primaryRoleName = signal<string>('');
   primaryRoleId = signal<number | null>(null);
@@ -131,7 +155,20 @@ export class UserForm implements OnInit {
 
   guideExpanded = signal(false);
 
-  // ── Permission section state ───────────────────────────────────────────────
+  // ── Section collapse state ────────────────────────────────────────────────
+  sectionExpanded = signal<Record<string, boolean>>({
+    account: true,
+    personal: true,
+    address: false,
+    guardian: false,
+    studentProfile: true,
+    teacherProfile: true,
+    parentProfile: true,
+    staffProfile: true,
+    permissions: false,
+  });
+
+  // ── Permission section ────────────────────────────────────────────────────
   permSectionUnlocked = signal(false);
   loadingPermissions = signal(false);
   savingPermissions = signal(false);
@@ -146,10 +183,7 @@ export class UserForm implements OnInit {
   originalGrantIds = signal<Set<number>>(new Set());
   originalDenyIds = signal<Set<number>>(new Set());
 
-  // ── UDISE+ toggle ──────────────────────────────────────────────────────────
-  showCwsnFields = computed(() => !!this.form?.get('isCwsn')?.value);
-
-  // ── Static option lists ────────────────────────────────────────────────────
+  // ── Static options ────────────────────────────────────────────────────────
   readonly bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
   readonly genders = [
     { value: 'MALE', label: 'Male' },
@@ -192,7 +226,7 @@ export class UserForm implements OnInit {
     { value: 'RURAL', label: 'Rural' },
   ];
 
-  // ── Computed: filtered permission groups ───────────────────────────────────
+  // ── Computed: filtered perm groups ────────────────────────────────────────
   filteredPermGroups = computed(() => {
     const q = this.permissionSearch().toLowerCase().trim();
     if (!q) return this.permModuleGroups();
@@ -233,7 +267,10 @@ export class UserForm implements OnInit {
     return labels[cat];
   });
 
-  // ── Computed profile flags ─────────────────────────────────────────────────
+  /** Category derived from primaryRole — used for section visibility & role filtering */
+  userCategory = computed<RoleCategory>(() => primaryRoleToCategory(this.primaryRoleName()));
+
+  // ── Profile section flags ─────────────────────────────────────────────────
   selectedRoleNames = computed(() => {
     const roleIds: number[] = this.form?.get('roleIds')?.value ?? [];
     return this.availableRoles()
@@ -243,10 +280,8 @@ export class UserForm implements OnInit {
 
   showStudentFields = computed(() => {
     if (this.isEdit()) {
-      return (
-        this.primaryRoleName().toUpperCase().includes('STUDENT') &&
-        !this.primaryRoleName().toUpperCase().includes('PARENT')
-      );
+      const p = this.primaryRoleName().toUpperCase();
+      return p.includes('STUDENT') && !p.includes('PARENT');
     }
     return this.selectedRoleNames().some((n) => n.includes('STUDENT') && !n.includes('PARENT'));
   });
@@ -275,7 +310,9 @@ export class UserForm implements OnInit {
     );
   });
 
-  // ── Field labels ───────────────────────────────────────────────────────────
+  showCwsnFields = computed(() => !!this.form?.get('isCwsn')?.value);
+
+  // ── Field labels ──────────────────────────────────────────────────────────
   private readonly fieldLabels: Record<string, string> = {
     name: 'Full Name',
     email: 'Email Address',
@@ -327,38 +364,46 @@ export class UserForm implements OnInit {
     isActive: 'Account Status',
   };
 
-  // ── Static options ─────────────────────────────────────────────────────────
+  // ── Category label helper ─────────────────────────────────────────────────
+  get currentCategoryLabel(): string {
+    const labels: Record<RoleCategory, string> = {
+      staff: 'Staff',
+      student: 'Student',
+      parent: 'Parent',
+    };
+    return labels[this.userCategory()] ?? 'User';
+  }
 
-  // ── Form ───────────────────────────────────────────────────────────────────
+  get currentCategoryIcon(): string {
+    const icons: Record<RoleCategory, string> = {
+      staff: 'badge',
+      student: 'school',
+      parent: 'family_restroom',
+    };
+    return icons[this.userCategory()] ?? 'person';
+  }
+
+  // ── Form ──────────────────────────────────────────────────────────────────
   form = this.fb.group({
-    // Account
     name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(100)]],
     primaryRoleId: [null as number | null],
     roleIds: [[] as number[], [Validators.required, this.minArrayLength(1)]],
-
-    // Personal
     phone: ['', [Validators.minLength(10), Validators.maxLength(15)]],
     alternatePhone: ['', [Validators.minLength(10), Validators.maxLength(15)]],
     dateOfBirth: [null as Date | null],
     gender: ['' as string],
     bloodGroup: ['' as string],
-
-    // Address
     addressLineOne: ['', Validators.maxLength(255)],
     addressLineTwo: ['', Validators.maxLength(255)],
     city: ['', Validators.maxLength(100)],
     state: ['', Validators.maxLength(100)],
     postalCode: ['', Validators.maxLength(20)],
-
-    // ── Guardian / parental fields ─────────────────────────────────────────
     fatherName: ['', Validators.maxLength(150)],
     motherName: ['', Validators.maxLength(150)],
     guardianName: ['', Validators.maxLength(150)],
     guardianRelation: ['', Validators.maxLength(100)],
-
-    // ── Student school-internal ────────────────────────────────────────────
     admissionNumber: ['', Validators.maxLength(50)],
     rollNumber: [''],
     admissionDate: [null as Date | null],
@@ -367,79 +412,138 @@ export class UserForm implements OnInit {
     enrollmentType: ['REGULAR'],
     previousClassResult: [''],
     previousSchoolUdiseCode: ['', [Validators.pattern(/^\d{11}$|^$/)]],
-
-    // ── UDISE / National identity ─────────────────────────────────────────
     pen: ['', [Validators.pattern(/^\d{16}$|^$/)]],
     apaarId: ['', [Validators.pattern(/^\d{12}$|^$/)]],
     stateStudentId: ['', Validators.maxLength(50)],
     aadhaarMasked: ['', [Validators.pattern(/^XXXX XXXX \d{4}$|^$/)]],
     aadhaarName: ['', Validators.maxLength(150)],
-
-    // ── UDISE+ demographic ────────────────────────────────────────────────
     socialCategory: [null as number | null],
     religion: [null as number | null],
     isMinority: [false],
     motherTongueCode: [null as number | null],
     isBpl: [false],
     localityType: [''],
-
-    // ── CWSN ─────────────────────────────────────────────────────────────
     isCwsn: [false],
     disabilityType: [null as number | null],
     hasDisabilityCertificate: [false],
     udidNumber: ['', Validators.maxLength(30)],
-
-    // ── Facilities ────────────────────────────────────────────────────────
     facilitiesReceived: [[] as string[]],
-
-    // ── Verification flags ────────────────────────────────────────────────
     isAadhaarVerified: [false],
     udiseVerified: [false],
-
-    // Teacher
     qualification: [''],
     experienceYears: [null as number | null, Validators.min(0)],
     specialization: [''],
-
-    // Parent
     occupation: [''],
-
-    // Staff
     department: [''],
     salary: [null as number | null, Validators.min(0)],
     shift: ['' as string],
     joiningDate: [null as Date | null],
-
-    // Edit-only
     isActive: [true],
     newPassword: ['', [Validators.minLength(8)]],
   });
 
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit(): void {
-    this.loadRoles();
     const id = this.route.snapshot.paramMap.get('id');
+
     if (id) {
+      // ── EDIT MODE ────────────────────────────────────────────────────────
       this.isEdit.set(true);
       this.userId.set(+id);
       this.form.get('password')?.clearValidators();
       this.form.get('password')?.updateValueAndValidity();
       this.disableAllFields();
+      // loadUser will set primaryRoleName, which triggers loadRolesForCategory
       this.loadUser(+id);
     } else {
+      // ── CREATE MODE ──────────────────────────────────────────────────────
       this.form.get('primaryRoleId')?.setValidators([Validators.required]);
       this.form.get('primaryRoleId')?.updateValueAndValidity();
-    }
 
-    this.form.get('primaryRoleId')?.valueChanges.subscribe((primaryId) => {
-      if (this.isEdit() || !primaryId) return;
-      const currentRoleIds: number[] = this.form.get('roleIds')?.value ?? [];
-      if (!currentRoleIds.includes(primaryId)) {
-        this.form.get('roleIds')?.setValue([...currentRoleIds, primaryId]);
-      }
+      // On primaryRoleId change: derive category, reload roles, auto-add to roleIds
+      this.form.get('primaryRoleId')?.valueChanges.subscribe((primaryId) => {
+        if (!primaryId) return;
+
+        // Find the selected role to get its category
+        const selectedRole = this.availableRoles().find((r) => r.id === primaryId);
+        if (selectedRole?.category) {
+          // Reload available roles filtered to this category
+          this.loadRolesForCategory(selectedRole.category, primaryId);
+        }
+
+        // Ensure primaryRoleId is always in roleIds
+        const currentRoleIds: number[] = this.form.get('roleIds')?.value ?? [];
+        if (!currentRoleIds.includes(primaryId)) {
+          this.form.get('roleIds')?.setValue([...currentRoleIds, primaryId]);
+        }
+      });
+
+      // Initial load: fetch ALL roles so the Primary Role dropdown is complete
+      this.loadAllRolesForPrimaryPicker();
+    }
+  }
+
+  // ── Role loading ───────────────────────────────────────────────────────────
+
+  /**
+   * CREATE mode: loads all roles (unfiltered) for the Primary Role dropdown.
+   * The Additional Roles dropdown is reloaded with category filter after
+   * the user picks a primary role.
+   */
+  private loadAllRolesForPrimaryPicker(): void {
+    this.loadingRoles.set(true);
+    this.api.get<{ success: boolean; roles: RoleOption[] }>('school/roles').subscribe({
+      next: (res) => {
+        this.availableRoles.set(res.roles ?? []);
+        this.loadingRoles.set(false);
+      },
+      error: () => {
+        this.toast.error('Could not load roles list');
+        this.loadingRoles.set(false);
+      },
     });
   }
 
-  // ── Field lock/unlock ──────────────────────────────────────────────────────
+  /**
+   * Loads roles filtered to the given category.
+   * Called after a primary role is selected (create) or after the user is
+   * loaded (edit). In edit mode `primaryId` is the ID of the primary role
+   * which must always remain in the list even if the category filter yields
+   * an empty set (defensive).
+   *
+   * The backend GET /school/roles?category=<cat> returns only roles of that
+   * category — preventing cross-category assignments from the UI.
+   */
+  loadRolesForCategory(category: RoleCategory, primaryId?: number | null): void {
+    this.loadingRoles.set(true);
+    const params = new HttpParams().set('category', category);
+    this.api.get<{ success: boolean; roles: RoleOption[] }>('school/roles', params).subscribe({
+      next: (res) => {
+        let roles = res.roles ?? [];
+
+        // Defensive: always ensure the primary role is in the list
+        if (primaryId && !roles.find((r) => r.id === primaryId)) {
+          const existing = this.availableRoles().find((r) => r.id === primaryId);
+          if (existing) roles = [existing, ...roles];
+        }
+
+        this.availableRoles.set(roles);
+        this.loadingRoles.set(false);
+
+        // Resolve primaryRoleId signal if needed (edit mode sets primaryRoleName first)
+        if (!this.primaryRoleId()) {
+          const found = roles.find((r) => r.name === this.primaryRoleName());
+          if (found) this.primaryRoleId.set(found.id);
+        }
+      },
+      error: () => {
+        this.toast.error('Could not load roles list');
+        this.loadingRoles.set(false);
+      },
+    });
+  }
+
+  // ── Field lock / unlock ────────────────────────────────────────────────────
 
   isFieldEditable(fieldName: string): boolean {
     return this.editableFields().has(fieldName);
@@ -455,11 +559,9 @@ export class UserForm implements OnInit {
         if (fieldName === 'roleIds' && this.primaryRoleId()) {
           const restoredIds: number[] = original[fieldName] ?? [];
           const primaryId = this.primaryRoleId()!;
-          if (!restoredIds.includes(primaryId)) {
-            this.form.get(fieldName)?.setValue([...restoredIds, primaryId]);
-          } else {
-            this.form.get(fieldName)?.setValue(restoredIds);
-          }
+          this.form
+            .get(fieldName)
+            ?.setValue(restoredIds.includes(primaryId) ? restoredIds : [...restoredIds, primaryId]);
         } else {
           this.form.get(fieldName)?.setValue(original[fieldName]);
         }
@@ -480,9 +582,9 @@ export class UserForm implements OnInit {
   }
 
   private disableAllFields(): void {
-    Object.keys(this.form.controls).forEach((field) => {
-      this.form.get(field)?.disable({ emitEvent: false });
-    });
+    Object.keys(this.form.controls).forEach((field) =>
+      this.form.get(field)?.disable({ emitEvent: false })
+    );
   }
 
   getFieldClass(fieldName: string): string {
@@ -490,7 +592,17 @@ export class UserForm implements OnInit {
     return this.isFieldEditable(fieldName) ? 'field-unlocked' : 'field-locked';
   }
 
-  // ── UDISE+ facility helpers ────────────────────────────────────────────────
+  // ── Section collapse ────────────────────────────────────────────────────────
+  toggleSection(key: string): void {
+    const current = this.sectionExpanded();
+    this.sectionExpanded.set({ ...current, [key]: !current[key] });
+  }
+
+  isSectionExpanded(key: string): boolean {
+    return this.sectionExpanded()[key] ?? true;
+  }
+
+  // ── UDISE facility helpers ─────────────────────────────────────────────────
   isFacilitySelected(value: FacilityReceived): boolean {
     const facilities: string[] = this.form.get('facilitiesReceived')?.value ?? [];
     return facilities.includes(value);
@@ -501,11 +613,9 @@ export class UserForm implements OnInit {
     const ctrl = this.form.get('facilitiesReceived');
     if (!ctrl) return;
     const current: string[] = ctrl.value ?? [];
-    if (current.includes(value)) {
-      ctrl.setValue(current.filter((f) => f !== value));
-    } else {
-      ctrl.setValue([...current, value]);
-    }
+    ctrl.setValue(
+      current.includes(value) ? current.filter((f) => f !== value) : [...current, value]
+    );
   }
 
   // ── Permission section ─────────────────────────────────────────────────────
@@ -527,7 +637,6 @@ export class UserForm implements OnInit {
   private loadPermissionsForUser(): void {
     const primaryRole = this.primaryRoleName();
     if (!primaryRole) return;
-
     const category = derivePermissionCategory(primaryRole);
     this.loadingPermissions.set(true);
 
@@ -535,7 +644,6 @@ export class UserForm implements OnInit {
     let rolesLoaded = false;
     let grantsLoaded = false;
     let denialsLoaded = false;
-
     let allPerms: Permission[] = [];
     let rolePermIds = new Set<number>();
     let directGrantPermIds = new Set<number>();
@@ -543,14 +651,12 @@ export class UserForm implements OnInit {
 
     const tryFinish = () => {
       if (!permissionsLoaded || !rolesLoaded || !grantsLoaded || !denialsLoaded) return;
-
       const grouped = allPerms.reduce((acc: Record<string, Permission[]>, p) => {
         const mod = p.module || 'Other';
         if (!acc[mod]) acc[mod] = [];
         acc[mod].push(p);
         return acc;
       }, {});
-
       this.allCategoryPermissions.set(allPerms);
       this.permModuleGroups.set(
         Object.entries(grouped).map(([module, permissions]) => ({
@@ -559,13 +665,11 @@ export class UserForm implements OnInit {
           expanded: false,
         }))
       );
-
       this.roleInheritedPermissionIds.set(new Set(rolePermIds));
       this.directGrantIds.set(new Set(directGrantPermIds));
       this.directDenyIds.set(new Set(directDenyPermIds));
       this.originalGrantIds.set(new Set(directGrantPermIds));
       this.originalDenyIds.set(new Set(directDenyPermIds));
-
       this.loadingPermissions.set(false);
     };
 
@@ -656,8 +760,8 @@ export class UserForm implements OnInit {
   }
 
   isPermEffectivelyActive(permId: number): boolean {
-    const state = this.getPermissionState(permId);
-    return state === 'granted' || state === 'inherited';
+    const s = this.getPermissionState(permId);
+    return s === 'granted' || s === 'inherited';
   }
 
   isPermDenied(permId: number): boolean {
@@ -716,16 +820,13 @@ export class UserForm implements OnInit {
   isPermModuleFullyActive(group: PermModuleGroup): boolean {
     return group.permissions.every((p) => this.isPermEffectivelyActive(p.id));
   }
-
   isPermModulePartiallyActive(group: PermModuleGroup): boolean {
     const active = group.permissions.filter((p) => this.isPermEffectivelyActive(p.id));
     return active.length > 0 && active.length < group.permissions.length;
   }
-
   isPermModuleHasDenials(group: PermModuleGroup): boolean {
     return group.permissions.some((p) => this.isPermDenied(p.id));
   }
-
   togglePermModule(group: PermModuleGroup): void {
     group.expanded = !group.expanded;
   }
@@ -777,11 +878,7 @@ export class UserForm implements OnInit {
       error: (err) => {
         const msg = err?.error?.error ?? err?.message ?? 'Failed to update permissions';
         const code = err?.error?.code;
-        if (code === 'CATEGORY_MISMATCH') {
-          this.toast.error(`Category mismatch: ${msg}`);
-        } else {
-          this.toast.error(msg);
-        }
+        this.toast.error(code === 'CATEGORY_MISMATCH' ? `Category mismatch: ${msg}` : msg);
         this.savingPermissions.set(false);
       },
     });
@@ -834,9 +931,8 @@ export class UserForm implements OnInit {
     for (const field of this.editableFields()) {
       const oldVal = original[field];
       const newVal = current[field];
-
       if (field === 'newPassword') {
-        if (newVal && newVal.trim()) {
+        if (newVal?.trim()) {
           changes.push({
             label: 'Password',
             field,
@@ -846,7 +942,6 @@ export class UserForm implements OnInit {
         }
         continue;
       }
-
       const oldStr = this.formatValueForDisplay(field, oldVal);
       const newStr = this.formatValueForDisplay(field, newVal);
       if (oldStr !== newStr) {
@@ -873,21 +968,19 @@ export class UserForm implements OnInit {
     }
     if (field === 'isActive') return value ? 'Active' : 'Inactive';
     if (
-      field === 'isMinority' ||
-      field === 'isBpl' ||
-      field === 'isCwsn' ||
-      field === 'hasDisabilityCertificate' ||
-      field === 'isAadhaarVerified' ||
-      field === 'udiseVerified'
+      [
+        'isMinority',
+        'isBpl',
+        'isCwsn',
+        'hasDisabilityCertificate',
+        'isAadhaarVerified',
+        'udiseVerified',
+      ].includes(field)
     ) {
       return value ? 'Yes' : 'No';
     }
-    if (field === 'socialCategory') {
-      return (SOCIAL_CATEGORY_LABELS as any)[value] ?? String(value);
-    }
-    if (field === 'religion') {
-      return (RELIGION_LABELS as any)[value] ?? String(value);
-    }
+    if (field === 'socialCategory') return (SOCIAL_CATEGORY_LABELS as any)[value] ?? String(value);
+    if (field === 'religion') return (RELIGION_LABELS as any)[value] ?? String(value);
     if (field === 'facilitiesReceived' && Array.isArray(value)) {
       return value.length === 0
         ? 'None'
@@ -897,8 +990,7 @@ export class UserForm implements OnInit {
     return String(value);
   }
 
-  // ── Data loading ───────────────────────────────────────────────────────────
-
+  // ── Validators ─────────────────────────────────────────────────────────────
   private minArrayLength(min: number): ValidatorFn {
     return (ctrl: AbstractControl) => {
       const v = ctrl.value;
@@ -906,26 +998,20 @@ export class UserForm implements OnInit {
     };
   }
 
-  private loadRoles(): void {
-    this.api.get<{ success: boolean; roles: RoleOption[] }>('school/roles').subscribe({
-      next: (res) => {
-        this.availableRoles.set(res.roles ?? []);
-        const name = this.primaryRoleName();
-        if (name) {
-          const found = (res.roles ?? []).find((r) => r.name === name);
-          if (found) this.primaryRoleId.set(found.id);
-        }
-      },
-      error: () => this.toast.error('Could not load roles list'),
-    });
-  }
+  // ── Data loading ───────────────────────────────────────────────────────────
 
   private loadUser(id: number): void {
     this.loading.set(true);
     this.usersService.getUserById(id).subscribe({
       next: (user) => {
-        this.primaryRoleName.set(user.primaryRole ?? '');
-        this.resolvePrimaryRoleId(user.primaryRole ?? '');
+        const primaryRole = user.primaryRole ?? '';
+        this.primaryRoleName.set(primaryRole);
+
+        // Derive category and load roles filtered to that category
+        const category = primaryRoleToCategory(primaryRole);
+        const primaryId = user.roles.find((r) => r.name === primaryRole)?.id ?? null;
+        this.primaryRoleId.set(primaryId);
+        this.loadRolesForCategory(category, primaryId);
 
         const p = (user.profile?.data ?? {}) as any;
         const values: Record<string, any> = {
@@ -943,14 +1029,10 @@ export class UserForm implements OnInit {
           state: user.state ?? '',
           postalCode: user.postalCode ?? '',
           isActive: user.isActive,
-
-          // Guardian fields
           fatherName: (user as any).fatherName ?? '',
           motherName: (user as any).motherName ?? '',
           guardianName: (user as any).guardianName ?? '',
           guardianRelation: (user as any).guardianRelation ?? '',
-
-          // Student profile
           admissionNumber: p.admissionNumber ?? '',
           rollNumber: p.rollNumber ?? '',
           admissionDate: p.admissionDate ? new Date(p.admissionDate) : null,
@@ -959,50 +1041,33 @@ export class UserForm implements OnInit {
           enrollmentType: p.enrollmentType ?? 'REGULAR',
           previousClassResult: p.previousClassResult ?? '',
           previousSchoolUdiseCode: p.previousSchoolUdiseCode ?? '',
-
-          // UDISE national identity
           pen: p.pen ?? '',
           apaarId: p.apaarId ?? '',
           stateStudentId: p.stateStudentId ?? '',
           aadhaarMasked: p.aadhaarMasked ?? '',
           aadhaarName: p.aadhaarName ?? '',
-
-          // UDISE demographic
           socialCategory: p.socialCategory ?? null,
           religion: p.religion ?? null,
           isMinority: p.isMinority ?? false,
           motherTongueCode: p.motherTongueCode ?? null,
           isBpl: p.isBpl ?? false,
           localityType: p.localityType ?? '',
-
-          // CWSN
           isCwsn: p.isCwsn ?? false,
           disabilityType: p.disabilityType ?? null,
           hasDisabilityCertificate: p.hasDisabilityCertificate ?? false,
           udidNumber: p.udidNumber ?? '',
-
-          // Facilities
           facilitiesReceived: p.facilitiesReceived ?? [],
-
-          // Verification
           isAadhaarVerified: p.isAadhaarVerified ?? false,
           udiseVerified: p.udiseVerified ?? false,
-
-          // Teacher
           qualification: p.qualification ?? '',
           experienceYears: p.experienceYears ?? null,
           specialization: p.specialization ?? '',
-
-          // Parent
           occupation: p.occupation ?? '',
-
-          // Staff
           department: p.department ?? '',
           salary: p.salary ?? null,
           shift: p.shift ?? '',
           joiningDate: p.joiningDate ? new Date(p.joiningDate) : null,
         };
-
         this.form.patchValue(values, { emitEvent: false });
         this.originalValues.set({ ...values });
         this.loading.set(false);
@@ -1014,11 +1079,6 @@ export class UserForm implements OnInit {
     });
   }
 
-  private resolvePrimaryRoleId(primaryRoleName: string): void {
-    const found = this.availableRoles().find((r) => r.name === primaryRoleName);
-    if (found) this.primaryRoleId.set(found.id);
-  }
-
   // ── Submit helpers ─────────────────────────────────────────────────────────
 
   private submitCreate(raw: any): void {
@@ -1028,7 +1088,6 @@ export class UserForm implements OnInit {
       this.submitting.set(false);
       return;
     }
-
     const roleIds: number[] = Array.isArray(raw.roleIds) ? [...raw.roleIds] : [];
     if (!roleIds.includes(primaryRoleId)) roleIds.push(primaryRoleId);
 
@@ -1040,7 +1099,6 @@ export class UserForm implements OnInit {
       roleIds,
       ...this.buildOptionalFields(raw),
     };
-
     this.usersService.createUser(payload).subscribe({
       next: () => {
         this.toast.success('User created! A welcome email has been sent.');
@@ -1061,18 +1119,15 @@ export class UserForm implements OnInit {
     if (editableSet.has('name')) payload.name = raw.name?.trim();
     if (editableSet.has('email')) payload.email = raw.email?.trim().toLowerCase();
     if (editableSet.has('isActive')) payload.isActive = raw.isActive;
-    if (editableSet.has('newPassword') && raw.newPassword?.trim()) {
+    if (editableSet.has('newPassword') && raw.newPassword?.trim())
       payload.newPassword = raw.newPassword.trim();
-    }
 
-    // Guardian fields
-    const guardianFields = ['fatherName', 'motherName', 'guardianName', 'guardianRelation'];
-    for (const k of guardianFields) {
+    for (const k of ['fatherName', 'motherName', 'guardianName', 'guardianRelation']) {
       if (editableSet.has(k)) (payload as any)[k] = raw[k]?.trim() || undefined;
     }
 
     const optionalFields = this.buildOptionalFields(raw);
-    const optionalFieldKeys = [
+    const optKeys = [
       'phone',
       'alternatePhone',
       'gender',
@@ -1118,7 +1173,7 @@ export class UserForm implements OnInit {
       'shift',
       'joiningDate',
     ];
-    for (const k of optionalFieldKeys) {
+    for (const k of optKeys) {
       if (editableSet.has(k) && (optionalFields as any)[k] !== undefined) {
         (payload as any)[k] = (optionalFields as any)[k];
       }
@@ -1129,7 +1184,6 @@ export class UserForm implements OnInit {
     const newRoleIds: number[] = raw.roleIds ?? [];
     const primaryId = this.primaryRoleId();
     if (primaryId && !newRoleIds.includes(primaryId)) newRoleIds.push(primaryId);
-
     const rolesDiffer =
       rolesChanged &&
       (originalRoleIds.length !== newRoleIds.length ||
@@ -1155,15 +1209,14 @@ export class UserForm implements OnInit {
 
     if (doUserUpdate$ && doRolesUpdate$) {
       doUserUpdate$.subscribe({
-        next: () => {
+        next: () =>
           doRolesUpdate$.subscribe({
             next: afterAll,
             error: (err) => {
               this.handleRolesError(err);
               this.submitting.set(false);
             },
-          });
-        },
+          }),
         error: (err) => {
           this.toast.error(err?.error?.error ?? err?.message ?? 'Failed to update user');
           this.submitting.set(false);
@@ -1227,18 +1280,12 @@ export class UserForm implements OnInit {
     strFields.forEach((k) => {
       if (raw[k]?.toString().trim()) out[k] = raw[k].toString().trim();
     });
-
     if (raw.dateOfBirth) out.dateOfBirth = this.formatDate(raw.dateOfBirth);
     if (raw.admissionDate) out.admissionDate = this.formatDate(raw.admissionDate);
     if (raw.joiningDate) out.joiningDate = this.formatDate(raw.joiningDate);
-
-    if (raw.experienceYears !== null && raw.experienceYears !== undefined)
-      out.experienceYears = Number(raw.experienceYears);
-    if (raw.salary !== null && raw.salary !== undefined) out.salary = Number(raw.salary);
-    if (raw.motherTongueCode !== null && raw.motherTongueCode !== undefined)
-      out.motherTongueCode = Number(raw.motherTongueCode);
-
-    // Boolean fields
+    if (raw.experienceYears != null) out.experienceYears = Number(raw.experienceYears);
+    if (raw.salary != null) out.salary = Number(raw.salary);
+    if (raw.motherTongueCode != null) out.motherTongueCode = Number(raw.motherTongueCode);
     [
       'isMinority',
       'isBpl',
@@ -1249,18 +1296,12 @@ export class UserForm implements OnInit {
     ].forEach((k) => {
       if (raw[k] !== undefined) out[k] = !!raw[k];
     });
-
-    // Nullable numeric
-    if (raw.socialCategory !== null && raw.socialCategory !== undefined)
+    if (raw.socialCategory != null)
       out.socialCategory = Number(raw.socialCategory) as SocialCategory;
-    if (raw.religion !== null && raw.religion !== undefined)
-      out.religion = Number(raw.religion) as Religion;
-    if (raw.disabilityType !== null && raw.disabilityType !== undefined)
+    if (raw.religion != null) out.religion = Number(raw.religion) as Religion;
+    if (raw.disabilityType != null)
       out.disabilityType = Number(raw.disabilityType) as DisabilityType;
-
-    // Facilities array
     if (Array.isArray(raw.facilitiesReceived)) out.facilitiesReceived = raw.facilitiesReceived;
-
     return out;
   }
 
@@ -1268,26 +1309,13 @@ export class UserForm implements OnInit {
     return this.datePipe.transform(date, 'yyyy-MM-dd') ?? undefined;
   }
 
+  // ── Navigation helpers ─────────────────────────────────────────────────────
   goBack(): void {
     this.router.navigate(['/school/users']);
   }
-
   getRoleDisplayName(role: RoleOption): string {
     return role.name.replace(/_/g, ' ');
   }
-
-  getSelectedRoleNames(): string {
-    const ids: number[] = this.form.getRawValue().roleIds ?? [];
-    if (!ids.length) return 'No roles assigned';
-    return ids
-      .map((id) => {
-        const r = this.availableRoles().find((r) => r.id === id);
-        return r ? r.name.replace(/_/g, ' ') : '';
-      })
-      .filter(Boolean)
-      .join(', ');
-  }
-
   hasAnyEditableField(): boolean {
     return this.editableFields().size > 0;
   }

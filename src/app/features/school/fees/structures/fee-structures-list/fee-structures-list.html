@@ -1,0 +1,144 @@
+<!-- fee-structures-list.html -->
+<div class="page-shell">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header__left">
+      <h1 class="page-title">Fee Structures</h1>
+      <p class="page-subtitle">Manage class-section fee structures for the current academic year</p>
+    </div>
+    <div class="page-header__actions">
+      <button mat-stroked-button class="btn-secondary" (click)="openBulkForm()">
+        <mat-icon>calendar_month</mat-icon>
+        Bulk Monthly Setup
+      </button>
+      <button mat-flat-button color="primary" class="btn-primary" (click)="openAddForm()">
+        <mat-icon>add</mat-icon>
+        Add Fee Structure
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters Bar -->
+  <div class="filters-bar">
+    <div class="filter-group">
+      <mat-icon class="filter-icon">search</mat-icon>
+      <input
+        class="filter-input"
+        placeholder="Search class or section…"
+        [(ngModel)]="filterClass"
+        (ngModelChange)="filterClass.set($event)"
+      />
+    </div>
+    <div class="filter-group">
+      <mat-icon class="filter-icon">label</mat-icon>
+      <input
+        class="filter-input"
+        placeholder="Filter by fee type…"
+        [(ngModel)]="filterFeeType"
+        (ngModelChange)="filterFeeType.set($event)"
+      />
+    </div>
+    <div class="filter-meta">
+      <span class="result-count">{{ filteredStructures().length }} structures</span>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+  <div class="state-container">
+    <mat-spinner diameter="40" />
+    <p>Loading fee structures…</p>
+  </div>
+  }
+
+  <!-- Error State -->
+  @if (error()) {
+  <div class="state-container state-error">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ error() }}</p>
+    <button mat-stroked-button (click)="loadStructures()">Retry</button>
+  </div>
+  }
+
+  <!-- Table -->
+  @if (!loading() && !error()) { @if (filteredStructures().length === 0) {
+  <div class="state-container state-empty">
+    <mat-icon>receipt_long</mat-icon>
+    <p class="state-empty__title">No fee structures found</p>
+    <p class="state-empty__sub">
+      Add your first fee structure to get started, or clear your filters.
+    </p>
+    <button mat-flat-button color="primary" (click)="openAddForm()">
+      <mat-icon>add</mat-icon>
+      Add Fee Structure
+    </button>
+  </div>
+  } @else {
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Class &amp; Section</th>
+          <th>Fee Type</th>
+          <th>Month</th>
+          <th class="text-right">Amount</th>
+          <th>Due Date</th>
+          <th class="text-center">Mandatory</th>
+          <th class="text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (s of filteredStructures(); track trackById($index, s)) {
+        <tr class="data-row">
+          <td>
+            <div class="class-cell">
+              <span class="class-badge">{{ s.className }}</span>
+              <span class="section-badge">{{ s.sectionName }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="fee-type-chip">{{ s.feeType }}</span>
+          </td>
+          <td class="cell-muted">{{ formatMonth(s.feeMonth) }}</td>
+          <td class="text-right amount-cell">{{ s.amount | paise }}</td>
+          <td class="cell-muted">
+            @if (s.dueDate) {
+            {{ s.dueDate | date : 'd MMM yyyy' }}
+            } @else {
+            <span class="text-muted">—</span>
+            }
+          </td>
+          <td class="text-center">
+            @if (s.isMandatory) {
+            <span class="badge badge--success">Yes</span>
+            } @else {
+            <span class="badge badge--neutral">No</span>
+            }
+          </td>
+          <td class="text-center">
+            <div class="action-btns">
+              <button
+                mat-icon-button
+                class="action-btn action-btn--edit"
+                matTooltip="Edit"
+                (click)="openEditForm(s)"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                class="action-btn action-btn--delete"
+                matTooltip="Delete"
+                (click)="deleteStructure(s)"
+              >
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            </div>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  } }
+</div>

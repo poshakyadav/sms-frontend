@@ -102,6 +102,47 @@
   color: var(--color-text-muted) !important;
 }
 
+// ── Empty state actions ─────────────────────────────────────────────────────
+// (Uses shared .empty-actions from _tables.scss — no override needed)
+
+// ── List meta bar ───────────────────────────────────────────────────────────
+
+.list-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  &__count {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+  }
+
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-decoration: none;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    transition: background 0.14s ease;
+
+    mat-icon {
+      font-size: 15px;
+      height: 15px;
+      width: 15px;
+    }
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    }
+  }
+}
+
 // ── Table Card ─────────────────────────────────────────────────────────────
 
 .table-card {

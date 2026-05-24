@@ -1,0 +1,229 @@
+<!-- concessions-form.html -->
+<div class="modal-shell">
+  <!-- Header -->
+  <div class="modal-header">
+    <div class="modal-header__icon">
+      <mat-icon>local_offer</mat-icon>
+    </div>
+    <div class="modal-header__content">
+      <h2 class="modal-title">Grant Concession</h2>
+      @if (data.studentName) {
+      <p class="modal-subtitle">{{ data.studentName }}</p>
+      } @else {
+      <p class="modal-subtitle">Apply a discount on a specific fee</p>
+      }
+    </div>
+    <button mat-icon-button class="modal-close" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="modal-body">
+    <!-- Mode Selector -->
+    <div class="mode-selector">
+      <button
+        type="button"
+        class="mode-btn"
+        [class.mode-btn--active]="sourceMode() === 'STRUCTURE'"
+        (click)="setMode('STRUCTURE')"
+      >
+        <mat-icon>receipt_long</mat-icon>
+        Standard Fee
+      </button>
+      <button
+        type="button"
+        class="mode-btn"
+        [class.mode-btn--active]="sourceMode() === 'ASSIGNMENT'"
+        (click)="setMode('ASSIGNMENT')"
+      >
+        <mat-icon>directions_bus</mat-icon>
+        Custom Fee
+      </button>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <!-- Fee Structure Selector -->
+      @if (sourceMode() === 'STRUCTURE') {
+      <mat-form-field appearance="outline" class="form-field full-width">
+        <mat-label>Select Fee Structure</mat-label>
+        <mat-select formControlName="feeStructureId">
+          @for (s of structures(); track s.id) {
+          <mat-option [value]="s.id">{{ formatFeeLabel(s) }}</mat-option>
+          }
+        </mat-select>
+        @if (!structures().length) {
+        <mat-hint>No fee structures found</mat-hint>
+        }
+      </mat-form-field>
+      }
+
+      <!-- Assignment Selector -->
+      @if (sourceMode() === 'ASSIGNMENT') {
+      <mat-form-field appearance="outline" class="form-field full-width">
+        <mat-label>Select Custom Fee Assignment</mat-label>
+        <mat-select formControlName="studentFeeAssignmentId">
+          @for (a of assignments(); track a.id) {
+          <mat-option [value]="a.id">{{ formatAssignmentLabel(a) }}</mat-option>
+          }
+        </mat-select>
+        @if (!assignments().length) {
+        <mat-hint>No custom fee assignments found</mat-hint>
+        }
+      </mat-form-field>
+      }
+
+      <!-- Concession Type -->
+      @if (selectedBaseAmount() > 0) {
+      <div class="field-group">
+        <label class="field-label">Concession Type</label>
+        <div class="type-pills">
+          <button
+            type="button"
+            class="type-pill"
+            [class.type-pill--active]="form.get('concessionType')?.value === 'PERCENTAGE'"
+            (click)="setConcessionType('PERCENTAGE')"
+          >
+            <mat-icon>percent</mat-icon>
+            Percentage
+          </button>
+          <button
+            type="button"
+            class="type-pill"
+            [class.type-pill--active]="form.get('concessionType')?.value === 'FIXED'"
+            (click)="setConcessionType('FIXED')"
+          >
+            <mat-icon>currency_rupee</mat-icon>
+            Fixed Amount
+          </button>
+        </div>
+      </div>
+
+      <!-- Concession Value -->
+      <mat-form-field appearance="outline" class="form-field full-width">
+        <mat-label>
+          {{
+            form.get('concessionType')?.value === 'PERCENTAGE'
+              ? 'Discount Percentage'
+              : 'Discount Amount (₹)'
+          }}
+        </mat-label>
+        @if (form.get('concessionType')?.value === 'PERCENTAGE') {
+        <ng-container>
+          <span matSuffix>%&nbsp;</span>
+        </ng-container>
+        <input
+          matInput
+          type="number"
+          formControlName="concessionValue"
+          min="1"
+          max="100"
+          placeholder="e.g. 20"
+        />
+        } @else {
+        <ng-container>
+          <span matPrefix>₹&nbsp;</span>
+        </ng-container>
+        <input
+          matInput
+          type="number"
+          formControlName="concessionValue"
+          min="1"
+          [max]="paiseToRupees(selectedBaseAmount())"
+          placeholder="e.g. 500"
+        />
+        } @if (form.get('concessionValue')?.hasError('required') &&
+        form.get('concessionValue')?.touched) {
+        <mat-error>Value is required</mat-error>
+        } @if (form.get('concessionValue')?.hasError('min')) {
+        <mat-error>Must be greater than 0</mat-error>
+        } @if (form.get('concessionValue')?.hasError('max')) {
+        <mat-error>Cannot exceed fee amount</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Live Preview -->
+      @if (previewDiscount(); as preview) {
+      <div class="preview-box">
+        <div class="preview-box__header">
+          <mat-icon>visibility</mat-icon>
+          Preview
+        </div>
+        <div class="preview-box__content">
+          <div class="preview-row">
+            <span class="preview-label">Original Amount</span>
+            <span class="preview-value"
+              >₹{{
+                paiseToRupees(preview.base).toLocaleString('en-IN', { minimumFractionDigits: 2 })
+              }}</span
+            >
+          </div>
+          <div class="preview-row preview-row--discount">
+            <span class="preview-label">Discount</span>
+            <span class="preview-value preview-value--discount">
+              -₹{{
+                paiseToRupees(preview.discount).toLocaleString('en-IN', {
+                  minimumFractionDigits: 2
+                })
+              }}
+            </span>
+          </div>
+          <div class="preview-row preview-row--effective">
+            <span class="preview-label">Effective Amount</span>
+            <span class="preview-value preview-value--effective">
+              ₹{{
+                paiseToRupees(preview.effective).toLocaleString('en-IN', {
+                  minimumFractionDigits: 2
+                })
+              }}
+            </span>
+          </div>
+        </div>
+      </div>
+      } }
+
+      <!-- Reason -->
+      <mat-form-field appearance="outline" class="form-field full-width">
+        <mat-label>Reason</mat-label>
+        <input
+          matInput
+          formControlName="reason"
+          placeholder="e.g. Merit scholarship, Financial hardship…"
+        />
+        @if (form.get('reason')?.hasError('required') && form.get('reason')?.touched) {
+        <mat-error>Reason is required</mat-error>
+        } @if (form.get('reason')?.hasError('minlength')) {
+        <mat-error>Minimum 5 characters</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Error -->
+      @if (error()) {
+      <div class="form-error-banner">
+        <mat-icon>error_outline</mat-icon>
+        {{ error() }}
+      </div>
+      }
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button type="button" mat-stroked-button (click)="close()" [disabled]="saving()">
+          Cancel
+        </button>
+        <button
+          type="submit"
+          mat-flat-button
+          color="primary"
+          [disabled]="saving() || !selectedBaseAmount()"
+        >
+          @if (saving()) {
+          <mat-spinner diameter="16" />
+          Saving… } @else {
+          <ng-container>
+            <mat-icon>local_offer</mat-icon>
+          </ng-container>
+          Grant Concession }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

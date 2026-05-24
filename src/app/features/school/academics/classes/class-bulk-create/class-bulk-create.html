@@ -1,0 +1,378 @@
+<!-- class-bulk-create.html -->
+<div class="bulk-page">
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <header class="bulk-header">
+    <div class="bulk-header__left">
+      <button
+        mat-icon-button
+        class="back-btn"
+        (click)="router.navigate(['/school/academics/classes'])"
+        matTooltip="Back to Classes"
+      >
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <h1>Bulk Create Classes</h1>
+        <p class="subtitle">Add multiple grade levels at once. Use presets for your school type.</p>
+      </div>
+    </div>
+
+    <div class="bulk-header__actions">
+      <!-- Guide toggle -->
+      <button mat-stroked-button class="guide-btn" (click)="toggleGuide()">
+        <mat-icon>menu_book</mat-icon>
+        {{ showGuide() ? 'Hide' : 'Field Guide' }}
+      </button>
+
+      <!-- Presets toggle -->
+      <button mat-stroked-button class="preset-btn" (click)="togglePresets()">
+        <mat-icon>auto_awesome</mat-icon>
+        Quick Presets
+      </button>
+
+      <button
+        mat-raised-button
+        color="primary"
+        [disabled]="form.invalid || submitting()"
+        (click)="submit()"
+      >
+        @if (submitting()) {
+        <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+        } @else {
+        <mat-icon>save</mat-icon>
+        } Create {{ rows.length }} {{ rows.length === 1 ? 'Class' : 'Classes' }}
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Field Guide panel ────────────────────────────────────────────────── -->
+  @if (showGuide()) {
+  <div class="guide-panel">
+    <div class="guide-panel__title">
+      <mat-icon>menu_book</mat-icon>
+      Field Guide — Understanding the columns
+    </div>
+
+    <div class="guide-grid">
+      <!-- Class Name -->
+      <div class="guide-card">
+        <div class="guide-card__icon guide-card__icon--primary">
+          <mat-icon>title</mat-icon>
+        </div>
+        <div class="guide-card__body">
+          <strong>Class Name</strong>
+          <p>
+            The official name displayed everywhere in the school portal — on report cards,
+            attendance sheets, timetables, etc.
+          </p>
+          <div class="guide-examples">
+            <span class="guide-example-chip">Nursery</span>
+            <span class="guide-example-chip">LKG</span>
+            <span class="guide-example-chip">UKG</span>
+            <span class="guide-example-chip">Class 1</span>
+            <span class="guide-example-chip">Class 10</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Level -->
+      <div class="guide-card">
+        <div class="guide-card__icon guide-card__icon--info">
+          <mat-icon>stairs</mat-icon>
+        </div>
+        <div class="guide-card__body">
+          <strong>Level</strong>
+          <p>
+            A <em>numeric rank</em> that places this class in the school's academic ladder. It is
+            used for promotion logic and reports.
+          </p>
+          <div class="guide-level-table">
+            <div class="guide-level-row">
+              <span class="guide-level-chip guide-level-chip--zero">0</span>
+              <span>Pre-Primary classes (Nursery, LKG, UKG)</span>
+            </div>
+            <div class="guide-level-row">
+              <span class="guide-level-chip guide-level-chip--num">1 – 12</span>
+              <span>Class 1 through Class 10, Class 11 = 13, Class 12 = 14</span>
+            </div>
+          </div>
+          <p class="guide-tip">
+            <mat-icon>info</mat-icon>
+            Tip: Use the presets — they set the correct levels automatically.
+          </p>
+        </div>
+      </div>
+
+      <!-- Sort Order -->
+      <div class="guide-card">
+        <div class="guide-card__icon guide-card__icon--success">
+          <mat-icon>format_list_numbered</mat-icon>
+        </div>
+        <div class="guide-card__body">
+          <strong>Sort Order</strong>
+          <p>
+            Controls the <em>display sequence</em> of classes in all dropdowns and lists across the
+            portal. Lower numbers appear first.
+          </p>
+          <div class="guide-order-example">
+            <div class="guide-order-item">
+              <span class="guide-order-num">1</span>
+              <span>Nursery — appears first</span>
+            </div>
+            <div class="guide-order-item">
+              <span class="guide-order-num">2</span>
+              <span>LKG</span>
+            </div>
+            <div class="guide-order-item guide-order-item--ellipsis">
+              <span class="guide-order-num">…</span>
+              <span></span>
+            </div>
+            <div class="guide-order-item">
+              <span class="guide-order-num">15</span>
+              <span>Class 12 — appears last</span>
+            </div>
+          </div>
+          <p class="guide-tip">
+            <mat-icon>lightbulb</mat-icon>
+            Use <strong>Resequence</strong> to auto-number rows 1, 2, 3… in the order they appear in
+            the table.
+          </p>
+        </div>
+      </div>
+
+      <!-- Indian system quick reference -->
+      <div class="guide-card guide-card--india">
+        <div class="guide-card__icon guide-card__icon--warning">
+          <mat-icon>school</mat-icon>
+        </div>
+        <div class="guide-card__body">
+          <strong>Indian School Structure (Reference)</strong>
+          <div class="guide-stages">
+            <div class="guide-stage">
+              <span class="guide-stage-badge guide-stage-badge--nursery">Pre-Primary</span>
+              <span>Nursery · LKG · UKG</span>
+            </div>
+            <div class="guide-stage">
+              <span class="guide-stage-badge guide-stage-badge--primary">Primary</span>
+              <span>Class 1 – 5</span>
+            </div>
+            <div class="guide-stage">
+              <span class="guide-stage-badge guide-stage-badge--middle">Middle</span>
+              <span>Class 6 – 8</span>
+            </div>
+            <div class="guide-stage">
+              <span class="guide-stage-badge guide-stage-badge--secondary">Secondary</span>
+              <span>Class 9 – 10 (Board Exams)</span>
+            </div>
+            <div class="guide-stage">
+              <span class="guide-stage-badge guide-stage-badge--higher">Higher Sec.</span>
+              <span>Class 11 – 12 (Streams)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- ── Presets panel ────────────────────────────────────────────────────── -->
+  @if (showPresets()) {
+  <div class="presets-panel">
+    <div class="presets-panel__header">
+      <div class="presets-panel__title">
+        <mat-icon>bolt</mat-icon>
+        Choose a preset for your school type
+      </div>
+      <p class="presets-panel__hint">
+        All rows are editable after loading. Levels and sort orders are pre-configured for the
+        Indian school system.
+      </p>
+    </div>
+
+    <div class="presets-grid">
+      @for (preset of presets; track preset.label) {
+      <button class="preset-card" matRipple (click)="applyPreset(preset)">
+        <div class="preset-card__top">
+          <span class="preset-card__count">{{ preset.classes.length }}</span>
+          <span class="preset-card__stage" [attr.data-stage]="preset.stage">{{
+            preset.stage
+          }}</span>
+        </div>
+        <span class="preset-card__label">{{ preset.label }}</span>
+        <span class="preset-card__desc">{{ preset.description }}</span>
+        <mat-icon class="preset-card__arrow">arrow_forward</mat-icon>
+      </button>
+      }
+    </div>
+  </div>
+  }
+
+  <!-- ── Result banner ─────────────────────────────────────────────────────── -->
+  @if (lastResult(); as result) {
+  <div class="result-banner" [class.result-banner--partial]="result.skipped.length > 0">
+    <mat-icon>{{ result.skipped.length > 0 ? 'warning_amber' : 'check_circle' }}</mat-icon>
+    <div>
+      @if (result.created > 0) {
+      <strong>
+        {{ result.created }} class{{ result.created !== 1 ? 'es' : '' }} created successfully.
+      </strong>
+      } @if (result.skipped.length > 0) {
+      <p>Skipped (already exist): {{ result.skipped.join(', ') }}</p>
+      }
+    </div>
+  </div>
+  }
+
+  <!-- ── Table card ─────────────────────────────────────────────────────────── -->
+  <div class="table-card">
+    <div class="table-toolbar">
+      <span class="table-toolbar__count">
+        <mat-icon>school</mat-icon>
+        {{ rows.length }} row{{ rows.length !== 1 ? 's' : '' }}
+      </span>
+      <div class="table-toolbar__actions">
+        <button
+          mat-stroked-button
+          class="toolbar-btn"
+          (click)="resequence()"
+          matTooltip="Auto-number sort orders 1, 2, 3… based on current row order"
+        >
+          <mat-icon>format_list_numbered</mat-icon>
+          Resequence
+        </button>
+        <button mat-raised-button color="accent" (click)="addRow()">
+          <mat-icon>add</mat-icon>
+          Add Row
+        </button>
+      </div>
+    </div>
+
+    <!-- Column headers -->
+    <div class="table-head">
+      <div class="th th--order">#</div>
+      <div class="th th--name">
+        Class Name
+        <span class="required-star">*</span>
+      </div>
+      <div class="th th--level">
+        Level
+        <span class="th-hint">(0 = Pre-Primary, 1–14 = Class 1–12)</span>
+      </div>
+      <div class="th th--sort">Sort Order</div>
+      <div class="th th--actions"></div>
+    </div>
+
+    <!-- Rows -->
+    <div class="table-body" [formGroup]="form">
+      <ng-container formArrayName="rows">
+        @for (row of rows.controls; track row) {
+        <div
+          class="table-row"
+          [class.table-row--invalid]="row.invalid && row.touched"
+          [formGroupName]="$index"
+        >
+          <!-- Row number -->
+          <div class="td td--order">
+            <span class="row-number">{{ $index + 1 }}</span>
+          </div>
+
+          <!-- Name -->
+          <div class="td td--name">
+            <mat-form-field appearance="outline" class="field-full">
+              <input
+                matInput
+                formControlName="name"
+                placeholder="e.g. Class 10, Nursery, LKG"
+                [attr.aria-label]="'Class name for row ' + ($index + 1)"
+              />
+              @if (fieldError(row.get('name'), 'required')) {
+              <mat-error>Name is required</mat-error>
+              } @if (fieldError(row.get('name'), 'maxlength')) {
+              <mat-error>Max 50 characters</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <!-- Level -->
+          <div class="td td--level">
+            <mat-form-field appearance="outline" class="field-full">
+              <input
+                matInput
+                type="number"
+                formControlName="level"
+                min="0"
+                max="15"
+                [attr.aria-label]="'Level for row ' + ($index + 1)"
+              />
+              @if (fieldError(row.get('level'), 'min') || fieldError(row.get('level'), 'max')) {
+              <mat-error>0 – 15</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <!-- Sort Order -->
+          <div class="td td--sort">
+            <mat-form-field appearance="outline" class="field-full">
+              <input
+                matInput
+                type="number"
+                formControlName="sort_order"
+                min="0"
+                max="100"
+                [attr.aria-label]="'Sort order for row ' + ($index + 1)"
+              />
+            </mat-form-field>
+          </div>
+
+          <!-- Actions -->
+          <div class="td td--actions">
+            <div class="row-actions">
+              <button
+                mat-icon-button
+                type="button"
+                color="warn"
+                [disabled]="rows.length === 1"
+                (click)="removeRow($index)"
+                matTooltip="Remove row"
+                class="row-action-btn row-action-btn--danger"
+              >
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+        }
+      </ng-container>
+    </div>
+
+    <!-- Add row footer -->
+    <div class="table-footer">
+      <button mat-button class="add-row-btn" (click)="addRow()">
+        <mat-icon>add_circle_outline</mat-icon>
+        Add another class
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Bottom submit bar ─────────────────────────────────────────────────── -->
+  <div class="submit-bar">
+    <button mat-stroked-button (click)="router.navigate(['/school/academics/classes'])">
+      Cancel
+    </button>
+    <button
+      mat-raised-button
+      color="primary"
+      [disabled]="form.invalid || submitting()"
+      (click)="submit()"
+    >
+      <span class="btn-content">
+        @if (submitting()) {
+        <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+        Creating… } @else {
+        <mat-icon>save</mat-icon>
+        Create {{ rows.length }} {{ rows.length === 1 ? 'Class' : 'Classes' }}
+        }
+      </span>
+    </button>
+  </div>
+</div>

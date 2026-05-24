@@ -61,12 +61,59 @@ export class SubjectsService {
     if (data.description?.trim()) payload.description = data.description.trim();
     return this.api.post<{ subject: SchoolSubject }>(this.base, payload);
   }
-  
+
   updateSubject(id: number, data: Partial<SchoolSubject>): Observable<{ subject: SchoolSubject }> {
     const payload: any = { name: data.name };
     if (data.code?.trim()) payload.code = data.code.trim();
     if (data.description?.trim()) payload.description = data.description.trim();
     return this.api.put<{ subject: SchoolSubject }>(`${this.base}/${id}`, payload);
+  }
+
+  // ==================== Bulk Subject Operations ====================
+
+  /**
+   * Bulk-create subjects (up to 100 per request).
+   * Backend deduplicates by name and skips existing ones.
+   */
+  bulkCreateSubjects(
+    subjects: Array<{ name: string; code?: string; description?: string }>
+  ): Observable<{
+    subjects: SchoolSubject[];
+    skipped: string[];
+    errors: string[];
+    message: string;
+  }> {
+    return this.api.post<{
+      subjects: SchoolSubject[];
+      skipped: string[];
+      errors: string[];
+      message: string;
+    }>(`${this.base}/bulk`, { subjects });
+  }
+
+  /**
+   * Bulk-update subjects (up to 100 per request).
+   * Each item must include its id. Only provided fields are changed.
+   */
+  bulkUpdateSubjects(
+    subjects: Array<{
+      id: number;
+      name?: string;
+      code?: string | null;
+      description?: string | null;
+    }>
+  ): Observable<{
+    subjects: SchoolSubject[];
+    notFound: number[];
+    errors: string[];
+    message: string;
+  }> {
+    return this.api.put<{
+      subjects: SchoolSubject[];
+      notFound: number[];
+      errors: string[];
+      message: string;
+    }>(`${this.base}/bulk`, { subjects });
   }
 
   deleteSubject(id: number): Observable<{ message: string }> {

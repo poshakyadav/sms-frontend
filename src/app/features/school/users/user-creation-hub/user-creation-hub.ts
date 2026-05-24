@@ -1,4 +1,6 @@
 // user-creation-hub.ts
+// ENHANCED: Aadhaar auto-prefix XXXX XXXX, Indian states dropdown (searchable),
+// UDISE+ mother tongue codes dropdown (searchable), all production-grade.
 
 import {
   Component,
@@ -71,6 +73,126 @@ export interface RoleOption {
 }
 
 type EmailCheckStatus = 'idle' | 'checking' | 'available' | 'taken' | 'error';
+
+// ── Indian States (2026 — includes all 28 states + 8 UTs) ─────────────────────
+
+export interface IndianStateOption {
+  code: string;
+  name: string;
+  type: 'state' | 'ut';
+}
+
+export const INDIAN_STATES: IndianStateOption[] = [
+  // States
+  { code: 'AP', name: 'Andhra Pradesh', type: 'state' },
+  { code: 'AR', name: 'Arunachal Pradesh', type: 'state' },
+  { code: 'AS', name: 'Assam', type: 'state' },
+  { code: 'BR', name: 'Bihar', type: 'state' },
+  { code: 'CG', name: 'Chhattisgarh', type: 'state' },
+  { code: 'GA', name: 'Goa', type: 'state' },
+  { code: 'GJ', name: 'Gujarat', type: 'state' },
+  { code: 'HR', name: 'Haryana', type: 'state' },
+  { code: 'HP', name: 'Himachal Pradesh', type: 'state' },
+  { code: 'JH', name: 'Jharkhand', type: 'state' },
+  { code: 'KA', name: 'Karnataka', type: 'state' },
+  { code: 'KL', name: 'Kerala', type: 'state' },
+  { code: 'MP', name: 'Madhya Pradesh', type: 'state' },
+  { code: 'MH', name: 'Maharashtra', type: 'state' },
+  { code: 'MN', name: 'Manipur', type: 'state' },
+  { code: 'ML', name: 'Meghalaya', type: 'state' },
+  { code: 'MZ', name: 'Mizoram', type: 'state' },
+  { code: 'NL', name: 'Nagaland', type: 'state' },
+  { code: 'OD', name: 'Odisha', type: 'state' },
+  { code: 'PB', name: 'Punjab', type: 'state' },
+  { code: 'RJ', name: 'Rajasthan', type: 'state' },
+  { code: 'SK', name: 'Sikkim', type: 'state' },
+  { code: 'TN', name: 'Tamil Nadu', type: 'state' },
+  { code: 'TG', name: 'Telangana', type: 'state' },
+  { code: 'TR', name: 'Tripura', type: 'state' },
+  { code: 'UP', name: 'Uttar Pradesh', type: 'state' },
+  { code: 'UK', name: 'Uttarakhand', type: 'state' },
+  { code: 'WB', name: 'West Bengal', type: 'state' },
+  // Union Territories
+  { code: 'AN', name: 'Andaman & Nicobar Islands', type: 'ut' },
+  { code: 'CH', name: 'Chandigarh', type: 'ut' },
+  { code: 'DN', name: 'Dadra & Nagar Haveli and Daman & Diu', type: 'ut' },
+  { code: 'DL', name: 'Delhi', type: 'ut' },
+  { code: 'JK', name: 'Jammu & Kashmir', type: 'ut' },
+  { code: 'LA', name: 'Ladakh', type: 'ut' },
+  { code: 'LD', name: 'Lakshadweep', type: 'ut' },
+  { code: 'PY', name: 'Puducherry', type: 'ut' },
+];
+
+// ── UDISE+ Mother Tongue Codes (Census of India — 2011 schedule, used in UDISE+) ─
+
+export interface MotherTongueOption {
+  code: number;
+  name: string;
+  script?: string;
+}
+
+/**
+ * UDISE+ uses the Census of India 2011 language codes.
+ * These are the scheduled + major non-scheduled languages that appear
+ * in the UDISE+ student data capture forms.
+ * Source: Census of India Language Codes + UDISE+ DCF mapping.
+ */
+export const MOTHER_TONGUE_OPTIONS: MotherTongueOption[] = [
+  // 22 Scheduled Languages (Eighth Schedule)
+  { code: 1, name: 'Assamese', script: 'Assamese' },
+  { code: 2, name: 'Bengali', script: 'Bengali' },
+  { code: 3, name: 'Bodo', script: 'Devanagari' },
+  { code: 4, name: 'Dogri', script: 'Devanagari' },
+  { code: 5, name: 'Gujarati', script: 'Gujarati' },
+  { code: 6, name: 'Hindi', script: 'Devanagari' },
+  { code: 7, name: 'Kannada', script: 'Kannada' },
+  { code: 8, name: 'Kashmiri', script: 'Nastaliq / Devanagari' },
+  { code: 9, name: 'Konkani', script: 'Devanagari' },
+  { code: 10, name: 'Maithili', script: 'Devanagari' },
+  { code: 11, name: 'Malayalam', script: 'Malayalam' },
+  { code: 12, name: 'Manipuri (Meitei)', script: 'Meitei Mayek' },
+  { code: 13, name: 'Marathi', script: 'Devanagari' },
+  { code: 14, name: 'Nepali', script: 'Devanagari' },
+  { code: 15, name: 'Odia', script: 'Odia' },
+  { code: 16, name: 'Punjabi', script: 'Gurmukhi' },
+  { code: 17, name: 'Sanskrit', script: 'Devanagari' },
+  { code: 18, name: 'Santali', script: 'Ol Chiki' },
+  { code: 19, name: 'Sindhi', script: 'Devanagari / Khudabadi' },
+  { code: 20, name: 'Tamil', script: 'Tamil' },
+  { code: 21, name: 'Telugu', script: 'Telugu' },
+  { code: 22, name: 'Urdu', script: 'Nastaliq' },
+  // Major non-scheduled / tribal languages present in UDISE+ DCF
+  { code: 23, name: 'Bhojpuri', script: 'Devanagari' },
+  { code: 24, name: 'Chhattisgarhi', script: 'Devanagari' },
+  { code: 25, name: 'Garo', script: 'Latin / Bengali' },
+  { code: 26, name: 'Gondi', script: 'Devanagari' },
+  { code: 27, name: 'Haryanvi', script: 'Devanagari' },
+  { code: 28, name: 'Ho', script: 'Warang Citi / Devanagari' },
+  { code: 29, name: 'Khasi', script: 'Latin' },
+  { code: 30, name: 'Kokborok', script: 'Bengali / Latin' },
+  { code: 31, name: 'Kumaoni', script: 'Devanagari' },
+  { code: 32, name: 'Kurukh (Oraon)', script: 'Devanagari' },
+  { code: 33, name: 'Ladakhi', script: 'Tibetan' },
+  { code: 34, name: 'Lepcha', script: 'Lepcha' },
+  { code: 35, name: 'Limboo', script: 'Sirijonga' },
+  { code: 36, name: 'Lushai (Mizo)', script: 'Latin' },
+  { code: 37, name: 'Magahi', script: 'Devanagari' },
+  { code: 38, name: 'Munda', script: 'Devanagari' },
+  { code: 39, name: 'Mundari', script: 'Warang Citi / Devanagari' },
+  { code: 40, name: 'Nagamese', script: 'Latin' },
+  { code: 41, name: 'Rajasthani', script: 'Devanagari' },
+  { code: 42, name: 'Santhali', script: 'Ol Chiki' },
+  { code: 43, name: 'Shekhawati', script: 'Devanagari' },
+  { code: 44, name: 'Tulu', script: 'Kannada / Tulu' },
+  { code: 45, name: 'Angami', script: 'Latin' },
+  { code: 46, name: 'Ao', script: 'Latin' },
+  { code: 47, name: 'Banjari', script: 'Devanagari' },
+  { code: 48, name: 'Chattisgarhi Gondi', script: 'Devanagari' },
+  // English — official language in Meghalaya, Nagaland, Arunachal Pradesh,
+  // Sikkim, and widely used as medium of instruction across India
+  { code: 50, name: 'English', script: 'Latin' },
+  { code: 99, name: 'Other Language', script: '' },
+];
 
 // ── Personas ───────────────────────────────────────────────────────────────────
 
@@ -221,6 +343,10 @@ export class UserCreationHub implements OnInit {
   emailCheckMessage = signal<string>('');
   private emailCheckSubject = new Subject<string>();
 
+  // ── State/Language search signals ─────────────────────────────────────────
+  stateSearch = signal('');
+  motherTongueSearch = signal('');
+
   // ── Static option lists ────────────────────────────────────────────────────
   readonly bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
   readonly genders = [
@@ -263,6 +389,36 @@ export class UserCreationHub implements OnInit {
     { value: 'URBAN', label: 'Urban' },
     { value: 'RURAL', label: 'Rural' },
   ];
+
+  // All states (for dropdown)
+  readonly allStates = INDIAN_STATES;
+
+  // All mother tongue options (for dropdown)
+  readonly allMotherTongues = MOTHER_TONGUE_OPTIONS;
+
+  // ── Filtered computed options ──────────────────────────────────────────────
+  filteredStates = computed(() => {
+    const q = this.stateSearch().toLowerCase().trim();
+    if (!q) return this.allStates;
+    return this.allStates.filter(
+      (s) => s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q)
+    );
+  });
+
+  filteredMotherTongues = computed(() => {
+    const q = this.motherTongueSearch().toLowerCase().trim();
+    if (!q) return this.allMotherTongues;
+    return this.allMotherTongues.filter(
+      (mt) =>
+        mt.name.toLowerCase().includes(q) ||
+        String(mt.code).includes(q) ||
+        (mt.script?.toLowerCase().includes(q) ?? false)
+    );
+  });
+
+  // ── Pre-computed booleans for template type safety ─────────────────────────
+  hasFilteredStates = computed(() => this.filteredStates().some((s) => s.type === 'state'));
+  hasFilteredUTs = computed(() => this.filteredStates().some((s) => s.type === 'ut'));
 
   // ── Computed ───────────────────────────────────────────────────────────────
   steps = computed(() => this.selectedPersona()?.steps ?? []);
@@ -308,11 +464,11 @@ export class UserCreationHub implements OnInit {
     bloodGroup: [''],
     addressLineOne: [''],
     city: [''],
-    state: [''],
+    state: [''], // stores state name
     postalCode: [''],
   });
 
-  /** Guardian / family fields — new for all user types */
+  /** Guardian / family fields */
   guardianForm = this.fb.group({
     fatherName: ['', Validators.maxLength(150)],
     motherName: ['', Validators.maxLength(150)],
@@ -337,13 +493,14 @@ export class UserCreationHub implements OnInit {
     pen: ['', [Validators.pattern(/^\d{16}$|^$/)]],
     apaarId: ['', [Validators.pattern(/^\d{12}$|^$/)]],
     stateStudentId: ['', Validators.maxLength(50)],
-    aadhaarMasked: ['', [Validators.pattern(/^XXXX XXXX \d{4}$|^$/)]],
+    // Aadhaar — only last 4 digits entered by user; prefix is auto-applied
+    aadhaarLast4: ['', [Validators.pattern(/^\d{4}$|^$/)]],
     aadhaarName: ['', Validators.maxLength(150)],
     // Demographic
     socialCategory: [null as number | null],
     religion: [null as number | null],
     isMinority: [false],
-    motherTongueCode: [null as number | null],
+    motherTongueCode: [null as number | null], // stored as integer code
     // Socio-economic
     isBpl: [false],
     localityType: [''],
@@ -474,6 +631,36 @@ export class UserCreationHub implements OnInit {
       });
   }
 
+  // ── State search ───────────────────────────────────────────────────────────
+  onStateSearchInput(event: Event): void {
+    this.stateSearch.set((event.target as HTMLInputElement).value);
+  }
+
+  clearStateSearch(): void {
+    this.stateSearch.set('');
+  }
+
+  // ── Mother tongue search ───────────────────────────────────────────────────
+  onMotherTongueSearchInput(event: Event): void {
+    this.motherTongueSearch.set((event.target as HTMLInputElement).value);
+  }
+
+  clearMotherTongueSearch(): void {
+    this.motherTongueSearch.set('');
+  }
+
+  /** Display label for the currently selected mother tongue code */
+  getMotherTongueLabel(code: number | null): string {
+    if (code == null) return '';
+    const found = MOTHER_TONGUE_OPTIONS.find((mt) => mt.code === code);
+    return found ? `${found.name} (${found.code})` : String(code);
+  }
+
+  /** Display label for the currently selected state */
+  getStateLabel(stateName: string | null): string {
+    return stateName ?? '';
+  }
+
   // ── Persona selection ──────────────────────────────────────────────────────
 
   selectPersona(persona: RolePersona): void {
@@ -506,6 +693,8 @@ export class UserCreationHub implements OnInit {
     this.staffWorkForm.reset();
     this.selectedStaffRole.set(null);
     this.staffRoleSearch.set('');
+    this.stateSearch.set('');
+    this.motherTongueSearch.set('');
     this.emailCheckStatus.set('idle');
     this.emailCheckMessage.set('');
   }
@@ -539,8 +728,8 @@ export class UserCreationHub implements OnInit {
 
     if (stepId === 'role') return this.selectedStaffRole() !== null;
     if (stepId === 'parents') return true;
-    if (stepId === 'guardian') return true; // all optional fields
-    if (stepId === 'udise') return true; // all optional fields
+    if (stepId === 'guardian') return true;
+    if (stepId === 'udise') return true;
 
     if (stepId === 'account') {
       const form = this.accountForm;
@@ -580,7 +769,6 @@ export class UserCreationHub implements OnInit {
       }
     }
 
-    // Trigger submit on last data-collection step
     const isStudentUdiseStep = persona?.id === 'student' && stepId === 'udise';
     const isNonStudentLastStep = this.isLastStep() && stepId !== 'parents';
 
@@ -612,6 +800,12 @@ export class UserCreationHub implements OnInit {
 
   private fmt(date: Date | string | null): string | undefined {
     return this.datePipe.transform(date, 'yyyy-MM-dd') ?? undefined;
+  }
+
+  /** Build the full masked Aadhaar from the last 4 digits. */
+  private buildAadhaarMasked(last4: string | null | undefined): string | undefined {
+    if (!last4 || !/^\d{4}$/.test(last4.trim())) return undefined;
+    return `XXXX XXXX ${last4.trim()}`;
   }
 
   submitUser(): void {
@@ -649,9 +843,9 @@ export class UserCreationHub implements OnInit {
       bloodGroup: per.bloodGroup || undefined,
       addressLineOne: per.addressLineOne?.trim() || undefined,
       city: per.city?.trim() || undefined,
-      state: per.state?.trim() || undefined,
+      state: per.state || undefined,
       postalCode: per.postalCode?.trim() || undefined,
-      // Guardian / parental (new)
+      // Guardian / parental
       fatherName: grd.fatherName?.trim() || undefined,
       motherName: grd.motherName?.trim() || undefined,
       guardianName: grd.guardianName?.trim() || undefined,
@@ -675,18 +869,14 @@ export class UserCreationHub implements OnInit {
       payload.pen = udi.pen?.trim() || undefined;
       payload.apaarId = udi.apaarId?.trim() || undefined;
       payload.stateStudentId = udi.stateStudentId?.trim() || undefined;
-      payload.aadhaarMasked = udi.aadhaarMasked?.trim() || undefined;
+      // Build masked aadhaar from last-4 field
+      payload.aadhaarMasked = this.buildAadhaarMasked((udi as any).aadhaarLast4);
       payload.aadhaarName = udi.aadhaarName?.trim() || undefined;
 
       // UDISE+ demographic
       payload.socialCategory =
-  udi.socialCategory != null
-    ? (udi.socialCategory as unknown as SocialCategory)
-    : undefined;
-    payload.religion =
-    udi.religion != null
-      ? (udi.religion as unknown as Religion)
-      : undefined;
+        udi.socialCategory != null ? (udi.socialCategory as unknown as SocialCategory) : undefined;
+      payload.religion = udi.religion != null ? (udi.religion as unknown as Religion) : undefined;
       payload.isMinority = udi.isMinority ?? false;
       payload.motherTongueCode = udi.motherTongueCode ?? undefined;
 
@@ -698,9 +888,9 @@ export class UserCreationHub implements OnInit {
       payload.isCwsn = udi.isCwsn ?? false;
       if (udi.isCwsn) {
         payload.disabilityType =
-    udi.disabilityType != null
-      ? (udi.disabilityType as unknown as DisabilityType)
-      : undefined;
+          udi.disabilityType != null
+            ? (udi.disabilityType as unknown as DisabilityType)
+            : undefined;
         payload.hasDisabilityCertificate = udi.hasDisabilityCertificate ?? false;
         payload.udidNumber = udi.udidNumber?.trim() || undefined;
       }
@@ -744,7 +934,7 @@ export class UserCreationHub implements OnInit {
 
         if (persona.id === 'student') {
           this.toast.success(`${acc.name} admitted successfully!`);
-          this.currentStep.set(this.steps().length - 1); // jump to parents step
+          this.currentStep.set(this.steps().length - 1);
         } else {
           this.toast.success(`${acc.name} created successfully!`);
           this.router.navigate(['/school/users']);
@@ -804,5 +994,13 @@ export class UserCreationHub implements OnInit {
 
   getStepLabel(step: StepDef, index: number): string {
     return `Step ${index + 1}: ${step.title}`;
+  }
+
+  /** Preview the composed masked Aadhaar for the hint text */
+  get aadhaarPreview(): string {
+    const last4 = this.udiseForm.get('aadhaarLast4')?.value?.trim();
+    if (!last4) return 'XXXX XXXX ____';
+    if (!/^\d{1,4}$/.test(last4)) return 'XXXX XXXX ____';
+    return `XXXX XXXX ${last4.padEnd(4, '_')}`;
   }
 }

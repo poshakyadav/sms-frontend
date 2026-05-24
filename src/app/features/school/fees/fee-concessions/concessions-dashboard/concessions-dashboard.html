@@ -1,0 +1,248 @@
+<!-- concessions-dashboard.html -->
+<div class="page-shell">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header__left">
+      <div class="page-header__icon">
+        <mat-icon>local_offer</mat-icon>
+      </div>
+      <div>
+        <h1 class="page-title">Concessions</h1>
+        <p class="page-subtitle">All fee discounts granted across the school</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Card -->
+  <div class="filters-card">
+    <div class="filters-row">
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Academic Year</mat-label>
+        <mat-select
+          [ngModel]="selectedAcademicYearId()"
+          (ngModelChange)="selectedAcademicYearId.set($event); onFilterChange()"
+        >
+          @for (y of academicYears(); track y.id) {
+          <mat-option [value]="y.id">
+            {{ y.name }}
+            @if (y.isCurrent) { <span class="current-tag">(Current)</span> }
+          </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Class – Section</mat-label>
+        <mat-select
+          [ngModel]="selectedClassSectionId()"
+          (ngModelChange)="selectedClassSectionId.set($event); onFilterChange()"
+        >
+          <mat-option [value]="null">All Classes</mat-option>
+          @for (cs of classSections(); track cs.id) {
+          <mat-option [value]="cs.id"> {{ cs.className }} – {{ cs.sectionName }} </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <div class="toggle-filter">
+        <mat-slide-toggle
+          [checked]="activeOnly()"
+          (change)="activeOnly.set($event.checked)"
+          color="primary"
+        >
+          Active Only
+        </mat-slide-toggle>
+      </div>
+    </div>
+
+    <!-- Search row -->
+    <div class="search-row">
+      <div class="search-wrap">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input
+          class="search-input"
+          placeholder="Search student, fee type, reason…"
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
+        />
+      </div>
+      <span class="result-count">{{ filteredRows().length }} records</span>
+    </div>
+  </div>
+
+  <!-- Summary Banner -->
+  @if (!loading() && !error() && rows().length > 0) {
+  <div class="summary-banner">
+    <div class="summary-banner__item summary-banner__item--primary">
+      <div class="summary-banner__icon">
+        <mat-icon>local_offer</mat-icon>
+      </div>
+      <div class="summary-banner__content">
+        <span class="summary-banner__label">Total Concessions Granted (Active)</span>
+        <span class="summary-banner__value">{{ activeTotalAmount() | paise : 'short' }}</span>
+      </div>
+    </div>
+    <div class="summary-banner__item">
+      <div class="summary-banner__icon summary-banner__icon--success">
+        <mat-icon>check_circle</mat-icon>
+      </div>
+      <div class="summary-banner__content">
+        <span class="summary-banner__label">Active Concessions</span>
+        <span class="summary-banner__value">{{ activeCount() }}</span>
+      </div>
+    </div>
+    <div class="summary-banner__item">
+      <div class="summary-banner__icon summary-banner__icon--muted">
+        <mat-icon>block</mat-icon>
+      </div>
+      <div class="summary-banner__content">
+        <span class="summary-banner__label">Revoked</span>
+        <span class="summary-banner__value">{{ revokedCount() }}</span>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Loading -->
+  @if (loading()) {
+  <div class="state-container">
+    <mat-spinner diameter="40" />
+    <p>Loading concessions…</p>
+  </div>
+  }
+
+  <!-- Error -->
+  @if (error() && !loading()) {
+  <div class="state-container state-error">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ error() }}</p>
+    <button mat-stroked-button (click)="loadData()">Retry</button>
+  </div>
+  }
+
+  <!-- Empty -->
+  @if (!loading() && !error() && filteredRows().length === 0) {
+  <div class="state-container state-empty">
+    <mat-icon>local_offer</mat-icon>
+    <p class="state-empty__title">No concessions found</p>
+    <p class="state-empty__sub">
+      @if (activeOnly()) { No active concessions. Toggle "Active Only" to see revoked ones. } @else
+      { No concessions have been granted yet. }
+    </p>
+  </div>
+  }
+
+  <!-- Table -->
+  @if (!loading() && !error() && filteredRows().length > 0) {
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th class="text-center">Source</th>
+          <th>Fee Type</th>
+          <th>Month</th>
+          <th class="text-right">Original</th>
+          <th class="text-center">Concession</th>
+          <th class="text-right">Discount</th>
+          <th class="text-right">Effective</th>
+          <th>Reason</th>
+          <th>Approved By</th>
+          <th class="text-center">Status</th>
+          <th class="text-center">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of filteredRows(); track trackById($index, row)) {
+        <tr class="data-row" [class.data-row--revoked]="!row.isActive">
+          <!-- Student -->
+          <td>
+            <div class="student-cell">
+              <div class="student-avatar">{{ row.studentName.charAt(0).toUpperCase() }}</div>
+              <div class="student-info">
+                <span class="student-name">{{ row.studentName }}</span>
+                <span class="student-class">{{ row.className }}–{{ row.sectionName }}</span>
+              </div>
+            </div>
+          </td>
+
+          <!-- Source -->
+          <td class="text-center">
+            <span
+              class="source-badge"
+              [class.source-badge--structure]="row.source === 'STRUCTURE'"
+              [class.source-badge--assignment]="row.source === 'ASSIGNMENT'"
+            >
+              <mat-icon>{{
+                row.source === 'STRUCTURE' ? 'receipt_long' : 'directions_bus'
+              }}</mat-icon>
+              {{ row.source === 'STRUCTURE' ? 'Standard' : 'Custom' }}
+            </span>
+          </td>
+
+          <!-- Fee Type -->
+          <td>
+            <span class="fee-type-chip">{{ row.feeType }}</span>
+          </td>
+
+          <!-- Month -->
+          <td class="cell-muted">{{ formatMonth(row.feeMonth) }}</td>
+
+          <!-- Original -->
+          <td class="text-right amount-cell">{{ row.originalAmount | paise : 'compact' }}</td>
+
+          <!-- Concession type+value -->
+          <td class="text-center">
+            <span class="concession-value-chip">{{ formatConcessionLabel(row) }}</span>
+          </td>
+
+          <!-- Discount amount -->
+          <td class="text-right amount-cell text-error">
+            -{{ row.concessionAmount | paise : 'compact' }}
+          </td>
+
+          <!-- Effective -->
+          <td class="text-right amount-cell text-success">
+            {{ row.effectiveAmount | paise : 'compact' }}
+          </td>
+
+          <!-- Reason -->
+          <td class="reason-cell" [matTooltip]="row.reason">{{ row.reason }}</td>
+
+          <!-- Approved By -->
+          <td class="cell-muted approved-cell">{{ row.approvedByName }}</td>
+
+          <!-- Status -->
+          <td class="text-center">
+            @if (row.isActive) {
+            <span class="status-badge status-badge--active">Active</span>
+            } @else {
+            <span class="status-badge status-badge--revoked">Revoked</span>
+            }
+          </td>
+
+          <!-- Action -->
+          <td class="text-center">
+            @if (row.isActive) {
+            <button
+              mat-icon-button
+              class="revoke-btn"
+              matTooltip="Revoke Concession"
+              [disabled]="revoking() === row.concessionId"
+              (click)="revoke(row)"
+            >
+              @if (revoking() === row.concessionId) {
+              <mat-spinner diameter="14" />
+              } @else {
+              <mat-icon>block</mat-icon>
+              }
+            </button>
+            }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+</div>

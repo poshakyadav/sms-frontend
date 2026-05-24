@@ -6,9 +6,37 @@
     </div>
     <div class="header-actions">
       @if (canManage()) {
-      <button mat-raised-button color="primary" [routerLink]="['/school/academics/subjects/new']">
+      <!-- ── Single create ─────────────────────────────────────────────────── -->
+      <button
+        mat-raised-button
+        [routerLink]="['/school/academics/subjects/new']"
+        matTooltip="Create a single subject"
+      >
         <mat-icon>add</mat-icon> New Subject
       </button>
+
+      <!-- ── Bulk actions menu ─────────────────────────────────────────────── -->
+      <button mat-raised-button color="primary" [matMenuTriggerFor]="bulkMenu">
+        <mat-icon>bolt</mat-icon>
+        Bulk Actions
+        <mat-icon iconPositionEnd>expand_more</mat-icon>
+      </button>
+
+      <mat-menu #bulkMenu="matMenu">
+        <button mat-menu-item [routerLink]="['/school/academics/subjects/bulk-create']">
+          <mat-icon>add_circle_outline</mat-icon>
+          <span>Bulk Create Subjects</span>
+        </button>
+        <button
+          mat-menu-item
+          [routerLink]="['/school/academics/subjects/bulk-edit']"
+          [disabled]="allSubjects().length === 0"
+        >
+          <mat-icon>edit_note</mat-icon>
+          <span>Bulk Edit Subjects</span>
+        </button>
+      </mat-menu>
+
       }
       <button mat-icon-button (click)="loadSubjects()" matTooltip="Refresh">
         <mat-icon>refresh</mat-icon>
@@ -44,6 +72,19 @@
   </div>
 
   } @else {
+
+  <!-- Quick-access meta row -->
+  <div class="list-meta">
+    <span class="list-meta__count">
+      {{ filteredSubjects().length }} subject{{ filteredSubjects().length !== 1 ? 's' : '' }}
+    </span>
+    @if (canManage() && allSubjects().length > 0) {
+    <a class="list-meta__link" [routerLink]="['/school/academics/subjects/bulk-edit']">
+      <mat-icon>edit_note</mat-icon>
+      Edit all at once
+    </a>
+    }
+  </div>
 
   <!-- Search bar -->
   <div class="search-bar">

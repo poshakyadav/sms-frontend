@@ -6,6 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AcademicsService } from '../../../../../core/services/academics.service';
 import { ToastService } from '../../../../../core/services/toast.service';
@@ -21,6 +22,7 @@ import { ToastService } from '../../../../../core/services/toast.service';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    MatTooltipModule,
   ],
   templateUrl: './class-form-component.html',
   styleUrl: './class-form-component.scss',
@@ -38,10 +40,15 @@ export class ClassFormComponent {
   loading = signal(false);
   notFound = signal(false);
 
+  // ── Guide panel visibility ────────────────────────────────────────────────
+  showLevelGuide = signal(false);
+  showSortGuide = signal(false);
+
   constructor() {
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(50)]],
-      level: [0, [Validators.required, Validators.min(0), Validators.max(12)]],
+      // FIX: Backend accepts 0–15; form was capping at 12 — now aligned.
+      level: [0, [Validators.required, Validators.min(0), Validators.max(15)]],
       sort_order: [10, [Validators.required, Validators.min(0), Validators.max(100)]],
     });
 
@@ -107,7 +114,17 @@ export class ClassFormComponent {
     });
   }
 
-  // Template helpers
+  // ── Level display helper ─────────────────────────────────────────────────
+  get levelLabel(): string {
+    const v = this.form.get('level')?.value;
+    if (v === null || v === undefined || v === '') return '';
+    const n = Number(v);
+    if (n === 0) return 'Nursery / Pre-KG';
+    if (n === 1) return 'KG / Class 1';
+    return `Class ${n}`;
+  }
+
+  // ── Form control getters ─────────────────────────────────────────────────
   get nameControl() {
     return this.form.get('name');
   }

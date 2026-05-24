@@ -1,198 +1,271 @@
+// features/school/fees/fee-structures/fee-structure-form/fee-structure-form.ts
+import { Component, OnInit, Inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { ActivatedRoute, Router } from '@angular/router';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import {
+  FeesService,
+  FeeStructure,
+  paiseToRupees,
+  rupeesToPaise,
+} from '../../../../../core/services/fees.service';
 import { AcademicsService } from '../../../../../core/services/academics.service';
-import { FeesService } from '../../../../../core/services/fees.service';
-import { ToastService } from '../../../../../core/services/toast.service';
 import { INDIAN_DATE_PROVIDERS } from '../../../../../core/adapters/indian-date-adapter';
+
+export interface FeeStructureFormData {
+  mode: 'create' | 'edit';
+  structure?: FeeStructure;
+}
+
+const FEE_TYPE_SUGGESTIONS = [
+  'TUITION',
+  'LIBRARY',
+  'ADMISSION',
+  'EXAM',
+  'SPORTS',
+  'DEVELOPMENT',
+  'COMPUTER',
+  'ANNUAL',
+  'LATE_FEE',
+];
+
+// Build month options: Jan–Dec labels with value "YYYY-MM"
+// We only need the month names; the year is selected separately in the picker.
+const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
 
 @Component({
   selector: 'app-fee-structure-form',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
+    MatDialogModule,
+    MatButtonModule,
+    MatIconModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MatSlideToggleModule,
+    MatProgressSpinnerModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatSlideToggleModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatTooltipModule,
   ],
-  // ── Provide the Indian DD/MM/YYYY date adapter for this form ────────────────
-  // DatePipe is also provided here so we can format the Date → 'yyyy-MM-dd'
-  // before sending to the backend (which expects ISO date strings).
   providers: [DatePipe, ...INDIAN_DATE_PROVIDERS],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './fee-structure-form.html',
   styleUrl: './fee-structure-form.scss',
 })
-export class FeeStructureForm implements OnInit {
-  private route = inject(ActivatedRoute);
-  readonly router = inject(Router);
-  private fb = inject(FormBuilder);
-  private feesService = inject(FeesService);
-  private academicsService = inject(AcademicsService);
-  private toast = inject(ToastService);
-  // DatePipe is used to convert the Date object from the datepicker to
-  // a 'yyyy-MM-dd' string that the Zod schema on the backend accepts.
-  private datePipe = inject(DatePipe);
-
-  isEdit = signal(false);
-  structureId = signal<number | null>(null);
-  pageLoading = signal(false);
-  submitting = signal(false);
-
+export class FeeStructureFormComponent implements OnInit {
+  form!: FormGroup;
+  saving = signal(false);
+  error = signal<string | null>(null);
   academicYears = signal<any[]>([]);
   classSections = signal<any[]>([]);
+  feeTypeSuggestions = FEE_TYPE_SUGGESTIONS;
 
-  /**
-   * Common fee-type suggestions shown as quick-fill chips below the input.
-   * The school owner can still type anything — these are shortcuts only.
-   */
-  feeTypeSuggestions: string[] = [
-    'Tuition',
-    'Transport',
-    'Library',
-    'Exam',
-    'Admission',
-    'Sports',
-    'Lab',
-    'Hostel',
-    'Canteen',
-    'Uniform',
-  ];
+  // ── Month picker state ───────────────────────────────────────────────────
+  monthPickerOpen = signal(false);
+  /** Year displayed in the month picker panel */
+  pickerYear = signal(new Date().getFullYear());
+  monthNames = MONTH_NAMES;
 
-  form = this.fb.group({
-    academicYearId: [null as number | null, Validators.required],
-    classSectionId: [null as number | null, Validators.required],
-    feeType: ['', [Validators.required, Validators.minLength(3)]],
-    // amount is stored as a number; the input type="number" handles the cast
-    amount: [null as number | null, [Validators.required, Validators.min(1)]],
-    // dueDate holds a Date object (from the Material datepicker) while in the
-    // form. It is converted to 'yyyy-MM-dd' only when building the payload.
-    dueDate: [null as Date | null],
-    isMandatory: [true],
-    description: [''],
-  });
+  /** The currently selected month label for display, e.g. "April 2025" */
+  get feeMonthDisplay(): string {
+    const raw: string | null = this.form?.get('feeMonth')?.value;
+    if (!raw) return '';
+    const [year, month] = raw.split('-').map(Number);
+    return `${MONTH_NAMES[month - 1]} ${year}`;
+  }
 
-  ngOnInit() {
-    this.loadOptions();
+  get isEdit(): boolean {
+    return this.data.mode === 'edit';
+  }
 
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id && !isNaN(+id)) {
-      this.isEdit.set(true);
-      this.structureId.set(+id);
-      this.loadStructure(+id);
+  constructor(
+    private fb: FormBuilder,
+    private fees: FeesService,
+    private academics: AcademicsService,
+    private datePipe: DatePipe,
+    public dialogRef: MatDialogRef<FeeStructureFormComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: FeeStructureFormData
+  ) {}
+
+  ngOnInit(): void {
+    this.buildForm();
+    this.loadDropdowns();
+    if (this.isEdit && this.data.structure) {
+      this.patchForm(this.data.structure);
     }
   }
 
-  /** Fills the feeType control when the user clicks a suggestion chip. */
-  setFeeType(value: string): void {
-    this.form.get('feeType')?.setValue(value);
-    this.form.get('feeType')?.markAsTouched();
-  }
-
-  private loadOptions() {
-    this.academicsService.getAcademicYears().subscribe({
-      next: (res) => this.academicYears.set(res.years ?? []),
-    });
-    this.academicsService.getClassSections().subscribe({
-      next: (res) => this.classSections.set(res.classSections ?? []),
-    });
-  }
-
-  private loadStructure(id: number) {
-    this.pageLoading.set(true);
-
-    this.feesService.getFeeStructures().subscribe({
-      next: (res) => {
-        const s = res.structures.find((x: any) => x.id === id);
-        if (s) {
-          // dueDate from backend is 'yyyy-MM-dd' string (or null).
-          // The IndianDateAdapter.parse() handles ISO strings via its fallback
-          // branch, so patchValue with the raw string works correctly.
-          this.form.patchValue({
-            academicYearId: s.academicYearId,
-            classSectionId: s.classSectionId,
-            feeType: s.feeType,
-            amount: s.amount,
-            // Pass the ISO string directly; the adapter converts it to a Date
-            dueDate: s.dueDate ? new Date(s.dueDate) : null,
-            isMandatory: s.isMandatory,
-            description: s.description ?? '',
-          });
-        }
-        this.pageLoading.set(false);
-      },
-      error: () => {
-        this.toast.error('Failed to load fee structure');
-        this.router.navigate(['/school/fees/structures']);
-      },
+  buildForm(): void {
+    this.form = this.fb.group({
+      academicYearId: [null, Validators.required],
+      classSectionId: [null, Validators.required],
+      feeType: ['', [Validators.required, Validators.minLength(2)]],
+      amountRupees: [null, [Validators.required, Validators.min(1)]],
+      /** Stored as "YYYY-MM" string */
+      feeMonth: [null],
+      /** Stored as a JS Date (Material datepicker) — serialised to "YYYY-MM-DD" on submit */
+      dueDateObj: [null],
+      isMandatory: [true],
+      description: [''],
     });
   }
 
-  onSubmit() {
+  patchForm(s: FeeStructure): void {
+    // Parse due date string → Date object for the datepicker
+    let dueDateObj: Date | null = null;
+    if (s.dueDate) {
+      // s.dueDate is "YYYY-MM-DD" from the backend
+      const [y, m, d] = s.dueDate.split('-').map(Number);
+      dueDateObj = new Date(y, m - 1, d);
+    }
+
+    this.form.patchValue({
+      academicYearId: s.academicYearId,
+      classSectionId: s.classSectionId,
+      feeType: s.feeType,
+      amountRupees: paiseToRupees(s.amount),
+      feeMonth: s.feeMonth,
+      dueDateObj,
+      isMandatory: s.isMandatory,
+      description: s.description ?? '',
+    });
+
+    // Initialise picker year to the stored fee month's year (or current year)
+    if (s.feeMonth) {
+      this.pickerYear.set(parseInt(s.feeMonth.split('-')[0], 10));
+    }
+  }
+
+  loadDropdowns(): void {
+    this.academics.getAcademicYears().subscribe({
+      next: (res) => this.academicYears.set(res.years),
+    });
+    this.academics.getClassSections().subscribe({
+      next: (res) => this.classSections.set(res.classSections),
+    });
+  }
+
+  selectFeeType(type: string): void {
+    this.form.patchValue({ feeType: type });
+  }
+
+  // ── Month picker helpers ─────────────────────────────────────────────────
+
+  toggleMonthPicker(): void {
+    this.monthPickerOpen.update((v) => !v);
+  }
+
+  closeMonthPicker(): void {
+    this.monthPickerOpen.set(false);
+  }
+
+  prevYear(): void {
+    this.pickerYear.update((y) => y - 1);
+  }
+
+  nextYear(): void {
+    this.pickerYear.update((y) => y + 1);
+  }
+
+  selectMonth(monthIndex: number): void {
+    // monthIndex is 0-based (Jan = 0)
+    const mm = String(monthIndex + 1).padStart(2, '0');
+    const value = `${this.pickerYear()}-${mm}`;
+    this.form.patchValue({ feeMonth: value });
+    this.monthPickerOpen.set(false);
+  }
+
+  clearFeeMonth(event: Event): void {
+    event.stopPropagation();
+    this.form.patchValue({ feeMonth: null });
+  }
+
+  /** Returns true if the given month (0-based) + pickerYear matches the stored value */
+  isMonthSelected(monthIndex: number): boolean {
+    const raw: string | null = this.form?.get('feeMonth')?.value;
+    if (!raw) return false;
+    const [year, month] = raw.split('-').map(Number);
+    return year === this.pickerYear() && month === monthIndex + 1;
+  }
+
+  // ── Submit ───────────────────────────────────────────────────────────────
+
+  submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.toast.warning('Please fill in all required fields');
       return;
     }
+    const v = this.form.value;
 
-    this.submitting.set(true);
-
-    const raw = this.form.getRawValue();
-
-    // ── Date serialisation ────────────────────────────────────────────────────
-    // The datepicker stores a JS Date object in the control.
-    // The backend Zod schema uses z.string().date() which expects 'yyyy-MM-dd'.
-    // DatePipe.transform() converts the Date correctly regardless of timezone.
-    const dueDateStr = raw.dueDate
-      ? this.datePipe.transform(raw.dueDate, 'yyyy-MM-dd') ?? undefined
-      : undefined;
+    // Serialise Date → "YYYY-MM-DD"
+    let dueDate: string | null = null;
+    if (v.dueDateObj instanceof Date && !isNaN(v.dueDateObj.getTime())) {
+      dueDate = this.datePipe.transform(v.dueDateObj, 'yyyy-MM-dd');
+    }
 
     const payload = {
-      academicYearId: raw.academicYearId!,
-      classSectionId: raw.classSectionId!,
-      feeType: raw.feeType!.trim(),
-      // Ensure we send a number, not a string from the input
-      amount: Number(raw.amount!),
-      dueDate: dueDateStr,
-      isMandatory: raw.isMandatory!,
-      description: raw.description?.trim() || undefined,
+      academicYearId: v.academicYearId,
+      classSectionId: v.classSectionId,
+      feeType: v.feeType.trim().toUpperCase(),
+      amount: rupeesToPaise(v.amountRupees),
+      feeMonth: v.feeMonth || null,
+      dueDate,
+      isMandatory: v.isMandatory,
+      description: v.description?.trim() || null,
     };
 
-    const obs$ = this.isEdit()
-      ? this.feesService.updateFeeStructure(this.structureId()!, payload)
-      : this.feesService.createFeeStructure(payload);
+    this.saving.set(true);
+    this.error.set(null);
 
-    obs$.subscribe({
+    const call$ = this.isEdit
+      ? this.fees.updateFeeStructure(this.data.structure!.id, payload)
+      : this.fees.createFeeStructure(payload);
+
+    call$.subscribe({
       next: () => {
-        this.toast.success(
-          this.isEdit()
-            ? 'Fee structure updated successfully'
-            : 'Fee structure created successfully'
-        );
-        this.router.navigate(['/school/fees/structures']);
+        this.saving.set(false);
+        this.dialogRef.close(true);
       },
-      error: (err: any) => {
-        this.toast.error(err?.error?.error ?? err?.message ?? 'Failed to save fee structure');
-        this.submitting.set(false);
+      error: (err) => {
+        this.error.set(err?.error?.error ?? 'Failed to save fee structure');
+        this.saving.set(false);
       },
     });
+  }
+
+  close(): void {
+    this.dialogRef.close(false);
   }
 }

@@ -1,66 +1,294 @@
+<!-- class-form-component.html -->
 <div class="form-page">
-  <header>
-    <div>
-      <h1>{{ isEdit() ? 'Edit Class' : 'New Class' }}</h1>
+  <!-- ── Page Header ─────────────────────────────────────────────────────── -->
+  <header class="form-page__header">
+    <div class="form-page__header-text">
+      <div class="form-page__breadcrumb">
+        <button
+          mat-icon-button
+          class="breadcrumb-back"
+          (click)="router.navigate(['/school/academics/classes'])"
+          matTooltip="Back to Classes"
+        >
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <span class="breadcrumb-label">Academics</span>
+        <mat-icon class="breadcrumb-sep">chevron_right</mat-icon>
+        <span class="breadcrumb-label">Classes</span>
+        <mat-icon class="breadcrumb-sep">chevron_right</mat-icon>
+        <span class="breadcrumb-current">{{ isEdit() ? 'Edit Class' : 'New Class' }}</span>
+      </div>
+
+      <h1>{{ isEdit() ? 'Edit Class' : 'Create New Class' }}</h1>
       <p class="subtitle">
-        {{ isEdit() ? 'Update class name, level and order' : 'Define a new grade level' }}
+        {{
+          isEdit()
+            ? 'Update the class name, academic level, and display order.'
+            : 'Define a new grade level for your school. Classes group students by their academic year.'
+        }}
       </p>
     </div>
-    <button mat-stroked-button (click)="router.navigate(['/school/academics/classes'])">
-      <mat-icon>arrow_back</mat-icon> Back
-    </button>
+
+    @if (isEdit()) {
+    <div class="edit-badge">
+      <mat-icon>edit</mat-icon>
+      Editing
+    </div>
+    }
   </header>
 
+  <!-- ── Not Found State ─────────────────────────────────────────────────── -->
   @if (notFound()) {
-  <div class="state-container error">
-    <mat-icon class="state-icon">search_off</mat-icon>
+  <div class="state-container state-container--error">
+    <div class="state-icon-wrap state-icon-wrap--error">
+      <mat-icon>search_off</mat-icon>
+    </div>
     <h2>Class Not Found</h2>
-    <p>Redirecting back…</p>
+    <p>This class may have been deleted. Redirecting you back…</p>
   </div>
   } @else {
+
+  <!-- ── Concept Guide Banner ─────────────────────────────────────────────── -->
+  @if (!isEdit()) {
+  <div class="info-card info-card--blue guide-banner">
+    <mat-icon>school</mat-icon>
+    <div>
+      <strong>What is a Class?</strong>
+      <p>
+        A class (or grade level) represents a year of study — e.g. "Class 1", "Class 10", "LKG", or
+        "Nursery". Once created, you can add <em>Sections</em> (like A, B, C) to it, and enroll
+        students.
+      </p>
+    </div>
+  </div>
+  }
+
+  <!-- ── Form Card ────────────────────────────────────────────────────────── -->
   <div class="form-card">
     @if (loading() && isEdit()) {
     <div class="loading-overlay">
-      <mat-spinner diameter="44"></mat-spinner>
+      <mat-spinner diameter="40"></mat-spinner>
       <p>Loading class data…</p>
     </div>
     } @else {
-    <form [formGroup]="form" (ngSubmit)="save()" class="form-layout">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Class Name</mat-label>
-        <input matInput formControlName="name" placeholder="e.g. Class 10, LKG, Nursery" />
-        @if (nameControl?.errors?.['required'] && nameControl?.touched) {
-        <mat-error>Class name is required</mat-error>
-        } @if (nameControl?.errors?.['minlength'] && nameControl?.touched) {
-        <mat-error>Minimum 1 character</mat-error>
-        }
-      </mat-form-field>
 
-      <div class="date-row">
-        <mat-form-field appearance="outline">
-          <mat-label>Level (0 = Nursery)</mat-label>
-          <input matInput type="number" formControlName="level" min="0" max="12" />
-          <mat-hint>0 to 12</mat-hint>
-          @if (levelControl?.errors?.['min'] && levelControl?.touched) {
-          <mat-error>Minimum 0</mat-error>
-          } @if (levelControl?.errors?.['max'] && levelControl?.touched) {
-          <mat-error>Maximum 12</mat-error>
+    <form [formGroup]="form" (ngSubmit)="save()" class="form-layout" novalidate>
+      <!-- ── Class Name ──────────────────────────────────────────────────── -->
+      <div class="field-group">
+        <div class="field-label-row">
+          <label class="field-label">Class Name <span class="required-star">*</span></label>
+        </div>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Class Name</mat-label>
+          <mat-icon matPrefix class="field-prefix-icon">school</mat-icon>
+          <input
+            matInput
+            formControlName="name"
+            placeholder="e.g. Class 10, LKG, Nursery, Grade 9"
+            autocomplete="off"
+          />
+          <mat-hint>The display name students and staff will see (max 50 characters)</mat-hint>
+          @if (nameControl?.errors?.['required'] && nameControl?.touched) {
+          <mat-error>Class name is required</mat-error>
+          } @if (nameControl?.errors?.['maxlength'] && nameControl?.touched) {
+          <mat-error>Cannot exceed 50 characters</mat-error>
           }
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Sort Order</mat-label>
-          <input matInput type="number" formControlName="sort_order" min="0" max="100" />
-          <mat-hint>Controls display order (lower = first)</mat-hint>
         </mat-form-field>
       </div>
 
+      <!-- ── Level + Sort Order row ──────────────────────────────────────── -->
+      <div class="two-col-row">
+        <!-- Level -->
+        <div class="field-group">
+          <div class="field-label-row">
+            <label class="field-label"> Academic Level <span class="required-star">*</span> </label>
+            <button
+              type="button"
+              class="guide-toggle-btn"
+              (click)="showLevelGuide.set(!showLevelGuide())"
+              [matTooltip]="showLevelGuide() ? 'Hide guide' : 'What is Level?'"
+            >
+              <mat-icon>{{ showLevelGuide() ? 'expand_less' : 'help_outline' }}</mat-icon>
+              {{ showLevelGuide() ? 'Hide' : 'What is this?' }}
+            </button>
+          </div>
+
+          @if (showLevelGuide()) {
+          <div class="guide-panel">
+            <p class="guide-panel__title"><mat-icon>info</mat-icon> Understanding Academic Level</p>
+            <p>
+              The <strong>Level</strong> is a numeric rank that reflects where this class sits in
+              your school's academic progression. It is used for:
+            </p>
+            <ul>
+              <li>
+                <strong>Promotion rules</strong> — the system uses level to figure out which class
+                to promote a student to next year.
+              </li>
+              <li>
+                <strong>Reports &amp; sorting</strong> — class lists are automatically ordered by
+                level so lower grades appear first.
+              </li>
+            </ul>
+            <div class="guide-panel__examples">
+              <div class="guide-example">
+                <span class="guide-example__level">0</span
+                ><span class="guide-example__name">Nursery / Pre-KG</span>
+              </div>
+              <div class="guide-example">
+                <span class="guide-example__level">1</span
+                ><span class="guide-example__name">LKG / Class 1</span>
+              </div>
+              <div class="guide-example">
+                <span class="guide-example__level">5</span
+                ><span class="guide-example__name">Class 5 / Grade 5</span>
+              </div>
+              <div class="guide-example">
+                <span class="guide-example__level">10</span
+                ><span class="guide-example__name">Class 10 (Matriculation)</span>
+              </div>
+              <div class="guide-example">
+                <span class="guide-example__level">12</span
+                ><span class="guide-example__name">Class 12 (Senior Secondary)</span>
+              </div>
+              <div class="guide-example">
+                <span class="guide-example__level">15</span
+                ><span class="guide-example__name">Diploma / Advanced</span>
+              </div>
+            </div>
+            <p class="guide-panel__note">
+              <mat-icon>lightbulb</mat-icon>
+              <strong>Tip:</strong> Use 0 for pre-school classes. Levels 1–10 suit most K–10
+              schools. Use 11–15 for higher secondary or diploma programmes.
+            </p>
+          </div>
+          }
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Level (0 = Nursery)</mat-label>
+            <mat-icon matPrefix class="field-prefix-icon">stairs</mat-icon>
+            <input matInput type="number" formControlName="level" min="0" max="15" />
+            <!-- Live preview label -->
+            @if (levelLabel) {
+            <mat-hint>
+              <span class="level-preview">
+                <mat-icon class="level-preview__icon">label</mat-icon>
+                Represents: <strong>{{ levelLabel }}</strong>
+              </span>
+            </mat-hint>
+            } @else {
+            <mat-hint>Enter 0–15 (0 = Nursery/Pre-KG)</mat-hint>
+            } @if (levelControl?.errors?.['required'] && levelControl?.touched) {
+            <mat-error>Level is required</mat-error>
+            } @if (levelControl?.errors?.['min'] && levelControl?.touched) {
+            <mat-error>Minimum value is 0</mat-error>
+            } @if (levelControl?.errors?.['max'] && levelControl?.touched) {
+            <mat-error>Maximum value is 15</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <!-- Sort Order -->
+        <div class="field-group">
+          <div class="field-label-row">
+            <label class="field-label">Sort Order <span class="required-star">*</span></label>
+            <button
+              type="button"
+              class="guide-toggle-btn"
+              (click)="showSortGuide.set(!showSortGuide())"
+              [matTooltip]="showSortGuide() ? 'Hide guide' : 'What is Sort Order?'"
+            >
+              <mat-icon>{{ showSortGuide() ? 'expand_less' : 'help_outline' }}</mat-icon>
+              {{ showSortGuide() ? 'Hide' : 'What is this?' }}
+            </button>
+          </div>
+
+          @if (showSortGuide()) {
+          <div class="guide-panel">
+            <p class="guide-panel__title"><mat-icon>info</mat-icon> Understanding Sort Order</p>
+            <p>
+              <strong>Sort Order</strong> controls the visual order of classes in dropdown menus,
+              fee structures, attendance sheets, and reports — <em>independently</em> of the
+              academic level.
+            </p>
+            <p>
+              This is useful when you want a custom display sequence that differs from strict
+              numeric level ordering.
+            </p>
+            <div class="guide-panel__examples">
+              <div class="guide-example">
+                <span class="guide-example__level sort">5</span
+                ><span class="guide-example__name">Appears first in lists</span>
+              </div>
+              <div class="guide-example">
+                <span class="guide-example__level sort">10</span
+                ><span class="guide-example__name">Default — middle position</span>
+              </div>
+              <div class="guide-example">
+                <span class="guide-example__level sort">50</span
+                ><span class="guide-example__name">Appears near the end</span>
+              </div>
+            </div>
+            <p class="guide-panel__note">
+              <mat-icon>lightbulb</mat-icon>
+              <strong>Tip:</strong> Use multiples of 10 (10, 20, 30…) so you can easily insert new
+              classes between existing ones without renumbering everything.
+            </p>
+          </div>
+          }
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Sort Order</mat-label>
+            <mat-icon matPrefix class="field-prefix-icon">swap_vert</mat-icon>
+            <input matInput type="number" formControlName="sort_order" min="0" max="100" />
+            <mat-hint>Lower = appears first in lists &amp; dropdowns (0–100)</mat-hint>
+            @if (sortOrderControl?.errors?.['required'] && sortOrderControl?.touched) {
+            <mat-error>Sort order is required</mat-error>
+            } @if (sortOrderControl?.errors?.['min'] && sortOrderControl?.touched) {
+            <mat-error>Minimum value is 0</mat-error>
+            } @if (sortOrderControl?.errors?.['max'] && sortOrderControl?.touched) {
+            <mat-error>Maximum value is 100</mat-error>
+            }
+          </mat-form-field>
+        </div>
+      </div>
+      <!-- end two-col-row -->
+
+      <!-- ── What Happens Next (create mode only) ──────────────────────── -->
+      @if (!isEdit()) {
+      <div class="next-steps-card">
+        <div class="next-steps-card__header">
+          <mat-icon>route</mat-icon>
+          <span>After creating this class, you can:</span>
+        </div>
+        <ul class="next-steps-card__list">
+          <li>
+            <mat-icon>check_circle</mat-icon> Add <strong>Sections</strong> (e.g. A, B, C) under
+            this class
+          </li>
+          <li>
+            <mat-icon>check_circle</mat-icon> Assign a <strong>Class Teacher</strong> to each
+            section
+          </li>
+          <li>
+            <mat-icon>check_circle</mat-icon> <strong>Enroll students</strong> into a class-section
+          </li>
+          <li>
+            <mat-icon>check_circle</mat-icon> Assign <strong>Subjects</strong> and teachers to this
+            class
+          </li>
+        </ul>
+      </div>
+      }
+
+      <!-- ── Form Actions ──────────────────────────────────────────────── -->
       <div class="form-actions">
         <button
           mat-stroked-button
           type="button"
           (click)="router.navigate(['/school/academics/classes'])"
         >
+          <mat-icon>close</mat-icon>
           Cancel
         </button>
         <button
@@ -70,7 +298,9 @@
           [disabled]="form.invalid || loading()"
         >
           @if (loading()) {
-          <mat-spinner diameter="18" style="display: inline-block; margin-right: 8px"></mat-spinner>
+          <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+          } @else {
+          <mat-icon>{{ isEdit() ? 'save' : 'add_circle' }}</mat-icon>
           }
           {{ isEdit() ? 'Update Class' : 'Create Class' }}
         </button>
@@ -78,5 +308,7 @@
     </form>
     }
   </div>
-  }
+  <!-- end form-card -->
+
+  }<!-- end @else -->
 </div>

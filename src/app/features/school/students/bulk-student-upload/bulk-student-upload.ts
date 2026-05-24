@@ -1,6 +1,17 @@
-// bulk-student-upload.component.ts — v2 (production-grade)
+// bulk-student-upload.ts — v3 (production-grade, complete rewrite)
+//
+// Removed: rollNumber field (handled separately via Roll Numbers feature)
+// Added:   UDISE warning display, progress tracking, rich guidance panels
+//          ExcelJS styled template download, improved accessibility
 
-import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  inject,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  OnInit,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -12,43 +23,58 @@ import {
   ClassSectionCapacityInfo,
   EmailConflict,
 } from '../../../../core/services/bulk-upload.service';
+import { BackButtonComponent } from '../../../../shared/components/back-button/back-button';
 
-type UploadStep = 'select' | 'upload' | 'processing' | 'results';
+export type UploadStep = 'select' | 'upload' | 'processing' | 'results';
 
 @Component({
   selector: 'app-bulk-student-upload',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, BackButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './bulk-student-upload.html',
   styleUrl: './bulk-student-upload.scss',
 })
-export class BulkStudentUploadComponent {
+export class BulkStudentUploadComponent implements OnInit {
   private router = inject(Router);
   private academics = inject(AcademicsService);
   private bulkUpload = inject(BulkUploadService);
 
-  // ── State ──────────────────────────────────────────────────────────────────
+  // ── Step state ───────────────────────────────────────────────────────────────
   currentStep = signal<UploadStep>('select');
+
+  // ── Class section ────────────────────────────────────────────────────────────
   classSections = signal<ClassSection[]>([]);
   loadingClassSections = signal(false);
-  // selectedClassSectionId = signal<number | null>(null);
   selectedClassSectionId = signal<number | ''>('');
   capacityInfo = signal<ClassSectionCapacityInfo | null>(null);
   loadingCapacity = signal(false);
+
+  // ── File state ───────────────────────────────────────────────────────────────
   selectedFile = signal<File | null>(null);
   fileError = signal<string | null>(null);
   isDragOver = signal(false);
   uploading = signal(false);
+
+  // ── Results ──────────────────────────────────────────────────────────────────
   uploadResult = signal<BulkUploadResult | null>(null);
   resultFilter = signal<'ALL' | 'SUCCESS' | 'FAILED'>('ALL');
 
-  // Email conflict popup
+  // ── Email conflict popup ─────────────────────────────────────────────────────
   showConflictPopup = signal(false);
   emailConflicts = signal<EmailConflict[]>([]);
   conflictFilter = signal<'ALL' | 'DUPLICATE_IN_FILE' | 'ALREADY_IN_SCHOOL'>('ALL');
 
-  // ── Computed ───────────────────────────────────────────────────────────────
+  // ── Template download state ──────────────────────────────────────────────────
+  downloadingTemplate = signal(false);
+
+  // ── Guide panel ──────────────────────────────────────────────────────────────
+  showGuide = signal(false);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // COMPUTED
+  // ─────────────────────────────────────────────────────────────────────────────
+
   selectedClassSectionName = computed(() => {
     const id = this.selectedClassSectionId();
     const cs = this.classSections().find((c) => c.id === id);
@@ -62,13 +88,12 @@ export class BulkStudentUploadComponent {
     (this.uploadResult()?.results ?? []).filter((r) => r.status === 'FAILED')
   );
   filteredResults = computed(() => {
-    const filter = this.resultFilter();
+    const f = this.resultFilter();
     const results = this.uploadResult()?.results ?? [];
-    if (filter === 'ALL') return results;
-    return results.filter((r) => r.status === filter);
+    if (f === 'ALL') return results;
+    return results.filter((r) => r.status === f);
   });
 
-  // Conflict popup computed
   inSchoolConflicts = computed(() =>
     this.emailConflicts().filter((c) => c.conflictType === 'ALREADY_IN_SCHOOL')
   );
@@ -82,23 +107,43 @@ export class BulkStudentUploadComponent {
     return all.filter((c) => c.conflictType === f);
   });
 
-  // Capacity fill percentage
   capacityPercent = computed(() => {
     const cap = this.capacityInfo();
-    if (!cap) return 0;
-    return Math.round((cap.existingStudents / cap.maxAllowed) * 100);
+    if (!cap || cap.maxAllowed === 0) return 0;
+    return Math.min(100, Math.round((cap.existingStudents / cap.maxAllowed) * 100));
   });
 
+  capacityAfterPercent = computed(() => {
+    const cap = this.uploadResult()?.capacityInfo;
+    if (!cap || cap.maxAllowed === 0) return 0;
+    return Math.min(100, Math.round((cap.totalAfter / cap.maxAllowed) * 100));
+  });
+
+  udiseWarningCount = computed(
+    () =>
+      (this.uploadResult()?.results ?? []).filter(
+        (r) => r.status === 'SUCCESS' && r.udiseWarnings && r.udiseWarnings.length > 0
+      ).length
+  );
+
+  stepOrder: UploadStep[] = ['select', 'upload', 'results'];
+
   stepDone(step: UploadStep): boolean {
-    const order: UploadStep[] = ['select', 'upload', 'results'];
-    return order.indexOf(this.currentStep()) > order.indexOf(step);
+    return this.stepOrder.indexOf(this.currentStep()) > this.stepOrder.indexOf(step);
   }
 
-  constructor() {
+  stepIndex(step: UploadStep): number {
+    return this.stepOrder.indexOf(step) + 1;
+  }
+
+  ngOnInit(): void {
     this.loadClassSections();
   }
 
-  // ── Load class sections ────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────────
+  // CLASS SECTIONS
+  // ─────────────────────────────────────────────────────────────────────────────
+
   private loadClassSections(): void {
     this.loadingClassSections.set(true);
     this.academics.getClassSections().subscribe({
@@ -110,13 +155,10 @@ export class BulkStudentUploadComponent {
     });
   }
 
-  // ── Class section selection ────────────────────────────────────────────────
   onClassSectionChange(value: string): void {
-    // const id = value ? parseInt(value) : null;
     const id = value !== '' ? parseInt(value, 10) : '';
     this.selectedClassSectionId.set(id);
     this.capacityInfo.set(null);
-
     if (id) {
       this.loadingCapacity.set(true);
       this.bulkUpload.getCapacityInfo(id).subscribe({
@@ -129,22 +171,39 @@ export class BulkStudentUploadComponent {
     }
   }
 
-  // ── Template download ──────────────────────────────────────────────────────
-  downloadTemplate(): void {
-    this.bulkUpload.downloadTemplate();
+  // ─────────────────────────────────────────────────────────────────────────────
+  // TEMPLATE DOWNLOAD
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  async downloadTemplate(): Promise<void> {
+    this.downloadingTemplate.set(true);
+    try {
+      await this.bulkUpload.downloadTemplate();
+    } finally {
+      this.downloadingTemplate.set(false);
+    }
   }
 
-  // ── Navigation ─────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────────
+  // NAVIGATION
+  // ─────────────────────────────────────────────────────────────────────────────
+
   goToUpload(): void {
     this.currentStep.set('upload');
   }
 
-  // ── File handling ──────────────────────────────────────────────────────────
+  goBack(): void {
+    this.router.navigate(['/school/students']);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // FILE HANDLING
+  // ─────────────────────────────────────────────────────────────────────────────
+
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (file) this.validateAndSetFile(file);
-    // Reset input so the same file can be re-selected after removing
     input.value = '';
   }
 
@@ -164,11 +223,15 @@ export class BulkStudentUploadComponent {
     this.fileError.set(null);
     const name = file.name.toLowerCase();
     if (!name.endsWith('.xlsx') && !name.endsWith('.xls')) {
-      this.fileError.set('Only .xlsx and .xls files are supported');
+      this.fileError.set(
+        'Only Excel files (.xlsx or .xls) are accepted. Please use the provided template.'
+      );
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      this.fileError.set('File size must be less than 5 MB');
+    if (file.size > 10 * 1024 * 1024) {
+      this.fileError.set(
+        'File size must be less than 10 MB. Split into smaller batches if needed.'
+      );
       return;
     }
     this.selectedFile.set(file);
@@ -183,10 +246,13 @@ export class BulkStudentUploadComponent {
   formatFileSize(bytes: number): string {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
   }
 
-  // ── Submit upload ──────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────────
+  // UPLOAD
+  // ─────────────────────────────────────────────────────────────────────────────
+
   submitUpload(): void {
     const file = this.selectedFile();
     const classSectionId = this.selectedClassSectionId();
@@ -204,9 +270,9 @@ export class BulkStudentUploadComponent {
       },
       error: (err) => {
         this.uploading.set(false);
-
-        // HTTP 409 = email conflicts — show the popup, stay on upload step
         const body = err?.error as BulkUploadResult | undefined;
+
+        // 409 → email conflicts
         if (err?.status === 409 && body?.emailConflicts?.length) {
           this.emailConflicts.set(body.emailConflicts);
           this.conflictFilter.set('ALL');
@@ -215,7 +281,7 @@ export class BulkStudentUploadComponent {
           return;
         }
 
-        // Other errors — show inline
+        // Other errors
         this.currentStep.set('upload');
         this.fileError.set(
           err?.error?.error ||
@@ -227,7 +293,10 @@ export class BulkStudentUploadComponent {
     });
   }
 
-  // ── Conflict popup actions ─────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────────
+  // CONFLICT POPUP
+  // ─────────────────────────────────────────────────────────────────────────────
+
   closeConflictPopup(): void {
     this.showConflictPopup.set(false);
   }
@@ -254,7 +323,10 @@ export class BulkStudentUploadComponent {
     URL.revokeObjectURL(url);
   }
 
-  // ── Results actions ────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────────
+  // RESULTS
+  // ─────────────────────────────────────────────────────────────────────────────
+
   resetAndStartOver(): void {
     this.selectedFile.set(null);
     this.fileError.set(null);
@@ -265,7 +337,31 @@ export class BulkStudentUploadComponent {
     this.currentStep.set('upload');
   }
 
-  goBack(): void {
-    this.router.navigate(['/school/students']);
+  downloadResultsReport(): void {
+    const results = this.uploadResult()?.results ?? [];
+    const lines = [
+      'Row #,Name,Email,Status,Detail',
+      ...results.map(
+        (r) =>
+          `${r.rowNumber},"${r.name}","${r.email}",${r.status},"${
+            r.status === 'SUCCESS' ? `User ID: ${r.userId}` : r.error ?? ''
+          }"`
+      ),
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'upload_results.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  getBannerClass(): string {
+    const r = this.uploadResult();
+    if (!r) return '';
+    if (r.summary.failed === 0) return 'banner-success';
+    if (r.summary.successful > 0) return 'banner-partial';
+    return 'banner-error';
   }
 }

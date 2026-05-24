@@ -1,0 +1,171 @@
+<!-- due-fees-panel.html -->
+<div class="due-panel">
+  <!-- Loading -->
+  @if (loading()) {
+  <div class="due-panel__loading">
+    <mat-spinner diameter="32" />
+    <span>Loading fees…</span>
+  </div>
+  }
+
+  <!-- Error -->
+  @if (error()) {
+  <div class="due-panel__error">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ error() }}</span>
+    <button mat-stroked-button (click)="load()">Retry</button>
+  </div>
+  }
+
+  <!-- Content -->
+  @if (!loading() && !error() && data(); as d) {
+
+  <!-- Summary strip -->
+  <div class="due-summary">
+    <div class="due-summary__item">
+      <span class="due-summary__label">Total Due</span>
+      <span class="due-summary__value">{{ d.totalDue | paise }}</span>
+    </div>
+    <div class="due-summary__item">
+      <span class="due-summary__label">Paid</span>
+      <span class="due-summary__value due-summary__value--success">{{ d.totalPaid | paise }}</span>
+    </div>
+    @if (d.totalConcession > 0) {
+    <div class="due-summary__item">
+      <span class="due-summary__label">Concession</span>
+      <span class="due-summary__value due-summary__value--info"
+        >-{{ d.totalConcession | paise }}</span
+      >
+    </div>
+    }
+    <div class="due-summary__item due-summary__item--balance">
+      <span class="due-summary__label">Balance</span>
+      <span
+        class="due-summary__value due-summary__value--{{ d.balanceDue > 0 ? 'error' : 'success' }}"
+      >
+        {{ d.balanceDue | paise }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Standard Fees section -->
+  @if (d.fees.length > 0) {
+  <div class="due-section">
+    <button class="due-section__header" (click)="structuresExpanded.set(!structuresExpanded())">
+      <mat-icon class="due-section__icon due-section__icon--primary">receipt_long</mat-icon>
+      <span class="due-section__title">Standard Fees</span>
+      <span class="due-section__count">{{ d.fees.length }}</span>
+      <mat-icon class="due-section__chevron" [class.rotated]="structuresExpanded()"
+        >expand_more</mat-icon
+      >
+    </button>
+
+    @if (structuresExpanded()) {
+    <div class="due-section__body">
+      <table class="due-table">
+        <thead>
+          <tr>
+            <th>Fee Type</th>
+            <th>Month</th>
+            <th class="text-right">Amount</th>
+            <th class="text-right">Paid</th>
+            <th class="text-right">Remaining</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of d.fees; track trackById($index, item)) {
+          <tr [class.is-paid]="item.remaining <= 0">
+            <td>
+              <span class="fee-type-tag">{{ item.feeType }}</span>
+              @if (item.concessionAmount > 0) {
+              <span class="concession-chip">
+                <mat-icon>local_offer</mat-icon>
+                -{{ item.concessionAmount | paise : 'compact' }}
+              </span>
+              }
+            </td>
+            <td class="cell-muted">{{ formatMonth(item.feeMonth) }}</td>
+            <td class="text-right">{{ item.effectiveAmount | paise : 'compact' }}</td>
+            <td class="text-right text-success">{{ item.paid | paise : 'compact' }}</td>
+            <td class="text-right" [class.text-error]="item.remaining > 0">
+              {{ item.remaining | paise : 'compact' }}
+            </td>
+            <td><app-fee-status-badge [status]="statusOf(item)" /></td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- Custom Fee Assignments section -->
+  @if (d.assignments.length > 0) {
+  <div class="due-section">
+    <button class="due-section__header" (click)="assignmentsExpanded.set(!assignmentsExpanded())">
+      <mat-icon class="due-section__icon due-section__icon--secondary">directions_bus</mat-icon>
+      <span class="due-section__title">Custom Fees</span>
+      <span class="due-section__count">{{ d.assignments.length }}</span>
+      <mat-icon class="due-section__chevron" [class.rotated]="assignmentsExpanded()"
+        >expand_more</mat-icon
+      >
+    </button>
+
+    @if (assignmentsExpanded()) {
+    <div class="due-section__body">
+      <table class="due-table">
+        <thead>
+          <tr>
+            <th>Fee Type</th>
+            <th>Month</th>
+            <th class="text-right">Amount</th>
+            <th class="text-right">Paid</th>
+            <th class="text-right">Remaining</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of d.assignments; track trackById($index, item)) {
+          <tr [class.is-paid]="item.remaining <= 0">
+            <td>
+              <span class="fee-type-tag fee-type-tag--custom">{{ item.feeType }}</span>
+              @if (item.description) {
+              <span class="cell-muted fee-desc">{{ item.description }}</span>
+              }
+            </td>
+            <td class="cell-muted">{{ formatMonth(item.feeMonth) }}</td>
+            <td class="text-right">{{ item.effectiveAmount | paise : 'compact' }}</td>
+            <td class="text-right text-success">{{ item.paid | paise : 'compact' }}</td>
+            <td class="text-right" [class.text-error]="item.remaining > 0">
+              {{ item.remaining | paise : 'compact' }}
+            </td>
+            <td><app-fee-status-badge [status]="statusOf(item)" /></td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- Empty state -->
+  @if (d.fees.length === 0 && d.assignments.length === 0) {
+  <div class="due-panel__empty">
+    <mat-icon>check_circle_outline</mat-icon>
+    <p>No fees due</p>
+  </div>
+  }
+
+  <!-- Pay Now button -->
+  @if (showPayButton && d.balanceDue > 0) {
+  <div class="due-panel__footer">
+    <button mat-flat-button color="primary" class="pay-btn" (click)="onPayNow()">
+      <mat-icon>payments</mat-icon>
+      Pay Now — {{ d.balanceDue | paise }}
+    </button>
+  </div>
+  } }
+</div>

@@ -1,0 +1,749 @@
+// class-section-bulk-create.scss
+// Bulk Class-Section Creator — production-grade, uses shared design tokens
+
+.bulk-page {
+  padding: 28px 32px;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  @media (max-width: 768px) {
+    padding: 16px;
+    gap: 14px;
+  }
+}
+
+// ── Header ─────────────────────────────────────────────────────────────────────
+
+.bulk-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 1.625rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+
+    @media (max-width: 480px) {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+}
+
+.back-btn {
+  flex-shrink: 0;
+  color: var(--color-text-secondary) !important;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.preset-btn {
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent) !important;
+  border-color: color-mix(in srgb, var(--color-primary) 25%, transparent) !important;
+  color: var(--color-primary) !important;
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-primary) 14%, transparent) !important;
+  }
+}
+
+// ── State containers ───────────────────────────────────────────────────────────
+
+.state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 14px;
+  padding: 56px 24px;
+  background: var(--color-bg-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+
+  p {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--color-text-secondary);
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
+  &--error {
+    border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
+    background: color-mix(in srgb, var(--color-error) 3%, var(--color-bg-surface));
+  }
+}
+
+.state-icon {
+  font-size: 48px !important;
+  width: 48px !important;
+  height: 48px !important;
+  color: var(--color-error) !important;
+}
+
+// ── Guide panel ────────────────────────────────────────────────────────────────
+
+.guide-panel {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  box-shadow: var(--shadow-sm);
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 16px;
+
+    mat-icon {
+      color: var(--color-primary);
+      font-size: 18px;
+      height: 18px;
+      width: 18px;
+    }
+  }
+}
+
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.guide-card {
+  display: flex;
+  gap: 12px;
+  padding: 14px;
+  background: var(--color-hover);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-divider);
+
+  &__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    mat-icon {
+      font-size: 18px;
+      height: 18px;
+      width: 18px;
+    }
+
+    &--primary {
+      background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+      mat-icon {
+        color: var(--color-primary);
+      }
+    }
+    &--info {
+      background: color-mix(in srgb, var(--color-info) 12%, transparent);
+      mat-icon {
+        color: var(--color-info);
+      }
+    }
+    &--success {
+      background: color-mix(in srgb, var(--color-success) 12%, transparent);
+      mat-icon {
+        color: var(--color-success);
+      }
+    }
+    &--warning {
+      background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+      mat-icon {
+        color: var(--color-warning);
+      }
+    }
+    &--secondary {
+      background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
+      mat-icon {
+        color: var(--color-secondary);
+      }
+    }
+  }
+
+  &__body {
+    min-width: 0;
+
+    strong {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      margin-bottom: 4px;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.775rem;
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+    }
+  }
+}
+
+// ── Presets panel ──────────────────────────────────────────────────────────────
+
+.presets-panel {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+
+  &__header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--color-divider);
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 6px;
+
+    mat-icon {
+      color: var(--color-primary);
+    }
+  }
+
+  &__hint {
+    margin: 0;
+    font-size: 0.84rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+  }
+}
+
+.presets-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.preset-selector {
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    gap: 12px;
+  }
+
+  &__label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+
+    mat-icon {
+      font-size: 16px;
+      height: 16px;
+      width: 16px;
+      color: var(--color-primary);
+    }
+  }
+
+  &__count {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    margin-left: 4px;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 4px;
+  }
+}
+
+.sel-btn {
+  font-size: 0.75rem !important;
+  min-width: 0 !important;
+  padding: 0 8px !important;
+  height: 28px !important;
+  line-height: 28px !important;
+  color: var(--color-text-muted) !important;
+
+  &:hover {
+    color: var(--color-primary) !important;
+  }
+}
+
+.preset-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.preset-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 6px 8px;
+  border-radius: 100px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+  position: relative;
+  overflow: hidden;
+
+  &__check {
+    font-size: 16px !important;
+    height: 16px !important;
+    width: 16px !important;
+    color: var(--color-text-muted);
+    transition: color 0.15s ease;
+  }
+
+  &:hover:not(&--selected) {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+  }
+
+  &--selected {
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    font-weight: 600;
+
+    .preset-chip__check {
+      color: var(--color-primary);
+    }
+  }
+}
+
+.presets-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid var(--color-divider);
+  flex-wrap: wrap;
+
+  &__preview {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.84rem;
+    color: var(--color-text-secondary);
+
+    mat-icon {
+      font-size: 17px;
+      height: 17px;
+      width: 17px;
+      color: var(--color-primary);
+    }
+
+    strong {
+      color: var(--color-primary);
+      font-weight: 700;
+    }
+  }
+
+  &__btns {
+    display: flex;
+    gap: 10px;
+  }
+}
+
+// ── Result banner ──────────────────────────────────────────────────────────────
+
+.result-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  background: color-mix(in srgb, var(--color-success) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-success) 20%, transparent);
+  border-radius: var(--radius-md);
+
+  mat-icon {
+    color: var(--color-success);
+    font-size: 22px;
+    height: 22px;
+    width: 22px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  strong {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+
+  &--partial {
+    background: color-mix(in srgb, var(--color-warning) 8%, transparent);
+    border-color: color-mix(in srgb, var(--color-warning) 20%, transparent);
+
+    mat-icon {
+      color: var(--color-warning);
+    }
+  }
+
+  .result-skipped {
+    margin: 4px 0 0;
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+  }
+}
+
+// ── Table card ─────────────────────────────────────────────────────────────────
+
+.table-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--color-divider);
+  background: var(--color-hover);
+
+  &__count {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+
+    mat-icon {
+      font-size: 16px;
+      height: 16px;
+      width: 16px;
+      color: var(--color-primary);
+    }
+  }
+}
+
+// ── Real table layout ──────────────────────────────────────────────────────────
+//
+// FIX (Issue 1): replaced the CSS-grid "table" with a real <table>.
+//
+// The CSS-grid approach broke because Angular Material's mat-form-field
+// inserts wrapper divs (.mat-mdc-form-field-wrapper etc.) that become
+// unintended grid items at the wrong nesting level, consuming columns and
+// shifting everything to the right.
+//
+// With a real <table> each <td> is the direct containing block for whatever
+// Angular renders inside it — no column-count drift is possible.
+//
+// Column widths are set via fixed percentages so the layout is stable even
+// before any data loads (avoids the "columns pop" on first render).
+
+.table-scroll-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cs-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed; // fixed layout = column widths are honoured
+  min-width: 860px; // prevents squishing on mid-size screens
+
+  // ── Column widths ────────────────────────────────────────────────────────
+  // Total must add up to 100%.  Adjust as needed.
+  .col-num {
+    width: 44px;
+  }
+  .col-class {
+    width: 18%;
+  }
+  .col-section {
+    width: 16%;
+  }
+  .col-capacity {
+    width: 100px;
+  }
+  .col-teacher {
+    width: 20%;
+  }
+  .col-room {
+    width: 12%;
+  }
+  .col-active {
+    width: 68px;
+  }
+  .col-actions {
+    width: 52px;
+  }
+
+  // ── Header row ──────────────────────────────────────────────────────────
+  thead tr {
+    background: var(--color-hover);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  th {
+    padding: 11px 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    text-align: left;
+    white-space: nowrap;
+
+    &.col-num {
+      text-align: center;
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+    &.col-active {
+      text-align: center;
+    }
+    &.col-actions {
+      text-align: center;
+    }
+  }
+
+  // ── Body rows ────────────────────────────────────────────────────────────
+  tbody tr {
+    border-bottom: 1px solid var(--color-divider);
+    transition: background 0.12s ease;
+
+    &:last-child {
+      border-bottom: none;
+    }
+    &:hover {
+      background: var(--color-hover);
+    }
+
+    &.cs-row--invalid {
+      background: color-mix(in srgb, var(--color-error) 3%, transparent) !important;
+    }
+  }
+
+  td {
+    padding: 8px 12px;
+    vertical-align: middle;
+
+    &.col-num {
+      text-align: center;
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+    &.col-active {
+      text-align: center;
+    }
+    &.col-actions {
+      text-align: center;
+    }
+  }
+}
+
+// ── Row number badge ───────────────────────────────────────────────────────────
+
+.row-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: var(--color-hover);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+
+// ── Required star ──────────────────────────────────────────────────────────────
+
+.required-star {
+  color: var(--color-error);
+  margin-left: 2px;
+}
+
+// ── form field inside table cell — full width, no bottom margin ────────────────
+//
+// mat-form-field adds a bottom margin for the hint/error area.  Inside a table
+// cell that margin pushes the row taller than needed when there is no error.
+// We collapse it here and only restore space when an error is shown.
+
+.cs-table td .field-full {
+  width: 100%;
+
+  // Remove the default bottom gutter — error messages expand the cell height
+  // naturally when they appear (Angular adds the text node), so we don't need
+  // to pre-reserve space.
+  .mat-mdc-form-field-subscript-wrapper {
+    margin-top: 0;
+  }
+}
+
+// ── Teacher search dropdown full-width inside its cell ─────────────────────────
+
+.cs-table .col-teacher app-teacher-search-dropdown {
+  display: block;
+  width: 100%;
+}
+
+// ── Toggle switch ──────────────────────────────────────────────────────────────
+
+.toggle-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  background: var(--color-border);
+  border-radius: 100px;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: white;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.toggle-input:checked + .toggle-slider {
+  background: var(--color-primary);
+
+  &::after {
+    transform: translateX(16px);
+  }
+}
+
+// ── Table footer ───────────────────────────────────────────────────────────────
+
+.table-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--color-divider);
+  background: var(--color-hover);
+}
+
+.add-row-btn {
+  color: var(--color-text-secondary) !important;
+  font-size: 0.84rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+
+  mat-icon {
+    color: var(--color-primary);
+  }
+
+  &:hover {
+    color: var(--color-primary) !important;
+  }
+}
+
+// ── Submit bar ─────────────────────────────────────────────────────────────────
+
+.submit-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+
+  @media (max-width: 480px) {
+    flex-direction: column-reverse;
+    button {
+      width: 100%;
+    }
+  }
+}
+
+.btn-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-spinner {
+  display: inline-block;
+}

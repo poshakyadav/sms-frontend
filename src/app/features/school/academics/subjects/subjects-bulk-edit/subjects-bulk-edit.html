@@ -1,0 +1,296 @@
+<!-- features/school/academics/subjects/subjects-bulk-edit/subjects-bulk-edit.html -->
+<div class="bulk-page">
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <header class="bulk-header">
+    <div class="bulk-header__left">
+      <button
+        mat-icon-button
+        class="back-btn"
+        (click)="router.navigate(['/school/academics/subjects/list'])"
+        matTooltip="Back to Subjects"
+      >
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <h1>Bulk Edit Subjects</h1>
+        <p class="subtitle">
+          Edit all subjects in one place. Only changed rows are sent to the server.
+        </p>
+      </div>
+    </div>
+    <div class="bulk-header__actions">
+      @if (dirtyCount > 0) {
+      <button mat-stroked-button (click)="resetAll()" matTooltip="Reset all unsaved changes">
+        <mat-icon>restart_alt</mat-icon>
+        Reset All
+      </button>
+      }
+      <button
+        mat-raised-button
+        color="primary"
+        [disabled]="form.invalid || submitting() || dirtyCount === 0"
+        (click)="submit()"
+      >
+        @if (submitting()) {
+        <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+        } @else {
+        <mat-icon>save</mat-icon>
+        } Save
+        {{ dirtyCount > 0 ? dirtyCount + ' Change' + (dirtyCount !== 1 ? 's' : '') : 'Changes' }}
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Loading ─────────────────────────────────────────────────────────── -->
+  @if (loading()) {
+  <div class="state-container">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading subjects…</p>
+  </div>
+  } @else if (loadError()) {
+  <div class="state-container state-container--error">
+    <mat-icon class="state-icon">error_outline</mat-icon>
+    <h2>Failed to load subjects</h2>
+    <p>{{ loadError() }}</p>
+  </div>
+  } @else if (rowCount === 0) {
+  <div class="state-container">
+    <mat-icon class="state-icon">menu_book</mat-icon>
+    <h2>No Subjects Found</h2>
+    <p>Create subjects first before editing them in bulk.</p>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="router.navigate(['/school/academics/subjects/new'])"
+    >
+      <mat-icon>add</mat-icon> Add First Subject
+    </button>
+  </div>
+  } @else {
+
+  <!-- ── Toolbar ────────────────────────────────────────────────────── -->
+  <div class="edit-toolbar">
+    <!-- Search -->
+    <div class="toolbar-search">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search subjects</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input
+          matInput
+          [value]="searchTerm()"
+          (input)="searchTerm.set($any($event.target).value)"
+          placeholder="Name or code…"
+        />
+        @if (searchTerm()) {
+        <button matSuffix mat-icon-button (click)="clearSearch()" matTooltip="Clear">
+          <mat-icon>close</mat-icon>
+        </button>
+        }
+      </mat-form-field>
+    </div>
+
+    <!-- Dirty filter toggle -->
+    <button
+      class="dirty-toggle-btn"
+      [class.dirty-toggle-btn--active]="showOnlyDirty()"
+      (click)="toggleDirtyFilter()"
+      matTooltip="{{ showOnlyDirty() ? 'Show all' : 'Show only changed rows' }}"
+    >
+      <mat-icon>{{ showOnlyDirty() ? 'filter_alt_off' : 'filter_alt' }}</mat-icon>
+      {{ showOnlyDirty() ? 'All rows' : 'Changed only' }}
+      @if (dirtyCount > 0) {
+      <span class="dirty-badge">{{ dirtyCount }}</span>
+      }
+    </button>
+
+    <!-- Stats -->
+    <div class="toolbar-stats">
+      <span class="stat-pill stat-pill--total">
+        <mat-icon>list</mat-icon> {{ rowCount }} total
+      </span>
+      @if (dirtyCount > 0) {
+      <span class="stat-pill stat-pill--dirty">
+        <mat-icon>edit</mat-icon> {{ dirtyCount }} changed
+      </span>
+      } @if (searchTerm() || showOnlyDirty()) {
+      <span class="stat-pill stat-pill--filtered">
+        <mat-icon>visibility</mat-icon> {{ visibleCount }} shown
+      </span>
+      }
+    </div>
+  </div>
+
+  <!-- ── Result Banner ──────────────────────────────────────────────── -->
+  @if (lastResult(); as result) {
+  <div
+    class="result-banner"
+    [class.result-banner--partial]="result.errors.length > 0 || result.notFound.length > 0"
+  >
+    <mat-icon>{{
+      result.errors.length > 0 || result.notFound.length > 0 ? 'warning_amber' : 'check_circle'
+    }}</mat-icon>
+    <div>
+      @if (result.updated > 0) {
+      <strong
+        >{{ result.updated }} subject{{ result.updated !== 1 ? 's' : '' }} updated
+        successfully.</strong
+      >
+      } @if (result.notFound.length > 0) {
+      <p class="result-secondary">Not found (IDs): {{ result.notFound.join(', ') }}</p>
+      } @if (result.errors.length > 0) {
+      <p class="result-errors">{{ result.errors.join(' · ') }}</p>
+      }
+    </div>
+  </div>
+  }
+
+  <!-- ── No Results (after filter) ─────────────────────────────────── -->
+  @if (visibleCount === 0) {
+  <div class="state-container">
+    <mat-icon class="state-icon">search_off</mat-icon>
+    <h2>No Matching Subjects</h2>
+    <p>Try a different search term or disable the filter.</p>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center">
+      @if (searchTerm()) {
+      <button mat-stroked-button (click)="clearSearch()">Clear Search</button>
+      } @if (showOnlyDirty()) {
+      <button mat-stroked-button (click)="showOnlyDirty.set(false)">Show All</button>
+      }
+    </div>
+  </div>
+  } @else {
+
+  <!-- ── Table Card ──────────────────────────────────────────────── -->
+  <div class="table-card">
+    <div class="table-scroll-wrap" [formGroup]="form">
+      <table class="cs-table" aria-label="Subjects to edit">
+        <thead>
+          <tr>
+            <th class="col-num">#</th>
+            <th class="col-status"></th>
+            <th class="col-name">Subject Name <span class="required-star">*</span></th>
+            <th class="col-code">Code</th>
+            <th class="col-description">Description</th>
+            <th class="col-actions"></th>
+          </tr>
+        </thead>
+
+        <tbody formArrayName="rows">
+          @for (idx of visibleIndices; track idx) {
+          <tr
+            class="cs-row"
+            [class.cs-row--dirty]="isRowDirty(idx)"
+            [class.cs-row--invalid]="rowAt(idx).invalid && rowAt(idx).touched"
+            [formGroupName]="idx"
+          >
+            <!-- Row number -->
+            <td class="col-num">
+              <span class="row-num">{{ idx + 1 }}</span>
+            </td>
+
+            <!-- Dirty indicator -->
+            <td class="col-status">
+              @if (isRowDirty(idx)) {
+              <span class="dirty-dot" matTooltip="Unsaved changes"></span>
+              }
+            </td>
+
+            <!-- Subject Name -->
+            <td class="col-name">
+              <mat-form-field appearance="outline" class="field-full">
+                <input matInput formControlName="name" maxlength="100" />
+                @if (fieldError(rowAt(idx).get('name'), 'required')) {
+                <mat-error>Required</mat-error>
+                }
+              </mat-form-field>
+            </td>
+
+            <!-- Code -->
+            <td class="col-code">
+              <mat-form-field appearance="outline" class="field-full">
+                <input
+                  matInput
+                  formControlName="code"
+                  maxlength="10"
+                  style="text-transform: uppercase"
+                  placeholder="e.g. MATH"
+                />
+                @if (fieldError(rowAt(idx).get('code'), 'maxlength')) {
+                <mat-error>Max 10 chars</mat-error>
+                }
+              </mat-form-field>
+            </td>
+
+            <!-- Description -->
+            <td class="col-description">
+              <mat-form-field appearance="outline" class="field-full">
+                <input
+                  matInput
+                  formControlName="description"
+                  maxlength="500"
+                  placeholder="Optional description"
+                />
+              </mat-form-field>
+            </td>
+
+            <!-- Reset row -->
+            <td class="col-actions">
+              @if (isRowDirty(idx)) {
+              <button
+                mat-icon-button
+                type="button"
+                (click)="resetRow(idx)"
+                matTooltip="Undo changes for this row"
+              >
+                <mat-icon>restart_alt</mat-icon>
+              </button>
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+
+  <!-- ── Bottom Submit Bar ──────────────────────────────────────────── -->
+  <div class="submit-bar">
+    <span class="submit-bar__hint">
+      @if (dirtyCount > 0) {
+      <mat-icon>edit_note</mat-icon>
+      {{ dirtyCount }} unsaved change{{ dirtyCount !== 1 ? 's' : '' }}
+      } @else {
+      <mat-icon>check_circle_outline</mat-icon>
+      No changes }
+    </span>
+    <div class="submit-bar__actions">
+      <button mat-stroked-button (click)="router.navigate(['/school/academics/subjects/list'])">
+        Cancel
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        [disabled]="form.invalid || submitting() || dirtyCount === 0"
+        (click)="submit()"
+      >
+        <span class="btn-content">
+          @if (submitting()) {
+          <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+          <span>Saving…</span>
+          } @else {
+          <mat-icon>save</mat-icon>
+          <span
+            >Save
+            {{
+              dirtyCount > 0 ? dirtyCount + ' Change' + (dirtyCount !== 1 ? 's' : '') : 'Changes'
+            }}</span
+          >
+          }
+        </span>
+      </button>
+    </div>
+  </div>
+
+  }
+</div>

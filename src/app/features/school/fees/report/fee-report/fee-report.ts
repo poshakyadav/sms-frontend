@@ -1,25 +1,29 @@
-// fee-report.ts  — full replacement
-
-import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatTableModule } from '@angular/material/table';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatChipsModule } from '@angular/material/chips';
-import { Router } from '@angular/router';
+// features/school/fees/fee-report/fee-report.ts
 import {
-  AcademicsService,
-  AcademicYear,
-  ClassSection,
-} from '../../../../../core/services/academics.service';
-import { FeeReportItem, FeesService } from '../../../../../core/services/fees.service';
-import { ToastService } from '../../../../../core/services/toast.service';
+  Component,
+  OnInit,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { PaisePipe } from '../../../../../shared/pipes/paise-pipe';
+import { FeeStatusBadge } from '../../../../../shared/components/fee-status-badge/fee-status-badge';
+import { FeeReportRow, FeesService } from '../../../../../core/services/fees.service';
+import { AcademicsService } from '../../../../../core/services/academics.service';
+import { RecordPaymentComponent } from '../../payments/record-payment/record-payment';
+import { ConcessionsFormComponent } from '../../fee-concessions/concessions-form/concessions-form';
+
 
 @Component({
   selector: 'app-fee-report',
@@ -27,187 +31,240 @@ import { ToastService } from '../../../../../core/services/toast.service';
   imports: [
     CommonModule,
     FormsModule,
-    MatTableModule,
-    MatButtonModule,
     MatIconModule,
+    MatButtonModule,
     MatProgressSpinnerModule,
-    MatFormFieldModule,
-    MatSelectModule,
-    MatSlideToggleModule,
     MatTooltipModule,
-    MatChipsModule,
+    MatSelectModule,
+    MatFormFieldModule,
+    MatSlideToggleModule,
+    MatDialogModule,
+    MatSnackBarModule,
+    PaisePipe,
+    // FeeStatusBadge,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './fee-report.html',
   styleUrl: './fee-report.scss',
 })
 export class FeeReport implements OnInit {
-  private feesService = inject(FeesService);
-  private academicsService = inject(AcademicsService);
-  private toast = inject(ToastService);
-  private router = inject(Router);
+  loading = signal(false);
+  error = signal<string | null>(null);
+  report = signal<FeeReportRow[]>([]);
 
-  // ── Filter state ────────────────────────────────────────────────────────────
-  classSections = signal<ClassSection[]>([]);
-  academicYears = signal<AcademicYear[]>([]);
+  academicYears = signal<any[]>([]);
+  classSections = signal<any[]>([]);
 
   selectedClassSectionId = signal<number | null>(null);
   selectedAcademicYearId = signal<number | null>(null);
   overdueOnly = signal(false);
+  searchQuery = signal('');
 
-  // ── Data state ──────────────────────────────────────────────────────────────
-  report = signal<FeeReportItem[]>([]);
+  expandedRows = signal<Set<number>>(new Set());
 
-  // ── Loading / error ─────────────────────────────────────────────────────────
-  filtersLoading = signal(true);
-  reportLoading = signal(false);
-  error = signal<string | null>(null);
-
-  /** True once the user has triggered at least one report load */
-  hasQueried = signal(false);
-
-  // ── Table columns ───────────────────────────────────────────────────────────
-  displayedColumns = [
-    'rollNumber',
-    'studentName',
-    'classSection',
-    'totalDue',
-    'totalPaid',
-    'balance',
-    'status',
-    'actions',
-  ];
-
-  // ── Computed summary totals ─────────────────────────────────────────────────
-  totalDue = computed(() => this.report().reduce((s, r) => s + r.totalDue, 0));
-  totalPaid = computed(() => this.report().reduce((s, r) => s + r.totalPaid, 0));
-  totalBalance = computed(() => this.report().reduce((s, r) => s + r.balance, 0));
-  overdueCount = computed(() => this.report().filter((r) => r.balance > 0).length);
-  paidCount = computed(() => this.report().filter((r) => r.balance <= 0).length);
-
-  collectionRate = computed(() => {
-    const due = this.totalDue();
-    return due > 0 ? Math.round((this.totalPaid() / due) * 100) : 0;
+  filteredReport = computed(() => {
+    const q = this.searchQuery().toLowerCase().trim();
+    if (!q) return this.report();
+    return this.report().filter(
+      (r) =>
+        r.studentName.toLowerCase().includes(q) ||
+        (r.rollNumber ?? '').toLowerCase().includes(q)
+    );
   });
 
-  selectedClassSectionLabel = computed(() => {
-    const id = this.selectedClassSectionId();
-    if (!id) return null;
-    const cs = this.classSections().find((c) => c.id === id);
-    return cs ? `${cs.className} – ${cs.sectionName}` : null;
-  });
-
-  // ── Lifecycle ───────────────────────────────────────────────────────────────
-
-  ngOnInit() {
-    this.loadFilters();
-  }
-
-  private loadFilters() {
-    this.filtersLoading.set(true);
-
-    // Load both class-sections and academic years in parallel
-    let sectionsLoaded = false;
-    let yearsLoaded = false;
-    const checkDone = () => {
-      if (sectionsLoaded && yearsLoaded) this.filtersLoading.set(false);
+  summaryStats = computed(() => {
+    const rows = this.filteredReport();
+    return {
+      totalStudents: rows.length,
+      totalDue: rows.reduce((s, r) => s + r.totalDue + r.customFeeEffective, 0),
+      totalCollected: rows.reduce((s, r) => s + r.totalPaid + r.customFeePaid, 0),
+      totalOutstanding: rows.reduce(
+        (s, r) => s + r.balance + r.customFeeBalance,
+        0
+      ),
+      totalConcessions: rows.reduce(
+        (s, r) => s + r.totalConcession + r.customFeeConcession,
+        0
+      ),
     };
+  });
 
-    this.academicsService.getClassSections().subscribe({
+  constructor(
+    private fees: FeesService,
+    private academics: AcademicsService,
+    private dialog: MatDialog,
+    private snack: MatSnackBar
+  ) {}
+
+  ngOnInit(): void {
+    this.loadDropdowns();
+  }
+
+  loadDropdowns(): void {
+    this.academics.getAcademicYears().subscribe({
       next: (res) => {
-        this.classSections.set(res.classSections ?? []);
-        sectionsLoaded = true;
-        checkDone();
-      },
-      error: () => {
-        sectionsLoaded = true;
-        checkDone();
+        this.academicYears.set(res.years);
+        const current = res.years.find((y) => y.isCurrent);
+        if (current) this.selectedAcademicYearId.set(current.id);
       },
     });
-
-    this.academicsService.getAcademicYears().subscribe({
-      next: (res) => {
-        const years = res.years ?? [];
-        this.academicYears.set(years);
-        // Pre-select current year if available
-        const current = years.find((y) => y.isCurrent);
-        if (current) this.selectedAcademicYearId.set(current.id);
-        yearsLoaded = true;
-        checkDone();
-      },
-      error: () => {
-        yearsLoaded = true;
-        checkDone();
-      },
+    this.academics.getClassSections().subscribe({
+      next: (res) => this.classSections.set(res.classSections),
     });
   }
 
-  // ── Report loading ──────────────────────────────────────────────────────────
-
-  loadReport() {
+  loadReport(): void {
     const csId = this.selectedClassSectionId();
-    if (!csId) {
-      this.toast.error('Please select a class-section first.');
-      return;
-    }
+    if (!csId) return;
 
-    this.hasQueried.set(true);
-    this.reportLoading.set(true);
+    this.loading.set(true);
     this.error.set(null);
+    this.report.set([]);
 
-    this.feesService
-      .getFeeReport(csId, this.selectedAcademicYearId() ?? undefined, this.overdueOnly())
+    this.fees
+      .getFeeReport(
+        csId,
+        this.selectedAcademicYearId() ?? undefined,
+        this.overdueOnly()
+      )
       .subscribe({
-        next: (res) => {
-          this.report.set(res.report ?? []);
-          this.reportLoading.set(false);
+        next: (rows) => {
+          this.report.set(rows);
+          this.loading.set(false);
         },
         error: (err) => {
-          const msg = err?.error?.error ?? err?.message ?? 'Failed to load fee report.';
-          this.error.set(msg);
-          this.toast.error(msg);
-          this.reportLoading.set(false);
+          this.error.set(err?.error?.error ?? 'Failed to load fee report');
+          this.loading.set(false);
         },
       });
   }
 
-  // ── Filter change handlers ──────────────────────────────────────────────────
-
-  onClassSectionChange(value: number | null) {
-    this.selectedClassSectionId.set(value);
-    // Auto-load when class-section changes (if it has a value)
-    if (value) this.loadReport();
-    else this.report.set([]);
+  onClassSectionChange(id: number): void {
+    this.selectedClassSectionId.set(id);
+    this.loadReport();
   }
 
-  onAcademicYearChange(value: number | null) {
-    this.selectedAcademicYearId.set(value);
+  onYearChange(): void {
     if (this.selectedClassSectionId()) this.loadReport();
   }
 
-  onOverdueToggle(value: boolean) {
-    this.overdueOnly.set(value);
+  onOverdueToggle(): void {
     if (this.selectedClassSectionId()) this.loadReport();
   }
 
-  // ── Navigation ──────────────────────────────────────────────────────────────
-
-  viewLedger(studentId: number) {
-    this.router.navigate(['/school/fees/ledger', studentId]);
+  toggleRowExpand(enrollmentId: number): void {
+    const set = new Set(this.expandedRows());
+    if (set.has(enrollmentId)) set.delete(enrollmentId);
+    else set.add(enrollmentId);
+    this.expandedRows.set(set);
   }
 
-  viewPaymentHistory(enrollmentId: number) {
-    this.router.navigate(['/school/fees/payments-history', enrollmentId]);
+  isExpanded(enrollmentId: number): boolean {
+    return this.expandedRows().has(enrollmentId);
   }
 
-  // ── Helpers ─────────────────────────────────────────────────────────────────
-
-  getStatus(balance: number): 'Paid' | 'Partial' | 'Due' {
-    if (balance <= 0) return 'Paid';
-    return 'Due';
+  openRecordPayment(row: FeeReportRow): void {
+    const cs = this.classSections().find(
+      (c) => c.id === this.selectedClassSectionId()
+    );
+    const ref = this.dialog.open(RecordPaymentComponent, {
+      width: '780px',
+      maxWidth: '96vw',
+      panelClass: 'payment-dialog',
+      data: {
+        enrollmentId: row.enrollmentId,
+        studentName: row.studentName,
+        className: row.className,
+        sectionName: row.sectionName,
+      },
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (result) {
+        this.snack.open(
+          `Payment recorded — ${result.meta?.receiptNumbers?.join(', ') ?? ''}`,
+          'Close',
+          { duration: 4000, panelClass: 'success-toast' }
+        );
+        this.loadReport();
+      }
+    });
   }
 
-  getStatusClass(balance: number): string {
-    if (balance <= 0) return 'paid';
-    return 'due';
+  openAddConcession(row: FeeReportRow): void {
+    const ref = this.dialog.open(ConcessionsFormComponent, {
+      width: '560px',
+      maxWidth: '95vw',
+      panelClass: 'side-sheet-dialog',
+      data: { enrollmentId: row.enrollmentId, studentName: row.studentName },
+    });
+    ref.afterClosed().subscribe((saved) => {
+      if (saved) {
+        this.snack.open('Concession granted', 'Close', { duration: 3000 });
+        this.loadReport();
+      }
+    });
+  }
+
+  exportCsv(): void {
+    const rows = this.filteredReport();
+    if (!rows.length) return;
+
+    const headers = [
+      'Roll No',
+      'Student Name',
+      'Class',
+      'Section',
+      'Standard Fee Due',
+      'Standard Fee Paid',
+      'Standard Balance',
+      'Custom Fee Due',
+      'Custom Fee Paid',
+      'Custom Balance',
+      'Total Concession',
+      'Overall Balance',
+    ];
+
+    const csvRows = rows.map((r) => [
+      r.rollNumber ?? '',
+      r.studentName,
+      r.className,
+      r.sectionName,
+      (r.totalDue / 100).toFixed(2),
+      (r.totalPaid / 100).toFixed(2),
+      (r.balance / 100).toFixed(2),
+      (r.customFeeEffective / 100).toFixed(2),
+      (r.customFeePaid / 100).toFixed(2),
+      (r.customFeeBalance / 100).toFixed(2),
+      ((r.totalConcession + r.customFeeConcession) / 100).toFixed(2),
+      ((r.balance + r.customFeeBalance) / 100).toFixed(2),
+    ]);
+
+    const csv = [headers, ...csvRows]
+      .map((r) => r.map((v) => `"${v}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `fee-report-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  overallBalance(row: FeeReportRow): number {
+    return row.balance + row.customFeeBalance;
+  }
+
+  isOverdue(row: FeeReportRow): boolean {
+    return this.overallBalance(row) > 0;
+  }
+
+  isPaid(row: FeeReportRow): boolean {
+    return this.overallBalance(row) <= 0;
+  }
+
+  trackById(_: number, item: FeeReportRow): number {
+    return item.enrollmentId;
   }
 }

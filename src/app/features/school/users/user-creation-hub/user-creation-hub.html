@@ -1,7 +1,10 @@
 <!-- user-creation-hub.html -->
-<!-- UPDATED: Added guardian step (fatherName, motherName, guardianName, guardianRelation) -->
-<!-- UPDATED: Added UDISE+ step for students (pen, apaarId, socialCategory, isCwsn, etc.) -->
-<!-- UPDATED: admissionNumber added to academic step -->
+<!-- ENHANCED:
+     1. Aadhaar — pre-filled "XXXX XXXX" prefix, user enters only last 4 digits
+     2. State field — searchable dropdown with all 28 Indian states + 8 UTs
+     3. Mother Tongue — searchable dropdown with UDISE+ language codes
+     4. Production-grade styling using global CSS variables
+-->
 
 <div class="hub-page">
   <!-- ══════════════════════════════════════════════════════════════════════
@@ -318,23 +321,118 @@
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>Address</mat-label>
+            <mat-label>Address Line</mat-label>
             <input matInput formControlName="addressLineOne" placeholder="Street / Colony" />
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>City</mat-label>
-            <input matInput formControlName="city" />
+            <mat-label>City / Town</mat-label>
+            <mat-icon matPrefix>location_city</mat-icon>
+            <input matInput formControlName="city" placeholder="e.g. Varanasi" />
           </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>State</mat-label>
-            <input matInput formControlName="state" />
-          </mat-form-field>
+          <!-- ── SEARCHABLE STATE DROPDOWN ── -->
+          <div class="searchable-select-wrap">
+            <label class="searchable-select-label">
+              <mat-icon class="select-label-icon">map</mat-icon>
+              State / Union Territory
+            </label>
+            <div class="searchable-select-container">
+              <div class="searchable-select-search-row">
+                <mat-icon class="select-search-icon">search</mat-icon>
+                <input
+                  class="searchable-select-input"
+                  type="text"
+                  placeholder="Search state or UT…"
+                  [value]="stateSearch()"
+                  (input)="onStateSearchInput($event)"
+                  autocomplete="off"
+                />
+                @if (stateSearch()) {
+                <button
+                  class="searchable-clear-btn"
+                  type="button"
+                  (click)="clearStateSearch()"
+                  matTooltip="Clear search"
+                >
+                  <mat-icon>close</mat-icon>
+                </button>
+                }
+              </div>
+
+              <!-- Selected display -->
+              @if (personalForm.get('state')?.value) {
+              <div class="searchable-selected-badge">
+                <mat-icon>check_circle</mat-icon>
+                <span>{{ personalForm.get('state')?.value }}</span>
+                <button
+                  type="button"
+                  class="badge-clear-btn"
+                  (click)="personalForm.get('state')?.setValue('')"
+                  matTooltip="Clear selection"
+                >
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+              }
+
+              <div class="searchable-options-list">
+                <!-- States group -->
+                @if (hasFilteredStates()) {
+                <div class="options-group-header">
+                  <mat-icon>account_balance</mat-icon>
+                  States
+                </div>
+                } @for (state of filteredStates(); track state.code) { @if (state.type === 'state')
+                {
+                <button
+                  type="button"
+                  class="searchable-option-btn"
+                  [class.is-selected]="personalForm.get('state')?.value === state.name"
+                  (click)="personalForm.get('state')?.setValue(state.name); clearStateSearch()"
+                >
+                  <span class="option-code-badge">{{ state.code }}</span>
+                  <span class="option-name">{{ state.name }}</span>
+                  @if (personalForm.get('state')?.value === state.name) {
+                  <mat-icon class="option-check">check</mat-icon>
+                  }
+                </button>
+                } }
+
+                <!-- UTs group -->
+                @if (hasFilteredUTs()) {
+                <div class="options-group-header options-group-header--ut">
+                  <mat-icon>stars</mat-icon>
+                  Union Territories
+                </div>
+                } @for (state of filteredStates(); track state.code) { @if (state.type === 'ut') {
+                <button
+                  type="button"
+                  class="searchable-option-btn"
+                  [class.is-selected]="personalForm.get('state')?.value === state.name"
+                  (click)="personalForm.get('state')?.setValue(state.name); clearStateSearch()"
+                >
+                  <span class="option-code-badge option-code-badge--ut">{{ state.code }}</span>
+                  <span class="option-name">{{ state.name }}</span>
+                  @if (personalForm.get('state')?.value === state.name) {
+                  <mat-icon class="option-check">check</mat-icon>
+                  }
+                </button>
+                } } @if (filteredStates().length === 0) {
+                <div class="searchable-no-results">
+                  <mat-icon>search_off</mat-icon>
+                  <span>No state or UT found for "{{ stateSearch() }}"</span>
+                </div>
+                }
+              </div>
+            </div>
+          </div>
+          <!-- ── /STATE DROPDOWN ── -->
 
           <mat-form-field appearance="outline">
             <mat-label>Postal Code</mat-label>
-            <input matInput formControlName="postalCode" />
+            <mat-icon matPrefix>markunread_mailbox</mat-icon>
+            <input matInput formControlName="postalCode" placeholder="6-digit PIN" maxlength="6" />
           </mat-form-field>
         </div>
       </form>
@@ -540,21 +638,54 @@
             <mat-hint>State-specific student tracking number</mat-hint>
           </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Aadhaar (Masked)</mat-label>
-            <mat-icon matPrefix>lock</mat-icon>
-            <input
-              matInput
-              formControlName="aadhaarMasked"
-              placeholder="XXXX XXXX 1234"
-              maxlength="14"
-            />
-            <mat-hint>Only last 4 digits — e.g. XXXX XXXX 5678</mat-hint>
-            @if (udiseForm.get('aadhaarMasked')?.hasError('pattern') &&
-            udiseForm.get('aadhaarMasked')?.touched) {
-            <mat-error>Format: XXXX XXXX followed by 4 digits</mat-error>
+          <!-- ── ENHANCED AADHAAR INPUT ── -->
+          <div class="aadhaar-input-wrap">
+            <label class="aadhaar-input-label">
+              <mat-icon class="aadhaar-label-icon">lock</mat-icon>
+              Aadhaar (Last 4 digits only)
+            </label>
+            <div class="aadhaar-input-row">
+              <!-- Pre-filled prefix (non-editable) -->
+              <div class="aadhaar-prefix-block" aria-label="Masked prefix">
+                <span class="aadhaar-prefix-text">XXXX&nbsp;&nbsp;XXXX</span>
+              </div>
+              <!-- Separator -->
+              <div class="aadhaar-separator" aria-hidden="true">&nbsp;</div>
+              <!-- Last 4 digits input -->
+              <input
+                class="aadhaar-last4-input"
+                type="text"
+                formControlName="aadhaarLast4"
+                [formGroup]="udiseForm"
+                placeholder="0000"
+                maxlength="4"
+                inputmode="numeric"
+                pattern="\d{4}"
+                autocomplete="off"
+                aria-label="Last 4 digits of Aadhaar"
+              />
+            </div>
+            <!-- Preview -->
+            <div class="aadhaar-preview-row">
+              <mat-icon class="aadhaar-preview-icon">visibility</mat-icon>
+              <span class="aadhaar-preview-text"
+                >Preview: <strong>{{ aadhaarPreview }}</strong></span
+              >
+            </div>
+            @if (udiseForm.get('aadhaarLast4')?.hasError('pattern') &&
+            udiseForm.get('aadhaarLast4')?.touched) {
+            <div class="aadhaar-error-row">
+              <mat-icon>error_outline</mat-icon>
+              <span>Enter exactly 4 digits</span>
+            </div>
             }
-          </mat-form-field>
+            <p class="aadhaar-security-note">
+              <mat-icon>security</mat-icon>
+              Only the last 4 digits are stored as per UIDAI data-minimisation guidelines. Full
+              Aadhaar is never stored.
+            </p>
+          </div>
+          <!-- ── /AADHAAR INPUT ── -->
 
           <mat-form-field appearance="outline" class="col-full">
             <mat-label>Name on Aadhaar Card</mat-label>
@@ -605,16 +736,89 @@
             </mat-select>
           </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Mother Tongue Code</mat-label>
-            <mat-icon matPrefix>language</mat-icon>
-            <input
-              matInput
-              type="number"
-              formControlName="motherTongueCode"
-              placeholder="Census language code (e.g. 22 for Hindi)"
-            />
-          </mat-form-field>
+          <!-- ── SEARCHABLE MOTHER TONGUE DROPDOWN ── -->
+          <div class="searchable-select-wrap">
+            <label class="searchable-select-label">
+              <mat-icon class="select-label-icon">language</mat-icon>
+              Mother Tongue
+              <span class="select-label-hint">(UDISE+ Code)</span>
+            </label>
+            <div class="searchable-select-container">
+              <div class="searchable-select-search-row">
+                <mat-icon class="select-search-icon">search</mat-icon>
+                <input
+                  class="searchable-select-input"
+                  type="text"
+                  placeholder="Search language…"
+                  [value]="motherTongueSearch()"
+                  (input)="onMotherTongueSearchInput($event)"
+                  autocomplete="off"
+                />
+                @if (motherTongueSearch()) {
+                <button
+                  class="searchable-clear-btn"
+                  type="button"
+                  (click)="clearMotherTongueSearch()"
+                  matTooltip="Clear search"
+                >
+                  <mat-icon>close</mat-icon>
+                </button>
+                }
+              </div>
+
+              <!-- Selected display -->
+              @if (udiseForm.get('motherTongueCode')?.value != null) {
+              <div class="searchable-selected-badge searchable-selected-badge--language">
+                <mat-icon>translate</mat-icon>
+                <span>{{
+                  getMotherTongueLabel(udiseForm.get('motherTongueCode')?.value ?? null)
+                }}</span>
+                <button
+                  type="button"
+                  class="badge-clear-btn"
+                  (click)="udiseForm.get('motherTongueCode')?.setValue(null)"
+                  matTooltip="Clear selection"
+                >
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+              }
+
+              <div class="searchable-options-list">
+                @for (lang of filteredMotherTongues(); track lang.code) {
+                <button
+                  type="button"
+                  class="searchable-option-btn"
+                  [class.is-selected]="udiseForm.get('motherTongueCode')?.value === lang.code"
+                  (click)="
+                    udiseForm.get('motherTongueCode')?.setValue(lang.code);
+                    clearMotherTongueSearch()
+                  "
+                >
+                  <span class="option-code-badge option-code-badge--lang">{{ lang.code }}</span>
+                  <div class="option-lang-info">
+                    <span class="option-name">{{ lang.name }}</span>
+                    @if (lang.script) {
+                    <span class="option-script">{{ lang.script }}</span>
+                    }
+                  </div>
+                  @if (udiseForm.get('motherTongueCode')?.value === lang.code) {
+                  <mat-icon class="option-check">check</mat-icon>
+                  }
+                </button>
+                } @if (filteredMotherTongues().length === 0) {
+                <div class="searchable-no-results">
+                  <mat-icon>search_off</mat-icon>
+                  <span>No language found for "{{ motherTongueSearch() }}"</span>
+                </div>
+                }
+              </div>
+            </div>
+            <p class="field-caption">
+              Census of India 2011 language code used in UDISE+ submissions
+            </p>
+          </div>
+          <!-- ── /MOTHER TONGUE DROPDOWN ── -->
 
           <div class="checkbox-row col-full">
             <mat-checkbox formControlName="isMinority" color="primary">

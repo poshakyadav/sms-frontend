@@ -1,170 +1,176 @@
+// features/school/fees/parent-fees/parent-fees.ts
+import { Component, OnInit, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import {
-  ChangeDetectionStrategy,
-  Component,
-  effect,
-  inject,
-  OnDestroy,
-  OnInit,
-  signal,
-} from '@angular/core';
-import { RouterModule } from '@angular/router';
-import { ApiService } from '../../../../core/services/api.service';
-import { ParentService } from '../../../../core/services/parent.service';
-import { Subject, takeUntil } from 'rxjs';
+  FeesService,
+  ParentChildFeeOverview,
+  StudentFeeItem,
+  StudentPaymentItem,
+} from '../../../../core/services/fees.service';
 
-// ── Interfaces ─────────────────────────────────────────────────────────────
-
-interface StudentFeeItem {
-  id: number;
-  feeType: string;
-  amount: number;
-  dueDate: string | null;
-  isMandatory: boolean;
-  description: string | null;
-  amountPaid: number;
-  balance: number;
-  status: 'PAID' | 'PARTIAL' | 'PENDING' | 'OVERDUE';
-}
-
-interface StudentPaymentItem {
-  id: number;
-  paymentDate: string;
-  amountPaid: number;
-  paymentMethod: 'CASH' | 'CHECK' | 'BANK_TRANSFER';
-  receiptNumber: string;
-  feeType: string;
-  notes: string | null;
-}
-
-interface ParentChildFeeOverview {
-  academicYearId: number;
-  academicYearName: string;
-  className: string;
-  sectionName: string;
-  rollNumber: string | null;
-  totalDue: number;
-  totalPaid: number;
-  balance: number;
-  collectionRate: number;
-  feeBreakdown: StudentFeeItem[];
-  recentPayments: StudentPaymentItem[];
-  studentName: string;
-  studentEmail: string;
-  studentId: number;
-}
+import { FeeStatusBadge } from '../../../../shared/components/fee-status-badge/fee-status-badge';
+import { PaisePipe } from '../../../../shared/pipes/paise-pipe';
 
 @Component({
   selector: 'app-parent-fees',
-  imports: [CommonModule, RouterModule],
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatIconModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    MatTooltipModule,
+    PaisePipe,
+    FeeStatusBadge,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './parent-fees.html',
   styleUrl: './parent-fees.scss',
 })
-export class ParentFees implements OnInit, OnDestroy {
-  private api = inject(ApiService);
-  private parentService = inject(ParentService);
-  private destroy$ = new Subject<void>();
+export class ParentFees implements OnInit {
+  loading = signal(false);
+  error = signal<string | null>(null);
+  overviews = signal<ParentChildFeeOverview[]>([]);
 
-  readonly Math = Math; // expose to template
+  /** Active tab: index into overviews array */
+  activeYearIndex = signal(0);
 
-  readonly loading = signal(true);
-  readonly error = signal<string | null>(null);
-  readonly overviews = signal<ParentChildFeeOverview[]>([]);
-  readonly selectedYearIdx = signal(0);
-  readonly hasActiveChild = signal(false);
+  /** Section expand state per year */
+  expandedSections = signal<Map<number, Set<string>>>(new Map());
 
-  constructor() {
-    // React to child selection changes
-    effect(() => {
-      const childId = this.parentService.activeChildId();
-      this.hasActiveChild.set(childId !== null);
-      if (childId !== null) {
-        this.load();
-      }
-    });
-  }
+  activeOverview = computed(() => {
+    const list = this.overviews();
+    if (!list.length) return null;
+    const idx = this.activeYearIndex();
+    return list[Math.min(idx, list.length - 1)];
+  });
+
+  structureFees = computed(() => {
+    const o = this.activeOverview();
+    if (!o) return [];
+    return o.feeBreakdown.filter((f) => f.source === 'STRUCTURE');
+  });
+
+  assignmentFees = computed(() => {
+    const o = this.activeOverview();
+    if (!o) return [];
+    return o.feeBreakdown.filter((f) => f.source === 'ASSIGNMENT');
+  });
+
+  hasNoChildSelected = signal(false);
+
+  constructor(private fees: FeesService) {}
 
   ngOnInit(): void {
-    const childId = this.parentService.activeChildId();
-    this.hasActiveChild.set(childId !== null);
-    if (childId !== null) {
-      this.load();
-    } else {
-      this.loading.set(false);
-    }
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+    this.load();
   }
 
   load(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.selectedYearIdx.set(0);
+    this.hasNoChildSelected.set(false);
 
-    this.api
-      .get<{ success: boolean; overview: ParentChildFeeOverview[] }>(
-        'school/fees/parent/child-fees'
-      )
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (res) => {
-          this.overviews.set(res.overview ?? []);
-          this.loading.set(false);
-        },
-        error: (err) => {
-          this.error.set(err?.error?.error ?? 'Unable to load fee details. Please try again.');
-          this.loading.set(false);
-        },
-      });
+    this.fees.getParentChildFees().subscribe({
+      next: (data) => {
+        this.overviews.set(data);
+        this.loading.set(false);
+        if (data.length > 0) {
+          this.expandSection(data[0].academicYearId, 'STRUCTURE');
+          this.expandSection(data[0].academicYearId, 'PAYMENTS');
+        }
+      },
+      error: (err) => {
+        const msg: string = err?.error?.error ?? err?.message ?? '';
+        if (msg.includes('No active child') || msg.includes('child') || err?.status === 400) {
+          this.hasNoChildSelected.set(true);
+        } else {
+          this.error.set(msg || "Failed to load your child's fee details");
+        }
+        this.loading.set(false);
+      },
+    });
   }
 
-  selectYear(idx: number): void {
-    this.selectedYearIdx.set(idx);
+  selectYear(index: number): void {
+    this.activeYearIndex.set(index);
+    const o = this.overviews()[index];
+    if (o && !this.expandedSections().has(o.academicYearId)) {
+      this.expandSection(o.academicYearId, 'STRUCTURE');
+      this.expandSection(o.academicYearId, 'PAYMENTS');
+    }
   }
 
-  getInitials(name: string): string {
-    return name
-      .split(' ')
-      .slice(0, 2)
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase();
+  expandSection(yearId: number, section: string): void {
+    const map = new Map(this.expandedSections());
+    if (!map.has(yearId)) map.set(yearId, new Set());
+    map.get(yearId)!.add(section);
+    this.expandedSections.set(map);
   }
 
-  getDashOffset(pct: number): number {
-    // Circumference = 2π × 32 ≈ 201.06
-    const circumference = 201.06;
-    return circumference - (circumference * pct) / 100;
+  toggleSection(yearId: number, section: string): void {
+    const map = new Map(this.expandedSections());
+    if (!map.has(yearId)) map.set(yearId, new Set());
+    const set = map.get(yearId)!;
+    if (set.has(section)) set.delete(section);
+    else set.add(section);
+    this.expandedSections.set(map);
   }
 
-  formatCurrency(amount: number): string {
-    return '₹' + amount.toLocaleString('en-IN');
+  isSectionExpanded(yearId: number, section: string): boolean {
+    return this.expandedSections().get(yearId)?.has(section) ?? false;
+  }
+
+  formatMonth(feeMonth: string | null): string {
+    if (!feeMonth) return '—';
+    const [y, m] = feeMonth.split('-');
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return `${months[parseInt(m) - 1]} ${y}`;
   }
 
   formatDate(dateStr: string): string {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
   }
 
-  formatFeeType(feeType: string): string {
-    return feeType.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  // Donut chart SVG helper (shared with student-fees)
+  getDonutPath(rate: number): string {
+    if (rate <= 0) return '';
+    const r = 40;
+    const cx = 50,
+      cy = 50;
+    const angle = (rate / 100) * 360;
+    const rad = ((angle - 90) * Math.PI) / 180;
+    const x = cx + r * Math.cos(rad);
+    const y = cy + r * Math.sin(rad);
+    const largeArc = angle > 180 ? 1 : 0;
+    return `M ${cx} ${cy - r} A ${r} ${r} 0 ${largeArc} 1 ${x} ${y}`;
   }
 
-  formatMethod(method: string): string {
-    const map: Record<string, string> = {
-      CASH: 'Cash',
-      CHECK: 'Cheque',
-      BANK_TRANSFER: 'Bank Transfer',
-    };
-    return map[method] ?? method;
+  trackByFee(_: number, item: StudentFeeItem): number {
+    return item.id;
   }
-
-  isOverdue(dueDate: string | null): boolean {
-    if (!dueDate) return false;
-    return dueDate < new Date().toISOString().split('T')[0];
+  trackByPayment(_: number, item: StudentPaymentItem): number {
+    return item.id;
   }
 }

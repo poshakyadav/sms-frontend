@@ -1,9 +1,10 @@
 // class-form-component.scss
-// Class Form — production-grade, themed SCSS
+// Class Form — production-grade, fully themed, responsive
+// Uses project design tokens (CSS vars) + shared SCSS utilities
 
 .form-page {
   padding: 28px 32px;
-  max-width: 640px;
+  max-width: 760px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -11,39 +12,117 @@
 
   @media (max-width: 768px) {
     padding: 16px;
-    gap: 16px;
+    gap: 18px;
+  }
+}
+
+// ── Page Header ─────────────────────────────────────────────────────────────
+
+.form-page__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+
+  @media (max-width: 540px) {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+.form-page__header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+// Breadcrumb trail
+.form-page__breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.breadcrumb-back {
+  width: 28px !important;
+  height: 28px !important;
+  flex-shrink: 0;
+  color: var(--color-text-muted) !important;
+  transition: color 0.15s ease, background 0.15s ease;
+
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
   }
 
-  header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-
-    @media (max-width: 480px) {
-      flex-direction: column-reverse;
-      align-items: flex-start;
-    }
-
-    h1 {
-      margin: 0 0 4px;
-      font-size: 1.625rem;
-      font-weight: 700;
-      color: var(--color-text-primary);
-      letter-spacing: -0.02em;
-      line-height: 1.25;
-    }
+  &:hover {
+    color: var(--color-primary) !important;
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent) !important;
   }
+}
+
+.breadcrumb-label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.breadcrumb-sep {
+  font-size: 14px !important;
+  height: 14px !important;
+  width: 14px !important;
+  color: var(--color-text-muted);
+}
+
+.breadcrumb-current {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.form-page__header-text h1 {
+  margin: 0 0 6px;
+  font-size: 1.625rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+  line-height: 1.25;
 }
 
 .subtitle {
   margin: 0;
   font-size: 0.875rem;
   color: var(--color-text-secondary);
-  line-height: 1.5;
+  line-height: 1.6;
+  max-width: 520px;
 }
 
-// ── Error / not-found state ────────────────────────────────────────────────
+// ── Edit badge ──────────────────────────────────────────────────────────────
+// Uses shared .edit-badge from _cards.scss
+
+// ── Guide Banner ────────────────────────────────────────────────────────────
+
+.guide-banner {
+  // Extends shared .info-card .info-card--blue
+  // Additional overrides for the banner context:
+  align-items: flex-start;
+  border-radius: var(--radius-md);
+  line-height: 1.65;
+
+  p {
+    margin: 0;
+    font-size: 0.84rem;
+
+    em {
+      font-style: italic;
+      color: color-mix(in srgb, var(--color-info) 80%, var(--color-text-primary));
+    }
+  }
+}
+
+// ── Not-Found / Error State ─────────────────────────────────────────────────
 
 .state-container {
   display: flex;
@@ -66,28 +145,42 @@
 
   p {
     margin: 0;
-    font-size: 0.9375rem;
+    font-size: 0.9rem;
     color: var(--color-text-secondary);
   }
 
-  &.error {
+  &--error {
     border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
     background: color-mix(in srgb, var(--color-error) 3%, var(--color-bg-surface));
+  }
+}
 
-    .state-icon {
-      color: var(--color-error) !important;
+.state-icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--color-text-muted) 10%, transparent);
+
+  mat-icon {
+    font-size: 28px;
+    height: 28px;
+    width: 28px;
+    color: var(--color-text-muted);
+  }
+
+  &--error {
+    background: color-mix(in srgb, var(--color-error) 10%, transparent);
+
+    mat-icon {
+      color: var(--color-error);
     }
   }
 }
 
-.state-icon {
-  font-size: 48px !important;
-  width: 48px !important;
-  height: 48px !important;
-  color: var(--color-text-muted) !important;
-}
-
-// ── Form card ──────────────────────────────────────────────────────────────
+// ── Form Card ───────────────────────────────────────────────────────────────
 
 .form-card {
   position: relative;
@@ -95,16 +188,11 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  padding: 28px;
-  min-height: 160px;
-
-  @media (max-width: 480px) {
-    padding: 18px;
-    border-radius: var(--radius-md);
-  }
+  overflow: hidden;
+  min-height: 140px;
 }
 
-// ── Loading overlay ────────────────────────────────────────────────────────
+// ── Loading Overlay ─────────────────────────────────────────────────────────
 
 .loading-overlay {
   position: absolute;
@@ -114,7 +202,7 @@
   align-items: center;
   justify-content: center;
   gap: 14px;
-  background: color-mix(in srgb, var(--color-bg-surface) 90%, transparent);
+  background: color-mix(in srgb, var(--color-bg-surface) 92%, transparent);
   border-radius: inherit;
   z-index: 2;
 
@@ -125,50 +213,366 @@
   }
 }
 
-// ── Form layout ────────────────────────────────────────────────────────────
+// ── Form Layout ─────────────────────────────────────────────────────────────
 
 .form-layout {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 0;
+  padding: 0;
 }
+
+// ── Field Group ─────────────────────────────────────────────────────────────
+
+.field-group {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--color-divider);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  @media (max-width: 540px) {
+    padding: 16px;
+  }
+}
+
+// Two-column row that contains two .field-group children
+.two-col-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border-bottom: 1px solid var(--color-divider);
+
+  // Each child .field-group inside the two-col-row
+  .field-group {
+    border-bottom: none;
+    border-right: 1px solid var(--color-divider);
+
+    &:last-child {
+      border-right: none;
+    }
+  }
+
+  @media (max-width: 580px) {
+    grid-template-columns: 1fr;
+
+    .field-group {
+      border-right: none;
+      border-bottom: 1px solid var(--color-divider);
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+  }
+}
+
+// ── Field Label Row ─────────────────────────────────────────────────────────
+
+.field-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.field-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: 0.01em;
+}
+
+.required-star {
+  color: var(--color-error);
+  margin-left: 2px;
+}
+
+// ── Guide Toggle Button ─────────────────────────────────────────────────────
+
+.guide-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+  }
+
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  }
+}
+
+// ── Guide Panel ─────────────────────────────────────────────────────────────
+
+.guide-panel {
+  background: color-mix(in srgb, var(--color-info) 5%, var(--color-bg-surface));
+  border: 1px solid color-mix(in srgb, var(--color-info) 18%, transparent);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  animation: guide-slide-in 0.18s ease;
+
+  p {
+    margin: 0;
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 18px;
+
+    li {
+      margin-bottom: 4px;
+    }
+  }
+
+  strong {
+    color: var(--color-text-primary);
+  }
+
+  em {
+    font-style: italic;
+  }
+}
+
+@keyframes guide-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.guide-panel__title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--color-info) 70%, var(--color-text-primary));
+  margin-bottom: 4px;
+
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+    color: var(--color-info);
+    flex-shrink: 0;
+  }
+}
+
+// Level examples grid
+.guide-panel__examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 0 4px;
+}
+
+.guide-example {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 4px;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-surface);
+  font-size: 0.75rem;
+}
+
+.guide-example__level {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+
+  &.sort {
+    background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
+    color: var(--color-secondary);
+  }
+}
+
+.guide-example__name {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.guide-panel__note {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-warning) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 18%, transparent);
+  color: color-mix(in srgb, var(--color-warning) 60%, var(--color-text-primary));
+  font-size: 0.78rem;
+  line-height: 1.5;
+
+  mat-icon {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+    flex-shrink: 0;
+    color: var(--color-warning);
+    margin-top: 1px;
+  }
+
+  strong {
+    color: inherit;
+  }
+}
+
+// ── Field prefix icon ───────────────────────────────────────────────────────
+
+.field-prefix-icon {
+  font-size: 18px !important;
+  height: 18px !important;
+  width: 18px !important;
+  color: var(--color-text-muted) !important;
+  margin-right: 4px;
+}
+
+// ── Level Live Preview ──────────────────────────────────────────────────────
+
+.level-preview {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 0.75rem;
+
+  strong {
+    color: var(--color-primary);
+  }
+}
+
+.level-preview__icon {
+  font-size: 13px !important;
+  height: 13px !important;
+  width: 13px !important;
+}
+
+// ── What Happens Next card ──────────────────────────────────────────────────
+
+.next-steps-card {
+  margin: 0 24px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-success) 5%, var(--color-bg-surface));
+  border: 1px solid color-mix(in srgb, var(--color-success) 18%, transparent);
+
+  @media (max-width: 540px) {
+    margin: 0 16px;
+  }
+}
+
+.next-steps-card__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--color-success) 70%, var(--color-text-primary));
+  margin-bottom: 10px;
+
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+    color: var(--color-success);
+    flex-shrink: 0;
+  }
+}
+
+.next-steps-card__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+
+    mat-icon {
+      font-size: 15px;
+      height: 15px;
+      width: 15px;
+      color: var(--color-success);
+      flex-shrink: 0;
+    }
+
+    strong {
+      color: var(--color-text-primary);
+    }
+  }
+}
+
+// ── Form Actions ─────────────────────────────────────────────────────────────
+// Uses .form-actions from shared _buttons.scss
+// Additional context overrides:
+
+.form-actions {
+  padding: 16px 24px 20px;
+  border-top: 1px solid var(--color-divider);
+  margin-top: 0;
+
+  @media (max-width: 540px) {
+    padding: 14px 16px 18px;
+  }
+}
+
+.btn-spinner {
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+// ── Full width helper ────────────────────────────────────────────────────────
 
 .full-width {
   width: 100%;
-}
-
-.date-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr;
-  }
-
-  mat-form-field {
-    width: 100%;
-  }
-}
-
-// ── Form actions ───────────────────────────────────────────────────────────
-
-.form-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-  padding-top: 8px;
-  border-top: 1px solid var(--color-divider);
-  margin-top: 4px;
-
-  @media (max-width: 400px) {
-    flex-direction: column;
-    align-items: stretch;
-
-    button {
-      width: 100%;
-      justify-content: center;
-    }
-  }
 }

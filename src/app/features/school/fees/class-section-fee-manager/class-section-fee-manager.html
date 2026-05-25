@@ -1,0 +1,796 @@
+<!-- class-section-fee-manager.html -->
+<div class="csfm-shell">
+  <!-- ══════════════════════════════════════════════════════════════════════
+           PAGE HEADER
+      ══════════════════════════════════════════════════════════════════════ -->
+  <div class="csfm-page-header">
+    <div class="csfm-page-header__left">
+      <div class="csfm-page-header__icon">
+        <mat-icon>manage_accounts</mat-icon>
+      </div>
+      <div>
+        <h1 class="csfm-page-header__title">Fee Manager</h1>
+        <p class="csfm-page-header__subtitle">
+          Select a class-section to manage all student fees in one place
+        </p>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="csfm-page-header__filters">
+      <mat-form-field appearance="outline" class="csfm-filter-field">
+        <mat-label>Academic Year</mat-label>
+        <mat-select
+          [ngModel]="selectedAcademicYearId()"
+          (ngModelChange)="selectedAcademicYearId.set($event)"
+        >
+          @for (y of academicYears(); track y.id) {
+          <mat-option [value]="y.id">
+            {{ y.name }}
+            @if (y.isCurrent) { <span class="current-tag">(Current)</span> }
+          </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="csfm-filter-field csfm-filter-field--wide">
+        <mat-label>Class – Section</mat-label>
+        <mat-select
+          [ngModel]="selectedClassSectionId()"
+          (ngModelChange)="onClassSectionChange($event)"
+        >
+          <mat-option [value]="null">Select a class-section…</mat-option>
+          @for (cs of classSections(); track cs.id) {
+          <mat-option [value]="cs.id"> {{ cs.className }} – {{ cs.sectionName }} </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+           PLACEHOLDER — no class-section selected
+      ══════════════════════════════════════════════════════════════════════ -->
+  @if (!selectedClassSectionId()) {
+  <div class="csfm-placeholder">
+    <div class="csfm-placeholder__icon">
+      <mat-icon>school</mat-icon>
+    </div>
+    <h2 class="csfm-placeholder__title">Select a class-section to get started</h2>
+    <p class="csfm-placeholder__sub">
+      Choose a class-section from the dropdown above. You'll see all enrolled students with their
+      fee balances, and can pay, assign, or grant concessions without leaving this page.
+    </p>
+    <div class="csfm-placeholder__features">
+      <div class="csfm-feature-pill"><mat-icon>payments</mat-icon> Record Payments</div>
+      <div class="csfm-feature-pill"><mat-icon>add_road</mat-icon> Assign Custom Fees</div>
+      <div class="csfm-feature-pill"><mat-icon>local_offer</mat-icon> Grant Concessions</div>
+      <div class="csfm-feature-pill"><mat-icon>receipt_long</mat-icon> View History</div>
+    </div>
+  </div>
+  }
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+           MAIN CONTENT — class selected
+      ══════════════════════════════════════════════════════════════════════ -->
+  @if (selectedClassSectionId()) {
+
+  <!-- Roster loading -->
+  @if (loadingRoster()) {
+  <div class="csfm-roster-loading">
+    <mat-spinner diameter="36" />
+    <p>Loading students…</p>
+  </div>
+  }
+
+  <!-- Roster error -->
+  @if (errorRoster() && !loadingRoster()) {
+  <div class="csfm-roster-error">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ errorRoster() }}</p>
+    <button mat-stroked-button (click)="loadRoster()">Retry</button>
+  </div>
+  } @if (!loadingRoster() && !errorRoster()) {
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+           CLASS-LEVEL FINANCIAL DASHBOARD
+      ══════════════════════════════════════════════════════════════════════ -->
+  @if (students().length > 0) {
+  <div class="csfm-class-dashboard">
+    <!-- Dashboard Header Row -->
+    <div class="csfm-class-dashboard__header">
+      <div class="csfm-class-dashboard__title">
+        <div class="csfm-class-dashboard__title-icon">
+          <mat-icon>class</mat-icon>
+        </div>
+        <div>
+          <span class="csfm-class-dashboard__name">{{ selectedClassSectionLabel() }}</span>
+          <span class="csfm-class-dashboard__meta">{{ students().length }} students enrolled</span>
+        </div>
+      </div>
+
+      <!-- Collection rate progress ring area -->
+      <div class="csfm-collection-rate">
+        <div class="csfm-collection-rate__ring">
+          <svg viewBox="0 0 40 40" class="csfm-ring-svg">
+            <circle cx="20" cy="20" r="16" class="csfm-ring-track" />
+            <circle
+              cx="20"
+              cy="20"
+              r="16"
+              class="csfm-ring-fill"
+              [style.strokeDasharray]="(classCollectionRate() / 100) * 100.53 + ' 100.53'"
+            />
+          </svg>
+          <span class="csfm-ring-label">{{ classCollectionRate() }}%</span>
+        </div>
+        <div class="csfm-collection-rate__text">
+          <span class="csfm-collection-rate__value">Collection Rate</span>
+          <span class="csfm-collection-rate__sub">of effective dues</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI Grid -->
+    <div class="csfm-kpi-grid">
+      <!-- Standard Fees (from fee structures) -->
+      <!-- Note: totalOriginal from StudentForPayment covers structure fees only.
+             Custom fee amounts are separate (not exposed in roster endpoint).
+             We show available aggregates clearly. -->
+      <div class="csfm-kpi-card csfm-kpi-card--blue">
+        <div class="csfm-kpi-card__icon">
+          <mat-icon>receipt_long</mat-icon>
+        </div>
+        <div class="csfm-kpi-card__body">
+          <span class="csfm-kpi-card__label">Total Billed</span>
+          <span class="csfm-kpi-card__value">{{ classTotalOriginal() | paise : 'compact' }}</span>
+          <span class="csfm-kpi-card__sub">across {{ students().length }} students</span>
+        </div>
+      </div>
+
+      <!-- Concessions -->
+      <div class="csfm-kpi-card csfm-kpi-card--purple">
+        <div class="csfm-kpi-card__icon">
+          <mat-icon>local_offer</mat-icon>
+        </div>
+        <div class="csfm-kpi-card__body">
+          <span class="csfm-kpi-card__label">Total Concessions</span>
+          <span class="csfm-kpi-card__value">{{ classTotalConcession() | paise : 'compact' }}</span>
+          <span class="csfm-kpi-card__sub">discounts applied</span>
+        </div>
+      </div>
+
+      <!-- Net Due -->
+      <div class="csfm-kpi-card csfm-kpi-card--indigo">
+        <div class="csfm-kpi-card__icon">
+          <mat-icon>account_balance</mat-icon>
+        </div>
+        <div class="csfm-kpi-card__body">
+          <span class="csfm-kpi-card__label">Net Due</span>
+          <span class="csfm-kpi-card__value">{{ classTotalDue() | paise : 'compact' }}</span>
+          <span class="csfm-kpi-card__sub">after concessions</span>
+        </div>
+      </div>
+
+      <!-- Collected -->
+      <div class="csfm-kpi-card csfm-kpi-card--green">
+        <div class="csfm-kpi-card__icon">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <div class="csfm-kpi-card__body">
+          <span class="csfm-kpi-card__label">Collected</span>
+          <span class="csfm-kpi-card__value">{{ classTotalCollected() | paise : 'compact' }}</span>
+          <span class="csfm-kpi-card__sub">{{ paidCount }} students paid</span>
+        </div>
+      </div>
+
+      <!-- Outstanding -->
+      <div
+        class="csfm-kpi-card"
+        [class.csfm-kpi-card--red]="classTotalOutstanding() > 0"
+        [class.csfm-kpi-card--green-muted]="classTotalOutstanding() <= 0"
+      >
+        <div class="csfm-kpi-card__icon">
+          <mat-icon>{{
+            classTotalOutstanding() > 0 ? 'account_balance_wallet' : 'done_all'
+          }}</mat-icon>
+        </div>
+        <div class="csfm-kpi-card__body">
+          <span class="csfm-kpi-card__label">Outstanding</span>
+          <span class="csfm-kpi-card__value">{{
+            classTotalOutstanding() | paise : 'compact'
+          }}</span>
+          <span class="csfm-kpi-card__sub">{{ pendingCount + partialCount }} students pending</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Student status pills row -->
+    <div class="csfm-status-pills">
+      <div class="csfm-status-pill csfm-status-pill--success">
+        <mat-icon>check_circle</mat-icon>
+        <span class="csfm-status-pill__count">{{ paidCount }}</span>
+        <span class="csfm-status-pill__label">Fully Paid</span>
+      </div>
+      <div class="csfm-status-pill csfm-status-pill--warning">
+        <mat-icon>schedule</mat-icon>
+        <span class="csfm-status-pill__count">{{ partialCount }}</span>
+        <span class="csfm-status-pill__label">Partial</span>
+      </div>
+      <div class="csfm-status-pill csfm-status-pill--error">
+        <mat-icon>radio_button_unchecked</mat-icon>
+        <span class="csfm-status-pill__count">{{ pendingCount }}</span>
+        <span class="csfm-status-pill__label">Unpaid</span>
+      </div>
+
+      <!-- Collection progress bar -->
+      <div class="csfm-class-progress">
+        <div class="csfm-class-progress__track">
+          <div
+            class="csfm-class-progress__fill"
+            [style.width.%]="classCollectionRate()"
+            [class.csfm-class-progress__fill--full]="classCollectionRate() >= 100"
+          ></div>
+        </div>
+        <span class="csfm-class-progress__label">
+          {{ classTotalCollected() | paise : 'compact' }} of
+          {{ classTotalDue() | paise : 'compact' }} collected
+        </span>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- ── Two-Panel Layout ───────────────────────────────────────────────── -->
+  <div class="csfm-layout">
+    <!-- LEFT: Student Roster Panel ─────────────────────────────────────── -->
+    <div class="csfm-roster-panel">
+      <!-- Search -->
+      <div class="csfm-roster-search">
+        <mat-icon class="csfm-roster-search__icon">search</mat-icon>
+        <input
+          class="csfm-roster-search__input"
+          placeholder="Search by name or roll…"
+          [value]="rosterSearch()"
+          (input)="rosterSearch.set($any($event.target).value)"
+        />
+        @if (rosterSearch()) {
+        <button
+          class="csfm-roster-search__clear"
+          (click)="rosterSearch.set('')"
+          aria-label="Clear search"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+        }
+      </div>
+
+      <!-- Empty roster -->
+      @if (students().length === 0) {
+      <div class="csfm-roster-empty">
+        <mat-icon>person_off</mat-icon>
+        <p>No students enrolled in this class-section</p>
+      </div>
+      }
+
+      <!-- No search results -->
+      @if (students().length > 0 && filteredStudents().length === 0) {
+      <div class="csfm-roster-empty">
+        <mat-icon>search_off</mat-icon>
+        <p>No students match "{{ rosterSearch() }}"</p>
+      </div>
+      }
+
+      <!-- Student list -->
+      @if (filteredStudents().length > 0) {
+      <div class="csfm-roster-list">
+        @for (student of filteredStudents(); track trackById($index, student)) {
+        <button
+          class="csfm-student-card"
+          [class.csfm-student-card--selected]="isSelected(student)"
+          [class.csfm-student-card--paid]="student.balance <= 0"
+          (click)="selectStudent(student)"
+        >
+          <!-- Avatar -->
+          <div
+            class="csfm-student-card__avatar"
+            [class.csfm-student-card__avatar--paid]="student.balance <= 0"
+          >
+            {{ student.name.charAt(0).toUpperCase() }}
+          </div>
+
+          <!-- Info -->
+          <div class="csfm-student-card__info">
+            <span class="csfm-student-card__name">{{ student.name }}</span>
+            <div class="csfm-student-card__meta">
+              @if (student.rollNumber) {
+              <span class="roll-chip">{{ student.rollNumber }}</span>
+              }
+              <span
+                class="csfm-student-card__balance"
+                [class.csfm-student-card__balance--paid]="student.balance <= 0"
+                [class.csfm-student-card__balance--due]="student.balance > 0"
+              >
+                @if (student.balance <= 0) {
+                <mat-icon>check_circle</mat-icon> Paid } @else {
+                {{ student.balance | paise : 'compact' }} due }
+              </span>
+            </div>
+            <!-- Progress bar -->
+            <div class="csfm-progress-bar">
+              <div
+                class="csfm-progress-bar__fill"
+                [class.csfm-progress-bar__fill--full]="student.balance <= 0"
+                [style.width.%]="collectionRate(student)"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Status icon -->
+          <mat-icon
+            class="csfm-student-card__status-icon"
+            [class]="'csfm-student-card__status-icon ' + statusIconClass(student)"
+            >{{ statusIcon(student) }}</mat-icon
+          >
+        </button>
+        }
+      </div>
+      }
+    </div>
+    <!-- /LEFT PANEL -->
+
+    <!-- RIGHT: Student Detail Panel ────────────────────────────────────── -->
+    <div class="csfm-detail-panel">
+      <!-- No student selected -->
+      @if (!selectedStudent()) {
+      <div class="csfm-detail-empty">
+        <div class="csfm-detail-empty__icon">
+          <mat-icon>touch_app</mat-icon>
+        </div>
+        <h3 class="csfm-detail-empty__title">Select a student</h3>
+        <p class="csfm-detail-empty__sub">
+          Click any student from the roster on the left to view their full fee detail and take
+          action.
+        </p>
+      </div>
+      }
+
+      <!-- Student detail loaded -->
+      @if (selectedStudent(); as student) {
+
+      <!-- Student Header -->
+      <div class="csfm-detail-header">
+        <div class="csfm-detail-header__avatar">
+          {{ student.name.charAt(0).toUpperCase() }}
+        </div>
+        <div class="csfm-detail-header__info">
+          <h2 class="csfm-detail-header__name">{{ student.name }}</h2>
+          <div class="csfm-detail-header__meta">
+            @if (student.rollNumber) {
+            <span class="roll-chip">Roll {{ student.rollNumber }}</span>
+            }
+            <span class="csfm-detail-header__email">{{ student.email }}</span>
+          </div>
+        </div>
+
+        <!-- Quick action buttons -->
+        <div class="csfm-detail-header__actions">
+          @if (canPay() && student.balance > 0) {
+          <button
+            mat-flat-button
+            color="primary"
+            class="csfm-action-btn csfm-action-btn--pay"
+            (click)="openRecordPayment()"
+            matTooltip="Record a payment for this student"
+          >
+            <mat-icon>payments</mat-icon>
+            Pay Now
+          </button>
+          } @if (canManage()) {
+          <button
+            mat-stroked-button
+            class="csfm-action-btn"
+            (click)="openGrantConcession('STRUCTURE')"
+            matTooltip="Grant a concession on a standard fee"
+          >
+            <mat-icon>local_offer</mat-icon>
+            Concession
+          </button>
+          }
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════════════════
+               STUDENT FEE OVERVIEW STRIP — enhanced breakdown
+          ════════════════════════════════════════════════════════════════ -->
+      @if (loadingDueFees()) {
+      <div class="csfm-overview-loading">
+        <mat-spinner diameter="28" />
+        <span>Loading fee overview…</span>
+      </div>
+      } @if (!loadingDueFees() && dueFees(); as df) {
+      <div class="csfm-student-overview">
+        <!-- Top summary bar: Total Due / Paid / Balance -->
+        <div class="csfm-student-summary-bar">
+          <div class="csfm-student-summary-bar__item">
+            <span class="csfm-student-summary-bar__label">Total Billed</span>
+            <span class="csfm-student-summary-bar__value">
+              {{ df.totalDue + df.totalConcession | paise : 'compact' }}
+            </span>
+          </div>
+
+          @if (df.totalConcession > 0) {
+          <div class="csfm-student-summary-bar__divider"></div>
+          <div class="csfm-student-summary-bar__item">
+            <span class="csfm-student-summary-bar__label">Concessions</span>
+            <span class="csfm-student-summary-bar__value csfm-student-summary-bar__value--purple">
+              −{{ df.totalConcession | paise : 'compact' }}
+            </span>
+          </div>
+          }
+
+          <div class="csfm-student-summary-bar__divider"></div>
+          <div class="csfm-student-summary-bar__item">
+            <span class="csfm-student-summary-bar__label">Net Due</span>
+            <span class="csfm-student-summary-bar__value csfm-student-summary-bar__value--blue">
+              {{ df.totalDue | paise : 'compact' }}
+            </span>
+          </div>
+
+          <div class="csfm-student-summary-bar__divider"></div>
+          <div class="csfm-student-summary-bar__item">
+            <span class="csfm-student-summary-bar__label">Paid</span>
+            <span class="csfm-student-summary-bar__value csfm-student-summary-bar__value--green">
+              {{ df.totalPaid | paise : 'compact' }}
+            </span>
+          </div>
+
+          <div class="csfm-student-summary-bar__divider"></div>
+          <div class="csfm-student-summary-bar__item">
+            <span class="csfm-student-summary-bar__label">Balance</span>
+            <span
+              class="csfm-student-summary-bar__value csfm-student-summary-bar__value--balance"
+              [class.csfm-student-summary-bar__value--zero]="df.balanceDue <= 0"
+              [class.csfm-student-summary-bar__value--error]="df.balanceDue > 0"
+            >
+              {{ df.balanceDue | paise : 'compact' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Fee breakdown section — standard vs custom -->
+        @if (df.fees.length > 0 || df.assignments.length > 0) {
+        <div class="csfm-fee-breakdown">
+          <!-- Standard Fees breakdown card -->
+          @if (df.fees.length > 0) {
+          <div class="csfm-breakdown-card csfm-breakdown-card--standard">
+            <div class="csfm-breakdown-card__header">
+              <div class="csfm-breakdown-card__icon">
+                <mat-icon>receipt_long</mat-icon>
+              </div>
+              <div class="csfm-breakdown-card__title-block">
+                <span class="csfm-breakdown-card__title">Standard Fees</span>
+                <span class="csfm-breakdown-card__count">{{ df.fees.length }} line items</span>
+              </div>
+            </div>
+            <div class="csfm-breakdown-card__stats">
+              <div class="csfm-breakdown-stat">
+                <span class="csfm-breakdown-stat__label">Billed</span>
+                <span class="csfm-breakdown-stat__value">
+                  {{ studentStandardDue() + studentStandardConcession() | paise : 'compact' }}
+                </span>
+              </div>
+              @if (studentStandardConcession() > 0) {
+              <div class="csfm-breakdown-stat csfm-breakdown-stat--concession">
+                <span class="csfm-breakdown-stat__label">Concession</span>
+                <span class="csfm-breakdown-stat__value">
+                  −{{ studentStandardConcession() | paise : 'compact' }}
+                </span>
+              </div>
+              }
+              <div class="csfm-breakdown-stat">
+                <span class="csfm-breakdown-stat__label">Net Due</span>
+                <span class="csfm-breakdown-stat__value csfm-breakdown-stat__value--primary">
+                  {{ studentStandardDue() | paise : 'compact' }}
+                </span>
+              </div>
+              <div class="csfm-breakdown-stat">
+                <span class="csfm-breakdown-stat__label">Paid</span>
+                <span class="csfm-breakdown-stat__value csfm-breakdown-stat__value--success">
+                  {{ studentStandardPaid() | paise : 'compact' }}
+                </span>
+              </div>
+              <div class="csfm-breakdown-stat">
+                <span class="csfm-breakdown-stat__label">Balance</span>
+                <span
+                  class="csfm-breakdown-stat__value"
+                  [class.csfm-breakdown-stat__value--success]="studentStandardBalance() <= 0"
+                  [class.csfm-breakdown-stat__value--error]="studentStandardBalance() > 0"
+                >
+                  {{ studentStandardBalance() | paise : 'compact' }}
+                </span>
+              </div>
+            </div>
+            <!-- Mini progress bar -->
+            <div class="csfm-breakdown-card__progress">
+              <div
+                class="csfm-breakdown-card__progress-fill"
+                [style.width.%]="
+                  studentStandardDue() > 0
+                    ? (studentStandardPaid() / studentStandardDue()) * 100
+                    : 100
+                "
+                [class.full]="studentStandardBalance() <= 0"
+              ></div>
+            </div>
+          </div>
+          }
+
+          <!-- Custom Fees breakdown card -->
+          @if (df.assignments.length > 0) {
+          <div class="csfm-breakdown-card csfm-breakdown-card--custom">
+            <div class="csfm-breakdown-card__header">
+              <div class="csfm-breakdown-card__icon">
+                <mat-icon>directions_bus</mat-icon>
+              </div>
+              <div class="csfm-breakdown-card__title-block">
+                <span class="csfm-breakdown-card__title">Custom Fees</span>
+                <span class="csfm-breakdown-card__count"
+                  >{{ df.assignments.length }} assignments</span
+                >
+              </div>
+            </div>
+            <div class="csfm-breakdown-card__stats">
+              <div class="csfm-breakdown-stat">
+                <span class="csfm-breakdown-stat__label">Billed</span>
+                <span class="csfm-breakdown-stat__value">
+                  {{ studentCustomDue() + studentCustomConcession() | paise : 'compact' }}
+                </span>
+              </div>
+              @if (studentCustomConcession() > 0) {
+              <div class="csfm-breakdown-stat csfm-breakdown-stat--concession">
+                <span class="csfm-breakdown-stat__label">Concession</span>
+                <span class="csfm-breakdown-stat__value">
+                  −{{ studentCustomConcession() | paise : 'compact' }}
+                </span>
+              </div>
+              }
+              <div class="csfm-breakdown-stat">
+                <span class="csfm-breakdown-stat__label">Net Due</span>
+                <span class="csfm-breakdown-stat__value csfm-breakdown-stat__value--secondary">
+                  {{ studentCustomDue() | paise : 'compact' }}
+                </span>
+              </div>
+              <div class="csfm-breakdown-stat">
+                <span class="csfm-breakdown-stat__label">Paid</span>
+                <span class="csfm-breakdown-stat__value csfm-breakdown-stat__value--success">
+                  {{ studentCustomPaid() | paise : 'compact' }}
+                </span>
+              </div>
+              <div class="csfm-breakdown-stat">
+                <span class="csfm-breakdown-stat__label">Balance</span>
+                <span
+                  class="csfm-breakdown-stat__value"
+                  [class.csfm-breakdown-stat__value--success]="studentCustomBalance() <= 0"
+                  [class.csfm-breakdown-stat__value--error]="studentCustomBalance() > 0"
+                >
+                  {{ studentCustomBalance() | paise : 'compact' }}
+                </span>
+              </div>
+            </div>
+            <!-- Mini progress bar -->
+            <div class="csfm-breakdown-card__progress">
+              <div
+                class="csfm-breakdown-card__progress-fill csfm-breakdown-card__progress-fill--secondary"
+                [style.width.%]="
+                  studentCustomDue() > 0 ? (studentCustomPaid() / studentCustomDue()) * 100 : 100
+                "
+                [class.full]="studentCustomBalance() <= 0"
+              ></div>
+            </div>
+          </div>
+          }
+        </div>
+        }
+      </div>
+      }
+
+      <!-- ── Tabs ────────────────────────────────────────────────────────── -->
+      <mat-tab-group class="csfm-tabs" animationDuration="200ms" [disableRipple]="true">
+        <!-- Tab 1: Standard Fees ──────────────────────────────────────── -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="csfm-tab-icon">receipt_long</mat-icon>
+            Standard Fees @if (dueFees()?.fees?.length) {
+            <span class="tab-badge tab-badge--primary">
+              {{ dueFees()!.fees.length }}
+            </span>
+            }
+          </ng-template>
+
+          <div class="csfm-tab-content">
+            @if (loadingDueFees()) {
+            <div class="csfm-tab-loading">
+              <mat-spinner diameter="28" />
+            </div>
+            } @else if (!dueFees() || dueFees()!.fees.length === 0) {
+            <div class="csfm-tab-empty">
+              <mat-icon>receipt_long</mat-icon>
+              <p>No standard fee structures configured for this class-section and academic year.</p>
+            </div>
+            } @else {
+            <!-- Standard Fees table -->
+            <div class="csfm-fees-section-header">
+              <mat-icon>receipt_long</mat-icon>
+              <span>Class-section fee structures</span>
+              @if (canManage()) {
+              <button
+                mat-stroked-button
+                class="csfm-inline-action"
+                (click)="openGrantConcession('STRUCTURE')"
+              >
+                <mat-icon>local_offer</mat-icon>
+                Grant Concession
+              </button>
+              } @if (canPay() && dueFees()!.balanceDue > 0) {
+              <button
+                mat-flat-button
+                color="primary"
+                class="csfm-inline-action"
+                (click)="openRecordPayment()"
+              >
+                <mat-icon>payments</mat-icon>
+                Record Payment
+              </button>
+              }
+            </div>
+
+            <div class="csfm-fees-table-wrap">
+              <table class="csfm-fees-table">
+                <thead>
+                  <tr>
+                    <th>Fee Type</th>
+                    <th>Month</th>
+                    <th class="text-right">Original</th>
+                    <th class="text-right">Concession</th>
+                    <th class="text-right">Effective</th>
+                    <th class="text-right">Paid</th>
+                    <th class="text-right">Remaining</th>
+                    <th>Due Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (fee of dueFees()!.fees; track fee.id) {
+                  <tr class="csfm-fee-row" [class.csfm-fee-row--paid]="fee.remaining <= 0">
+                    <td>
+                      <span class="fee-type-chip fee-type-chip--std">
+                        {{ fee.feeType }}
+                      </span>
+                      @if (fee.isMandatory) {
+                      <span class="csfm-mandatory-dot" matTooltip="Mandatory fee">M</span>
+                      }
+                    </td>
+                    <td class="cell-muted">{{ formatMonth(fee.feeMonth) }}</td>
+                    <td class="text-right">{{ fee.amount | paise : 'compact' }}</td>
+                    <td class="text-right">
+                      @if (fee.concessionAmount > 0) {
+                      <span
+                        class="csfm-concession-value"
+                        [matTooltip]="fee.concessionReason || 'Concession applied'"
+                      >
+                        -{{ fee.concessionAmount | paise : 'compact' }}
+                      </span>
+                      } @else {
+                      <span class="cell-muted">—</span>
+                      }
+                    </td>
+                    <td class="text-right amount-cell">
+                      {{ fee.effectiveAmount | paise : 'compact' }}
+                    </td>
+                    <td class="text-right amount-cell text-success">
+                      {{ fee.paid | paise : 'compact' }}
+                    </td>
+                    <td
+                      class="text-right"
+                      [class.amount-cell]="true"
+                      [class.text-error]="fee.remaining > 0"
+                      [class.text-success]="fee.remaining <= 0"
+                    >
+                      {{ fee.remaining | paise : 'compact' }}
+                    </td>
+                    <td class="cell-muted">
+                      @if (fee.dueDate) {
+                      {{ fee.dueDate | date : 'd MMM yyyy' }}
+                      } @else { — }
+                    </td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            }
+          </div>
+        </mat-tab>
+
+        <!-- Tab 2: Custom Fees / Assignments ─────────────────────────── -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="csfm-tab-icon">directions_bus</mat-icon>
+            Custom Fees @if (dueFees()?.assignments?.length) {
+            <span class="tab-badge tab-badge--primary">
+              {{ dueFees()!.assignments.length }}
+            </span>
+            }
+          </ng-template>
+
+          <div class="csfm-tab-content">
+            <app-assignments-list
+              [enrollmentId]="student.enrollmentId"
+              [studentName]="student.name"
+              [academicYearId]="selectedAcademicYearId() ?? undefined"
+              [canManage]="canManage()"
+              [canPay]="canPay()"
+              (changed)="onChildChanged()"
+            />
+          </div>
+        </mat-tab>
+
+        <!-- Tab 3: Payment History ─────────────────────────────────────── -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="csfm-tab-icon">receipt</mat-icon>
+            Payments
+          </ng-template>
+
+          <div class="csfm-tab-content">
+            <app-payment-history
+              [enrollmentId]="student.enrollmentId"
+              [canVoid]="canVoid()"
+              (changed)="onChildChanged()"
+            />
+          </div>
+        </mat-tab>
+
+        <!-- Tab 4: Concessions ──────────────────────────────────────────── -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="csfm-tab-icon">local_offer</mat-icon>
+            Concessions
+          </ng-template>
+
+          <div class="csfm-tab-content">
+            <!-- Action bar -->
+            @if (canManage()) {
+            <div class="csfm-concessions-actions">
+              <button mat-stroked-button (click)="openGrantConcession('STRUCTURE')">
+                <mat-icon>receipt_long</mat-icon>
+                Concession on Standard Fee
+              </button>
+              <button mat-stroked-button (click)="openGrantConcession('ASSIGNMENT')">
+                <mat-icon>directions_bus</mat-icon>
+                Concession on Custom Fee
+              </button>
+            </div>
+            }
+            <app-concessions-list
+              [enrollmentId]="student.enrollmentId"
+              [canRevoke]="canManage()"
+              (revoked)="onChildChanged()"
+            />
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+      }
+      <!-- /student detail -->
+    </div>
+    <!-- /RIGHT PANEL -->
+  </div>
+  <!-- /two-panel layout -->
+
+  }
+  <!-- /!loadingRoster && !errorRoster -->
+
+  }
+  <!-- /selectedClassSectionId -->
+</div>
+<!-- /csfm-shell -->

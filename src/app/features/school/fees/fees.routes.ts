@@ -40,6 +40,18 @@ export const FEES_ROUTES: Routes = [
     loadComponent: () => import('./fee-ledger/fee-ledger').then((m) => m.FeeLedger),
     canActivate: [permissionGuard(['fees.report', 'fees.ledger.view'])],
   },
+
+  {
+    path: 'class-section-fees',
+    loadComponent: () =>
+      import('./class-section-fee-manager/class-section-fee-manager').then(
+        (m) => m.ClassSectionFeeManager
+      ),
+    canActivate: [
+      permissionGuard(['fees.report', 'fees.payments.record', 'fees.structures.manage']),
+    ],
+  },
+
   {
     path: 'concessions',
     loadComponent: () =>

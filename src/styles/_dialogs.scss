@@ -278,3 +278,38 @@
     }
   }
 }
+
+// All outlined form fields that have a text prefix
+.mat-mdc-form-field.mat-mdc-form-field-type-mat-input,
+.mat-mdc-form-field.mat-mdc-form-field-type-mat-select {
+  // Text prefix (e.g. <span matPrefix>₹</span>)
+  .mat-mdc-form-field-text-prefix {
+    padding-left: 12px;
+    padding-right: 6px;
+    color: var(--color-text-secondary);
+    font-weight: 600;
+  }
+
+  // Icon prefix (e.g. <mat-icon matPrefix>search</mat-icon>)
+  .mat-mdc-form-field-icon-prefix {
+    padding-left: 10px;
+    padding-right: 4px;
+
+    mat-icon {
+      color: var(--color-text-muted);
+    }
+  }
+
+  // Text suffix (e.g. <span matSuffix>.00</span>)
+  .mat-mdc-form-field-text-suffix {
+    padding-right: 12px;
+    padding-left: 6px;
+    color: var(--color-text-secondary);
+  }
+
+  // Icon suffix
+  .mat-mdc-form-field-icon-suffix {
+    padding-right: 10px;
+    padding-left: 4px;
+  }
+}

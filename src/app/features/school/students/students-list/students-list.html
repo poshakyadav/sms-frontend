@@ -331,7 +331,7 @@
   <!-- ── Table ───────────────────────────────────────────────────────── -->
   @else if (!loadingStudents()) {
   <div class="sl-table-card overflow-x">
-    <table mat-table [dataSource]="filteredStudents()" [trackBy]="trackById">
+    <table mat-table [dataSource]="filteredStudents()" [trackBy]="trackById" multiTemplateDataRows>
       <!-- ── Checkbox ── -->
       <ng-container matColumnDef="select">
         <th mat-header-cell *matHeaderCellDef class="col-check">

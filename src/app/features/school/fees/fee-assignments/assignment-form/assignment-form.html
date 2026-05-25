@@ -1,6 +1,6 @@
 <!-- assignment-form.html -->
 <div class="modal-shell">
-  <!-- Header -->
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
   <div class="modal-header">
     <div class="modal-header__icon">
       <mat-icon>add_road</mat-icon>
@@ -18,16 +18,19 @@
     </button>
   </div>
 
+  <!-- ── Body ────────────────────────────────────────────────────────────── -->
   <div class="modal-body">
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <!-- Academic Year -->
-      <mat-form-field appearance="outline" class="form-field full-width">
+      <mat-form-field appearance="outline" class="form-field--sm full-width">
         <mat-label>Academic Year</mat-label>
         <mat-select formControlName="academicYearId">
           @for (y of academicYears(); track y.id) {
           <mat-option [value]="y.id">
             {{ y.name }}
-            @if (y.isCurrent) { <span class="current-tag">(Current)</span> }
+            @if (y.isCurrent) {
+            <span class="current-tag">(Current)</span>
+            }
           </mat-option>
           }
         </mat-select>
@@ -36,15 +39,21 @@
         }
       </mat-form-field>
 
-      <!-- Fee Type with suggestions -->
+      <!-- Fee Type + suggestion chips -->
       <div class="form-group">
-        <mat-form-field appearance="outline" class="form-field full-width">
+        <mat-form-field appearance="outline" class="form-field--sm full-width">
           <mat-label>Fee Type</mat-label>
-          <input matInput formControlName="feeType" placeholder="e.g. TRANSPORT, HOSTEL, SPORTS" />
+          <input
+            matInput
+            formControlName="feeType"
+            placeholder="e.g. TRANSPORT, HOSTEL, SPORTS"
+            autocomplete="off"
+          />
           @if (form.get('feeType')?.invalid && form.get('feeType')?.touched) {
           <mat-error>Fee type is required</mat-error>
           }
         </mat-form-field>
+
         <div class="suggestion-chips">
           @for (s of feeTypeSuggestions; track s) {
           <button
@@ -60,9 +69,9 @@
       </div>
 
       <!-- Amount -->
-      <mat-form-field appearance="outline" class="form-field full-width">
+      <mat-form-field appearance="outline" class="form-field--sm full-width form-field--prefixed">
         <mat-label>Amount (₹)</mat-label>
-        <span matPrefix>₹&nbsp;</span>
+        <span matPrefix class="rupee-prefix">₹</span>
         <input matInput type="number" formControlName="amountRupees" min="1" placeholder="0" />
         @if (form.get('amountRupees')?.hasError('required') && form.get('amountRupees')?.touched) {
         <mat-error>Amount is required</mat-error>
@@ -71,22 +80,85 @@
         }
       </mat-form-field>
 
-      <!-- Fee Month + Due Date row -->
-      <div class="form-row form-row--2col">
-        <mat-form-field appearance="outline" class="form-field">
-          <mat-label>Fee Month (optional)</mat-label>
-          <input matInput type="month" formControlName="feeMonth" />
-          <mat-hint>Leave blank for one-time fees</mat-hint>
-        </mat-form-field>
+      <!-- ── Fee Month + Due Date — compact 3-col row ───────────────────── -->
+      <!--
+        Layout: [Month select (flex 3)] [Year select (flex 2)] [Due Date datepicker (flex 3)]
+        All three fields share one row label line above them.
+      -->
+      <div class="month-due-section">
+        <div class="month-due-labels">
+          <span class="mds-label">
+            <mat-icon class="mds-label__icon">calendar_month</mat-icon>
+            Fee Month
+            <span class="optional-label">(optional)</span>
+          </span>
+          <span class="mds-sep"></span>
+          <span class="mds-label">
+            <mat-icon class="mds-label__icon">event</mat-icon>
+            Due Date
+            <span class="optional-label">(optional)</span>
+          </span>
+        </div>
 
-        <mat-form-field appearance="outline" class="form-field">
-          <mat-label>Due Date (optional)</mat-label>
-          <input matInput type="date" formControlName="dueDate" />
-        </mat-form-field>
+        <div class="month-due-row" [class.month-due-row--error]="feeMonthPartialError">
+          <!-- Month -->
+          <mat-form-field appearance="outline" class="form-field--sm mdr-month">
+            <mat-label>Month</mat-label>
+            <mat-select formControlName="feeMonthMonth">
+              <mat-option [value]="null">— Any —</mat-option>
+              @for (m of monthOptions; track m.value) {
+              <mat-option [value]="m.value">{{ m.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Year -->
+          <mat-form-field appearance="outline" class="form-field--sm mdr-year">
+            <mat-label>Year</mat-label>
+            <mat-select formControlName="feeMonthYear">
+              <mat-option [value]="null">— Any —</mat-option>
+              @for (y of yearOptions; track y.value) {
+              <mat-option [value]="y.value">{{ y.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Divider pip -->
+          <div class="mdr-divider" aria-hidden="true"></div>
+
+          <!-- Due Date — MatDatepicker with IndianDateAdapter (DD/MM/YYYY) -->
+          <mat-form-field appearance="outline" class="form-field--sm mdr-due">
+            <mat-label>Due Date</mat-label>
+            <input
+              matInput
+              [matDatepicker]="duePicker"
+              [min]="minDueDate"
+              formControlName="dueDate"
+              placeholder="DD/MM/YYYY"
+              readonly
+            />
+            <mat-datepicker-toggle matIconSuffix [for]="duePicker">
+              <mat-icon matDatepickerToggleIcon>calendar_today</mat-icon>
+            </mat-datepicker-toggle>
+            <mat-datepicker #duePicker />
+          </mat-form-field>
+        </div>
+
+        <!-- Sub-hint / validation message -->
+        <div class="month-due-footer">
+          @if (feeMonthPartialError) {
+          <p class="mdf-error">
+            <mat-icon>error_outline</mat-icon>
+            Select both month and year, or leave both blank for a one-time fee.
+          </p>
+          } @else {
+          <p class="mdf-hint">Leave month &amp; year blank for one-time fees</p>
+          }
+        </div>
       </div>
 
       <!-- Description -->
-      <mat-form-field appearance="outline" class="form-field full-width">
+      <mat-form-field appearance="outline" class="form-field--sm full-width">
         <mat-label>Description (optional)</mat-label>
         <textarea
           matInput
@@ -105,7 +177,7 @@
         <mat-slide-toggle formControlName="isMandatory" color="primary" />
       </div>
 
-      <!-- Error -->
+      <!-- Error banner -->
       @if (error()) {
       <div class="form-error-banner">
         <mat-icon>error_outline</mat-icon>
@@ -113,7 +185,7 @@
       </div>
       }
 
-      <!-- Footer -->
+      <!-- Footer actions -->
       <div class="modal-footer">
         <button type="button" mat-stroked-button (click)="close()" [disabled]="saving()">
           Cancel
@@ -122,11 +194,10 @@
           @if (saving()) {
           <mat-spinner diameter="16" />
           Saving… } @else {
-          <ng-container>
+          <ng-container matButtonIcon>
             <mat-icon>add_road</mat-icon>
-            Assign Fee
-          </ng-container>
-          }
+            Assign Fee </ng-container
+          >}
         </button>
       </div>
     </form>

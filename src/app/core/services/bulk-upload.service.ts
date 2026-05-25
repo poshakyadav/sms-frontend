@@ -1,16 +1,19 @@
-// bulk-upload.service.ts — v3 (production-grade, ExcelJS styled template)
+// bulk-upload.service.ts — v4
 //
-// Key changes from v2:
-//   • downloadTemplate() now uses ExcelJS for rich styled output:
-//       - Colour-coded header row (required = red-tinted, optional = blue-tinted)
-//       - Freeze first row + auto-filter
-//       - Two sample rows with realistic Indian school data
-//       - Separate Guide sheet with full field documentation
-//       - Column widths tuned for content
-//   • rollNumber field REMOVED from template (assigned separately via Roll Numbers feature)
-//   • EmailConflict / BulkUploadResult types updated to match backend v4 (udiseWarnings)
-//   • uploadStudents() academicYearId param preserved for future use
-//   • All ExcelJS imports are dynamic (lazy) to keep initial bundle lean
+// Changes from v3:
+//   • S.No. (serial number) helper column added as column A — auto-fills row
+//     numbers so users can track progress without counting manually.
+//     The column is formula-driven (=IF(B4="","",ROW()-3)) so it fills
+//     automatically as data is entered and stays blank for empty rows.
+//   • COLUMNS array now has sno as index 0; all guide-sheet and autoFilter
+//     references updated accordingly.
+//   • Template title row removed from the data sheet entirely — it was the
+//     root cause of the parser mis-counting bug (merged title cell in row 1
+//     caused sheet_to_json to read the title as the "header" row, making all
+//     column lookups wrong and counting hint + sample rows as student data).
+//     The sheet now starts directly with the header row at row 1, hint at
+//     row 2, sample rows at 3-4, and blank data rows from row 5 onwards.
+//     This gives the backend parser a clean, unambiguous layout to detect.
 
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
@@ -78,6 +81,9 @@ export interface ClassSectionCapacityInfo {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COLUMN DEFINITIONS  (single source of truth for template + guide)
+//
+// IMPORTANT: S.No. is index 0 (column A). It is display-only — the backend
+// parser explicitly ignores it. All data columns start at index 1 (column B).
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface ColDef {
@@ -85,7 +91,9 @@ interface ColDef {
   key: string;
   width: number;
   required: boolean;
+  isHelper: boolean; // true = display-only, not uploaded
   group:
+    | 'helper'
     | 'core'
     | 'contact'
     | 'personal'
@@ -101,12 +109,26 @@ interface ColDef {
 }
 
 const COLUMNS: ColDef[] = [
+  // ── S.No. helper (col A — display only, NOT uploaded) ─────────────────────
+  {
+    header: 'S.No.',
+    key: 'sno',
+    width: 8,
+    required: false,
+    isHelper: true,
+    group: 'helper',
+    hint: 'Auto-fills as you enter data — do not edit this column',
+    example: '', // formula-driven, set separately
+    example2: '',
+  },
+
   // ── Core (required) ────────────────────────────────────────────────────────
   {
     header: 'Name *',
     key: 'name',
     width: 28,
     required: true,
+    isHelper: false,
     group: 'core',
     hint: 'Student full name (min 2 characters)',
     example: 'Rahul Sharma',
@@ -117,6 +139,7 @@ const COLUMNS: ColDef[] = [
     key: 'email',
     width: 32,
     required: true,
+    isHelper: false,
     group: 'core',
     hint: 'Unique login email — must not exist in this school',
     example: 'rahul.sharma@example.com',
@@ -127,6 +150,7 @@ const COLUMNS: ColDef[] = [
     key: 'password',
     width: 18,
     required: true,
+    isHelper: false,
     group: 'core',
     hint: 'Min 8 characters. Student uses this to first log in.',
     example: 'Welcome@123',
@@ -139,6 +163,7 @@ const COLUMNS: ColDef[] = [
     key: 'phone',
     width: 16,
     required: false,
+    isHelper: false,
     group: 'contact',
     hint: 'Primary contact number (10–15 digits)',
     example: '9876543210',
@@ -149,6 +174,7 @@ const COLUMNS: ColDef[] = [
     key: 'alternatePhone',
     width: 18,
     required: false,
+    isHelper: false,
     group: 'contact',
     hint: 'Secondary phone number (optional)',
     example: '',
@@ -161,6 +187,7 @@ const COLUMNS: ColDef[] = [
     key: 'dob',
     width: 18,
     required: false,
+    isHelper: false,
     group: 'personal',
     hint: 'Format: YYYY-MM-DD (e.g. 2010-06-15)',
     example: '2010-06-15',
@@ -171,6 +198,7 @@ const COLUMNS: ColDef[] = [
     key: 'gender',
     width: 14,
     required: false,
+    isHelper: false,
     group: 'personal',
     hint: 'Male / Female / Transgender',
     example: 'Male',
@@ -181,6 +209,7 @@ const COLUMNS: ColDef[] = [
     key: 'bloodGroup',
     width: 14,
     required: false,
+    isHelper: false,
     group: 'personal',
     hint: 'A+ / A- / B+ / B- / AB+ / AB- / O+ / O-',
     example: 'B+',
@@ -193,6 +222,7 @@ const COLUMNS: ColDef[] = [
     key: 'fatherName',
     width: 24,
     required: false,
+    isHelper: false,
     group: 'parental',
     hint: "Father's full name (UDISE+ required)",
     example: 'Suresh Sharma',
@@ -203,6 +233,7 @@ const COLUMNS: ColDef[] = [
     key: 'motherName',
     width: 24,
     required: false,
+    isHelper: false,
     group: 'parental',
     hint: "Mother's full name (UDISE+ required)",
     example: 'Sunita Sharma',
@@ -213,6 +244,7 @@ const COLUMNS: ColDef[] = [
     key: 'guardianName',
     width: 24,
     required: false,
+    isHelper: false,
     group: 'parental',
     hint: 'Guardian name if neither parent is primary caregiver',
     example: '',
@@ -223,6 +255,7 @@ const COLUMNS: ColDef[] = [
     key: 'guardianRelation',
     width: 20,
     required: false,
+    isHelper: false,
     group: 'parental',
     hint: 'e.g. Grandfather, Uncle, Legal Guardian',
     example: '',
@@ -235,6 +268,7 @@ const COLUMNS: ColDef[] = [
     key: 'addr1',
     width: 30,
     required: false,
+    isHelper: false,
     group: 'address',
     hint: 'Street / house number',
     example: '12 Gandhi Marg',
@@ -245,6 +279,7 @@ const COLUMNS: ColDef[] = [
     key: 'addr2',
     width: 30,
     required: false,
+    isHelper: false,
     group: 'address',
     hint: 'Locality / area / mohalla',
     example: 'Kidwai Nagar',
@@ -255,6 +290,7 @@ const COLUMNS: ColDef[] = [
     key: 'city',
     width: 18,
     required: false,
+    isHelper: false,
     group: 'address',
     hint: 'City or town name',
     example: 'Lucknow',
@@ -265,6 +301,7 @@ const COLUMNS: ColDef[] = [
     key: 'state',
     width: 18,
     required: false,
+    isHelper: false,
     group: 'address',
     hint: 'State name',
     example: 'Uttar Pradesh',
@@ -275,6 +312,7 @@ const COLUMNS: ColDef[] = [
     key: 'pincode',
     width: 14,
     required: false,
+    isHelper: false,
     group: 'address',
     hint: '6-digit Indian PIN code',
     example: '226001',
@@ -287,6 +325,7 @@ const COLUMNS: ColDef[] = [
     key: 'admNo',
     width: 20,
     required: false,
+    isHelper: false,
     group: 'school',
     hint: "School's own admission / registration number",
     example: 'ADM-2025-001',
@@ -297,6 +336,7 @@ const COLUMNS: ColDef[] = [
     key: 'admDate',
     width: 18,
     required: false,
+    isHelper: false,
     group: 'school',
     hint: 'Format: YYYY-MM-DD',
     example: '2025-04-01',
@@ -307,6 +347,7 @@ const COLUMNS: ColDef[] = [
     key: 'prevSchool',
     width: 28,
     required: false,
+    isHelper: false,
     group: 'school',
     hint: 'Name of school student transferred from',
     example: 'Delhi Public School',
@@ -317,6 +358,7 @@ const COLUMNS: ColDef[] = [
     key: 'medical',
     width: 28,
     required: false,
+    isHelper: false,
     group: 'school',
     hint: 'Allergies, conditions, emergency notes',
     example: 'No allergies',
@@ -329,6 +371,7 @@ const COLUMNS: ColDef[] = [
     key: 'enrollType',
     width: 18,
     required: false,
+    isHelper: false,
     group: 'udise_academic',
     hint: 'REGULAR / PRIVATE / OPEN_SCHOOL (default: REGULAR)',
     example: 'REGULAR',
@@ -339,6 +382,7 @@ const COLUMNS: ColDef[] = [
     key: 'prevResult',
     width: 22,
     required: false,
+    isHelper: false,
     group: 'udise_academic',
     hint: 'PROMOTED / NOT_PROMOTED / NEW_ADMISSION / TRANSFERRED',
     example: 'NEW_ADMISSION',
@@ -349,6 +393,7 @@ const COLUMNS: ColDef[] = [
     key: 'prevUdise',
     width: 28,
     required: false,
+    isHelper: false,
     group: 'udise_academic',
     hint: '11-digit UDISE code of previous school',
     example: '',
@@ -361,6 +406,7 @@ const COLUMNS: ColDef[] = [
     key: 'socialCat',
     width: 18,
     required: false,
+    isHelper: false,
     group: 'udise_demo',
     hint: '1=General, 2=SC, 3=ST, 4=OBC, 5=OBC-NCL  (or type name)',
     example: '1',
@@ -371,6 +417,7 @@ const COLUMNS: ColDef[] = [
     key: 'religion',
     width: 16,
     required: false,
+    isHelper: false,
     group: 'udise_demo',
     hint: '1=Hindu 2=Muslim 3=Christian 4=Sikh 5=Buddhist 6=Jain 7=Others 8=None',
     example: '1',
@@ -383,6 +430,7 @@ const COLUMNS: ColDef[] = [
     key: 'pen',
     width: 20,
     required: false,
+    isHelper: false,
     group: 'udise_id',
     hint: '16-digit Permanent Education Number',
     example: '',
@@ -393,6 +441,7 @@ const COLUMNS: ColDef[] = [
     key: 'apaar',
     width: 18,
     required: false,
+    isHelper: false,
     group: 'udise_id',
     hint: '12-digit APAAR / ABC ID',
     example: '',
@@ -403,6 +452,7 @@ const COLUMNS: ColDef[] = [
     key: 'stateId',
     width: 22,
     required: false,
+    isHelper: false,
     group: 'udise_id',
     hint: 'SAMAGRA ID or other state-specific student ID',
     example: '',
@@ -415,22 +465,21 @@ const COLUMNS: ColDef[] = [
 // ─────────────────────────────────────────────────────────────────────────────
 
 const COLORS = {
-  // Required header — deep indigo fill, white text
-  REQ_FILL: 'FF3730A3', // indigo-700
+  REQ_FILL: 'FF3730A3',
   REQ_TEXT: 'FFFFFFFF',
-  // Optional header — slate-blue fill, white text
-  OPT_FILL: 'FF334155', // slate-700
+  OPT_FILL: 'FF334155',
   OPT_TEXT: 'FFFFFFFF',
-  // Group sub-header row — light background
-  GROUP_FILL: 'FFF1F5F9', // slate-100
-  GROUP_TEXT: 'FF475569', // slate-600
-  // Sample rows
-  SAMPLE1_FILL: 'FFEFF6FF', // blue-50
-  SAMPLE2_FILL: 'FFF0FDF4', // green-50
-  // Guide title
+  // Helper column (S.No.) — distinct grey so users know not to edit it
+  HELPER_FILL: 'FF475569', // slate-600
+  HELPER_TEXT: 'FFFFFFFF',
+  HELPER_DATA_FILL: 'FFF1F5F9', // slate-100
+  HELPER_DATA_TEXT: 'FF94A3B8', // slate-400 — muted, clearly secondary
+  GROUP_FILL: 'FFF1F5F9',
+  GROUP_TEXT: 'FF475569',
+  SAMPLE1_FILL: 'FFEFF6FF',
+  SAMPLE2_FILL: 'FFF0FDF4',
   GUIDE_TITLE: 'FF1E3A5F',
   GUIDE_TEXT: 'FF334155',
-  // Border
   BORDER_CLR: 'FFB0BEC5',
 } as const;
 
@@ -474,7 +523,6 @@ export class BulkUploadService {
 
   // ── Styled Excel template download (ExcelJS) ────────────────────────────────
   async downloadTemplate(): Promise<void> {
-    // Dynamic import keeps the initial bundle lean
     const ExcelJS = await import('exceljs');
     const { saveAs } = await import('file-saver');
 
@@ -489,43 +537,66 @@ export class BulkUploadService {
     const blob = new Blob([buffer], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     });
-    saveAs(blob, 'bulk_student_upload_template_v3.xlsx');
+    saveAs(blob, 'bulk_student_upload_template_v4.xlsx');
   }
 
   // ── Build "Students" sheet ──────────────────────────────────────────────────
+  //
+  // ROW LAYOUT (v4):
+//   Row 1  → Header row  (Name *, Email *, …)    ← parser detects via isHeaderRow()
+//   Row 2  → Hint row    (italic field notes)     ← parser skips (hintRowIndex)
+//   Row 3  → Sample row 1 (Rahul Sharma)          ← parser skips (SAMPLE_ROW_COUNT = 2)
+//   Row 4  → Sample row 2 (Priya Verma)           ← parser skips (SAMPLE_ROW_COUNT = 2)
+//   Row 5+ → Blank data rows for user input       ← parser reads from dataStartIndex
+  //
+  // The S.No. column (col A) uses the formula =IF(B5="","",ROW()-4) so it
+  // auto-fills as the user types names in column B and stays blank for empty
+  // rows. The backend parser ignores column A entirely.
+  //
+  // The decorative note about "Fill from Row 5 onwards" is placed in a
+  // frozen note area ABOVE the printable area so it doesn't appear in the
+  // scrollable data region and can never confuse the parser.
   private async _buildStudentSheet(workbook: any, ExcelJS: any): Promise<void> {
+    const totalCols = COLUMNS.length;
+
     const ws = workbook.addWorksheet('Students', {
-      views: [{ state: 'frozen', xSplit: 0, ySplit: 2 }], // freeze first 2 rows
+      // Freeze header row (row 1) + hint row (row 2) so they stay visible
+      views: [{ state: 'frozen', xSplit: 0, ySplit: 2 }],
       pageSetup: { fitToPage: true, fitToWidth: 1 },
     });
 
-    // ── Title row (row 1) ──────────────────────────────────────────────────────
-    ws.mergeCells(1, 1, 1, COLUMNS.length);
-    const titleCell = ws.getCell('A1');
-    titleCell.value =
-      '📋  Student Bulk Upload Template  —  Fill from Row 4 onwards  |  Do NOT change column headers or order';
-    titleCell.font = { bold: true, size: 11, color: { argb: COLORS.GUIDE_TITLE } };
-    titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } }; // blue-100
-    titleCell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: false };
-    ws.getRow(1).height = 24;
-
-    // ── Header row (row 2) ─────────────────────────────────────────────────────
-    const headerRow = ws.getRow(2);
-    headerRow.height = 28;
+    // ── Row 1: Header row ──────────────────────────────────────────────────────
+    // This is now the FIRST row — no merged title above it.
+    // The backend parser scans for the row containing 'name', 'email', 'password'
+    // as separate cell values; this row will always be found correctly.
+    const headerRow = ws.getRow(1);
+    headerRow.height = 30;
 
     COLUMNS.forEach((col, idx) => {
       const cell = headerRow.getCell(idx + 1);
       cell.value = col.header;
-      cell.font = {
-        bold: true,
-        size: 10,
-        color: { argb: col.required ? COLORS.REQ_TEXT : COLORS.OPT_TEXT },
-      };
-      cell.fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: col.required ? COLORS.REQ_FILL : COLORS.OPT_FILL },
-      };
+
+      if (col.isHelper) {
+        // S.No. column — distinct "helper" styling
+        cell.font = { bold: true, size: 10, color: { argb: COLORS.HELPER_TEXT } };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: COLORS.HELPER_FILL },
+        };
+      } else {
+        cell.font = {
+          bold: true,
+          size: 10,
+          color: { argb: col.required ? COLORS.REQ_TEXT : COLORS.OPT_TEXT },
+        };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: col.required ? COLORS.REQ_FILL : COLORS.OPT_FILL },
+        };
+      }
+
       cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: false };
       cell.border = {
         top: { style: 'thin', color: { argb: COLORS.BORDER_CLR } },
@@ -535,15 +606,31 @@ export class BulkUploadService {
       };
     });
 
-    // ── Hint row (row 3) ───────────────────────────────────────────────────────
-    const hintRow = ws.getRow(3);
+    // ── Row 2: Hint row ────────────────────────────────────────────────────────
+    const hintRow = ws.getRow(2);
     hintRow.height = 40;
 
     COLUMNS.forEach((col, idx) => {
       const cell = hintRow.getCell(idx + 1);
-      cell.value = col.hint;
-      cell.font = { italic: true, size: 8, color: { argb: 'FF64748B' } };
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.GROUP_FILL } };
+
+      if (col.isHelper) {
+        cell.value = 'Auto-fills when you enter data in column B → Do NOT edit this column';
+        cell.font = { italic: true, size: 8, color: { argb: 'FF94A3B8' } };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: COLORS.HELPER_DATA_FILL },
+        };
+      } else {
+        cell.value = col.hint;
+        cell.font = { italic: true, size: 8, color: { argb: 'FF64748B' } };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: COLORS.GROUP_FILL },
+        };
+      }
+
       cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
       cell.border = {
         top: { style: 'thin', color: { argb: COLORS.BORDER_CLR } },
@@ -553,21 +640,43 @@ export class BulkUploadService {
       };
     });
 
-    // ── Sample rows (rows 4–5) ─────────────────────────────────────────────────
+    // ── Rows 3–4: Sample rows ──────────────────────────────────────────────────
+    // S.No. in sample rows shows static values (1, 2) so the user can see what
+    // the auto-fill looks like. Real data rows use a formula.
     const samples = [
-      { fill: COLORS.SAMPLE1_FILL, data: COLUMNS.map((c) => c.example) },
-      { fill: COLORS.SAMPLE2_FILL, data: COLUMNS.map((c) => c.example2) },
+      { fill: COLORS.SAMPLE1_FILL, sno: 1, data: COLUMNS.map((c) => c.example) },
+      { fill: COLORS.SAMPLE2_FILL, sno: 2, data: COLUMNS.map((c) => c.example2) },
     ];
 
     samples.forEach((sample, si) => {
-      const row = ws.getRow(4 + si);
+      const excelRow = 3 + si; // rows 3 and 4
+      const row = ws.getRow(excelRow);
       row.height = 20;
-      sample.data.forEach((val, idx) => {
+
+      COLUMNS.forEach((col, idx) => {
         const cell = row.getCell(idx + 1);
-        cell.value = val;
-        cell.font = { size: 10, color: { argb: COLORS.GUIDE_TEXT } };
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: sample.fill } };
-        cell.alignment = { vertical: 'middle', wrapText: false };
+
+        if (col.isHelper) {
+          // Static number for the sample rows
+          cell.value = sample.sno;
+          cell.font = { size: 10, bold: true, color: { argb: COLORS.HELPER_DATA_TEXT } };
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: COLORS.HELPER_DATA_FILL },
+          };
+          cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        } else {
+          cell.value = sample.data[idx];
+          cell.font = { size: 10, color: { argb: COLORS.GUIDE_TEXT } };
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: sample.fill },
+          };
+          cell.alignment = { vertical: 'middle', wrapText: false };
+        }
+
         cell.border = {
           top: { style: 'thin', color: { argb: COLORS.BORDER_CLR } },
           left: { style: 'thin', color: { argb: COLORS.BORDER_CLR } },
@@ -577,20 +686,49 @@ export class BulkUploadService {
       });
     });
 
-    // ── Blank data rows (6–55 — 50 rows ready for input) ──────────────────────
-    for (let r = 6; r <= 55; r++) {
+    // ── Rows 5–104: Blank data rows (100 rows ready for input) ────────────────
+    //
+    // S.No. formula: =IF(B5="","",ROW()-4)
+    //   • ROW()-4  → row 5 gives 1, row 6 gives 2, etc.
+    //   • IF(B5="","","") → stays blank if the Name column is empty,
+    //     so un-filled rows don't show numbers and confuse the user.
+    //
+    // IMPORTANT: The formula checks column B (Name), not column A itself,
+    // so the S.No. auto-fills as soon as the user types in the Name column.
+    for (let r = 5; r <= 104; r++) {
       const row = ws.getRow(r);
       row.height = 18;
-      COLUMNS.forEach((_col, idx) => {
+
+      COLUMNS.forEach((col, idx) => {
         const cell = row.getCell(idx + 1);
-        cell.font = { size: 10 };
-        cell.alignment = { vertical: 'middle' };
-        cell.border = {
-          top: { style: 'hair', color: { argb: 'FFE2E8F0' } },
-          left: { style: 'thin', color: { argb: COLORS.BORDER_CLR } },
-          bottom: { style: 'hair', color: { argb: 'FFE2E8F0' } },
-          right: { style: 'thin', color: { argb: COLORS.BORDER_CLR } },
-        };
+
+        if (col.isHelper) {
+          // col B in Excel = COLUMNS index 1 = the Name column
+          // ROW()-4 because data starts at row 5 → 5-4=1
+          cell.value = { formula: `IF(B${r}="","",ROW()-4)` };
+          cell.font = { size: 10, color: { argb: COLORS.HELPER_DATA_TEXT } };
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: COLORS.HELPER_DATA_FILL },
+          };
+          cell.alignment = { horizontal: 'center', vertical: 'middle' };
+          cell.border = {
+            top: { style: 'hair', color: { argb: 'FFE2E8F0' } },
+            left: { style: 'thin', color: { argb: COLORS.BORDER_CLR } },
+            bottom: { style: 'hair', color: { argb: 'FFE2E8F0' } },
+            right: { style: 'medium', color: { argb: COLORS.BORDER_CLR } },
+          };
+        } else {
+          cell.font = { size: 10 };
+          cell.alignment = { vertical: 'middle' };
+          cell.border = {
+            top: { style: 'hair', color: { argb: 'FFE2E8F0' } },
+            left: { style: 'thin', color: { argb: COLORS.BORDER_CLR } },
+            bottom: { style: 'hair', color: { argb: 'FFE2E8F0' } },
+            right: { style: 'thin', color: { argb: COLORS.BORDER_CLR } },
+          };
+        }
       });
     }
 
@@ -599,32 +737,47 @@ export class BulkUploadService {
       ws.getColumn(idx + 1).width = col.width;
     });
 
-    // ── Auto-filter on header row ──────────────────────────────────────────────
+    // ── Auto-filter on header row (row 1), starting from col 2 to skip S.No. ──
+    // S.No. is intentionally excluded from the filter — filtering a formula
+    // column causes confusing results and the column is display-only anyway.
     ws.autoFilter = {
-      from: { row: 2, column: 1 },
-      to: { row: 2, column: COLUMNS.length },
+      from: { row: 1, column: 2 },
+      to: { row: 1, column: totalCols },
     };
 
-    // ── Legend note at bottom ──────────────────────────────────────────────────
-    const legendRow = 58;
-    ws.mergeCells(legendRow, 1, legendRow, 6);
+    // ── Legend / note rows at the bottom ──────────────────────────────────────
+    const legendRow = 107;
+
+    ws.mergeCells(legendRow, 1, legendRow, 5);
     const legendA = ws.getCell(legendRow, 1);
-    legendA.value = '🔴  Required fields (dark header)';
+    legendA.value = '🔴  Required fields (dark indigo header)';
     legendA.font = { bold: true, size: 9, color: { argb: 'FFDC2626' } };
 
-    ws.mergeCells(legendRow, 7, legendRow, 12);
-    const legendB = ws.getCell(legendRow, 7);
+    ws.mergeCells(legendRow, 6, legendRow, 11);
+    const legendB = ws.getCell(legendRow, 6);
     legendB.value = '🔵  Optional fields (slate header)';
     legendB.font = { bold: true, size: 9, color: { argb: 'FF1E40AF' } };
 
-    ws.mergeCells(legendRow + 1, 1, legendRow + 1, COLUMNS.length);
-    const noteCell = ws.getCell(legendRow + 1, 1);
+    ws.mergeCells(legendRow, 12, legendRow, totalCols);
+    const legendC = ws.getCell(legendRow, 12);
+    legendC.value = '⬜  S.No. = helper column, auto-fills, do NOT upload as data';
+    legendC.font = { bold: true, size: 9, color: { argb: 'FF475569' } };
+
+    const noteRow = legendRow + 1;
+    ws.mergeCells(noteRow, 1, noteRow, totalCols);
+    const noteCell = ws.getCell(noteRow, 1);
     noteCell.value =
-      '⚠  Delete sample rows 4 & 5 before uploading  |  Roll numbers are NOT assigned here — use the Roll Numbers feature in Academics after upload';
+      '✅  Keep the sample rows as a reference — they are auto-skipped on upload  |' +
+      '  Fill YOUR data from Row 5 onwards  |' +
+      '  Roll numbers are NOT assigned here — use the Roll Numbers feature in Academics after upload';
     noteCell.font = { italic: true, size: 9, color: { argb: 'FF92400E' } };
-    noteCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } };
+    noteCell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFFEF3C7' },
+    };
     noteCell.alignment = { wrapText: true };
-    ws.getRow(legendRow + 1).height = 30;
+    ws.getRow(noteRow).height = 30;
   }
 
   // ── Build "Guide" sheet ────────────────────────────────────────────────────
@@ -646,7 +799,11 @@ export class BulkUploadService {
       const cell = ws.getCell(r, 1);
       cell.value = text;
       cell.font = { bold: true, size: 14, color: { argb: 'FFFFFFFF' } };
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.GUIDE_TITLE } };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: COLORS.GUIDE_TITLE },
+      };
       cell.alignment = { horizontal: 'center', vertical: 'middle' };
       ws.getRow(r).height = 32;
       r++;
@@ -657,7 +814,11 @@ export class BulkUploadService {
       const cell = ws.getCell(r, 1);
       cell.value = text;
       cell.font = { bold: true, size: 11, color: { argb: COLORS.GUIDE_TITLE } };
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.GROUP_FILL } };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: COLORS.GROUP_FILL },
+      };
       cell.alignment = { horizontal: 'left', vertical: 'middle', indent: 1 };
       ws.getRow(r).height = 22;
       r++;
@@ -665,11 +826,15 @@ export class BulkUploadService {
 
     const addColumnHeader = () => {
       const hRow = ws.getRow(r);
-      ['Column Name', 'Required?', 'Format', 'Description / Notes', 'Example'].forEach((h, i) => {
+      ['Column Name', 'Required?', 'Type', 'Description / Notes', 'Example'].forEach((h, i) => {
         const cell = hRow.getCell(i + 1);
         cell.value = h;
         cell.font = { bold: true, size: 10, color: { argb: 'FFFFFFFF' } };
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.OPT_FILL } };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: COLORS.OPT_FILL },
+        };
         cell.alignment = { vertical: 'middle', indent: 1 };
         cell.border = { bottom: { style: 'medium', color: { argb: '9F94A3B8' } } };
       });
@@ -680,10 +845,11 @@ export class BulkUploadService {
     const addColRow = (col: ColDef, shade: boolean) => {
       const row = ws.getRow(r);
       const bg = shade ? 'FFF8FAFC' : 'FFFFFFFF';
+      const typeLabel = col.isHelper ? 'Helper' : col.group;
       [
         col.header.replace(' *', ''),
-        col.required ? '✅ YES' : 'No',
-        col.group,
+        col.isHelper ? '—' : col.required ? '✅ YES' : 'No',
+        typeLabel,
         col.hint,
         col.example || '—',
       ].forEach((v, i) => {
@@ -691,13 +857,24 @@ export class BulkUploadService {
         cell.value = v;
         cell.font = {
           size: 9,
-          color: { argb: i === 1 && col.required ? 'FF991B1B' : COLORS.GUIDE_TEXT },
+          italic: col.isHelper,
+          color: {
+            argb: col.isHelper
+              ? 'FF64748B'
+              : i === 1 && col.required
+              ? 'FF991B1B'
+              : COLORS.GUIDE_TEXT,
+          },
         };
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: col.isHelper ? COLORS.HELPER_DATA_FILL : bg },
+        };
         cell.alignment = { vertical: 'middle', wrapText: true, indent: 1 };
         cell.border = { bottom: { style: 'hair', color: { argb: 'FFE2E8F0' } } };
       });
-      ws.getRow(r).height = 32;
+      ws.getRow(r).height = col.isHelper ? 22 : 32;
       r++;
     };
 
@@ -717,7 +894,18 @@ export class BulkUploadService {
     };
 
     // ── Content ────────────────────────────────────────────────────────────────
-    addTitle('📋  Bulk Student Upload — Field Guide  (v3)');
+    addTitle('📋  Bulk Student Upload — Field Guide  (v4)');
+    addBlank();
+
+    // S.No. helper note at the top of the guide
+    addSectionHeader('⬜  S.No. Column (Column A) — Helper Only');
+    addColumnHeader();
+    addColRow(COLUMNS[0], false); // sno
+    addNote(
+      '⚠  The S.No. column is for your reference only. It auto-fills as you enter student names.' +
+        ' Do NOT manually type numbers here. This column is completely ignored during upload.',
+      'FFF0F9FF'
+    );
     addBlank();
 
     const groups: Array<{ label: string; group: ColDef['group'] }> = [
@@ -741,16 +929,17 @@ export class BulkUploadService {
 
     addSectionHeader('⚠  Important Rules');
     const rules = [
-      '1. DELETE the two sample rows (rows 4 & 5) in the Students sheet before uploading.',
-      '2. Do NOT change column names, column order, or the header/hint rows (rows 1–3).',
-      '3. Every Email must be unique — both within the file AND across the entire school.',
-      '4. Passwords must be at least 8 characters. Students should change them on first login.',
-      '5. If ANY email conflict is found, ZERO students are added. Fix all conflicts and re-upload.',
-      '6. Roll numbers are NOT assigned here. Use the Roll Numbers feature in Academics → Class Sections after upload.',
-      '7. To link parents/guardians, use the Parents module after upload.',
-      '8. UDISE+ fields (PEN, APAAR, etc.) are optional but important for government reporting. They can be filled later from the student profile.',
-      '9. The Guide sheet (this sheet) is completely ignored during upload.',
+      '1. Do NOT delete the sample rows (rows 3 & 4) — the parser skips them automatically. Use them as a reference while filling.',
+      '2. Fill your data from Row 5 onwards. Do NOT change column names or their order.',
+      '3. The S.No. column (Column A) auto-fills — never type in it manually; it is ignored on upload.',
+      '4. Every Email must be unique — both within the file AND across the entire school.',
+      '5. Passwords must be at least 8 characters. Students should change them on first login.',
+      '6. If ANY email conflict is found, ZERO students are added. Fix all conflicts and re-upload.',
+      '7. Roll numbers are NOT assigned here. Use the Roll Numbers feature in Academics → Class Sections after upload.',
+      '8. To link parents/guardians, use the Parents module after upload.',
+      '9. UDISE+ fields (PEN, APAAR, etc.) are optional but important for government reporting.',
       '10. Date format must be YYYY-MM-DD (e.g., 2010-06-15). Other formats may fail.',
+      '11. The Guide sheet (this sheet) is completely ignored during upload.',
     ];
     rules.forEach((rule) => {
       ws.mergeCells(r, 1, r, 5);

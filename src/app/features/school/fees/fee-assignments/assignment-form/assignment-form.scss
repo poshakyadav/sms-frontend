@@ -1,4 +1,10 @@
 // assignment-form.scss
+// ─────────────────────────────────────────────────────────────────────────────
+// Uses project CSS custom properties from styles.scss :root.
+// Compact density: all mat-form-fields use --sm modifier (reduced padding).
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Shell ─────────────────────────────────────────────────────────────────────
 .modal-shell {
   display: flex;
   flex-direction: column;
@@ -9,11 +15,12 @@
   overflow: hidden;
 }
 
+// ── Header ────────────────────────────────────────────────────────────────────
 .modal-header {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
-  padding: 20px 24px 16px;
+  gap: 12px;
+  padding: 16px 20px 14px;
   border-bottom: 1px solid var(--color-divider);
   flex-shrink: 0;
 
@@ -21,90 +28,119 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: var(--radius-sm);
     background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
     flex-shrink: 0;
 
     mat-icon {
-      font-size: 20px;
-      height: 20px;
-      width: 20px;
+      font-size: 18px;
+      height: 18px;
+      width: 18px;
       color: var(--color-secondary);
     }
   }
 
   &__content {
     flex: 1;
+    min-width: 0;
   }
 }
 
 .modal-title {
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--color-text-primary);
   margin: 0 0 2px;
+  line-height: 1.3;
 }
 
 .modal-subtitle {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--color-text-muted);
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .modal-close {
   color: var(--color-text-muted);
+  flex-shrink: 0;
 }
 
+// ── Body ──────────────────────────────────────────────────────────────────────
 .modal-body {
-  padding: 20px 24px;
+  padding: 16px 20px;
   overflow-y: auto;
   flex: 1;
 }
 
-.form-row {
-  display: flex;
-  gap: 14px;
-  margin-bottom: 4px;
+// ── Compact form field modifier ───────────────────────────────────────────────
+// Reduces internal padding so fields feel tighter on the dialog.
+// Applied globally for this component via the --sm class.
+.form-field--sm {
+  // Tell MDC to use a slightly smaller internal vertical rhythm
+  --mat-form-field-container-height: 44px;
+  --mat-form-field-filled-label-display: block;
 
-  &--2col .form-field {
-    flex: 1;
-  }
-}
-
-.form-group {
-  margin-bottom: 8px;
-}
-
-.form-field {
   width: 100%;
+
   &.full-width {
     display: block;
-    width: 100%;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
   }
 }
 
-// ── Suggestion chips ──────────────────────────────────────────────────────
+// ── Amount prefix fix ─────────────────────────────────────────────────────────
+// Angular Material MDC outlined fields don't add left padding for matPrefix.
+.form-field--prefixed {
+  .mat-mdc-form-field-text-prefix,
+  .mat-mdc-form-field-icon-prefix {
+    padding-left: 12px;
+    padding-right: 4px;
+    color: var(--color-text-secondary);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+}
+
+.rupee-prefix {
+  padding-left: 12px;
+  padding-right: 6px;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  line-height: 1;
+  user-select: none;
+}
+
+// ── Form group (fee type block) ───────────────────────────────────────────────
+.form-group {
+  margin-bottom: 2px;
+}
+
+// ── Suggestion chips ──────────────────────────────────────────────────────────
 .suggestion-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 12px;
+  gap: 5px;
+  margin-bottom: 10px;
   margin-top: -4px;
 }
 
 .suggestion-chip {
-  padding: 3px 10px;
+  padding: 3px 9px;
   border-radius: 9999px;
   border: 1px solid var(--color-divider);
   background: var(--color-hover);
   color: var(--color-text-muted);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
+  line-height: 1.4;
   transition: all 0.15s ease;
 
   &:hover {
@@ -121,16 +157,148 @@
   }
 }
 
-// ── Toggle row ────────────────────────────────────────────────────────────
+// ── Fee Month + Due Date section ──────────────────────────────────────────────
+.month-due-section {
+  margin-bottom: 10px;
+}
+
+// Label row above the three fields
+.month-due-labels {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 4px;
+}
+
+.mds-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  user-select: none;
+
+  &__icon {
+    font-size: 13px;
+    height: 13px;
+    width: 13px;
+    color: var(--color-text-muted);
+  }
+}
+
+.mds-sep {
+  flex: 1; // pushes "Due Date" label to the right, aligned with the picker
+}
+
+.optional-label {
+  font-size: 0.68rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  margin-left: 2px;
+}
+
+// The 3-column control row: Month | Year | (pip) | Due Date
+.month-due-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+
+  // Error state: highlight month + year selects
+  &--error {
+    .mdr-month,
+    .mdr-year {
+      .mdc-notched-outline__leading,
+      .mdc-notched-outline__notch,
+      .mdc-notched-outline__trailing {
+        border-color: var(--color-error) !important;
+      }
+    }
+  }
+}
+
+// Month select — widest (needs room for "September")
+.mdr-month {
+  flex: 3;
+  min-width: 0;
+}
+
+// Year select — narrower (4-digit year)
+.mdr-year {
+  flex: 2;
+  min-width: 0;
+}
+
+// Visual separator between Fee Month and Due Date
+.mdr-divider {
+  width: 1px;
+  height: 44px;
+  background: var(--color-divider);
+  flex-shrink: 0;
+  align-self: center;
+  margin: 0 2px;
+}
+
+// Due Date datepicker — same visual weight as month
+.mdr-due {
+  flex: 3;
+  min-width: 0;
+
+  // Shrink the calendar toggle icon slightly to match compact density
+  .mat-mdc-icon-button.mat-mdc-button-base {
+    width: 32px;
+    height: 32px;
+    padding: 4px;
+
+    mat-icon {
+      font-size: 16px;
+      height: 16px;
+      width: 16px;
+    }
+  }
+}
+
+// Sub-footer: hint or error
+.month-due-footer {
+  margin-top: 2px;
+}
+
+.mdf-hint {
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  padding-left: 2px;
+}
+
+.mdf-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--color-error);
+  padding-left: 2px;
+  line-height: 1.4;
+
+  mat-icon {
+    font-size: 12px;
+    height: 12px;
+    width: 12px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+}
+
+// ── Toggle row ────────────────────────────────────────────────────────────────
 .toggle-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 14px;
+  padding: 10px 12px;
   border: 1px solid var(--color-divider);
   border-radius: var(--radius-sm);
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   background: var(--color-bg-main);
 
   &__label {
@@ -141,70 +309,97 @@
 }
 
 .toggle-label {
-  font-size: 0.875rem;
+  font-size: 0.82rem;
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
 .toggle-hint {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--color-text-muted);
 }
 
-// ── Error / footer ────────────────────────────────────────────────────────
+// ── Error banner ──────────────────────────────────────────────────────────────
 .form-error-banner {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 14px;
+  padding: 9px 12px;
   background: color-mix(in srgb, var(--color-error) 10%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-error) 25%, transparent);
   border-radius: var(--radius-sm);
   color: var(--color-error);
-  font-size: 0.82rem;
-  margin-bottom: 12px;
+  font-size: 0.8rem;
+  margin-bottom: 10px;
 
   mat-icon {
-    font-size: 16px;
-    height: 16px;
-    width: 16px;
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
     flex-shrink: 0;
   }
 }
 
+// ── Footer ────────────────────────────────────────────────────────────────────
 .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  padding-top: 8px;
+  gap: 8px;
+  padding-top: 4px;
 
   button {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     font-weight: 600;
+    font-size: 0.875rem;
 
     mat-icon {
-      font-size: 17px;
-      height: 17px;
-      width: 17px;
+      font-size: 16px;
+      height: 16px;
+      width: 16px;
     }
   }
 }
 
+// ── Misc ──────────────────────────────────────────────────────────────────────
 .current-tag {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: var(--color-primary);
   font-weight: 700;
   margin-left: 4px;
 }
 
-@media (max-width: 600px) {
-  .form-row--2col {
-    flex-direction: column;
-    gap: 0;
-  }
+// ── Responsive ────────────────────────────────────────────────────────────────
+@media (max-width: 560px) {
   .modal-body {
-    padding: 16px;
+    padding: 12px 14px;
+  }
+
+  // Stack Month/Year + Due Date vertically on very narrow screens
+  .month-due-row {
+    flex-wrap: wrap;
+
+    .mdr-month {
+      flex: 1 1 40%;
+    }
+    .mdr-year {
+      flex: 1 1 30%;
+    }
+    .mdr-divider {
+      display: none;
+    }
+    .mdr-due {
+      flex: 1 1 100%;
+    }
+  }
+
+  .month-due-labels {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .mds-sep {
+    display: none;
   }
 }

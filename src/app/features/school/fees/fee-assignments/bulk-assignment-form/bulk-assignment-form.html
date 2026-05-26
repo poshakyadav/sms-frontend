@@ -1,6 +1,6 @@
 <!-- bulk-assignment-form.html -->
 <div class="modal-shell">
-  <!-- Header -->
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
   <div class="modal-header">
     <div class="modal-header__icon">
       <mat-icon>directions_bus</mat-icon>
@@ -9,17 +9,19 @@
       <h2 class="modal-title">Bulk Monthly Fee Assignment</h2>
       <p class="modal-subtitle">
         @if (data.studentName) {
-        {{ data.studentName }} — assign recurring fee for a date range } @else { Assign the same
-        custom fee for every month in a date range }
+        <span class="modal-subtitle__name">{{ data.studentName }}</span>
+        &mdash; assign recurring fee for a date range } @else { Assign the same custom fee for every
+        month in a date range }
       </p>
     </div>
-    <button mat-icon-button class="modal-close" (click)="close()">
+    <button mat-icon-button class="modal-close" (click)="close()" aria-label="Close dialog">
       <mat-icon>close</mat-icon>
     </button>
   </div>
 
+  <!-- ── Body ────────────────────────────────────────────────────────────── -->
   <div class="modal-body">
-    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate autocomplete="off">
       <!-- Academic Year -->
       <mat-form-field appearance="outline" class="form-field full-width">
         <mat-label>Academic Year</mat-label>
@@ -27,7 +29,9 @@
           @for (y of academicYears(); track y.id) {
           <mat-option [value]="y.id">
             {{ y.name }}
-            @if (y.isCurrent) { <span class="current-tag">(Current)</span> }
+            @if (y.isCurrent) {
+            <span class="current-tag">(Current)</span>
+            }
           </mat-option>
           }
         </mat-select>
@@ -36,16 +40,16 @@
         }
       </mat-form-field>
 
-      <!-- Fee Type with suggestions -->
+      <!-- Fee Type + suggestion chips -->
       <div class="form-group">
         <mat-form-field appearance="outline" class="form-field full-width">
           <mat-label>Fee Type</mat-label>
           <input matInput formControlName="feeType" placeholder="e.g. TRANSPORT, HOSTEL" />
           @if (form.get('feeType')?.invalid && form.get('feeType')?.touched) {
-          <mat-error>Fee type is required</mat-error>
+          <mat-error>Fee type is required (min. 2 characters)</mat-error>
           }
         </mat-form-field>
-        <div class="suggestion-chips">
+        <div class="suggestion-chips" role="group" aria-label="Fee type suggestions">
           @for (s of feeTypeSuggestions; track s) {
           <button
             type="button"
@@ -61,33 +65,109 @@
 
       <!-- Monthly Amount -->
       <mat-form-field appearance="outline" class="form-field full-width">
-        <mat-label>Monthly Amount (₹) — same for all months</mat-label>
+        <mat-label>Monthly Amount — same for all months</mat-label>
         <span matPrefix>₹&nbsp;</span>
-        <input matInput type="number" formControlName="amountRupees" min="1" placeholder="0" />
+        <input
+          matInput
+          type="number"
+          formControlName="amountRupees"
+          min="1"
+          placeholder="0"
+          inputmode="decimal"
+        />
         @if (form.get('amountRupees')?.hasError('required') && form.get('amountRupees')?.touched) {
         <mat-error>Amount is required</mat-error>
         } @if (form.get('amountRupees')?.hasError('min')) {
-        <mat-error>Amount must be greater than 0</mat-error>
+        <mat-error>Amount must be greater than ₹0</mat-error>
         }
       </mat-form-field>
 
-      <!-- Start Month + End Month -->
-      <div class="form-row form-row--2col">
-        <mat-form-field appearance="outline" class="form-field">
-          <mat-label>Start Month</mat-label>
-          <input matInput type="month" formControlName="startMonth" />
-          @if (form.get('startMonth')?.invalid && form.get('startMonth')?.touched) {
-          <mat-error>Required</mat-error>
-          }
-        </mat-form-field>
+      <!-- ── Date Range — Start ───────────────────────────────────────────── -->
+      <div class="range-section">
+        <div class="range-section__label">
+          <mat-icon>date_range</mat-icon>
+          Fee Period
+        </div>
 
-        <mat-form-field appearance="outline" class="form-field">
-          <mat-label>End Month</mat-label>
-          <input matInput type="month" formControlName="endMonth" />
-          @if (form.get('endMonth')?.invalid && form.get('endMonth')?.touched) {
-          <mat-error>Required</mat-error>
-          }
-        </mat-form-field>
+        <div class="range-grid">
+          <!-- Start Month + Year -->
+          <div class="range-group">
+            <span class="range-group__heading">
+              <span class="range-dot range-dot--start"></span>
+              Start
+            </span>
+            <div class="month-year-row">
+              <mat-form-field appearance="outline" class="form-field month-field">
+                <mat-label>Month</mat-label>
+                <mat-select formControlName="startMonth" placeholder="Select">
+                  @for (m of startMonthOptions; track m.value) {
+                  <mat-option [value]="m.value">{{ m.label }}</mat-option>
+                  }
+                </mat-select>
+                @if (form.get('startMonth')?.invalid && form.get('startMonth')?.touched) {
+                <mat-error>Required</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="form-field year-field">
+                <mat-label>Year</mat-label>
+                <mat-select formControlName="startYear" placeholder="Select">
+                  @for (y of years; track y) {
+                  <mat-option [value]="y">{{ y }}</mat-option>
+                  }
+                </mat-select>
+                @if (form.get('startYear')?.invalid && form.get('startYear')?.touched) {
+                <mat-error>Required</mat-error>
+                }
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div class="range-arrow" aria-hidden="true">
+            <mat-icon>arrow_forward</mat-icon>
+          </div>
+
+          <!-- End Month + Year -->
+          <div class="range-group">
+            <span class="range-group__heading">
+              <span class="range-dot range-dot--end"></span>
+              End
+            </span>
+            <div class="month-year-row">
+              <mat-form-field appearance="outline" class="form-field month-field">
+                <mat-label>Month</mat-label>
+                <mat-select formControlName="endMonth" placeholder="Select">
+                  @for (m of endMonthOptions; track m.value) {
+                  <mat-option [value]="m.value">{{ m.label }}</mat-option>
+                  }
+                </mat-select>
+                @if (form.get('endMonth')?.invalid && form.get('endMonth')?.touched) {
+                <mat-error>Required</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="form-field year-field">
+                <mat-label>Year</mat-label>
+                <mat-select formControlName="endYear" placeholder="Select">
+                  @for (y of years; track y) {
+                  <mat-option [value]="y">{{ y }}</mat-option>
+                  }
+                </mat-select>
+                @if (form.get('endYear')?.invalid && form.get('endYear')?.touched) {
+                <mat-error>Required</mat-error>
+                }
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+
+        <!-- Date range error -->
+        @if (hasRangeError()) {
+        <div class="range-error">
+          <mat-icon>error_outline</mat-icon>
+          End month cannot be before start month.
+        </div>
+        }
       </div>
 
       <!-- Due Day of Month -->
@@ -99,9 +179,17 @@
           formControlName="dueDayOfMonth"
           min="1"
           max="28"
-          placeholder="e.g. 10 → due on 10th of each month"
+          placeholder="e.g. 10"
+          inputmode="numeric"
         />
-        <mat-hint>Enter 1–28. Leave blank for no specific due date.</mat-hint>
+        <mat-icon matSuffix matTooltip="Enter 1–28 to set a recurring due date for every month"
+          >info_outline</mat-icon
+        >
+        <mat-hint>Leave blank for no specific due date per month.</mat-hint>
+        @if (form.get('dueDayOfMonth')?.hasError('min') ||
+        form.get('dueDayOfMonth')?.hasError('max')) {
+        <mat-error>Enter a value between 1 and 28</mat-error>
+        }
       </mat-form-field>
 
       <!-- Description -->
@@ -111,16 +199,21 @@
           matInput
           formControlName="description"
           rows="2"
-          placeholder="e.g. Zone 3 – Kidwai Nagar route, ~8km"
+          placeholder="e.g. Zone 3 – Kidwai Nagar route, ~8 km"
         ></textarea>
       </mat-form-field>
 
-      <!-- Month Preview -->
+      <!-- ── Month preview ────────────────────────────────────────────────── -->
       @if (monthPreview().length > 0) {
       <div class="month-preview">
         <div class="month-preview__header">
-          <mat-icon>preview</mat-icon>
-          <span>{{ monthPreview().length }} assignments will be created</span>
+          <div class="month-preview__header-left">
+            <mat-icon>preview</mat-icon>
+            <span>Preview</span>
+          </div>
+          <span class="month-preview__count">
+            {{ monthPreview().length }} assignment{{ monthPreview().length !== 1 ? 's' : '' }}
+          </span>
         </div>
         <div class="month-preview__tags">
           @for (m of monthPreview(); track m) {
@@ -130,15 +223,15 @@
       </div>
       }
 
-      <!-- Error -->
+      <!-- Error banner -->
       @if (error()) {
-      <div class="form-error-banner">
+      <div class="form-error-banner" role="alert">
         <mat-icon>error_outline</mat-icon>
-        {{ error() }}
+        <span>{{ error() }}</span>
       </div>
       }
 
-      <!-- Footer -->
+      <!-- ── Footer ──────────────────────────────────────────────────────── -->
       <div class="modal-footer">
         <button type="button" mat-stroked-button (click)="close()" [disabled]="saving()">
           Cancel
@@ -151,11 +244,14 @@
         >
           @if (saving()) {
           <mat-spinner diameter="16" />
-          Creating… } @else {
-          <ng-container>
-          <mat-icon>directions_bus</mat-icon>
-        </ng-container>
-          Create {{ monthPreview().length > 0 ? monthPreview().length : '' }} Assignments }
+          Creating&hellip; } @else {
+          <ng-container matButtonIcon>
+            <mat-icon>directions_bus</mat-icon>
+            Create {{ monthPreview().length > 0 ? monthPreview().length : '' }} Assignment{{
+              monthPreview().length !== 1 ? 's' : ''
+            }}
+          </ng-container>
+          }
         </button>
       </div>
     </form>

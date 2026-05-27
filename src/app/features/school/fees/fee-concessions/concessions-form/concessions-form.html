@@ -1,25 +1,46 @@
 <!-- concessions-form.html -->
 <div class="modal-shell">
-  <!-- Header -->
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
   <div class="modal-header">
-    <div class="modal-header__icon">
-      <mat-icon>local_offer</mat-icon>
+    <div
+      class="modal-header__icon"
+      [class.modal-header__icon--warning]="existingConcession()"
+      [class.modal-header__icon--paid]="isPaid() && existingConcession()"
+    >
+      <mat-icon>
+        {{
+          isPaid() && existingConcession()
+            ? 'lock'
+            : existingConcession()
+            ? 'edit_note'
+            : 'local_offer'
+        }}
+      </mat-icon>
     </div>
     <div class="modal-header__content">
-      <h2 class="modal-title">Grant Concession</h2>
+      <h2 class="modal-title">
+        @if (isPaid() && existingConcession()) { Concession Details } @else if
+        (existingConcession()) { Manage Concession } @else { Grant Concession }
+      </h2>
       @if (data.studentName) {
       <p class="modal-subtitle">{{ data.studentName }}</p>
       } @else {
       <p class="modal-subtitle">Apply a discount on a specific fee</p>
       }
     </div>
-    <button mat-icon-button class="modal-close" (click)="close()">
+    <button
+      mat-icon-button
+      class="modal-close"
+      (click)="close()"
+      [disabled]="saving() || revoking()"
+    >
       <mat-icon>close</mat-icon>
     </button>
   </div>
 
   <div class="modal-body">
-    <!-- Mode Selector -->
+    <!-- ── Mode Selector (hidden when preselected) ─────────────────────── -->
+    @if (!data.preselectedFeeStructureId && !data.preselectedAssignmentId) {
     <div class="mode-selector">
       <button
         type="button"
@@ -40,10 +61,26 @@
         Custom Fee
       </button>
     </div>
+    } @else {
+    <!-- Compact mode pill when preselected -->
+    <div class="mode-pill">
+      <mat-icon>{{ sourceMode() === 'STRUCTURE' ? 'receipt_long' : 'directions_bus' }}</mat-icon>
+      <span>{{ sourceMode() === 'STRUCTURE' ? 'Standard Fee' : 'Custom Fee' }}</span>
+      <span class="mode-pill__divider">·</span>
+      <span class="mode-pill__label">{{ selectedFeeLabel() }}</span>
+    </div>
+    }
 
+    <!-- ── Loading spinner ─────────────────────────────────────────────── -->
+    @if (loading()) {
+    <div class="form-loading">
+      <mat-spinner diameter="28" />
+      <span>Loading fee details…</span>
+    </div>
+    } @if (!loading()) {
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-      <!-- Fee Structure Selector -->
-      @if (sourceMode() === 'STRUCTURE') {
+      <!-- ── Fee Structure Selector (hidden if preselected) ────────────── -->
+      @if (sourceMode() === 'STRUCTURE' && !data.preselectedFeeStructureId) {
       <mat-form-field appearance="outline" class="form-field full-width">
         <mat-label>Select Fee Structure</mat-label>
         <mat-select formControlName="feeStructureId">
@@ -57,8 +94,8 @@
       </mat-form-field>
       }
 
-      <!-- Assignment Selector -->
-      @if (sourceMode() === 'ASSIGNMENT') {
+      <!-- ── Assignment Selector (hidden if preselected) ──────────────── -->
+      @if (sourceMode() === 'ASSIGNMENT' && !data.preselectedAssignmentId) {
       <mat-form-field appearance="outline" class="form-field full-width">
         <mat-label>Select Custom Fee Assignment</mat-label>
         <mat-select formControlName="studentFeeAssignmentId">
@@ -72,8 +109,176 @@
       </mat-form-field>
       }
 
-      <!-- Concession Type -->
-      @if (selectedBaseAmount() > 0) {
+      <!-- ══════════════════════════════════════════════════════════════
+               EXISTING CONCESSION BANNER
+               Shows when an active concession already exists for this fee.
+          ════════════════════════════════════════════════════════════════ -->
+      @if (existingConcession(); as existing) {
+      <div class="existing-concession-banner" [class.existing-concession-banner--paid]="isPaid()">
+        <!-- Animated shimmer stripe at top -->
+        <div class="ecb-shimmer" [class.ecb-shimmer--paid]="isPaid()"></div>
+
+        <!-- Status ribbon -->
+        <div class="ecb-ribbon">
+          <div class="ecb-ribbon__icon" [class.ecb-ribbon__icon--paid]="isPaid()">
+            <mat-icon>{{ isPaid() ? 'lock_clock' : 'verified' }}</mat-icon>
+          </div>
+          <div class="ecb-ribbon__content">
+            <div class="ecb-ribbon__badges">
+              <span class="ecb-badge ecb-badge--active">
+                <mat-icon>check_circle</mat-icon>
+                Active Concession
+              </span>
+              @if (isPaid()) {
+              <span class="ecb-badge ecb-badge--paid">
+                <mat-icon>payments</mat-icon>
+                Fee Fully Paid
+              </span>
+              }
+            </div>
+            <h3 class="ecb-title">
+              @if (isPaid()) { This fee is fully settled — concession is locked } @else { A discount
+              is already applied to this fee }
+            </h3>
+            <p class="ecb-subtitle">
+              @if (isPaid()) { The fee has been paid in full. The concession applied is shown below
+              for reference. Paid fees cannot be modified. } @else { To apply a different discount,
+              revoke the current concession first and then create a new one. }
+            </p>
+          </div>
+        </div>
+
+        <!-- Concession details grid -->
+        <div class="ecb-details">
+          <div class="ecb-detail-item">
+            <span class="ecb-detail-label">
+              <mat-icon>toll</mat-icon>
+              Discount Value
+            </span>
+            <span class="ecb-detail-value ecb-detail-value--highlight">
+              {{ formatConcessionValue(existing) }}
+            </span>
+          </div>
+
+          <div class="ecb-detail-item">
+            <span class="ecb-detail-label">
+              <mat-icon>category</mat-icon>
+              Type
+            </span>
+            <span class="ecb-detail-value">
+              <span
+                class="ecb-type-chip ecb-type-chip--{{
+                  existing.concessionType === 'PERCENTAGE' ? 'pct' : 'fixed'
+                }}"
+              >
+                <mat-icon>{{
+                  existing.concessionType === 'PERCENTAGE' ? 'percent' : 'currency_rupee'
+                }}</mat-icon>
+                {{ existing.concessionType === 'PERCENTAGE' ? 'Percentage' : 'Fixed Amount' }}
+              </span>
+            </span>
+          </div>
+
+          <div class="ecb-detail-item">
+            <span class="ecb-detail-label">
+              <mat-icon>savings</mat-icon>
+              Discount Amount
+            </span>
+            <span class="ecb-detail-value ecb-detail-value--saving">
+              −₹{{
+                    paiseToRupees(existing.concessionAmount).toLocaleString('en-IN', {
+                      minimumFractionDigits: 2,
+                    })
+              }}
+            </span>
+          </div>
+
+          <div class="ecb-detail-item">
+            <span class="ecb-detail-label">
+              <mat-icon>account_balance_wallet</mat-icon>
+              Effective Amount
+            </span>
+            <span class="ecb-detail-value ecb-detail-value--effective">
+              ₹{{
+                    paiseToRupees(existing.effectiveAmount).toLocaleString('en-IN', {
+                      minimumFractionDigits: 2,
+                    })
+              }}
+            </span>
+          </div>
+
+          <div class="ecb-detail-item ecb-detail-item--full">
+            <span class="ecb-detail-label">
+              <mat-icon>notes</mat-icon>
+              Reason on Record
+            </span>
+            <span class="ecb-detail-value ecb-reason-text"> "{{ existing.reason }}" </span>
+          </div>
+        </div>
+
+        <!-- Action strip -->
+        <div class="ecb-actions">
+          @if (isPaid()) {
+          <!-- Paid state: no action available, just a notice -->
+          <div class="ecb-paid-notice">
+            <div class="ecb-paid-notice__icon">
+              <mat-icon>info_outline</mat-icon>
+            </div>
+            <p class="ecb-paid-notice__text">
+              Concessions on fully paid fees cannot be revoked or modified. If a correction is
+              needed, void the payment first.
+            </p>
+          </div>
+          } @else if (!editMode()) {
+          <div class="ecb-action-hint">
+            <mat-icon>info</mat-icon>
+            To modify this concession, revoke it and create a new one.
+          </div>
+          <button type="button" class="ecb-btn ecb-btn--revoke" (click)="editMode.set(true)">
+            <mat-icon>edit</mat-icon>
+            Revoke &amp; Replace
+          </button>
+          } @else {
+          <!-- Confirmation step before revoke -->
+          <div class="ecb-confirm-strip">
+            <div class="ecb-confirm-strip__text">
+              <mat-icon>warning_amber</mat-icon>
+              This will permanently revoke the current concession. You can then enter a new one.
+            </div>
+            <div class="ecb-confirm-strip__btns">
+              <button
+                type="button"
+                class="ecb-btn ecb-btn--cancel"
+                (click)="editMode.set(false)"
+                [disabled]="revoking()"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                class="ecb-btn ecb-btn--confirm-revoke"
+                (click)="revokeAndReplace()"
+                [disabled]="revoking()"
+              >
+                @if (revoking()) {
+                <mat-spinner diameter="14" />
+                Revoking… } @else {
+                <mat-icon>delete_sweep</mat-icon>
+                Yes, Revoke It }
+              </button>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+      }
+
+      <!-- ══════════════════════════════════════════════════════════════
+               NEW CONCESSION FORM — only shown when no existing concession
+          ════════════════════════════════════════════════════════════════ -->
+      @if (!existingConcession() && selectedBaseAmount() > 0) {
+
+      <!-- Concession Type Pills -->
       <div class="field-group">
         <label class="field-label">Concession Type</label>
         <div class="type-pills">
@@ -151,16 +356,16 @@
         <div class="preview-box__content">
           <div class="preview-row">
             <span class="preview-label">Original Amount</span>
-            <span class="preview-value"
-              >₹{{
+            <span class="preview-value">
+              ₹{{
                 paiseToRupees(preview.base).toLocaleString('en-IN', { minimumFractionDigits: 2 })
-              }}</span
-            >
+              }}
+            </span>
           </div>
           <div class="preview-row preview-row--discount">
             <span class="preview-label">Discount</span>
             <span class="preview-value preview-value--discount">
-              -₹{{
+              −₹{{
                 paiseToRupees(preview.discount).toLocaleString('en-IN', {
                   minimumFractionDigits: 2
                 })
@@ -179,7 +384,7 @@
           </div>
         </div>
       </div>
-      } }
+      }
 
       <!-- Reason -->
       <mat-form-field appearance="outline" class="form-field full-width">
@@ -196,7 +401,9 @@
         }
       </mat-form-field>
 
-      <!-- Error -->
+      }
+
+      <!-- Error Banner -->
       @if (error()) {
       <div class="form-error-banner">
         <mat-icon>error_outline</mat-icon>
@@ -204,11 +411,18 @@
       </div>
       }
 
-      <!-- Footer -->
+      <!-- ── Footer ──────────────────────────────────────────────────── -->
       <div class="modal-footer">
-        <button type="button" mat-stroked-button (click)="close()" [disabled]="saving()">
-          Cancel
+        <button
+          type="button"
+          mat-stroked-button
+          (click)="close()"
+          [disabled]="saving() || revoking()"
+        >
+          {{ existingConcession() ? 'Close' : 'Cancel' }}
         </button>
+
+        @if (!existingConcession()) {
         <button
           type="submit"
           mat-flat-button
@@ -218,12 +432,15 @@
           @if (saving()) {
           <mat-spinner diameter="16" />
           Saving… } @else {
-          <ng-container>
+          <ng-container matButtonIcon>
             <mat-icon>local_offer</mat-icon>
+            Grant Concession
           </ng-container>
-          Grant Concession }
+          }
         </button>
+        }
       </div>
     </form>
+    }
   </div>
 </div>

@@ -17,16 +17,16 @@
     </div>
 
     <div class="al-header__right">
-      <!-- Show cancelled toggle -->
-      <div class="cancelled-toggle">
-        <mat-slide-toggle
-          [checked]="showCancelled()"
-          (change)="onShowCancelledToggle($event.checked)"
-          color="primary"
-        >
-          <span class="toggle-label">Show Cancelled</span>
-        </mat-slide-toggle>
-      </div>
+      <!-- Show cancelled — compact ghost button; demoted from slide-toggle -->
+      <button
+        class="show-cancelled-btn"
+        [class.show-cancelled-btn--active]="showCancelled()"
+        (click)="onShowCancelledToggle(!showCancelled())"
+        matTooltip="Toggle cancelled assignments"
+      >
+        <mat-icon>{{ showCancelled() ? 'visibility_off' : 'history' }}</mat-icon>
+        {{ showCancelled() ? 'Hide Cancelled' : 'Show Cancelled' }}
+      </button>
 
       @if (canManage) {
       <button
@@ -98,23 +98,41 @@
         @for (a of assignments(); track trackById($index, a)) {
         <!-- Main Row -->
         <tr class="al-row" [class.al-row--cancelled]="a.isCancelled">
+          <!-- Fee Type cell — chip + badges + inline concession reason pill -->
           <td>
             <div class="fee-type-cell">
-              <span class="fee-type-chip" [class.fee-type-chip--cancelled]="a.isCancelled">
-                {{ a.feeType }}
+              <div class="fee-type-badges">
+                <span class="fee-type-chip" [class.fee-type-chip--cancelled]="a.isCancelled">
+                  {{ a.feeType }}
+                </span>
+                @if (a.isCancelled) {
+                <span class="cancelled-badge">Cancelled</span>
+                } @if (!a.isMandatory) {
+                <span class="optional-badge">Optional</span>
+                }
+              </div>
+
+              @if (a.description) {
+              <p class="fee-desc">{{ a.description }}</p>
+              }
+
+              <!-- Concession reason as a small inline pill — no separate row needed -->
+              @if (!a.isCancelled && a.concessionAmount > 0 && a.concessionReason) {
+              <span
+                class="concession-reason-pill"
+                [matTooltip]="a.concessionReason"
+                matTooltipPosition="above"
+              >
+                <mat-icon>local_offer</mat-icon>
+                {{ a.concessionReason }}
               </span>
-              @if (a.isCancelled) {
-              <span class="cancelled-badge">Cancelled</span>
-              } @if (!a.isMandatory) {
-              <span class="optional-badge">Optional</span>
               }
             </div>
-            @if (a.description) {
-            <p class="fee-desc">{{ a.description }}</p>
-            }
           </td>
+
           <td class="cell-muted">{{ formatMonth(a.feeMonth) }}</td>
           <td class="text-right amount-cell">{{ a.amount | paise : 'compact' }}</td>
+
           <td class="text-right">
             @if (a.concessionAmount > 0) {
             <span class="concession-amount" [matTooltip]="a.concessionReason || ''">
@@ -125,6 +143,7 @@
             <span class="cell-muted">—</span>
             }
           </td>
+
           <td class="text-right amount-cell">{{ a.effectiveAmount | paise : 'compact' }}</td>
           <td class="text-right amount-cell text-success">
             {{ a.amountPaid | paise : 'compact' }}
@@ -132,16 +151,17 @@
           <td class="text-right amount-cell" [class.text-error]="a.balance > 0">
             {{ a.balance | paise : 'compact' }}
           </td>
+
           <td class="cell-muted cell-date">
-            @if (a.dueDate) {
-            {{ a.dueDate | date : 'd MMM yy' }}
-            } @else { — }
+            @if (a.dueDate) { {{ a.dueDate | date : 'd MMM yy' }} } @else { — }
           </td>
+
           <td class="text-center">
             @if (!a.isCancelled) {
             <app-fee-status-badge [status]="a.status" />
             }
           </td>
+
           @if (canManage || canPay) {
           <td class="text-center">
             @if (!a.isCancelled) {
@@ -210,18 +230,6 @@
                   <button mat-stroked-button (click)="cancelCancel()">Back</button>
                 </div>
               </div>
-            </div>
-          </td>
-        </tr>
-        }
-
-        <!-- Concession reason row if applicable -->
-        @if (!a.isCancelled && a.concessionAmount > 0 && a.concessionReason) {
-        <tr class="concession-note-row">
-          <td [attr.colspan]="canManage || canPay ? 10 : 9">
-            <div class="concession-note">
-              <mat-icon>local_offer</mat-icon>
-              <span>Concession reason: {{ a.concessionReason }}</span>
             </div>
           </td>
         </tr>

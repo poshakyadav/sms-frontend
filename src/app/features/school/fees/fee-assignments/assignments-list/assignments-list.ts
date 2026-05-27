@@ -15,7 +15,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { FeesService, StudentFeeAssignment } from '../../../../../core/services/fees.service';
@@ -38,7 +37,6 @@ import { BulkAssignmentFormComponent } from '../bulk-assignment-form/bulk-assign
     MatButtonModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
-    MatSlideToggleModule,
     MatDialogModule,
     MatSnackBarModule,
     PaisePipe,
@@ -160,15 +158,46 @@ export class AssignmentsList implements OnChanges {
     });
   }
 
+  /**
+   * Opens the concession form pre-targeted to a specific custom fee assignment.
+   *
+   * Key fixes vs the previous implementation:
+   *
+   * 1. `preselectedAssignmentId: a.id` — tells the form to auto-select this
+   *    assignment after `getStudentFeeAssignments` resolves, hiding the
+   *    dropdown and immediately checking for an existing concession.
+   *
+   * 2. `isPaid: a.balance <= 0` — passes the settled-fee flag so the form
+   *    hides the "Revoke & Replace" button when the fee is fully paid.
+   *    `a.balance` is computed by `getStudentFeeAssignments` in the service
+   *    and accounts for concessions (effectiveAmount − amountPaid).
+   *
+   * Previously this method passed neither field, so:
+   *   • The dropdown was never hidden or pre-selected (user had to pick again).
+   *   • The existing-concession banner never appeared on open.
+   *   • The paid-lock state was ignored (revoke was always shown).
+   */
   openConcession(a: StudentFeeAssignment): void {
     const ref = this.dialog.open(ConcessionsFormComponent, {
-      width: '560px',
+      width: '580px',
       maxWidth: '95vw',
       panelClass: 'side-sheet-dialog',
       data: {
         enrollmentId: this.enrollmentId,
         studentName: this.studentName,
         mode: 'ASSIGNMENT',
+        // ── Pre-select this specific assignment ───────────────────────────
+        // The form's loadData() patches this ID into the form AFTER the
+        // assignments list is fetched, triggering valueChanges which:
+        //   a) sets selectedBaseAmount from the assignment's amount
+        //   b) calls checkExistingConcession() to look up active concessions
+        //   c) hides the dropdown (compact mode-pill shown instead)
+        preselectedAssignmentId: a.id,
+        // ── Lock revoke when fee is fully settled ─────────────────────────
+        // balance = effectiveAmount (after concession) − amountPaid.
+        // When <= 0 the fee is paid in full; revoking the concession would
+        // retroactively create a new outstanding balance — block it at UI level.
+        isPaid: a.balance <= 0,
       },
     });
     ref.afterClosed().subscribe((saved) => {

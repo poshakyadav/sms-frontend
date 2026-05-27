@@ -54,7 +54,7 @@ const MONTH_NAMES_FULL = [
   'December',
 ];
 
-const FEE_TYPE_SUGGESTIONS = ['TUITION', 'LIBRARY', 'EXAM', 'SPORTS', 'DEVELOPMENT', 'COMPUTER'];
+const FEE_TYPE_SUGGESTIONS = ['MONTHLY','TUITION', 'LIBRARY', 'EXAM', 'SPORTS', 'DEVELOPMENT', 'COMPUTER'];
 
 /** Build a range of years centred around the current year. */
 function buildYearOptions(spread = 3): number[] {

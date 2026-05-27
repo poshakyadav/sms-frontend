@@ -18,6 +18,7 @@ import {
   FeesService,
   StudentForPayment,
   DueFeesResponse,
+  DueFeeItem,
 } from '../../../../core/services/fees.service';
 import {
   AcademicsService,
@@ -88,6 +89,14 @@ export class ClassSectionFeeManager implements OnInit {
   loadingDueFees = signal(false);
   dueFees = signal<DueFeesResponse | null>(null);
   errorDueFees = signal<string | null>(null);
+
+  // ── Per-student combined balance cache ────────────────────────────────────
+  // Key: enrollmentId → combined balanceDue (standard + custom − concessions − paid)
+  // Populated on first click of each student, updated after any payment/concession.
+  // This is the ONLY reliable source of the true combined balance because
+  // StudentForPayment.balance from getStudentsByClassSection only reflects
+  // standard fee structures and misses custom fee assignments entirely.
+  private studentBalanceCache = signal<Map<number, number>>(new Map());
 
   // ── Permissions ───────────────────────────────────────────────────────────
   canManage = computed(() => this.auth.hasPermission('fees.structures.manage'));
@@ -238,6 +247,8 @@ export class ClassSectionFeeManager implements OnInit {
     this.dueFees.set(null);
     this.students.set([]);
     this.rosterSearch.set('');
+    // Clear the balance cache when switching class-sections
+    this.studentBalanceCache.set(new Map());
     if (id) this.loadRoster();
   }
 
@@ -277,6 +288,13 @@ export class ClassSectionFeeManager implements OnInit {
       next: (res) => {
         this.dueFees.set(res);
         this.loadingDueFees.set(false);
+
+        // ── Update the per-student balance cache with the authoritative value ──
+        // res.balanceDue = standard remaining + custom remaining (server-computed)
+        // This is the only correct combined balance; update the cache map.
+        const current = new Map(this.studentBalanceCache());
+        current.set(enrollmentId, res.balanceDue);
+        this.studentBalanceCache.set(current);
       },
       error: (err) => {
         this.errorDueFees.set(err?.error?.error ?? 'Failed to load fee overview');
@@ -317,9 +335,30 @@ export class ClassSectionFeeManager implements OnInit {
     });
   }
 
-  openGrantConcession(mode: 'STRUCTURE' | 'ASSIGNMENT'): void {
+  /**
+   * Opens the concession form.
+   *
+   * @param mode    'STRUCTURE' for standard fees, 'ASSIGNMENT' for custom fees.
+   * @param feeItem Optional. When passed (by clicking the concession icon on a
+   *                specific fee row), the form will open with that fee
+   *                pre-selected and show the existing-concession banner if one
+   *                already exists.
+   *
+   * passes `isPaid` so the form can lock "Revoke & Replace" when the
+   *      fee is already fully settled (remaining === 0).
+   * custom-fee branch now correctly uses `preselectedAssignmentId`
+   *      AND the timing-safe patch in `loadData()` ensures auto-select
+   *      fires AFTER the assignments list is populated.
+   */
+  openGrantConcession(mode: 'STRUCTURE' | 'ASSIGNMENT', feeItem?: DueFeeItem): void {
     const student = this.selectedStudent();
     if (!student) return;
+
+    // ── Is this fee fully settled? ───────────────────────────────────────
+    // remaining <= 0 means the student has already paid the effective amount.
+    // Revoking a concession on a paid fee would retroactively increase the
+    // outstanding balance — block it at the UI level.
+    const isPaid = feeItem ? feeItem.remaining <= 0 : false;
 
     const ref = this.dialog.open(ConcessionsFormComponent, {
       width: '580px',
@@ -329,6 +368,15 @@ export class ClassSectionFeeManager implements OnInit {
         enrollmentId: student.enrollmentId,
         studentName: student.name,
         mode,
+        isPaid,
+        // ── Preselected fee IDs ──────────────────────────────────────────
+        // Pass exactly ONE of these so the form:
+        //   a) hides the fee-selector dropdown (compact mode pill)
+        //   b) auto-selects the fee after its list is loaded
+        //   c) immediately checks for an existing concession
+        // Never pass both — backend schema forbids it.
+        ...(feeItem && mode === 'STRUCTURE' ? { preselectedFeeStructureId: feeItem.id } : {}),
+        ...(feeItem && mode === 'ASSIGNMENT' ? { preselectedAssignmentId: feeItem.id } : {}),
       },
     });
 
@@ -350,7 +398,45 @@ export class ClassSectionFeeManager implements OnInit {
     this.loadRoster();
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
+  // ── Public helpers for template ───────────────────────────────────────────
+
+  /**
+   * Returns the true combined balance for a student card in the roster.
+   *
+   * Priority:
+   *   1. Cached value from getDueFeesForEnrollment (standard + custom, server-authoritative)
+   *   2. Fall back to StudentForPayment.balance (standard only — shown with a visual cue)
+   *
+   * The cache is populated the first time a student is selected and updated after
+   * every payment / concession change.
+   */
+  getCombinedBalance(student: StudentForPayment): number {
+    const cached = this.studentBalanceCache().get(student.enrollmentId);
+    // Return cached authoritative value if available
+    if (cached !== undefined) return cached;
+    // Fallback: StudentForPayment.balance may under-report if student has custom fees.
+    // We return it as-is; the template shows a "+" indicator when the cache is absent.
+    return student.balance;
+  }
+
+  /**
+   * True when we have loaded the authoritative combined balance for this student.
+   * Used by the template to show/hide the "includes custom fees" indicator.
+   */
+  hasCachedBalance(student: StudentForPayment): boolean {
+    return this.studentBalanceCache().has(student.enrollmentId);
+  }
+
+  /**
+   * True when the authoritative combined balance differs from the roster balance.
+   * Signals the student has custom fees not reflected in the roster card's .balance.
+   */
+  hasCustomFees(student: StudentForPayment): boolean {
+    const cached = this.studentBalanceCache().get(student.enrollmentId);
+    if (cached === undefined) return false;
+    // Difference of more than 1 paisa means custom fees exist
+    return Math.abs(cached - student.balance) > 1;
+  }
 
   balanceClass(balance: number): string {
     if (balance <= 0) return 'balance--paid';
@@ -359,18 +445,29 @@ export class ClassSectionFeeManager implements OnInit {
   }
 
   statusIcon(student: StudentForPayment): string {
-    if (student.balance <= 0) return 'check_circle';
+    const balance = this.getCombinedBalance(student);
+    if (balance <= 0) return 'check_circle';
     if (student.totalPaid > 0) return 'schedule';
     return 'radio_button_unchecked';
   }
 
   statusIconClass(student: StudentForPayment): string {
-    if (student.balance <= 0) return 'icon--paid';
+    const balance = this.getCombinedBalance(student);
+    if (balance <= 0) return 'icon--paid';
     if (student.totalPaid > 0) return 'icon--partial';
     return 'icon--pending';
   }
 
   collectionRate(student: StudentForPayment): number {
+    // Use cached combined balance for the progress bar denominator
+    const cached = this.studentBalanceCache().get(student.enrollmentId);
+    if (cached !== undefined) {
+      // totalPaid from roster is still correct (payments are the same either way)
+      const totalDue = student.totalPaid + Math.max(0, cached);
+      if (totalDue <= 0) return 100;
+      return Math.round((student.totalPaid / totalDue) * 100);
+    }
+    // Fallback to roster-level data
     if (student.totalAssigned <= 0) return 100;
     return Math.round((student.totalPaid / student.totalAssigned) * 100);
   }

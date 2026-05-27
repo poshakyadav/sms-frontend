@@ -49,15 +49,50 @@
   }
 }
 
-.cancelled-toggle {
-  display: flex;
+// ── Show Cancelled — compact ghost button (replaces heavy slide-toggle) ────────
+// Sits quietly at the left of the actions group. Active state gains a subtle
+// tinted background so it reads as "on" without a toggle widget.
+.show-cancelled-btn {
+  display: inline-flex;
   align-items: center;
-}
-
-.toggle-label {
-  font-size: 0.78rem;
+  gap: 5px;
+  padding: 4px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--color-text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+
+  mat-icon {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+  }
+
+  &:hover {
+    background: var(--color-hover);
+    color: var(--color-text-secondary);
+    border-color: var(--color-text-muted);
+  }
+
+  // Active = "Show Cancelled" is ON — tinted to signal state
+  &--active {
+    background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+    border-color: color-mix(in srgb, var(--color-warning) 30%, transparent);
+    color: color-mix(in srgb, var(--color-warning) 70%, #000);
+
+    mat-icon {
+      color: var(--color-warning);
+    }
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-warning) 15%, transparent);
+    }
+  }
 }
 
 .add-btn {
@@ -126,7 +161,10 @@
   max-width: 320px;
 }
 
-// ── Table ─────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// TABLE
+// ─────────────────────────────────────────────────────────────────────────────
+
 .al-table-wrap {
   overflow-x: auto;
 }
@@ -149,8 +187,16 @@
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--color-text-muted);
-    text-align: left;
     white-space: nowrap;
+    text-align: left;
+    vertical-align: middle;
+
+    &.text-right {
+      text-align: right;
+    }
+    &.text-center {
+      text-align: center;
+    }
   }
 
   td {
@@ -158,9 +204,18 @@
     border-bottom: 1px solid var(--color-divider);
     vertical-align: middle;
     color: var(--color-text-primary);
+    text-align: left;
+
+    &.text-right {
+      text-align: right;
+    }
+    &.text-center {
+      text-align: center;
+    }
   }
 }
 
+// ── Row states ────────────────────────────────────────────────────────────────
 .al-row {
   transition: background 0.12s ease;
 
@@ -173,18 +228,21 @@
 
   &--cancelled {
     opacity: 0.55;
-
     td {
       text-decoration: line-through;
     }
   }
 }
 
+// ── Alignment helpers ─────────────────────────────────────────────────────────
 .text-right {
-  text-align: right;
+  text-align: right !important;
 }
 .text-center {
-  text-align: center;
+  text-align: center !important;
+}
+.text-left {
+  text-align: left !important;
 }
 .text-success {
   color: var(--color-success);
@@ -195,10 +253,12 @@
 .cell-muted {
   color: var(--color-text-muted);
 }
+
 .cell-date {
   white-space: nowrap;
   font-size: 0.78rem;
 }
+
 .amount-cell {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -207,8 +267,15 @@
 // ── Fee type cell ─────────────────────────────────────────────────────────────
 .fee-type-cell {
   display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+
+.fee-type-badges {
+  display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   flex-wrap: wrap;
 }
 
@@ -250,14 +317,41 @@
 .fee-desc {
   font-size: 0.68rem;
   color: var(--color-text-muted);
-  margin: 2px 0 0;
+  margin: 0;
   font-style: italic;
 }
 
-// ── Concession amount ─────────────────────────────────────────────────────────
+// ── Inline concession reason pill ─────────────────────────────────────────────
+.concession-reason-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--color-success) 75%, #000);
+  background: color-mix(in srgb, var(--color-success) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-success) 20%, transparent);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  mat-icon {
+    font-size: 10px;
+    height: 10px;
+    width: 10px;
+    flex-shrink: 0;
+    color: var(--color-success);
+  }
+}
+
+// ── Concession amount cell ────────────────────────────────────────────────────
 .concession-amount {
   display: inline-flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 3px;
   font-size: 0.75rem;
   font-weight: 600;
@@ -271,7 +365,10 @@
   }
 }
 
-// ── Action buttons ────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// ACTION BUTTONS — compact 28×28 icon buttons
+// ─────────────────────────────────────────────────────────────────────────────
+
 .action-btns {
   display: flex;
   align-items: center;
@@ -283,11 +380,14 @@
   width: 28px !important;
   height: 28px !important;
   line-height: 28px !important;
+  padding: 0 !important;
 
+  ::ng-deep .mat-icon,
   mat-icon {
-    font-size: 14px;
-    height: 14px;
-    width: 14px;
+    font-size: 15px !important;
+    width: 15px !important;
+    height: 15px !important;
+    line-height: 15px !important;
   }
 
   &--pay {
@@ -382,34 +482,10 @@
   font-weight: 600;
 }
 
-// ── Concession note row ───────────────────────────────────────────────────────
-.concession-note-row td {
-  padding: 0 12px 8px;
-}
-
-.concession-note {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.72rem;
-  color: var(--color-success);
-  background: color-mix(in srgb, var(--color-success) 8%, transparent);
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  font-style: italic;
-
-  mat-icon {
-    font-size: 12px;
-    height: 12px;
-    width: 12px;
-  }
-}
-
 // ── Summary footer ────────────────────────────────────────────────────────────
 .al-summary {
   display: flex;
   align-items: center;
-  gap: 0;
   border-top: 2px solid var(--color-divider);
   background: color-mix(in srgb, var(--color-hover) 40%, transparent);
 
@@ -424,7 +500,6 @@
     &:last-child {
       border-right: none;
     }
-
     &--balance {
       font-weight: 700;
     }

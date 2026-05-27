@@ -412,7 +412,7 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         label: 'My Fees',
         icon: 'payments',
-        route: '/school/fees/student/my',
+        route: '/school/fees/my',
         permissions: ['fees.student.view'],
       },
     ],

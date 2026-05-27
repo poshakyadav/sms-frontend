@@ -624,7 +624,23 @@
                   </tr>
                 </thead>
                 <tbody>
-                  @for (fee of dueFees()!.fees; track fee.id) {
+                  @for (group of standardFeeGroups(); track trackByFeeGroup($index, group); let
+                  lastGroup = $last) {
+
+                  <!-- Month header row -->
+                  <tr class="csfm-month-header-row">
+                    <td [attr.colspan]="canManage() ? 9 : 8">
+                      <div class="csfm-month-header">
+                        <mat-icon>calendar_month</mat-icon>
+                        <span>{{ group.label }}</span>
+                        <span class="csfm-month-header__count">
+                          {{ group.items.length }} fee{{ group.items.length !== 1 ? 's' : '' }}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+
+                  @for (fee of group.items; track trackByFeeItem($index, fee)) {
                   <tr class="csfm-fee-row" [class.csfm-fee-row--paid]="fee.remaining <= 0">
                     <td class="text-left">
                       <span class="fee-type-chip fee-type-chip--std">{{ fee.feeType }}</span>
@@ -653,8 +669,7 @@
                       {{ fee.paid | paise : 'compact' }}
                     </td>
                     <td
-                      class="text-right"
-                      [class.amount-cell]="true"
+                      class="text-right amount-cell"
                       [class.text-error]="fee.remaining > 0"
                       [class.text-success]="fee.remaining <= 0"
                     >
@@ -663,7 +678,6 @@
                     <td class="cell-muted text-center">
                       @if (fee.dueDate) { {{ fee.dueDate | date : 'd MMM yyyy' }} } @else { — }
                     </td>
-
                     @if (canManage()) {
                     <td class="text-center csfm-col-action">
                       <button
@@ -685,6 +699,15 @@
                     }
                   </tr>
                   }
+                  <!-- end @for fee -->
+
+                  <!-- Spacer between month groups -->
+                  @if (!lastGroup) {
+                  <tr class="csfm-month-spacer-row" aria-hidden="true">
+                    <td [attr.colspan]="canManage() ? 9 : 8"></td>
+                  </tr>
+                  } }
+                  <!-- end @for group -->
                 </tbody>
               </table>
             </div>

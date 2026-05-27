@@ -33,6 +33,13 @@ import { PaymentHistory } from '../payments/payment-history/payment-history';
 import { ConcessionsList } from '../fee-concessions/concessions-list/concessions-list';
 import { AuthService } from '../../../../core/services/auth.service';
 
+// ── Month group shape for standard fees ───────────────────────────────────────
+export interface StandardFeeMonthGroup {
+  monthKey: string | null;
+  label: string;
+  items: DueFeeItem[];
+}
+
 @Component({
   selector: 'app-class-section-fee-manager',
   standalone: true,
@@ -210,6 +217,13 @@ export class ClassSectionFeeManager implements OnInit {
     const df = this.dueFees();
     if (!df) return 0;
     return df.assignments.reduce((s, a) => s + a.remaining, 0);
+  });
+
+  // ── Month-grouped standard fees (used by standard fees tab table) ─────────────
+  standardFeeGroups = computed<StandardFeeMonthGroup[]>(() => {
+    const df = this.dueFees();
+    if (!df || !df.fees.length) return [];
+    return this.buildStandardFeeGroups(df.fees);
   });
 
   constructor(
@@ -499,7 +513,70 @@ export class ClassSectionFeeManager implements OnInit {
     return `${months[parseInt(m) - 1]} ${y}`;
   }
 
+  formatMonthFull(feeMonth: string | null): string {
+    if (!feeMonth) return 'One-time fees';
+    const [y, m] = feeMonth.split('-');
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    return `${months[parseInt(m) - 1]} ${y}`;
+  }
+
+  trackByFeeGroup(_: number, group: StandardFeeMonthGroup): string {
+    return group.monthKey ?? '__one_time__';
+  }
+
+  trackByFeeItem(_: number, item: DueFeeItem): number {
+    return item.id;
+  }
+
   trackById(_: number, item: StudentForPayment): number {
     return item.enrollmentId;
+  }
+
+  private buildStandardFeeGroups(fees: DueFeeItem[]): StandardFeeMonthGroup[] {
+    if (!fees.length) return [];
+
+    const groups: StandardFeeMonthGroup[] = [];
+    let currentKey: string | null | undefined = undefined;
+    let currentItems: DueFeeItem[] = [];
+
+    for (const fee of fees) {
+      const key = fee.feeMonth;
+      if (key !== currentKey) {
+        if (currentKey !== undefined) {
+          groups.push({
+            monthKey: currentKey,
+            label: this.formatMonthFull(currentKey),
+            items: currentItems,
+          });
+        }
+        currentKey = key;
+        currentItems = [fee];
+      } else {
+        currentItems.push(fee);
+      }
+    }
+
+    if (currentKey !== undefined && currentItems.length > 0) {
+      groups.push({
+        monthKey: currentKey,
+        label: this.formatMonthFull(currentKey),
+        items: currentItems,
+      });
+    }
+
+    return groups;
   }
 }

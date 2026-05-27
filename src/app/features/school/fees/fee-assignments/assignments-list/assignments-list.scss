@@ -524,3 +524,53 @@
     }
   }
 }
+
+// ── Month header row (inside tbody) ──────────────────────────────────────────
+.al-month-header-row {
+  td {
+    padding: 0;
+    border-bottom: none;
+    padding-top: 4px;
+  }
+}
+
+.al-month-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px 6px;
+  background: color-mix(in srgb, var(--color-secondary) 6%, transparent);
+  border-left: 3px solid var(--color-secondary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-warning);
+  letter-spacing: 0.02em;
+
+  mat-icon {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+    flex-shrink: 0;
+    opacity: 0.8;
+  }
+
+  &__count {
+    margin-left: auto;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    background: var(--color-hover);
+    padding: 1px 7px;
+    border-radius: 9999px;
+  }
+}
+
+// ── Spacer row between month groups ──────────────────────────────────────────
+.al-month-spacer-row {
+  td {
+    padding: 0;
+    height: 10px;
+    border-bottom: none;
+    background: transparent;
+  }
+}

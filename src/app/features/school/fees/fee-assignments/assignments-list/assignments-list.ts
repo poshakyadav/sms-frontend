@@ -8,6 +8,7 @@ import {
   Output,
   EventEmitter,
   ChangeDetectionStrategy,
+  computed,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -26,6 +27,13 @@ import { AssignmentFormComponent } from '../assignment-form/assignment-form';
 import { PaisePipe } from '../../../../../shared/pipes/paise-pipe';
 import { RecordPaymentComponent } from '../../payments/record-payment/record-payment';
 import { BulkAssignmentFormComponent } from '../bulk-assignment-form/bulk-assignment-form';
+
+// ── Month group shape (mirrors student-fees grouping) ─────────────────────────
+export interface AssignmentMonthGroup {
+  monthKey: string | null;
+  label: string;
+  items: StudentFeeAssignment[];
+}
 
 @Component({
   selector: 'app-assignments-list',
@@ -60,6 +68,11 @@ export class AssignmentsList implements OnChanges {
   error = signal<string | null>(null);
   assignments = signal<StudentFeeAssignment[]>([]);
   showCancelled = signal(false);
+
+  // ── Month-grouped assignments (used by table template) ────────────────────────
+  assignmentGroups = computed<AssignmentMonthGroup[]>(() =>
+    this.buildMonthGroups(this.assignments().filter((a) => this.showCancelled() || !a.isCancelled))
+  );
 
   /** Inline cancel confirmation state */
   cancellingId = signal<number | null>(null);
@@ -259,8 +272,32 @@ export class AssignmentsList implements OnChanges {
     return `${months[parseInt(m) - 1]} ${y}`;
   }
 
+  formatMonthFull(feeMonth: string | null): string {
+    if (!feeMonth) return 'One-time fees';
+    const [y, m] = feeMonth.split('-');
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    return `${months[parseInt(m) - 1]} ${y}`;
+  }
+
   trackById(_: number, item: StudentFeeAssignment): number {
     return item.id;
+  }
+
+  trackByGroup(_: number, group: AssignmentMonthGroup): string {
+    return group.monthKey ?? '__one_time__';
   }
 
   get activeCount(): number {
@@ -271,5 +308,40 @@ export class AssignmentsList implements OnChanges {
     return this.assignments()
       .filter((a) => !a.isCancelled)
       .reduce((s, a) => s + (a.balance ?? 0), 0);
+  }
+
+  private buildMonthGroups(fees: StudentFeeAssignment[]): AssignmentMonthGroup[] {
+    if (!fees.length) return [];
+
+    const groups: AssignmentMonthGroup[] = [];
+    let currentKey: string | null | undefined = undefined;
+    let currentItems: StudentFeeAssignment[] = [];
+
+    for (const fee of fees) {
+      const key = fee.feeMonth;
+      if (key !== currentKey) {
+        if (currentKey !== undefined) {
+          groups.push({
+            monthKey: currentKey,
+            label: this.formatMonthFull(currentKey),
+            items: currentItems,
+          });
+        }
+        currentKey = key;
+        currentItems = [fee];
+      } else {
+        currentItems.push(fee);
+      }
+    }
+
+    if (currentKey !== undefined && currentItems.length > 0) {
+      groups.push({
+        monthKey: currentKey,
+        label: this.formatMonthFull(currentKey),
+        items: currentItems,
+      });
+    }
+
+    return groups;
   }
 }

@@ -95,10 +95,26 @@
         </tr>
       </thead>
       <tbody>
-        @for (a of assignments(); track trackById($index, a)) {
+        @for (group of assignmentGroups(); track trackByGroup($index, group); let lastGroup = $last)
+        {
+
+        <!-- Month header row -->
+        <tr class="al-month-header-row">
+          <td [attr.colspan]="canManage || canPay ? 10 : 9">
+            <div class="al-month-header">
+              <mat-icon>calendar_month</mat-icon>
+              <span>{{ group.label }}</span>
+              <span class="al-month-header__count">
+                {{ group.items.length }} fee{{ group.items.length !== 1 ? 's' : '' }}
+              </span>
+            </div>
+          </td>
+        </tr>
+
+        @for (a of group.items; track trackById($index, a)) {
         <!-- Main Row -->
         <tr class="al-row" [class.al-row--cancelled]="a.isCancelled">
-          <!-- Fee Type cell — chip + badges + inline concession reason pill -->
+          <!-- Fee Type cell -->
           <td>
             <div class="fee-type-cell">
               <div class="fee-type-badges">
@@ -111,13 +127,9 @@
                 <span class="optional-badge">Optional</span>
                 }
               </div>
-
               @if (a.description) {
               <p class="fee-desc">{{ a.description }}</p>
-              }
-
-              <!-- Concession reason as a small inline pill — no separate row needed -->
-              @if (!a.isCancelled && a.concessionAmount > 0 && a.concessionReason) {
+              } @if (!a.isCancelled && a.concessionAmount > 0 && a.concessionReason) {
               <span
                 class="concession-reason-pill"
                 [matTooltip]="a.concessionReason"
@@ -234,6 +246,15 @@
           </td>
         </tr>
         } }
+        <!-- end @for assignment -->
+
+        <!-- Spacer row between month groups -->
+        @if (!lastGroup) {
+        <tr class="al-month-spacer-row" aria-hidden="true">
+          <td [attr.colspan]="canManage || canPay ? 10 : 9"></td>
+        </tr>
+        } }
+        <!-- end @for group -->
       </tbody>
     </table>
   </div>

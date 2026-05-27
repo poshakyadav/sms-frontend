@@ -404,3 +404,72 @@
   justify-content: center;
   margin-top: 4px;
 }
+
+// ── Column text-alignment helpers ─────────────────────────────────────────────
+//
+// Two independent sets:
+//   th-align-*  → header cells only
+//   td-align-*  → data cells only
+//
+// Use them independently — a header can be left-aligned while its data
+// cells are right-aligned (standard for numeric/amount columns).
+//
+// ── HEADER alignment (th) ─────────────────────────────────────────────────────
+//
+//   <th class="th-align-left">Fee Type</th>      ← default, explicit
+//   <th class="th-align-center">Status</th>      ← centered header label
+//   <th class="th-align-right">Amount</th>       ← right-aligned header label
+//
+// ── DATA CELL alignment (td) ──────────────────────────────────────────────────
+//
+//   <td class="td-align-left">{{ item.name }}</td>
+//   <td class="td-align-center"><app-badge /></td>
+//   <td class="td-align-right">{{ item.amount }}</td>
+//
+// ── COMMON PATTERN — amount columns ───────────────────────────────────────────
+//
+//   <th class="th-align-left">Original</th>      ← label stays left
+//   <td class="td-align-right">₹4,000</td>       ← value right-aligned with breathing room
+//
+// ── COMMON PATTERN — status/action columns ────────────────────────────────────
+//
+//   <th class="th-align-center">Status</th>
+//   <td class="td-align-center"><app-status-badge /></td>
+
+// Header cells
+.th-align-left {
+  text-align: left !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+.th-align-center {
+  text-align: center !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+.th-align-right {
+  text-align: right !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+// Data cells
+.td-align-left {
+  text-align: left !important;
+  padding-left: 2% !important;
+  padding-right: 8px !important;
+}
+
+.td-align-center {
+  text-align: center !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+.td-align-right {
+  text-align: right !important;
+  padding-left: 8px !important;
+  padding-right: 2% !important;
+}

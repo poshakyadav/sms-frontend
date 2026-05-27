@@ -73,7 +73,6 @@
     <div class="sf-donut-card">
       <div class="sf-donut-card__chart-wrap">
         <svg viewBox="0 0 100 100" class="sf-donut-svg">
-          <!-- Background ring -->
           <circle
             cx="50"
             cy="50"
@@ -82,7 +81,6 @@
             stroke="var(--color-hover)"
             stroke-width="10"
           />
-          <!-- Progress arc -->
           @if (overview.collectionRate > 0) {
           <path
             [attr.d]="getDonutPath(overview.collectionRate)"
@@ -98,7 +96,6 @@
             stroke-linecap="round"
           />
           }
-          <!-- Center text -->
           <text x="50" y="46" text-anchor="middle" class="sf-donut-pct">
             {{ overview.collectionRate }}%
           </text>
@@ -203,40 +200,92 @@
 
     @if (isSectionExpanded(overview.academicYearId, 'STRUCTURE')) {
     <div class="sf-section__body">
-      <!-- Mobile: cards; Desktop: table -->
+      <!-- Desktop: grouped table ─────────────────────────────────────── -->
       <div class="sf-fee-table-wrap">
         <table class="sf-fee-table">
+          <colgroup>
+            <col class="col-fee-type" />
+            <col class="col-month" />
+            <col class="col-original" />
+            <col class="col-concession" />
+            <col class="col-effective" />
+            <col class="col-paid" />
+            <col class="col-balance" />
+            <col class="col-duedate" />
+            <col class="col-status" />
+          </colgroup>
           <thead>
             <tr>
-              <th class="text-center">Fee Type</th>
-              <th class="text-center">Month</th>
-              <th class="text-right">Original</th>
-              <th class="text-right">Concession</th>
-              <th class="text-right">Effective</th>
-              <th class="text-right">Paid</th>
-              <th class="text-right">Balance</th>
-              <th class="text-center">Due Date</th>
-              <th class="text-center">Status</th>
+              <th class="th-align-center">Fee Type</th>
+              <th class="th-align-center">Month</th>
+              <th class="th-align-center">Original</th>
+              <th class="th-align-center">Concession</th>
+              <th class="th-align-center">Effective</th>
+              <th class="th-align-center">Paid</th>
+              <th class="th-align-center">Balance</th>
+              <th class="th-align-center">Due Date</th>
+              <th class="th-align-center">Status</th>
             </tr>
           </thead>
           <tbody>
-            @for (fee of structureFees(); track trackByFee($index, fee)) {
+            <!--
+              Outer loop: one iteration per month group.
+              Each group renders:
+                1. A full-width month-header row
+                2. One data row per fee item in the group
+                3. An inline concession note row if applicable
+                4. A spacer row after the last item (except after the last group)
+            -->
+            @for (group of structureFeeGroups(); track trackByGroup($index, group); let lastGroup =
+            $last) {
+
+            <!-- Month header row -->
+            <tr class="sf-month-header-row">
+              <td colspan="9">
+                <div class="sf-month-header">
+                  <mat-icon>calendar_month</mat-icon>
+                  <span>{{ group.label }}</span>
+                  <span class="sf-month-header__count"
+                    >{{ group.items.length }} fee{{ group.items.length !== 1 ? 's' : '' }}</span
+                  >
+                </div>
+              </td>
+            </tr>
+
+            <!-- Fee rows for this month -->
+            @for (fee of group.items; track trackByFee($index, fee)) {
             <tr
               class="sf-fee-row"
               [class.sf-fee-row--paid]="fee.status === 'PAID'"
               [class.sf-fee-row--overdue]="fee.status === 'OVERDUE'"
             >
-              <td class="text-center">
-                <div class="sf-fee-type-cell">
-                  <span class="sf-fee-type-chip">{{ fee.feeType }}</span>
-                  @if (!fee.isMandatory) {
-                  <span class="sf-optional-tag">Optional</span>
+              <td class="td-align-center">
+                <!-- <div class="sf-fee-type-cell"> -->
+                <div>
+                  <!-- <div class="sf-fee-type-badges"> -->
+                  <div>
+                    <span class="sf-fee-type-chip">{{ fee.feeType }}</span>
+                    @if (!fee.isMandatory) {
+                    <span class="sf-optional-tag">Optional</span>
+                    }
+                  </div>
+                  @if (fee.concessionAmount > 0 && fee.concessionReason) {
+                  <span
+                    class="sf-concession-reason-pill"
+                    [matTooltip]="fee.concessionReason"
+                    matTooltipPosition="above"
+                  >
+                    <mat-icon>local_offer</mat-icon>
+                    {{ fee.concessionReason }}
+                  </span>
                   }
                 </div>
               </td>
-              <td class="cell-muted text-center">{{ formatMonth(fee.feeMonth) }}</td>
-              <td class="text-right amount-cell">{{ fee.originalAmount | paise : 'compact' }}</td>
-              <td class="text-right">
+              <td class="cell-muted td-align-center">{{ formatMonthShort(fee.feeMonth) }}</td>
+              <td class="amount-cell td-align-right">
+                {{ fee.originalAmount | paise : 'compact' }}
+              </td>
+              <td class="td-align-right">
                 @if (fee.concessionAmount > 0) {
                 <span class="sf-concession-text" [matTooltip]="fee.concessionReason || ''">
                   -{{ fee.concessionAmount | paise : 'compact' }}
@@ -245,40 +294,51 @@
                 <span class="cell-muted">—</span>
                 }
               </td>
-              <td class="text-right amount-cell">{{ fee.effectiveAmount | paise : 'compact' }}</td>
-              <td class="text-right amount-cell text-success">
+              <td class="amount-cell td-align-right">
+                {{ fee.effectiveAmount | paise : 'compact' }}
+              </td>
+              <td class="amount-cell text-success td-align-right">
                 {{ fee.amountPaid | paise : 'compact' }}
               </td>
-              <td class="text-right amount-cell" [class.text-error]="fee.balance > 0">
+              <td class="amount-cell td-align-right" [class.text-error]="fee.balance > 0">
                 {{ fee.balance | paise : 'compact' }}
               </td>
-              <td class="text-center cell-muted">
+              <td class="cell-muted td-align-center">
                 {{ fee.dueDate ? formatDate(fee.dueDate) : '—' }}
                 @if (fee.status === 'OVERDUE') {
                 <span class="sf-overdue-dot" matTooltip="Overdue"></span>
                 }
               </td>
-              <td class="text-center">
+              <td class="td-align-center">
                 <app-fee-status-badge [status]="fee.status" />
               </td>
             </tr>
-            @if (fee.concessionAmount > 0 && fee.concessionReason) {
-            <tr class="sf-concession-note-row">
-              <td colspan="9">
-                <span class="sf-concession-note">
-                  <mat-icon>local_offer</mat-icon>
-                  Concession: {{ fee.concessionReason }}
-                </span>
-              </td>
+            }
+            <!-- end @for fee -->
+
+            <!-- Spacer row between month groups (not after the last group) -->
+            @if (!lastGroup) {
+            <tr class="sf-month-spacer-row" aria-hidden="true">
+              <td colspan="9"></td>
             </tr>
             } }
+            <!-- end @for group -->
           </tbody>
         </table>
       </div>
 
-      <!-- Mobile card view -->
+      <!-- Mobile: grouped cards ──────────────────────────────────────── -->
       <div class="sf-fee-cards">
-        @for (fee of structureFees(); track trackByFee($index, fee)) {
+        @for (group of structureFeeGroups(); track trackByGroup($index, group); let lastGroup =
+        $last) {
+
+        <!-- Month label pill -->
+        <div class="sf-month-pill">
+          <mat-icon>calendar_month</mat-icon>
+          {{ group.label }}
+        </div>
+
+        @for (fee of group.items; track trackByFee($index, fee)) {
         <div
           class="sf-fee-card"
           [class.sf-fee-card--overdue]="fee.status === 'OVERDUE'"
@@ -288,7 +348,6 @@
             <span class="sf-fee-type-chip">{{ fee.feeType }}</span>
             <app-fee-status-badge [status]="fee.status" />
           </div>
-          <div class="sf-fee-card__month">{{ formatMonth(fee.feeMonth) }}</div>
           @if (fee.concessionAmount > 0) {
           <div class="sf-fee-card__concession">
             <mat-icon>local_offer</mat-icon>
@@ -319,6 +378,13 @@
           </div>
         </div>
         }
+        <!-- end @for fee (mobile) -->
+
+        <!-- Spacer between month groups on mobile -->
+        @if (!lastGroup) {
+        <div class="sf-month-card-spacer" aria-hidden="true"></div>
+        } }
+        <!-- end @for group (mobile) -->
       </div>
     </div>
     }
@@ -350,34 +416,78 @@
 
     @if (isSectionExpanded(overview.academicYearId, 'ASSIGNMENT')) {
     <div class="sf-section__body">
+      <!-- Desktop: grouped table ─────────────────────────────────────── -->
       <div class="sf-fee-table-wrap">
         <table class="sf-fee-table">
+          <colgroup>
+            <col class="col-fee-type" />
+            <col class="col-month" />
+            <col class="col-original" />
+            <col class="col-concession" />
+            <col class="col-effective" />
+            <col class="col-paid" />
+            <col class="col-balance" />
+            <col class="col-duedate" />
+            <col class="col-status" />
+          </colgroup>
           <thead>
             <tr>
-              <th>Fee Type</th>
-              <th>Month</th>
-              <th>Original</th>
-              <th class="text-right">Concession</th>
-              <th class="text-right">Effective</th>
-              <th class="text-right">Paid</th>
-              <th class="text-right">Balance</th>
-              <th>Description</th>
-              <th class="text-center">Status</th>
+              <th class="th-align-center">Fee Type</th>
+              <th class="th-align-center">Month</th>
+              <th class="th-align-center">Original</th>
+              <th class="th-align-center">Concession</th>
+              <th class="th-align-center">Effective</th>
+              <th class="th-align-center">Paid</th>
+              <th class="th-align-center">Balance</th>
+              <th class="th-align-center">Description</th>
+              <th class="th-align-center">Status</th>
             </tr>
           </thead>
           <tbody>
-            @for (fee of assignmentFees(); track trackByFee($index, fee)) {
+            @for (group of assignmentFeeGroups(); track trackByGroup($index, group); let lastGroup =
+            $last) {
+
+            <!-- Month header row -->
+            <tr class="sf-month-header-row">
+              <td colspan="9">
+                <div class="sf-month-header sf-month-header--custom">
+                  <mat-icon>calendar_month</mat-icon>
+                  <span>{{ group.label }}</span>
+                  <span class="sf-month-header__count"
+                    >{{ group.items.length }} fee{{ group.items.length !== 1 ? 's' : '' }}</span
+                  >
+                </div>
+              </td>
+            </tr>
+
+            @for (fee of group.items; track trackByFee($index, fee)) {
             <tr
               class="sf-fee-row"
               [class.sf-fee-row--paid]="fee.status === 'PAID'"
               [class.sf-fee-row--overdue]="fee.status === 'OVERDUE'"
             >
-              <td>
-                <span class="sf-fee-type-chip sf-fee-type-chip--custom">{{ fee.feeType }}</span>
+              <td class="td-align-center">
+                <!-- <div class="sf-fee-type-cell"> -->
+                <div>
+                  <!-- <div class="sf-fee-type-badges"> -->
+                  <div>
+                    <span class="sf-fee-type-chip sf-fee-type-chip--custom">{{ fee.feeType }}</span>
+                  </div>
+                  @if (fee.concessionAmount > 0 && fee.concessionReason) {
+                  <span
+                    class="sf-concession-reason-pill"
+                    [matTooltip]="fee.concessionReason"
+                    matTooltipPosition="above"
+                  >
+                    <mat-icon>local_offer</mat-icon>
+                    {{ fee.concessionReason }}
+                  </span>
+                  }
+                </div>
               </td>
-              <td class="cell-muted">{{ formatMonth(fee.feeMonth) }}</td>
-              <td class="text-right amount-cell">{{ fee.originalAmount | paise : 'compact' }}</td>
-              <td class="text-right">
+              <td class="cell-muted td-align-center">{{ formatMonthShort(fee.feeMonth) }}</td>
+              <td class="amount-cell td-align-right">{{ fee.originalAmount | paise : 'compact' }}</td>
+              <td class="td-align-right">
                 @if (fee.concessionAmount > 0) {
                 <span class="sf-concession-text" [matTooltip]="fee.concessionReason || ''">
                   -{{ fee.concessionAmount | paise : 'compact' }}
@@ -386,26 +496,42 @@
                 <span class="cell-muted">—</span>
                 }
               </td>
-              <td class="text-right amount-cell">{{ fee.effectiveAmount | paise : 'compact' }}</td>
-              <td class="text-right amount-cell text-success">
+              <td class="amount-cell td-align-right">{{ fee.effectiveAmount | paise : 'compact' }}</td>
+              <td class="amount-cell text-success td-align-right">
                 {{ fee.amountPaid | paise : 'compact' }}
               </td>
-              <td class="text-right amount-cell" [class.text-error]="fee.balance > 0">
+              <td class="amount-cell td-align-right" [class.text-error]="fee.balance > 0">
                 {{ fee.balance | paise : 'compact' }}
               </td>
-              <td class="cell-muted desc-cell">{{ fee.description || '—' }}</td>
-              <td class="text-center">
+              <td class="cell-muted desc-cell td-align-left">{{ fee.description || '—' }}</td>
+              <td class="td-align-center">
                 <app-fee-status-badge [status]="fee.status" />
               </td>
             </tr>
             }
+            <!-- end @for fee -->
+
+            @if (!lastGroup) {
+            <tr class="sf-month-spacer-row" aria-hidden="true">
+              <td colspan="9"></td>
+            </tr>
+            } }
+            <!-- end @for group -->
           </tbody>
         </table>
       </div>
 
-      <!-- Mobile cards -->
+      <!-- Mobile: grouped cards ──────────────────────────────────────── -->
       <div class="sf-fee-cards">
-        @for (fee of assignmentFees(); track trackByFee($index, fee)) {
+        @for (group of assignmentFeeGroups(); track trackByGroup($index, group); let lastGroup =
+        $last) {
+
+        <div class="sf-month-pill sf-month-pill--custom">
+          <mat-icon>calendar_month</mat-icon>
+          {{ group.label }}
+        </div>
+
+        @for (fee of group.items; track trackByFee($index, fee)) {
         <div
           class="sf-fee-card sf-fee-card--custom"
           [class.sf-fee-card--overdue]="fee.status === 'OVERDUE'"
@@ -415,9 +541,13 @@
             <span class="sf-fee-type-chip sf-fee-type-chip--custom">{{ fee.feeType }}</span>
             <app-fee-status-badge [status]="fee.status" />
           </div>
-          <div class="sf-fee-card__month">{{ formatMonth(fee.feeMonth) }}</div>
           @if (fee.description) {
           <p class="sf-fee-card__desc">{{ fee.description }}</p>
+          } @if (fee.concessionAmount > 0) {
+          <div class="sf-fee-card__concession">
+            <mat-icon>local_offer</mat-icon>
+            Concession: -{{ fee.concessionAmount | paise : 'compact' }}
+          </div>
           }
           <div class="sf-fee-card__amounts">
             <div class="sf-fee-card__amount-item">
@@ -442,7 +572,10 @@
             </div>
           </div>
         </div>
-        }
+        } @if (!lastGroup) {
+        <div class="sf-month-card-spacer" aria-hidden="true"></div>
+        } }
+        <!-- end @for group (mobile) -->
       </div>
     </div>
     }
@@ -500,7 +633,7 @@
   </div>
   }
 
-  <!-- Fully paid congratulations state -->
+  <!-- Fully paid banner -->
   @if (overview.balance <= 0 && overview.recentPayments.length > 0) {
   <div class="sf-paid-banner">
     <mat-icon>celebration</mat-icon>

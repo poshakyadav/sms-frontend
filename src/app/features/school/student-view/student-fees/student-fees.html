@@ -124,7 +124,7 @@
         </div>
         <div class="sf-stat-card__body">
           <span class="sf-stat-card__label">Total Fees</span>
-          <span class="sf-stat-card__value">{{ overview.totalOriginal | paise : 'short' }}</span>
+          <span class="sf-stat-card__value">{{ overview.totalOriginal | paise : 'compact' }}</span>
           @if (overview.totalConcession > 0) {
           <span class="sf-stat-card__concession">
             <mat-icon>local_offer</mat-icon>
@@ -140,7 +140,7 @@
         </div>
         <div class="sf-stat-card__body">
           <span class="sf-stat-card__label">Total Due</span>
-          <span class="sf-stat-card__value">{{ overview.totalDue | paise : 'short' }}</span>
+          <span class="sf-stat-card__value">{{ overview.totalDue | paise : 'compact' }}</span>
         </div>
       </div>
 
@@ -151,7 +151,7 @@
         <div class="sf-stat-card__body">
           <span class="sf-stat-card__label">Paid So Far</span>
           <span class="sf-stat-card__value sf-stat-card__value--success">{{
-            overview.totalPaid | paise : 'short'
+            overview.totalPaid | paise : 'compact'
           }}</span>
         </div>
       </div>
@@ -171,7 +171,7 @@
             [class.sf-stat-card__value--error]="overview.balance > 0"
             [class.sf-stat-card__value--success]="overview.balance <= 0"
           >
-            {{ overview.balance | paise : 'short' }}
+            {{ overview.balance | paise : 'compact' }}
           </span>
         </div>
       </div>
@@ -208,8 +208,8 @@
         <table class="sf-fee-table">
           <thead>
             <tr>
-              <th>Fee Type</th>
-              <th>Month</th>
+              <th class="text-center">Fee Type</th>
+              <th class="text-center">Month</th>
               <th class="text-right">Original</th>
               <th class="text-right">Concession</th>
               <th class="text-right">Effective</th>
@@ -226,7 +226,7 @@
               [class.sf-fee-row--paid]="fee.status === 'PAID'"
               [class.sf-fee-row--overdue]="fee.status === 'OVERDUE'"
             >
-              <td>
+              <td class="text-center">
                 <div class="sf-fee-type-cell">
                   <span class="sf-fee-type-chip">{{ fee.feeType }}</span>
                   @if (!fee.isMandatory) {
@@ -234,7 +234,7 @@
                   }
                 </div>
               </td>
-              <td class="cell-muted">{{ formatMonth(fee.feeMonth) }}</td>
+              <td class="cell-muted text-center">{{ formatMonth(fee.feeMonth) }}</td>
               <td class="text-right amount-cell">{{ fee.originalAmount | paise : 'compact' }}</td>
               <td class="text-right">
                 @if (fee.concessionAmount > 0) {
@@ -356,7 +356,7 @@
             <tr>
               <th>Fee Type</th>
               <th>Month</th>
-              <th class="text-right">Original</th>
+              <th>Original</th>
               <th class="text-right">Concession</th>
               <th class="text-right">Effective</th>
               <th class="text-right">Paid</th>

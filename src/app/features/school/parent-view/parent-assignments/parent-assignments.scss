@@ -1,5 +1,10 @@
 // parent-assignments.scss
-// Uses app CSS variables for full theme support
+// ─────────────────────────────────────────────────────────────────────────────
+// All colors use CSS custom properties from styles.scss :root.
+// No hardcoded hex values — dark-mode works automatically via _dark-theme.scss.
+// ─────────────────────────────────────────────────────────────────────────────
+
+@use '../../../../../styles/tokens' as *;
 
 .pa-page {
   min-height: 100vh;
@@ -10,15 +15,23 @@
 // ══ Hero ═══════════════════════════════════════════════════════════════════
 .pa-hero {
   position: relative;
-  background: var(--color-secondary, #8b5cf6);
+  background: var(--color-primary);
   padding: 28px 24px 32px;
   overflow: hidden;
 
   &__bg {
     position: absolute;
     inset: 0;
-    background: radial-gradient(ellipse at 90% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 55%),
-      radial-gradient(ellipse at 10% 90%, rgba(0, 0, 0, 0.2) 0%, transparent 50%);
+    background: radial-gradient(
+        ellipse at 90% 20%,
+        color-mix(in srgb, var(--color-on-secondary) 10%, transparent) 0%,
+        transparent 55%
+      ),
+      radial-gradient(
+        ellipse at 10% 90%,
+        color-mix(in srgb, #000 20%, transparent) 0%,
+        transparent 50%
+      );
     pointer-events: none;
   }
 
@@ -41,7 +54,7 @@
     width: 50px;
     height: 50px;
     border-radius: 14px;
-    background: rgba(255, 255, 255, 0.2);
+    background: color-mix(in srgb, var(--color-on-secondary) 20%, transparent);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -51,7 +64,7 @@
       font-size: 26px;
       width: 26px;
       height: 26px;
-      color: #fff;
+      color: var(--color-on-secondary);
     }
   }
 
@@ -59,24 +72,24 @@
     margin: 0;
     font-size: 1.6rem;
     font-weight: 700;
-    color: #fff;
+    color: var(--color-on-secondary);
     line-height: 1.2;
   }
 
   &__sub {
     margin: 3px 0 0;
     font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.72);
+    color: color-mix(in srgb, var(--color-on-secondary) 72%, transparent);
   }
 }
 
-// Child banner
+// ── Child banner ──────────────────────────────────────────────────────────────
 .pa-child-banner {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: color-mix(in srgb, var(--color-on-secondary) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-on-secondary) 22%, transparent);
   border-radius: 12px;
   padding: 10px 16px;
   backdrop-filter: blur(8px);
@@ -87,14 +100,14 @@
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.25);
+  background: color-mix(in srgb, var(--color-on-secondary) 25%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   font-size: 1rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--color-on-secondary);
   flex-shrink: 0;
 
   img {
@@ -108,17 +121,17 @@
   display: block;
   font-size: 0.9rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--color-on-secondary);
 }
 
 .pa-child-class {
   display: block;
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: color-mix(in srgb, var(--color-on-secondary) 70%, transparent);
   margin-top: 2px;
 }
 
-// KPI Dashboard
+// ── KPI Dashboard ─────────────────────────────────────────────────────────────
 .pa-dashboard {
   display: flex;
   gap: 10px;
@@ -128,8 +141,8 @@
 .pa-kpi {
   flex: 1;
   min-width: 80px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: color-mix(in srgb, var(--color-on-secondary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-on-secondary) 20%, transparent);
   border-radius: 12px;
   padding: 12px;
   text-align: center;
@@ -142,38 +155,39 @@
   &--primary {
     min-width: 100px;
   }
+
   &--done {
-    background: rgba(16, 185, 129, 0.18);
-    border-color: rgba(16, 185, 129, 0.3);
+    background: color-mix(in srgb, var(--color-success) 18%, transparent);
+    border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
   }
 
   &__big {
     font-size: 1.75rem;
     font-weight: 800;
-    color: #fff;
+    color: var(--color-on-secondary);
     line-height: 1;
   }
 
   &__lbl {
     font-size: 0.68rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: color-mix(in srgb, var(--color-on-secondary) 70%, transparent);
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
 
   &__sub {
     font-size: 0.7rem;
-    color: rgba(255, 255, 255, 0.55);
+    color: color-mix(in srgb, var(--color-on-secondary) 55%, transparent);
   }
 
   &__warn {
     font-size: 0.68rem;
-    color: #fca5a5;
+    color: color-mix(in srgb, var(--color-error) 80%, var(--color-on-secondary));
     font-weight: 600;
   }
 }
 
-// Ring KPI
+// ── Ring KPI ──────────────────────────────────────────────────────────────────
 .pa-kpi__ring {
   position: relative;
   width: 52px;
@@ -188,13 +202,13 @@
 
 .pa-kpi__ring-bg {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.18);
+  stroke: color-mix(in srgb, var(--color-on-secondary) 18%, transparent);
   stroke-width: 3;
 }
 
 .pa-kpi__ring-fill {
   fill: none;
-  stroke: #fff;
+  stroke: var(--color-on-secondary);
   stroke-width: 3;
   stroke-dasharray: 88;
   stroke-linecap: round;
@@ -209,7 +223,7 @@
   justify-content: center;
   font-size: 0.78rem;
   font-weight: 800;
-  color: #fff;
+  color: var(--color-on-secondary);
 }
 
 // ══ Controls ════════════════════════════════════════════════════════════════
@@ -271,18 +285,19 @@
   }
 
   &.active {
-    background: var(--color-secondary, #8b5cf6);
-    border-color: var(--color-secondary, #8b5cf6);
-    color: #fff;
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-on-secondary);
+
     span {
-      background: rgba(255, 255, 255, 0.25);
-      color: #fff;
+      background: color-mix(in srgb, var(--color-on-secondary) 25%, transparent);
+      color: var(--color-on-secondary);
     }
   }
 
   &:hover:not(.active) {
-    border-color: var(--color-secondary, #8b5cf6);
-    color: var(--color-secondary, #8b5cf6);
+    border-color: var(--color-secondary);
+    color: var(--color-secondary);
   }
 }
 
@@ -305,13 +320,14 @@
     transition: all 0.15s;
 
     &.active {
-      background: var(--color-secondary, #8b5cf6);
-      color: #fff;
+      background: var(--color-primary);
+      color: var(--color-on-secondary);
     }
 
     &:not(:last-child) {
       border-right: 1px solid var(--color-border);
     }
+
     mat-icon {
       font-size: 18px;
       width: 18px;
@@ -342,9 +358,9 @@
   gap: 5px;
 
   &.active {
-    border-color: var(--color-secondary, #8b5cf6);
-    color: var(--color-secondary, #8b5cf6);
-    background: color-mix(in srgb, var(--color-secondary, #8b5cf6) 8%, transparent);
+    border-color: var(--color-secondary);
+    color: var(--color-secondary);
+    background: color-mix(in srgb, var(--color-secondary) 8%, transparent);
   }
 }
 
@@ -352,9 +368,10 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-}
-.pa-dot--warn {
-  background: var(--color-error);
+
+  &--warn {
+    background: var(--color-error);
+  }
 }
 
 .pa-date-row {
@@ -384,11 +401,13 @@
     height: 52px;
     opacity: 0.3;
   }
+
   h3 {
     margin: 0;
     font-size: 1.1rem;
     color: var(--color-text-primary);
   }
+
   p {
     margin: 0;
     font-size: 0.875rem;
@@ -399,6 +418,7 @@
     color: var(--color-error);
     opacity: 0.7;
   }
+
   &--empty mat-icon {
     opacity: 0.25;
   }
@@ -408,16 +428,17 @@
       width: 80px;
       height: 80px;
       border-radius: 50%;
-      background: color-mix(in srgb, var(--color-secondary, #8b5cf6) 12%, transparent);
+      background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
       display: flex;
       align-items: center;
       justify-content: center;
       margin-bottom: 4px;
+
       mat-icon {
         font-size: 36px;
         width: 36px;
         height: 36px;
-        color: var(--color-secondary, #8b5cf6);
+        color: var(--color-secondary);
         opacity: 1;
       }
     }
@@ -455,6 +476,7 @@
     color: var(--color-text-primary);
     white-space: nowrap;
     box-shadow: var(--shadow-sm);
+
     mat-icon {
       font-size: 14px;
       width: 14px;
@@ -462,15 +484,17 @@
     }
 
     &.today {
-      background: var(--color-secondary, #8b5cf6);
-      border-color: var(--color-secondary, #8b5cf6);
-      color: #fff;
+      background: var(--color-secondary);
+      border-color: var(--color-secondary);
+      color: var(--color-on-secondary);
     }
+
     &.tomorrow {
-      background: color-mix(in srgb, var(--color-secondary, #8b5cf6) 10%, transparent);
-      border-color: var(--color-secondary, #8b5cf6);
-      color: var(--color-secondary, #8b5cf6);
+      background: color-mix(in srgb, var(--color-secondary) 10%, transparent);
+      border-color: var(--color-secondary);
+      color: var(--color-secondary);
     }
+
     &.overdue {
       background: color-mix(in srgb, var(--color-error) 10%, transparent);
       border-color: var(--color-error);
@@ -483,6 +507,7 @@
     height: 1px;
     background: var(--color-border);
   }
+
   &__count {
     font-size: 0.72rem;
     font-weight: 600;
@@ -500,7 +525,7 @@
   gap: 14px;
 }
 
-// Parent card — slightly more informational than student card
+// ── Assignment card ────────────────────────────────────────────────────────────
 .pa-card {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
@@ -515,17 +540,19 @@
     transform: translateY(-1px);
   }
 
+  // Colour stripes use the semantic type variables
   &__stripe {
     width: 5px;
     flex-shrink: 0;
+
     &.type-assignment {
-      background: #8b5cf6;
+      background: var(--color-secondary);
     }
     &.type-homework {
-      background: #f59e0b;
+      background: var(--color-warning);
     }
     &.type-classwork {
-      background: #10b981;
+      background: var(--color-success);
     }
   }
 
@@ -551,12 +578,14 @@
     align-items: center;
     flex-wrap: wrap;
   }
+
   &__title {
     margin: 0;
     font-size: 0.95rem;
     font-weight: 700;
     color: var(--color-text-primary);
   }
+
   &__desc {
     margin: 0;
     font-size: 0.82rem;
@@ -581,11 +610,11 @@
     border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
   }
   &--graded {
-    border-color: color-mix(in srgb, #8b5cf6 30%, transparent);
+    border-color: color-mix(in srgb, var(--color-secondary) 30%, transparent);
   }
 }
 
-// Type badge
+// ── Type badge ────────────────────────────────────────────────────────────────
 .pa-type-badge {
   display: inline-flex;
   align-items: center;
@@ -596,6 +625,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+
   mat-icon {
     font-size: 12px;
     width: 12px;
@@ -603,16 +633,16 @@
   }
 
   &.type-assignment {
-    background: rgba(139, 92, 246, 0.12);
-    color: #8b5cf6;
+    background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
+    color: var(--color-secondary);
   }
   &.type-homework {
-    background: rgba(245, 158, 11, 0.12);
-    color: #d97706;
+    background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+    color: color-mix(in srgb, var(--color-warning) 70%, var(--color-text-primary));
   }
   &.type-classwork {
-    background: rgba(16, 185, 129, 0.12);
-    color: #059669;
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    color: color-mix(in srgb, var(--color-success) 70%, var(--color-text-primary));
   }
 }
 
@@ -624,8 +654,9 @@
   border-radius: 4px;
   font-size: 0.68rem;
   font-weight: 700;
-  background: rgba(239, 68, 68, 0.1);
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
   color: var(--color-error);
+
   mat-icon {
     font-size: 11px;
     width: 11px;
@@ -633,7 +664,7 @@
   }
 }
 
-// Submission status
+// ── Submission status badge ────────────────────────────────────────────────────
 .pa-submission-status {
   display: inline-flex;
   align-items: center;
@@ -642,10 +673,11 @@
   border-radius: 50px;
   font-size: 0.75rem;
   font-weight: 600;
-  background: rgba(245, 158, 11, 0.1);
-  color: #d97706;
-  border: 1px solid rgba(245, 158, 11, 0.25);
+  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+  color: color-mix(in srgb, var(--color-warning) 70%, var(--color-text-primary));
+  border: 1px solid color-mix(in srgb, var(--color-warning) 25%, transparent);
   white-space: nowrap;
+
   mat-icon {
     font-size: 13px;
     width: 13px;
@@ -653,24 +685,26 @@
   }
 
   &.submitted {
-    background: rgba(16, 185, 129, 0.1);
-    color: #059669;
-    border-color: rgba(16, 185, 129, 0.25);
+    background: color-mix(in srgb, var(--color-success) 10%, transparent);
+    color: color-mix(in srgb, var(--color-success) 70%, var(--color-text-primary));
+    border-color: color-mix(in srgb, var(--color-success) 25%, transparent);
   }
+
   &.graded {
-    background: rgba(139, 92, 246, 0.1);
-    color: #8b5cf6;
-    border-color: rgba(139, 92, 246, 0.25);
+    background: color-mix(in srgb, var(--color-secondary) 10%, transparent);
+    color: var(--color-secondary);
+    border-color: color-mix(in srgb, var(--color-secondary) 25%, transparent);
   }
 }
 
-// Info chips
+// ── Info chips ────────────────────────────────────────────────────────────────
 .pa-info-chip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   font-size: 0.75rem;
   color: var(--color-text-secondary);
+
   mat-icon {
     font-size: 13px;
     width: 13px;
@@ -679,16 +713,17 @@
   }
 
   &--marks {
-    color: #8b5cf6;
+    color: var(--color-secondary);
     font-weight: 600;
+
     mat-icon {
       opacity: 1;
-      color: #8b5cf6;
+      color: var(--color-secondary);
     }
   }
 }
 
-// Score
+// ── Score ─────────────────────────────────────────────────────────────────────
 .pa-score-row {
   display: flex;
   align-items: center;
@@ -706,14 +741,27 @@
     height: 100%;
     border-radius: 4px;
     transition: width 0.5s ease;
+
     &.score--high {
-      background: linear-gradient(90deg, #10b981, #059669);
+      background: linear-gradient(
+        90deg,
+        var(--color-success),
+        color-mix(in srgb, var(--color-success) 70%, #000)
+      );
     }
     &.score--mid {
-      background: linear-gradient(90deg, #f59e0b, #d97706);
+      background: linear-gradient(
+        90deg,
+        var(--color-warning),
+        color-mix(in srgb, var(--color-warning) 70%, #000)
+      );
     }
     &.score--low {
-      background: linear-gradient(90deg, #ef4444, #dc2626);
+      background: linear-gradient(
+        90deg,
+        var(--color-error),
+        color-mix(in srgb, var(--color-error) 80%, #000)
+      );
     }
   }
 }
@@ -725,10 +773,10 @@
   white-space: nowrap;
 
   &.score--high {
-    color: #059669;
+    color: color-mix(in srgb, var(--color-success) 70%, var(--color-text-primary));
   }
   &.score--mid {
-    color: #d97706;
+    color: color-mix(in srgb, var(--color-warning) 70%, var(--color-text-primary));
   }
   &.score--low {
     color: var(--color-error);
@@ -739,10 +787,12 @@
   font-size: 0.9rem;
   font-weight: 800;
 }
+
 .pa-score-max {
   font-size: 0.75rem;
   font-weight: 600;
 }
+
 .pa-score-pct {
   font-size: 0.72rem;
   color: var(--color-text-muted);
@@ -772,21 +822,21 @@
   gap: 12px;
   padding: 14px 18px;
   border-bottom: 1px solid var(--color-divider);
-  background: color-mix(in srgb, var(--color-secondary, #8b5cf6) 5%, var(--color-bg-card));
+  background: color-mix(in srgb, var(--color-secondary) 5%, var(--color-bg-card));
 }
 
 .pa-subject-icon {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: color-mix(in srgb, var(--color-secondary, #8b5cf6) 15%, transparent);
+  background: color-mix(in srgb, var(--color-secondary) 15%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 
   mat-icon {
-    color: var(--color-secondary, #8b5cf6);
+    color: var(--color-secondary);
     font-size: 18px;
     width: 18px;
     height: 18px;
@@ -795,12 +845,14 @@
 
 .pa-subject-title {
   flex: 1;
+
   h3 {
     margin: 0;
     font-size: 0.95rem;
     font-weight: 700;
     color: var(--color-text-primary);
   }
+
   span {
     font-size: 0.75rem;
     color: var(--color-text-muted);
@@ -820,12 +872,12 @@
   font-weight: 600;
 
   &--pending {
-    background: rgba(245, 158, 11, 0.12);
-    color: #d97706;
+    background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+    color: color-mix(in srgb, var(--color-warning) 70%, var(--color-text-primary));
   }
   &--done {
-    background: rgba(16, 185, 129, 0.12);
-    color: #059669;
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    color: color-mix(in srgb, var(--color-success) 70%, var(--color-text-primary));
   }
 }
 
@@ -846,6 +898,7 @@
   &:last-child {
     border-bottom: none;
   }
+
   &:hover {
     background: var(--color-hover);
   }
@@ -853,6 +906,7 @@
   &.done {
     opacity: 0.65;
   }
+
   &.overdue .pa-subject-item__title {
     color: var(--color-error);
   }
@@ -893,29 +947,34 @@
   }
 }
 
+// ── Type dot (subject view) ───────────────────────────────────────────────────
 .pa-stype-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
+
   &.type-assignment {
-    background: #8b5cf6;
+    background: var(--color-secondary);
   }
   &.type-homework {
-    background: #f59e0b;
+    background: var(--color-warning);
   }
   &.type-classwork {
-    background: #10b981;
+    background: var(--color-success);
   }
 }
 
+// ── Mini status icons (subject view) ─────────────────────────────────────────
 .pa-mini-status {
   display: flex;
+
   mat-icon {
     font-size: 18px;
     width: 18px;
     height: 18px;
   }
+
   &.done mat-icon {
     color: var(--color-success);
   }
@@ -927,6 +986,7 @@
   }
 }
 
+// ── Mini score (subject view) ─────────────────────────────────────────────────
 .pa-mini-score {
   font-size: 0.8rem;
   font-weight: 700;
@@ -934,15 +994,15 @@
   border-radius: 6px;
 
   &.score--high {
-    background: rgba(16, 185, 129, 0.1);
-    color: #059669;
+    background: color-mix(in srgb, var(--color-success) 10%, transparent);
+    color: color-mix(in srgb, var(--color-success) 70%, var(--color-text-primary));
   }
   &.score--mid {
-    background: rgba(245, 158, 11, 0.1);
-    color: #d97706;
+    background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+    color: color-mix(in srgb, var(--color-warning) 70%, var(--color-text-primary));
   }
   &.score--low {
-    background: rgba(239, 68, 68, 0.1);
+    background: color-mix(in srgb, var(--color-error) 10%, transparent);
     color: var(--color-error);
   }
 }
@@ -954,7 +1014,7 @@
 }
 
 // ══ Responsive ════════════════════════════════════════════════════════════════
-@media (max-width: 768px) {
+@media (max-width: $bp-lg) {
   .pa-hero {
     padding: 20px 16px 24px;
   }
@@ -994,7 +1054,7 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: $bp-sm) {
   .pa-chips {
     gap: 6px;
   }

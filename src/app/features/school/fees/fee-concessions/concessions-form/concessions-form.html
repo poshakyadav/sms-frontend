@@ -4,12 +4,18 @@
   <div class="modal-header">
     <div
       class="modal-header__icon"
-      [class.modal-header__icon--warning]="existingConcession()"
-      [class.modal-header__icon--paid]="isPaid() && existingConcession()"
+      [class.modal-header__icon--warning]="existingConcession() && !isPaid()"
+      [class.modal-header__icon--paid]="isPaid()"
+      [class.modal-header__icon--blocked]="isPaidWithNoConession()"
+      [class.modal-header__icon--partial]="isPartiallyPaidBlocked()"
     >
       <mat-icon>
         {{
-          isPaid() && existingConcession()
+          isPartiallyPaidBlocked()
+            ? 'schedule'
+            : isPaidWithNoConession()
+            ? 'block'
+            : isPaid() && existingConcession()
             ? 'lock'
             : existingConcession()
             ? 'edit_note'
@@ -19,8 +25,10 @@
     </div>
     <div class="modal-header__content">
       <h2 class="modal-title">
-        @if (isPaid() && existingConcession()) { Concession Details } @else if
-        (existingConcession()) { Manage Concession } @else { Grant Concession }
+        @if (isPartiallyPaidBlocked()) { Cannot Grant Concession } @else if
+        (isPaidWithNoConession()) { Cannot Grant Concession } @else if (isPaid() &&
+        existingConcession()) { Concession Details } @else if (existingConcession()) { Manage
+        Concession } @else { Grant Concession }
       </h2>
       @if (data.studentName) {
       <p class="modal-subtitle">{{ data.studentName }}</p>
@@ -78,6 +86,235 @@
       <span>Loading fee details…</span>
     </div>
     } @if (!loading()) {
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         PARTIAL-PAY BLOCKING STATE — fee has been partially paid but is
+         not yet fully settled. Granting a concession at this point would
+         retroactively alter the amount that was owed when the partial
+         payment was recorded, making the payment history inaccurate.
+    ════════════════════════════════════════════════════════════════════ -->
+    @if (isPartiallyPaidBlocked()) {
+    <div class="partial-blocking-state">
+      <!-- Accent bar -->
+      <div class="ppbs-accent-bar"></div>
+
+      <!-- Icon + headline -->
+      <div class="ppbs-hero">
+        <div class="ppbs-hero__icon-wrap">
+          <div class="ppbs-hero__icon">
+            <mat-icon>schedule</mat-icon>
+          </div>
+        </div>
+        <div class="ppbs-hero__content">
+          <div class="ppbs-hero__badges">
+            <span class="ppbs-badge ppbs-badge--partial">
+              <mat-icon>hourglass_top</mat-icon>
+              Partially Paid
+            </span>
+            <span class="ppbs-badge ppbs-badge--blocked">
+              <mat-icon>block</mat-icon>
+              Concession Blocked
+            </span>
+          </div>
+          <h3 class="ppbs-hero__title">A payment has already been recorded for this fee</h3>
+          <p class="ppbs-hero__subtitle">
+            Concessions must be applied before any payment is recorded. Since a partial payment
+            already exists, granting a discount now would retroactively change the amount that was
+            owed — making the payment history inconsistent.
+          </p>
+        </div>
+      </div>
+
+      <!-- Payment summary strip -->
+      @if (data.amountPaid !== undefined || data.effectiveAmount !== undefined) {
+      <div class="ppbs-summary-strip">
+        @if (data.effectiveAmount !== undefined) {
+        <div class="ppbs-summary-item">
+          <span class="ppbs-summary-label">Total Due</span>
+          <span class="ppbs-summary-value">
+            ₹{{
+              paiseToRupees(data.effectiveAmount).toLocaleString('en-IN', {
+                minimumFractionDigits: 2
+              })
+            }}
+          </span>
+        </div>
+        } @if (data.amountPaid !== undefined) {
+        <div class="ppbs-summary-divider"></div>
+        <div class="ppbs-summary-item">
+          <span class="ppbs-summary-label">Already Paid</span>
+          <span class="ppbs-summary-value ppbs-summary-value--paid">
+            ₹{{
+              paiseToRupees(data.amountPaid).toLocaleString('en-IN', { minimumFractionDigits: 2 })
+            }}
+          </span>
+        </div>
+        } @if (data.amountPaid !== undefined && data.effectiveAmount !== undefined) {
+        <div class="ppbs-summary-divider"></div>
+        <div class="ppbs-summary-item">
+          <span class="ppbs-summary-label">Remaining</span>
+          <span class="ppbs-summary-value ppbs-summary-value--remaining">
+            ₹{{
+              paiseToRupees(data.effectiveAmount - data.amountPaid).toLocaleString('en-IN', {
+                minimumFractionDigits: 2
+              })
+            }}
+          </span>
+        </div>
+        }
+      </div>
+      }
+
+      <!-- Why this rule exists -->
+      <div class="ppbs-rule-card">
+        <div class="ppbs-rule-card__header">
+          <mat-icon>info_outline</mat-icon>
+          <span>Why can't I add a concession now?</span>
+        </div>
+        <p class="ppbs-rule-card__body">
+          A concession adjusts the <em>effective amount due</em> — the amount the student is
+          actually obligated to pay. Once a partial payment is recorded against the full due amount,
+          the payment record is tied to that value. Retroactively discounting it creates an
+          inconsistency: the collected amount would exceed the new effective amount for the portion
+          already paid.
+        </p>
+      </div>
+
+      <!-- What to do instead -->
+      <div class="ppbs-actions-guide">
+        <p class="ppbs-actions-guide__label">Recommended steps</p>
+        <div class="ppbs-action-item">
+          <div class="ppbs-action-item__icon ppbs-action-item__icon--primary">
+            <mat-icon>undo</mat-icon>
+          </div>
+          <div class="ppbs-action-item__content">
+            <span class="ppbs-action-item__title">Void the partial payment first</span>
+            <span class="ppbs-action-item__desc">
+              Go to the Payments tab, void the existing payment record, apply the concession, then
+              re-record the corrected amount — which will reflect the discounted effective amount.
+            </span>
+          </div>
+        </div>
+        <div class="ppbs-action-item">
+          <div class="ppbs-action-item__icon ppbs-action-item__icon--secondary">
+            <mat-icon>receipt_long</mat-icon>
+          </div>
+          <div class="ppbs-action-item__content">
+            <span class="ppbs-action-item__title">Apply concession to other unpaid fees</span>
+            <span class="ppbs-action-item__desc">
+              If the student has other fee lines with no payments recorded yet, you can still grant
+              concessions on those from the Standard Fees or Custom Fees tab.
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Close action -->
+      <div class="ppbs-footer">
+        <button mat-flat-button color="primary" (click)="close()">
+          <mat-icon>arrow_back</mat-icon>
+          Go Back
+        </button>
+      </div>
+    </div>
+    }
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         PAID-BLOCKING STATE — fee is fully settled with NO active concession.
+         Granting a concession after full payment would retroactively reduce
+         the effective amount below what was already collected, creating a
+         logical inconsistency. This state is surfaced as a hard block.
+    ════════════════════════════════════════════════════════════════════ -->
+    @if (isPaidWithNoConession()) {
+    <div class="paid-blocking-state">
+      <!-- Accent bar -->
+      <div class="pbs-accent-bar"></div>
+
+      <!-- Icon + headline -->
+      <div class="pbs-hero">
+        <div class="pbs-hero__icon-wrap">
+          <div class="pbs-hero__icon">
+            <mat-icon>payments</mat-icon>
+          </div>
+        </div>
+        <div class="pbs-hero__content">
+          <div class="pbs-hero__badges">
+            <span class="pbs-badge pbs-badge--paid">
+              <mat-icon>check_circle</mat-icon>
+              Fully Paid
+            </span>
+            <span class="pbs-badge pbs-badge--blocked">
+              <mat-icon>block</mat-icon>
+              Concession Blocked
+            </span>
+          </div>
+          <h3 class="pbs-hero__title">This fee has already been paid in full</h3>
+          <p class="pbs-hero__subtitle">
+            Concessions can only be applied to fees with an outstanding balance. Since this fee is
+            fully settled, adding a discount at this stage would create a retroactive adjustment —
+            which is not permitted.
+          </p>
+        </div>
+      </div>
+
+      <!-- Why this rule exists -->
+      <div class="pbs-rule-card">
+        <div class="pbs-rule-card__header">
+          <mat-icon>info_outline</mat-icon>
+          <span>Why can't I add a concession?</span>
+        </div>
+        <p class="pbs-rule-card__body">
+          A concession reduces the effective amount due <em>before</em> payment is recorded. Once a
+          fee is fully paid, the ledger is balanced — there is no remaining balance to discount.
+          Retroactively altering a settled fee would make the payment history inaccurate and could
+          create unexplained credits.
+        </p>
+      </div>
+
+      <!-- What to do instead -->
+      <div class="pbs-actions-guide">
+        <p class="pbs-actions-guide__label">What you can do instead</p>
+        <div class="pbs-action-item">
+          <div class="pbs-action-item__icon pbs-action-item__icon--primary">
+            <mat-icon>undo</mat-icon>
+          </div>
+          <div class="pbs-action-item__content">
+            <span class="pbs-action-item__title">Void the payment first</span>
+            <span class="pbs-action-item__desc">
+              Go to the Payments tab, void the relevant payment, then apply a concession before
+              re-recording the corrected amount.
+            </span>
+          </div>
+        </div>
+        <div class="pbs-action-item">
+          <div class="pbs-action-item__icon pbs-action-item__icon--secondary">
+            <mat-icon>receipt_long</mat-icon>
+          </div>
+          <div class="pbs-action-item__content">
+            <span class="pbs-action-item__title">Check other unpaid fees</span>
+            <span class="pbs-action-item__desc">
+              If this student has other outstanding fee lines, you can apply concessions to those
+              from the Standard Fees or Custom Fees tab.
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Close action -->
+      <div class="pbs-footer">
+        <button mat-flat-button color="primary" (click)="close()">
+          <mat-icon>arrow_back</mat-icon>
+          Go Back
+        </button>
+      </div>
+    </div>
+    }
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         NORMAL FORM — fee is not fully or partially paid (or concession check still
+         pending). Show grant form or existing-concession banner.
+    ════════════════════════════════════════════════════════════════════ -->
+    @if (!isPaidWithNoConession() && !isPartiallyPaidBlocked()) {
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <!-- ── Fee Structure Selector (hidden if preselected) ────────────── -->
       @if (sourceMode() === 'STRUCTURE' && !data.preselectedFeeStructureId) {
@@ -107,6 +344,14 @@
         <mat-hint>No custom fee assignments found</mat-hint>
         }
       </mat-form-field>
+      }
+
+      <!-- Concession check loading indicator -->
+      @if (selectedBaseAmount() > 0 && !concessionCheckDone()) {
+      <div class="concession-check-loading">
+        <mat-spinner diameter="16" />
+        <span>Checking for existing concessions…</span>
+      </div>
       }
 
       <!-- ══════════════════════════════════════════════════════════════
@@ -276,7 +521,7 @@
       <!-- ══════════════════════════════════════════════════════════════
                NEW CONCESSION FORM — only shown when no existing concession
           ════════════════════════════════════════════════════════════════ -->
-      @if (!existingConcession() && selectedBaseAmount() > 0) {
+      @if (!existingConcession() && selectedBaseAmount() > 0 && concessionCheckDone()) {
 
       <!-- Concession Type Pills -->
       <div class="field-group">
@@ -303,48 +548,59 @@
         </div>
       </div>
 
-      <!-- Concession Value -->
-      <mat-form-field appearance="outline" class="form-field full-width">
-        <mat-label>
+      <!-- ── Concession Value — custom inline input (fixes textarea-sizing bug) -->
+      <div class="field-group">
+        <label class="field-label">
           {{
             form.get('concessionType')?.value === 'PERCENTAGE'
               ? 'Discount Percentage'
               : 'Discount Amount (₹)'
           }}
-        </mat-label>
-        @if (form.get('concessionType')?.value === 'PERCENTAGE') {
-        <ng-container>
-          <span matSuffix>%&nbsp;</span>
-        </ng-container>
-        <input
-          matInput
-          type="number"
-          formControlName="concessionValue"
-          min="1"
-          max="100"
-          placeholder="e.g. 20"
-        />
-        } @else {
-        <ng-container>
-          <span matPrefix>₹&nbsp;</span>
-        </ng-container>
-        <input
-          matInput
-          type="number"
-          formControlName="concessionValue"
-          min="1"
-          [max]="paiseToRupees(selectedBaseAmount())"
-          placeholder="e.g. 500"
-        />
-        } @if (form.get('concessionValue')?.hasError('required') &&
+        </label>
+        <div
+          class="amount-input-wrap"
+          [class.amount-input-wrap--focused]="amountInputFocused"
+          [class.amount-input-wrap--error]="
+            form.get('concessionValue')?.invalid && form.get('concessionValue')?.touched
+          "
+        >
+          <span class="amount-input-prefix">
+            @if (form.get('concessionType')?.value === 'PERCENTAGE') {
+            <mat-icon>percent</mat-icon>
+            } @else {
+            <span class="amount-input-prefix__symbol">₹</span>
+            }
+          </span>
+          <input
+            class="amount-input-field"
+            type="number"
+            formControlName="concessionValue"
+            [min]="1"
+            [max]="
+              form.get('concessionType')?.value === 'PERCENTAGE'
+                ? 100
+                : paiseToRupees(selectedBaseAmount())
+            "
+            [placeholder]="
+              form.get('concessionType')?.value === 'PERCENTAGE' ? 'e.g. 20' : 'e.g. 500'
+            "
+            (focus)="amountInputFocused = true"
+            (blur)="amountInputFocused = false"
+          />
+          @if (form.get('concessionType')?.value === 'PERCENTAGE') {
+          <span class="amount-input-suffix">%</span>
+          }
+        </div>
+        <!-- Inline validation messages -->
+        @if (form.get('concessionValue')?.hasError('required') &&
         form.get('concessionValue')?.touched) {
-        <mat-error>Value is required</mat-error>
-        } @if (form.get('concessionValue')?.hasError('min')) {
-        <mat-error>Must be greater than 0</mat-error>
-        } @if (form.get('concessionValue')?.hasError('max')) {
-        <mat-error>Cannot exceed fee amount</mat-error>
+        <p class="field-error">Value is required</p>
+        } @else if (form.get('concessionValue')?.hasError('min')) {
+        <p class="field-error">Must be greater than 0</p>
+        } @else if (form.get('concessionValue')?.hasError('max')) {
+        <p class="field-error">Cannot exceed fee amount</p>
         }
-      </mat-form-field>
+      </div>
 
       <!-- Live Preview -->
       @if (previewDiscount(); as preview) {
@@ -422,7 +678,7 @@
           {{ existingConcession() ? 'Close' : 'Cancel' }}
         </button>
 
-        @if (!existingConcession()) {
+        @if (!existingConcession() && concessionCheckDone()) {
         <button
           type="submit"
           mat-flat-button
@@ -441,6 +697,6 @@
         }
       </div>
     </form>
-    }
+    } }
   </div>
 </div>

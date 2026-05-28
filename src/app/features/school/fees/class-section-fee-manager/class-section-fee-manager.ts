@@ -362,30 +362,47 @@ export class ClassSectionFeeManager implements OnInit {
   }
 
   /**
-   * Opens the concession form.
+   * Opens the concession form dialog.
    *
    * @param mode    'STRUCTURE' for standard fees, 'ASSIGNMENT' for custom fees.
    * @param feeItem Optional. When passed (by clicking the concession icon on a
-   *                specific fee row), the form will open with that fee
-   *                pre-selected and show the existing-concession banner if one
-   *                already exists.
+   *                specific fee row), the form opens pre-targeted to that fee.
    *
-   * passes `isPaid` so the form can lock "Revoke & Replace" when the
-   *      fee is already fully settled (remaining === 0).
-   * custom-fee branch now correctly uses `preselectedAssignmentId`
-   *      AND the timing-safe patch in `loadData()` ensures auto-select
-   *      fires AFTER the assignments list is populated.
+   * Payment-state guards (evaluated in priority order):
+   *
+   *   1. Fully paid (remaining === 0, no concession yet)
+   *      → isPaid=true — form shows paid-blocking state (cannot grant).
+   *
+   *   2. Partially paid (paid > 0 but remaining > 0, no concession yet)
+   *      → isPartiallyPaid=true — form shows partial-pay blocking state (cannot grant).
+   *      amountPaid and effectiveAmount are forwarded so the blocking UI can
+   *      display the exact amounts already collected.
+   *
+   *   3. Fee has an active concession AND is fully settled (remaining === 0)
+   *      → isPaid=true — form shows the locked-concession banner (cannot revoke).
+   *
+   *   4. Fee has an active concession but still has remaining balance
+   *      → no flags set — form shows the existing-concession management UI.
+   *
+   *   5. No payment, no concession
+   *      → no flags set — form shows the grant-concession form.
+   *
+   * Note: cases 1–3 use `remaining <= 0` or `paid > 0` on the DueFeeItem,
+   * which already accounts for any existing concession in its effectiveAmount.
    */
   openGrantConcession(mode: 'STRUCTURE' | 'ASSIGNMENT', feeItem?: DueFeeItem): void {
     const student = this.selectedStudent();
     if (!student) return;
-
-    // ── Is this fee fully settled? ───────────────────────────────────────
-    // remaining <= 0 means the student has already paid the effective amount.
-    // Revoking a concession on a paid fee would retroactively increase the
-    // outstanding balance — block it at the UI level.
+ 
+    // ── Determine payment state for this fee item ─────────────────────────
     const isPaid = feeItem ? feeItem.remaining <= 0 : false;
-
+ 
+    // Partially paid: a payment exists but the balance is not yet cleared.
+    // Only meaningful when a specific feeItem is clicked (not header-level action).
+    const isPartiallyPaid = feeItem
+      ? feeItem.paid > 0 && feeItem.remaining > 0
+      : false;
+ 
     const ref = this.dialog.open(ConcessionsFormComponent, {
       width: '580px',
       maxWidth: '95vw',
@@ -395,6 +412,10 @@ export class ClassSectionFeeManager implements OnInit {
         studentName: student.name,
         mode,
         isPaid,
+        isPartiallyPaid,
+        // ── Pass payment amounts for the partial-pay blocking UI ─────────
+        // Only relevant when isPartiallyPaid=true; harmless otherwise.
+        ...(feeItem ? { amountPaid: feeItem.paid, effectiveAmount: feeItem.effectiveAmount } : {}),
         // ── Preselected fee IDs ──────────────────────────────────────────
         // Pass exactly ONE of these so the form:
         //   a) hides the fee-selector dropdown (compact mode pill)
@@ -405,7 +426,7 @@ export class ClassSectionFeeManager implements OnInit {
         ...(feeItem && mode === 'ASSIGNMENT' ? { preselectedAssignmentId: feeItem.id } : {}),
       },
     });
-
+ 
     ref.afterClosed().subscribe((saved) => {
       if (saved) {
         this.snack.open('Concession granted successfully', 'Close', { duration: 3000 });

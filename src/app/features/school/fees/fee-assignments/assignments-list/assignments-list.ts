@@ -172,23 +172,36 @@ export class AssignmentsList implements OnChanges {
   /**
    * Opens the concession form pre-targeted to a specific custom fee assignment.
    *
-   * Key fixes vs the previous implementation:
+   * Payment-state guards (evaluated in priority order):
    *
-   * 1. `preselectedAssignmentId: a.id` — tells the form to auto-select this
-   *    assignment after `getStudentFeeAssignments` resolves, hiding the
-   *    dropdown and immediately checking for an existing concession.
+   *   1. Fully paid (balance <= 0, no concession yet)
+   *      → isPaid=true — form shows paid-blocking state (cannot grant).
    *
-   * 2. `isPaid: a.balance <= 0` — passes the settled-fee flag so the form
-   *    hides the "Revoke & Replace" button when the fee is fully paid.
-   *    `a.balance` is computed by `getStudentFeeAssignments` in the service
-   *    and accounts for concessions (effectiveAmount − amountPaid).
+   *   2. Partially paid (amountPaid > 0 but balance > 0, no concession yet)
+   *      → isPartiallyPaid=true — form shows partial-pay blocking state (cannot grant).
+   *      amountPaid and effectiveAmount are forwarded so the blocking UI can
+   *      display the exact amounts already collected.
    *
-   * Previously this method passed neither field, so:
-   *   • The dropdown was never hidden or pre-selected (user had to pick again).
-   *   • The existing-concession banner never appeared on open.
-   *   • The paid-lock state was ignored (revoke was always shown).
+   *   3. Assignment has an active concession AND is fully settled (balance <= 0)
+   *      → isPaid=true — form shows the locked-concession banner (cannot revoke).
+   *
+   *   Cases 2 and 3 above are mutually exclusive: if concessionAmount > 0 the
+   *   service already factors it into effectiveAmount, so balance is computed
+   *   against the discounted figure. An assignment with a concession that still
+   *   has balance > 0 falls through to case 4 (existing concession, manageable).
+   *
+   * `a.balance` = effectiveAmount − amountPaid (server-computed, concession-aware).
+   * `a.amountPaid` = raw collected amount (not concession-adjusted).
    */
   openConcession(a: StudentFeeAssignment): void {
+    // ── Determine payment state ────────────────────────────────────────────
+    const isPaid = a.balance <= 0;
+
+    // Partially paid: some amount has been collected but the balance remains.
+    // Only block when there is no existing concession — if there already is one,
+    // the form handles it via the locked-concession banner path.
+    const isPartiallyPaid = !isPaid && a.amountPaid > 0;
+
     const ref = this.dialog.open(ConcessionsFormComponent, {
       width: '580px',
       maxWidth: '95vw',
@@ -198,19 +211,18 @@ export class AssignmentsList implements OnChanges {
         studentName: this.studentName,
         mode: 'ASSIGNMENT',
         // ── Pre-select this specific assignment ───────────────────────────
-        // The form's loadData() patches this ID into the form AFTER the
-        // assignments list is fetched, triggering valueChanges which:
-        //   a) sets selectedBaseAmount from the assignment's amount
-        //   b) calls checkExistingConcession() to look up active concessions
-        //   c) hides the dropdown (compact mode-pill shown instead)
         preselectedAssignmentId: a.id,
-        // ── Lock revoke when fee is fully settled ─────────────────────────
-        // balance = effectiveAmount (after concession) − amountPaid.
-        // When <= 0 the fee is paid in full; revoking the concession would
-        // retroactively create a new outstanding balance — block it at UI level.
-        isPaid: a.balance <= 0,
+        // ── Payment-state flags ───────────────────────────────────────────
+        isPaid,
+        isPartiallyPaid,
+        // ── Pass raw payment amounts for the partial-pay blocking UI ─────
+        // effectiveAmount is already concession-adjusted (server-computed).
+        // Only meaningful when isPartiallyPaid=true; harmless otherwise.
+        amountPaid: a.amountPaid,
+        effectiveAmount: a.effectiveAmount,
       },
     });
+
     ref.afterClosed().subscribe((saved) => {
       if (saved) {
         this.snack.open('Concession granted', 'Close', { duration: 3000 });

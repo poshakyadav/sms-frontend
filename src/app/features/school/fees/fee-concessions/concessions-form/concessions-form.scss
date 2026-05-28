@@ -52,6 +52,14 @@
         color: var(--color-text-muted);
       }
     }
+
+    // Paid with NO concession — hard blocked
+    &--blocked {
+      background: color-mix(in srgb, var(--color-error) 10%, transparent);
+      mat-icon {
+        color: var(--color-error);
+      }
+    }
   }
 
   &__content {
@@ -178,6 +186,24 @@
   font-size: 0.84rem;
 }
 
+// ── Concession check mini-loading ─────────────────────────────────────────
+.concession-check-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 12%, transparent);
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+
+  mat-spinner {
+    flex-shrink: 0;
+  }
+}
+
 // ── Form fields ───────────────────────────────────────────────────────────
 .form-field {
   width: 100%;
@@ -189,7 +215,7 @@
 }
 
 .field-group {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .field-label {
@@ -198,6 +224,112 @@
   font-weight: 600;
   color: var(--color-text-secondary);
   margin-bottom: 8px;
+}
+
+.field-error {
+  font-size: 0.74rem;
+  color: var(--color-error);
+  margin: 5px 0 0 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+// ── Custom amount input (replaces mat-form-field for number fields) ────────
+// mat-form-field with type="number" renders as an oversized textarea-like
+// box in some Angular Material versions. This native input wrapper fixes
+// the sizing, alignment, and placeholder positioning consistently.
+.amount-input-wrap {
+  display: flex;
+  align-items: center;
+  height: 48px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-card);
+  overflow: hidden;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+
+  &--focused {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
+  }
+
+  &--error {
+    border-color: var(--color-error);
+
+    &.amount-input-wrap--focused {
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error) 10%, transparent);
+    }
+  }
+
+  &:hover:not(&--focused):not(&--error) {
+    border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border));
+  }
+}
+
+.amount-input-prefix {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 100%;
+  border-right: 1px solid var(--color-divider);
+  background: color-mix(in srgb, var(--color-bg-main) 60%, transparent);
+  color: var(--color-text-muted);
+
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+  }
+
+  &__symbol {
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+}
+
+.amount-input-field {
+  flex: 1;
+  height: 100%;
+  padding: 0 12px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: 0.95rem;
+  font-weight: 500;
+  font-family: inherit;
+  // Remove number input spinners — they misalign in Chrome/Firefox
+  -moz-appearance: textfield;
+  appearance: textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  &::placeholder {
+    color: var(--color-text-muted);
+    font-weight: 400;
+  }
+}
+
+.amount-input-suffix {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0 12px;
+  height: 100%;
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+  border-left: 1px solid var(--color-divider);
+  background: color-mix(in srgb, var(--color-bg-main) 60%, transparent);
 }
 
 // ── Type pills ────────────────────────────────────────────────────────────
@@ -354,6 +486,257 @@
 }
 
 // ══════════════════════════════════════════════════════════════════════════
+// PAID-BLOCKING STATE — Fee fully paid, no concession
+// ══════════════════════════════════════════════════════════════════════════
+
+.paid-blocking-state {
+  border: 1px solid color-mix(in srgb, var(--color-error) 20%, transparent);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-error) 3%, var(--color-bg-card));
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+// Top accent bar (static — payment is complete, no shimmer needed)
+.pbs-accent-bar {
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--color-error),
+    color-mix(in srgb, var(--color-warning) 60%, var(--color-error)),
+    var(--color-error)
+  );
+}
+
+// Hero section
+.pbs-hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-error) 10%, transparent);
+
+  &__icon-wrap {
+    flex-shrink: 0;
+  }
+
+  &__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+
+    mat-icon {
+      font-size: 22px;
+      height: 22px;
+      width: 22px;
+      color: var(--color-success);
+    }
+  }
+
+  &__content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  &__title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin: 0 0 5px;
+    line-height: 1.4;
+  }
+
+  &__subtitle {
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
+    margin: 0;
+    line-height: 1.6;
+  }
+}
+
+// Status badges inside hero
+.pbs-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+
+  mat-icon {
+    font-size: 11px;
+    height: 11px;
+    width: 11px;
+    flex-shrink: 0;
+  }
+
+  &--paid {
+    background: color-mix(in srgb, var(--color-success) 14%, transparent);
+    color: color-mix(in srgb, var(--color-success) 70%, #000);
+    border: 1px solid color-mix(in srgb, var(--color-success) 22%, transparent);
+  }
+
+  &--blocked {
+    background: color-mix(in srgb, var(--color-error) 10%, transparent);
+    color: var(--color-error);
+    border: 1px solid color-mix(in srgb, var(--color-error) 20%, transparent);
+  }
+}
+
+// Rule explanation card
+.pbs-rule-card {
+  margin: 0 18px 0;
+  padding: 12px 14px;
+  border-left: 3px solid color-mix(in srgb, var(--color-info) 50%, transparent);
+  background: color-mix(in srgb, var(--color-info) 5%, transparent);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--color-info);
+    margin-bottom: 6px;
+
+    mat-icon {
+      font-size: 15px;
+      height: 15px;
+      width: 15px;
+      flex-shrink: 0;
+    }
+  }
+
+  &__body {
+    font-size: 0.76rem;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    margin: 0;
+
+    em {
+      font-style: italic;
+      color: var(--color-text-primary);
+    }
+  }
+}
+
+// Actions guide
+.pbs-actions-guide {
+  padding: 14px 18px;
+  border-top: 1px solid color-mix(in srgb, var(--color-error) 10%, transparent);
+
+  &__label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+    margin: 0 0 10px;
+  }
+}
+
+.pbs-action-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+
+  & + & {
+    border-top: 1px solid var(--color-divider);
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+
+    mat-icon {
+      font-size: 16px;
+      height: 16px;
+      width: 16px;
+    }
+
+    &--primary {
+      background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+      mat-icon {
+        color: var(--color-primary);
+      }
+    }
+
+    &--secondary {
+      background: color-mix(in srgb, var(--color-secondary) 10%, transparent);
+      mat-icon {
+        color: var(--color-secondary);
+      }
+    }
+  }
+
+  &__content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  &__title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+
+  &__desc {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+  }
+}
+
+// Footer inside paid-blocking state
+.pbs-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 18px 16px;
+  border-top: 1px solid color-mix(in srgb, var(--color-error) 8%, transparent);
+  background: color-mix(in srgb, var(--color-bg-main) 40%, transparent);
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+
+    mat-icon {
+      font-size: 17px;
+      height: 17px;
+      width: 17px;
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
 // EXISTING CONCESSION BANNER — REDESIGNED
 // ══════════════════════════════════════════════════════════════════════════
 
@@ -379,7 +762,7 @@
         color-mix(in srgb, var(--color-text-muted) 20%, transparent)
       );
       background-size: 200% 100%;
-      animation: none; // static for paid — no shimmer
+      animation: none;
     }
 
     .ecb-detail-item {
@@ -394,7 +777,7 @@
   }
 }
 
-// Animated shimmer stripe at the top (active concession only)
+// Animated shimmer stripe at the top
 .ecb-shimmer {
   position: absolute;
   top: 0;
@@ -422,7 +805,7 @@
   }
 }
 
-// ── Ribbon row (icon + headline) ──────────────────────────────────────────
+// Ribbon row
 .ecb-ribbon {
   display: flex;
   align-items: flex-start;
@@ -449,10 +832,8 @@
     color: color-mix(in srgb, var(--color-warning) 80%, #000);
   }
 
-  // Paid icon — greyed out
   &--paid {
     background: color-mix(in srgb, var(--color-text-muted) 12%, transparent);
-
     mat-icon {
       color: var(--color-text-muted);
     }
@@ -472,7 +853,6 @@
   margin-bottom: 6px;
 }
 
-// Badges inside ribbon
 .ecb-badge {
   display: inline-flex;
   align-items: center;
@@ -518,7 +898,7 @@
   line-height: 1.55;
 }
 
-// ── Details grid ──────────────────────────────────────────────────────────
+// Details grid
 .ecb-details {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -627,7 +1007,7 @@
   }
 }
 
-// ── Action strip ──────────────────────────────────────────────────────────
+// Action strip
 .ecb-actions {
   display: flex;
   align-items: center;
@@ -657,7 +1037,7 @@
   }
 }
 
-// ── Paid notice (replaces action strip when fee is fully paid) ────────────
+// Paid notice
 .ecb-paid-notice {
   display: flex;
   align-items: flex-start;
@@ -693,7 +1073,7 @@
   }
 }
 
-// ── Shared ECB button base ────────────────────────────────────────────────
+// Shared ECB button base
 .ecb-btn {
   display: inline-flex;
   align-items: center;
@@ -755,7 +1135,7 @@
   }
 }
 
-// ── Confirmation strip ────────────────────────────────────────────────────
+// Confirmation strip
 .ecb-confirm-strip {
   display: flex;
   align-items: center;
@@ -786,5 +1166,331 @@
     align-items: center;
     gap: 8px;
     flex-shrink: 0;
+  }
+}
+
+// ── Header icon variant for partial-pay state ─────────────────────────────
+// Add this inside .modal-header__icon alongside the existing variants:
+//
+// &--partial {
+//   background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+//   mat-icon { color: var(--color-warning); }
+// }
+//
+// The full rule block below is the standalone addition to paste after the
+// existing &--blocked rule inside .modal-header__icon:
+
+// (If editing the SCSS directly, add inside .modal-header__icon):
+// &--partial {
+//   background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+//   mat-icon { color: var(--color-warning); }
+// }
+
+// ══════════════════════════════════════════════════════════════════════════
+// PARTIAL-PAY BLOCKING STATE — Fee partially paid, no concession
+// ══════════════════════════════════════════════════════════════════════════
+
+.partial-blocking-state {
+  border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-warning) 4%, var(--color-bg-card));
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+// Top accent bar — amber/warning gradient to differentiate from error (red)
+.ppbs-accent-bar {
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-warning) 60%, transparent),
+    var(--color-warning),
+    color-mix(in srgb, var(--color-warning) 80%, #c47900),
+    var(--color-warning),
+    color-mix(in srgb, var(--color-warning) 60%, transparent)
+  );
+}
+
+// Hero section
+.ppbs-hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-warning) 14%, transparent);
+
+  &__icon-wrap {
+    flex-shrink: 0;
+  }
+
+  &__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-warning) 14%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+
+    mat-icon {
+      font-size: 22px;
+      height: 22px;
+      width: 22px;
+      color: color-mix(in srgb, var(--color-warning) 80%, #000);
+    }
+  }
+
+  &__content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  &__title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin: 0 0 5px;
+    line-height: 1.4;
+  }
+
+  &__subtitle {
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
+    margin: 0;
+    line-height: 1.6;
+  }
+}
+
+// Status badges inside partial hero
+.ppbs-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+
+  mat-icon {
+    font-size: 11px;
+    height: 11px;
+    width: 11px;
+    flex-shrink: 0;
+  }
+
+  &--partial {
+    background: color-mix(in srgb, var(--color-warning) 16%, transparent);
+    color: color-mix(in srgb, var(--color-warning) 80%, #000);
+    border: 1px solid color-mix(in srgb, var(--color-warning) 28%, transparent);
+  }
+
+  &--blocked {
+    background: color-mix(in srgb, var(--color-error) 10%, transparent);
+    color: var(--color-error);
+    border: 1px solid color-mix(in srgb, var(--color-error) 20%, transparent);
+  }
+}
+
+// Payment summary strip — shows totals in context
+.ppbs-summary-strip {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 0 18px;
+  padding: 12px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-warning) 14%, transparent);
+}
+
+.ppbs-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  padding: 0 16px;
+
+  &:first-child {
+    padding-left: 0;
+  }
+
+  &:last-child {
+    padding-right: 0;
+  }
+}
+
+.ppbs-summary-divider {
+  width: 1px;
+  height: 32px;
+  background: color-mix(in srgb, var(--color-warning) 20%, transparent);
+  flex-shrink: 0;
+}
+
+.ppbs-summary-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.ppbs-summary-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+
+  &--paid {
+    color: color-mix(in srgb, var(--color-warning) 80%, #000);
+  }
+
+  &--remaining {
+    color: var(--color-error);
+  }
+}
+
+// Rule explanation card
+.ppbs-rule-card {
+  margin: 14px 18px 0;
+  padding: 12px 14px;
+  border-left: 3px solid color-mix(in srgb, var(--color-info) 50%, transparent);
+  background: color-mix(in srgb, var(--color-info) 5%, transparent);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--color-info);
+    margin-bottom: 6px;
+
+    mat-icon {
+      font-size: 15px;
+      height: 15px;
+      width: 15px;
+      flex-shrink: 0;
+    }
+  }
+
+  &__body {
+    font-size: 0.76rem;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    margin: 0;
+
+    em {
+      font-style: italic;
+      color: var(--color-text-primary);
+    }
+  }
+}
+
+// Actions guide
+.ppbs-actions-guide {
+  padding: 14px 18px;
+  border-top: 1px solid color-mix(in srgb, var(--color-warning) 10%, transparent);
+
+  &__label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+    margin: 0 0 10px;
+  }
+}
+
+.ppbs-action-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+
+  & + & {
+    border-top: 1px solid var(--color-divider);
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+
+    mat-icon {
+      font-size: 16px;
+      height: 16px;
+      width: 16px;
+    }
+
+    &--primary {
+      background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+      mat-icon {
+        color: var(--color-primary);
+      }
+    }
+
+    &--secondary {
+      background: color-mix(in srgb, var(--color-secondary) 10%, transparent);
+      mat-icon {
+        color: var(--color-secondary);
+      }
+    }
+  }
+
+  &__content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  &__title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+
+  &__desc {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+  }
+}
+
+// Footer inside partial-blocking state
+.ppbs-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 18px 16px;
+  border-top: 1px solid color-mix(in srgb, var(--color-warning) 10%, transparent);
+  background: color-mix(in srgb, var(--color-bg-main) 40%, transparent);
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+
+    mat-icon {
+      font-size: 17px;
+      height: 17px;
+      width: 17px;
+    }
   }
 }

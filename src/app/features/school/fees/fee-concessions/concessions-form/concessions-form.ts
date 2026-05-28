@@ -47,9 +47,31 @@ export interface ConcessionsFormData {
    */
   preselectedAssignmentId?: number;
   /**
-   * When true, fee is fully paid — revoke should be blocked.
+   * When true, fee is fully paid — concession grant should be blocked.
+   * This covers BOTH cases:
+   *   a) Fee has an active concession + is paid   → show locked-concession banner
+   *   b) Fee has NO concession + is paid           → show paid-blocking state
    */
   isPaid?: boolean;
+  /**
+   * When true, fee has been partially paid (amountPaid > 0 but remaining > 0).
+   * Concession grant is blocked because applying a discount after partial
+   * payment would retroactively misrepresent what was owed at time of payment.
+   *
+   * Passed by the caller alongside amountPaid / effectiveAmount so the
+   * blocking UI can show the exact amounts already collected.
+   */
+  isPartiallyPaid?: boolean;
+  /**
+   * Amount already collected (in paise). Only meaningful when isPartiallyPaid=true.
+   * Shown in the partial-pay blocking UI so the admin understands the context.
+   */
+  amountPaid?: number;
+  /**
+   * Effective amount due after any existing concession (in paise).
+   * Only meaningful when isPartiallyPaid=true.
+   */
+  effectiveAmount?: number;
 }
 
 @Component({
@@ -90,6 +112,57 @@ export class ConcessionsFormComponent implements OnInit {
   editMode = signal(false);
   isPaid = signal(false);
 
+  /**
+   * True when the fee has been partially paid (some amount collected but
+   * balance still remains). Concessions are blocked in this state because
+   * they would retroactively change what was owed at the time payment was made.
+   */
+  isPartiallyPaid = signal(false);
+
+  /**
+   * True once concession-check has resolved and we have confirmed there is
+   * no active concession. Until then we can't distinguish "no concession yet"
+   * from "concession check still pending".
+   */
+  concessionCheckDone = signal(false);
+
+  /** Tracks focus on the custom amount input for border highlighting */
+  amountInputFocused = false;
+
+  /**
+   * Derived blocking state:
+   * Fee is fully paid AND has no active concession → adding a concession
+   * on an already-settled fee makes no financial sense and is blocked.
+   *
+   * This is separate from the "paid + has concession" case, which shows the
+   * locked-concession banner inside the existing concession block.
+   */
+  isPaidWithNoConession = computed(
+    () =>
+      this.isPaid() &&
+      this.concessionCheckDone() &&
+      !this.existingConcession() &&
+      this.selectedBaseAmount() > 0
+  );
+
+  /**
+   * Derived blocking state:
+   * Fee has been partially paid but not yet fully settled.
+   * Granting a concession now would retroactively lower the effective amount
+   * below what was already collected — disallowed as a data integrity rule.
+   *
+   * Only active when concession check has resolved so we don't show the
+   * blocker before we know whether an existing concession exists (which
+   * would have already been factored into the balance).
+   */
+  isPartiallyPaidBlocked = computed(
+    () =>
+      this.isPartiallyPaid() &&
+      this.concessionCheckDone() &&
+      !this.existingConcession() &&
+      this.selectedBaseAmount() > 0
+  );
+
   previewDiscount = computed(() => {
     const type = this.form?.get('concessionType')?.value;
     const value = this.form?.get('concessionValue')?.value;
@@ -129,6 +202,7 @@ export class ConcessionsFormComponent implements OnInit {
   ngOnInit(): void {
     if (this.data.mode) this.sourceMode.set(this.data.mode);
     if (this.data.isPaid) this.isPaid.set(true);
+    if (this.data.isPartiallyPaid) this.isPartiallyPaid.set(true);
     this.buildForm();
     this.loadData();
   }
@@ -146,10 +220,12 @@ export class ConcessionsFormComponent implements OnInit {
       if (id) {
         const s = this.structures().find((x) => x.id === id);
         this.selectedBaseAmount.set(s?.amount ?? 0);
+        this.concessionCheckDone.set(false);
         this.checkExistingConcession('STRUCTURE', id);
       } else {
         this.selectedBaseAmount.set(0);
         this.existingConcession.set(null);
+        this.concessionCheckDone.set(false);
         this.editMode.set(false);
       }
     });
@@ -158,10 +234,12 @@ export class ConcessionsFormComponent implements OnInit {
       if (id) {
         const a = this.assignments().find((x) => x.id === id);
         this.selectedBaseAmount.set(a?.amount ?? 0);
+        this.concessionCheckDone.set(false);
         this.checkExistingConcession('ASSIGNMENT', id);
       } else {
         this.selectedBaseAmount.set(0);
         this.existingConcession.set(null);
+        this.concessionCheckDone.set(false);
         this.editMode.set(false);
       }
     });
@@ -220,6 +298,7 @@ export class ConcessionsFormComponent implements OnInit {
   private checkExistingConcession(mode: 'STRUCTURE' | 'ASSIGNMENT', selectedId: number): void {
     this.existingConcession.set(null);
     this.editMode.set(false);
+    this.concessionCheckDone.set(false);
 
     this.fees.getConcessionsForEnrollment(this.data.enrollmentId).subscribe({
       next: (concessions) => {
@@ -229,10 +308,13 @@ export class ConcessionsFormComponent implements OnInit {
           return c.studentFeeAssignmentId === selectedId;
         });
         this.existingConcession.set(active ?? null);
+        this.concessionCheckDone.set(true);
         this.cdr.markForCheck();
       },
       error: () => {
-        // Non-fatal — let submit handle the backend duplicate error
+        // Non-fatal — mark check done so the UI can resolve its state
+        this.concessionCheckDone.set(true);
+        this.cdr.markForCheck();
       },
     });
   }
@@ -246,6 +328,7 @@ export class ConcessionsFormComponent implements OnInit {
     });
     this.selectedBaseAmount.set(0);
     this.existingConcession.set(null);
+    this.concessionCheckDone.set(false);
     this.editMode.set(false);
     this.loadData();
   }
@@ -338,49 +421,19 @@ export class ConcessionsFormComponent implements OnInit {
   }
 
   // ── Error extraction ───────────────────────────────────────────────────────
-  /**
-   * Robustly extracts a human-readable message from any error shape.
-   *
-   * Handles all shapes this backend can return:
-   *
-   *   1. { error: string }          — service-layer throw (most common)
-   *   2. { message: string }        — alternative service shape
-   *   3. Zod validation error body  — array of { message, path }[] under
-   *      the Hono zValidator default response shape, which wraps it as:
-   *      { success: false, error: { issues: [...], name: 'ZodError' } }
-   *      In this case err.error is an object (not a string), so
-   *      JSON.stringify gives a readable fallback.
-   *   4. Plain string               — rare but possible
-   *   5. Anything else              — fallback to the provided default
-   *
-   * The root cause of "[object Object]" was case 3: the Zod rejection body
-   * has `error` as an object (ZodError), not a string. The previous code did
-   * `err?.error?.error ?? err?.error?.message` which evaluates to the ZodError
-   * object itself when `err.error.error` is undefined, then coerces it to
-   * "[object Object]" in the template.
-   */
   private extractErrorMessage(err: any, fallback: string): string {
-    // err is an HttpErrorResponse; err.error is the parsed JSON body
     const body = err?.error;
 
     if (!body) return err?.message ?? fallback;
 
-    // Case 1: { error: string }
     if (typeof body.error === 'string') return body.error;
-
-    // Case 2: { message: string }
     if (typeof body.message === 'string') return body.message;
 
-    // Case 3: Zod validation error — body.error is an object (ZodError shape)
-    // Hono's zValidator wraps it as { success: false, error: ZodError }
-    // ZodError has .issues[] with human-readable messages
     if (body.error && typeof body.error === 'object') {
-      // Try to extract the first Zod issue message
       const issues = body.error?.issues;
       if (Array.isArray(issues) && issues.length > 0) {
         return issues.map((i: any) => i.message).join('; ');
       }
-      // Fallback: stringify the error object
       try {
         return JSON.stringify(body.error);
       } catch {
@@ -388,7 +441,6 @@ export class ConcessionsFormComponent implements OnInit {
       }
     }
 
-    // Case 4: plain string body
     if (typeof body === 'string') return body;
 
     return fallback;

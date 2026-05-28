@@ -1,10 +1,10 @@
 <!-- fee-structures-list.html -->
 <div class="page-shell">
-  <!-- Page Header -->
+  <!-- ── Page Header ────────────────────────────────────────────────────── -->
   <div class="page-header">
     <div class="page-header__left">
       <h1 class="page-title">Fee Structures</h1>
-      <p class="page-subtitle">Manage class-section fee structures for the current academic year</p>
+      <p class="page-subtitle">Manage class-section fee structures by academic year</p>
     </div>
     <div class="page-header__actions">
       <button mat-stroked-button class="btn-secondary" (click)="openBulkForm()">
@@ -18,32 +18,120 @@
     </div>
   </div>
 
-  <!-- Filters Bar -->
-  <div class="filters-bar">
-    <div class="filter-group">
-      <mat-icon class="filter-icon">search</mat-icon>
-      <input
-        class="filter-input"
-        placeholder="Search class or section…"
-        [(ngModel)]="filterClass"
-        (ngModelChange)="filterClass.set($event)"
-      />
+  <!-- ── Filter Panel ───────────────────────────────────────────────────── -->
+  <div class="filter-panel">
+    <!-- Row 1: Dropdowns + Search -->
+    <div class="filter-row">
+      <!-- Academic Year -->
+      <mat-form-field
+        appearance="outline"
+        class="filter-form-field filter-form-field--year"
+        subscriptSizing="dynamic"
+      >
+        <mat-label>
+          <mat-icon class="field-label-icon">school</mat-icon>
+          Academic Year
+        </mat-label>
+        <mat-select [value]="filterAcademicYearId()" (valueChange)="onAcademicYearChange($event)">
+          <mat-option [value]="null">All years</mat-option>
+          @for (year of academicYears(); track year.id) {
+          <mat-option [value]="year.id">
+            {{ year.name }}
+            @if (year.isCurrent) {
+            <span class="option-current-badge">Current</span>
+            }
+          </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Class & Section (scoped to selected year) -->
+      <mat-form-field
+        appearance="outline"
+        class="filter-form-field filter-form-field--section"
+        subscriptSizing="dynamic"
+      >
+        <mat-label>
+          <mat-icon class="field-label-icon">meeting_room</mat-icon>
+          Class &amp; Section
+        </mat-label>
+        <mat-select
+          [value]="filterClassSectionId()"
+          (valueChange)="filterClassSectionId.set($event)"
+          [disabled]="filteredClassSectionOptions().length === 0"
+        >
+          <mat-option [value]="null">All sections</mat-option>
+          @for (cs of filteredClassSectionOptions(); track cs.id) {
+          <mat-option [value]="cs.id">{{ cs.className }} – {{ cs.sectionName }}</mat-option>
+          }
+        </mat-select>
+        @if (filterAcademicYearId() && filteredClassSectionOptions().length === 0) {
+        <mat-hint>No sections for this year</mat-hint>
+        }
+      </mat-form-field>
+
+      <!-- Search -->
+      <mat-form-field
+        appearance="outline"
+        class="filter-form-field filter-form-field--search"
+        subscriptSizing="dynamic"
+      >
+        <mat-label>Search</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input
+          matInput
+          placeholder="Class, section, fee type, description…"
+          [value]="filterText()"
+          (input)="filterText.set($any($event.target).value)"
+        />
+        @if (filterText()) {
+        <button matSuffix mat-icon-button aria-label="Clear" (click)="filterText.set('')">
+          <mat-icon>close</mat-icon>
+        </button>
+        }
+      </mat-form-field>
     </div>
-    <div class="filter-group">
-      <mat-icon class="filter-icon">label</mat-icon>
-      <input
-        class="filter-input"
-        placeholder="Filter by fee type…"
-        [(ngModel)]="filterFeeType"
-        (ngModelChange)="filterFeeType.set($event)"
-      />
+
+    <!-- Row 2: Fee-type chips -->
+    @if (uniqueFeeTypes().length > 0) {
+    <div class="filter-chips-row">
+      <span class="chips-label">Fee type:</span>
+      <div class="chips-list">
+        @for (type of uniqueFeeTypes(); track type) {
+        <button
+          class="chip"
+          [class.chip--active]="filterFeeType() === type"
+          (click)="onFeeTypeChipClick(type)"
+        >
+          {{ type }}
+        </button>
+        }
+      </div>
     </div>
-    <div class="filter-meta">
-      <span class="result-count">{{ filteredStructures().length }} structures</span>
+    }
+
+    <!-- Row 3: Active filter summary -->
+    @if (hasActiveFilters()) {
+    <div class="filter-summary-row">
+      <span class="summary-text">
+        Showing <strong>{{ filterSummary().count }}</strong> structure{{
+          filterSummary().count !== 1 ? 's' : ''
+        }}
+        @if (filterAcademicYearId()) { in
+        <strong>{{ getAcademicYearLabel(filterAcademicYearId()!) }}</strong> } @if
+        (filterClassSectionId()) { · <strong>{{ getClassSectionLabel() }}</strong> } @if
+        (filterFeeType()) { · type <strong>{{ filterFeeType() }}</strong>
+        }
+      </span>
+      <button class="clear-btn" (click)="clearAllFilters()">
+        <mat-icon>filter_alt_off</mat-icon>
+        Clear filters
+      </button>
     </div>
+    }
   </div>
 
-  <!-- Loading State -->
+  <!-- ── Loading ─────────────────────────────────────────────────────────── -->
   @if (loading()) {
   <div class="state-container">
     <mat-spinner diameter="40" />
@@ -51,7 +139,7 @@
   </div>
   }
 
-  <!-- Error State -->
+  <!-- ── Error ───────────────────────────────────────────────────────────── -->
   @if (error()) {
   <div class="state-container state-error">
     <mat-icon>error_outline</mat-icon>
@@ -60,85 +148,115 @@
   </div>
   }
 
-  <!-- Table -->
-  @if (!loading() && !error()) { @if (filteredStructures().length === 0) {
+  <!-- ── Content ─────────────────────────────────────────────────────────── -->
+  @if (!loading() && !error()) {
+
+  <!-- Empty state -->
+  @if (filteredStructures().length === 0) {
   <div class="state-container state-empty">
     <mat-icon>receipt_long</mat-icon>
-    <p class="state-empty__title">No fee structures found</p>
+    @if (hasActiveFilters()) {
+    <p class="state-empty__title">No structures match your filters</p>
     <p class="state-empty__sub">
-      Add your first fee structure to get started, or clear your filters.
+      Try a different academic year or class-section, or
+      <button class="inline-link" (click)="clearAllFilters()">clear all filters</button>.
     </p>
+    } @else {
+    <p class="state-empty__title">No fee structures yet</p>
+    <p class="state-empty__sub">Add your first fee structure to get started.</p>
     <button mat-flat-button color="primary" (click)="openAddForm()">
       <mat-icon>add</mat-icon>
       Add Fee Structure
     </button>
+    }
   </div>
-  } @else {
-  <div class="table-wrapper">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Class &amp; Section</th>
-          <th>Fee Type</th>
-          <th>Month</th>
-          <th class="text-right">Amount</th>
-          <th>Due Date</th>
-          <th class="text-center">Mandatory</th>
-          <th class="text-center">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (s of filteredStructures(); track trackById($index, s)) {
-        <tr class="data-row">
-          <td>
-            <div class="class-cell">
-              <span class="class-badge">{{ s.className }}</span>
-              <span class="section-badge">{{ s.sectionName }}</span>
-            </div>
-          </td>
-          <td>
-            <span class="fee-type-chip">{{ s.feeType }}</span>
-          </td>
-          <td class="cell-muted">{{ formatMonth(s.feeMonth) }}</td>
-          <td class="text-right amount-cell">{{ s.amount | paise }}</td>
-          <td class="cell-muted">
-            @if (s.dueDate) {
-            {{ s.dueDate | date : 'd MMM yyyy' }}
-            } @else {
-            <span class="text-muted">—</span>
-            }
-          </td>
-          <td class="text-center">
-            @if (s.isMandatory) {
-            <span class="badge badge--success">Yes</span>
-            } @else {
-            <span class="badge badge--neutral">No</span>
-            }
-          </td>
-          <td class="text-center">
-            <div class="action-btns">
-              <button
-                mat-icon-button
-                class="action-btn action-btn--edit"
-                matTooltip="Edit"
-                (click)="openEditForm(s)"
-              >
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button
-                mat-icon-button
-                class="action-btn action-btn--delete"
-                matTooltip="Delete"
-                (click)="deleteStructure(s)"
-              >
-                <mat-icon>delete_outline</mat-icon>
-              </button>
-            </div>
-          </td>
-        </tr>
-        }
-      </tbody>
-    </table>
+  }
+
+  <!-- Data table -->
+  @if (filteredStructures().length > 0) {
+  <div class="table-card">
+    <!-- Table meta bar -->
+    <div class="table-meta">
+      <span class="table-meta__count">
+        {{ filterSummary().count }} structure{{ filterSummary().count !== 1 ? 's' : '' }}
+      </span>
+      <span class="table-meta__divider"></span>
+      <span class="table-meta__stat">
+        <mat-icon>check_circle_outline</mat-icon>
+        {{ filterSummary().mandatory }} mandatory
+      </span>
+      <span class="table-meta__stat table-meta__stat--amount">
+        <mat-icon>currency_rupee</mat-icon>
+        {{ filterSummary().total | paise }} total
+      </span>
+    </div>
+
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Class &amp; Section</th>
+            <th>Fee Type</th>
+            <th>Month</th>
+            <th class="text-right">Amount</th>
+            <th>Due Date</th>
+            <th class="text-center">Mandatory</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of filteredStructures(); track trackById($index, s)) {
+          <tr class="data-row">
+            <td>
+              <div class="class-cell">
+                <span class="class-badge">{{ s.className }}</span>
+                <span class="section-badge">{{ s.sectionName }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="fee-type-chip">{{ s.feeType }}</span>
+            </td>
+            <td class="cell-muted">{{ formatMonth(s.feeMonth) }}</td>
+            <td class="text-right amount-cell">{{ s.amount | paise }}</td>
+            <td class="cell-muted">
+              @if (s.dueDate) {
+              {{ s.dueDate | date : 'd MMM yyyy' }}
+              } @else {
+              <span class="text-muted">—</span>
+              }
+            </td>
+            <td class="text-center">
+              @if (s.isMandatory) {
+              <span class="badge badge--success">Yes</span>
+              } @else {
+              <span class="badge badge--neutral">No</span>
+              }
+            </td>
+            <td class="text-center">
+              <div class="action-btns">
+                <button
+                  mat-icon-button
+                  class="action-btn action-btn--edit"
+                  matTooltip="Edit structure"
+                  (click)="openEditForm(s)"
+                >
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  class="action-btn action-btn--delete"
+                  matTooltip="Delete structure"
+                  (click)="deleteStructure(s)"
+                >
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   </div>
   } }
 </div>

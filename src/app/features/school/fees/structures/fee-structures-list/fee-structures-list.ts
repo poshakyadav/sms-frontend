@@ -13,10 +13,13 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { PaisePipe } from '../../../../../shared/pipes/paise-pipe';
 import { FeesService, FeeStructure } from '../../../../../core/services/fees.service';
-import { AcademicsService } from '../../../../../core/services/academics.service';
+import {
+  AcademicsService,
+  AcademicYear,
+  ClassSection,
+} from '../../../../../core/services/academics.service';
 import { BulkMonthlyStructureFormComponent } from '../bulk-monthly-structure-form/bulk-monthly-structure-form';
 import { FeeStructureFormComponent } from '../fee-structure-form/fee-structure-form';
-
 
 @Component({
   selector: 'app-fee-structures-list',
@@ -44,25 +47,88 @@ export class FeeStructuresList implements OnInit {
   error = signal<string | null>(null);
   structures = signal<FeeStructure[]>([]);
 
-  // Filters
-  filterClass = signal('');
+  // ── Filter state ───────────────────────────────────────────────────────────
+  filterText = signal('');
   filterFeeType = signal('');
-  filterAcademicYear = signal<number | null>(null);
+  filterAcademicYearId = signal<number | null>(null);
+  filterClassSectionId = signal<number | null>(null);
 
-  academicYears = signal<any[]>([]);
-  classSections = signal<any[]>([]);
+  // ── Reference data ─────────────────────────────────────────────────────────
+  academicYears = signal<AcademicYear[]>([]);
+  classSections = signal<ClassSection[]>([]);
 
+  // ── Derived: unique fee types for the quick-filter chips ──────────────────
+  uniqueFeeTypes = computed(() => {
+    const types = new Set(this.structures().map((s) => s.feeType));
+    return Array.from(types).sort();
+  });
+
+  // ── Derived: class-sections that actually exist in loaded structures ───────
+  // Only show class-sections relevant to the selected academic year so the
+  // class-section dropdown stays meaningful.
+  filteredClassSectionOptions = computed<ClassSection[]>(() => {
+    const yearId = this.filterAcademicYearId();
+    const allSections = this.classSections();
+
+    if (!yearId) return allSections;
+
+    const idsInYear = new Set(
+      this.structures()
+        .filter((s) => s.academicYearId === yearId)
+        .map((s) => s.classSectionId)
+    );
+
+    return allSections.filter((cs) => idsInYear.has(cs.id));
+  });
+
+  // ── Master computed filter ─────────────────────────────────────────────────
   filteredStructures = computed(() => {
     let list = this.structures();
-    const cls = this.filterClass().trim().toLowerCase();
-    const ft = this.filterFeeType().trim().toLowerCase();
-    if (cls)
+
+    const yearId = this.filterAcademicYearId();
+    if (yearId !== null) {
+      list = list.filter((s) => s.academicYearId === yearId);
+    }
+
+    const sectionId = this.filterClassSectionId();
+    if (sectionId !== null) {
+      list = list.filter((s) => s.classSectionId === sectionId);
+    }
+
+    const text = this.filterText().trim().toLowerCase();
+    if (text) {
       list = list.filter(
-        (s) => s.className.toLowerCase().includes(cls) || s.sectionName.toLowerCase().includes(cls)
+        (s) =>
+          s.className.toLowerCase().includes(text) ||
+          s.sectionName.toLowerCase().includes(text) ||
+          s.feeType.toLowerCase().includes(text) ||
+          (s.description ?? '').toLowerCase().includes(text)
       );
-    if (ft) list = list.filter((s) => s.feeType.toLowerCase().includes(ft));
+    }
+
+    const feeType = this.filterFeeType();
+    if (feeType) {
+      list = list.filter((s) => s.feeType === feeType);
+    }
+
     return list;
   });
+
+  // ── Summary totals for the active filter view ──────────────────────────────
+  filterSummary = computed(() => {
+    const list = this.filteredStructures();
+    const total = list.reduce((sum, s) => sum + s.amount, 0);
+    const mandatory = list.filter((s) => s.isMandatory).length;
+    return { count: list.length, total, mandatory };
+  });
+
+  hasActiveFilters = computed(
+    () =>
+      this.filterAcademicYearId() !== null ||
+      this.filterClassSectionId() !== null ||
+      this.filterText().trim() !== '' ||
+      this.filterFeeType() !== ''
+  );
 
   constructor(
     private fees: FeesService,
@@ -72,8 +138,27 @@ export class FeeStructuresList implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.loadReferenceData();
     this.loadStructures();
-    this.loadAcademicYears();
+  }
+
+  // ── Data loading ───────────────────────────────────────────────────────────
+
+  private loadReferenceData(): void {
+    this.academics.getAcademicYears().subscribe({
+      next: (res) => {
+        this.academicYears.set(res.years);
+        // Auto-select current academic year on load
+        const current = res.years.find((y) => y.isCurrent);
+        if (current) {
+          this.filterAcademicYearId.set(current.id);
+        }
+      },
+    });
+
+    this.academics.getClassSections().subscribe({
+      next: (res) => this.classSections.set(res.classSections),
+    });
   }
 
   loadStructures(): void {
@@ -91,11 +176,27 @@ export class FeeStructuresList implements OnInit {
     });
   }
 
-  loadAcademicYears(): void {
-    this.academics.getAcademicYears().subscribe({
-      next: (res) => this.academicYears.set(res.years),
-    });
+  // ── Filter actions ─────────────────────────────────────────────────────────
+
+  onAcademicYearChange(yearId: number | null): void {
+    this.filterAcademicYearId.set(yearId);
+    // Reset class-section when year changes — it may no longer be valid
+    this.filterClassSectionId.set(null);
   }
+
+  onFeeTypeChipClick(feeType: string): void {
+    // Toggle: clicking the active chip clears it
+    this.filterFeeType.set(this.filterFeeType() === feeType ? '' : feeType);
+  }
+
+  clearAllFilters(): void {
+    this.filterText.set('');
+    this.filterFeeType.set('');
+    this.filterAcademicYearId.set(null);
+    this.filterClassSectionId.set(null);
+  }
+
+  // ── Dialog openers ─────────────────────────────────────────────────────────
 
   openAddForm(): void {
     const ref = this.dialog.open(FeeStructureFormComponent, {
@@ -136,9 +237,7 @@ export class FeeStructuresList implements OnInit {
     ref.afterClosed().subscribe((saved) => {
       if (saved) {
         this.loadStructures();
-        this.snack.open(`Bulk fee structures created`, 'Close', {
-          duration: 3500,
-        });
+        this.snack.open('Bulk fee structures created', 'Close', { duration: 3500 });
       }
     });
   }
@@ -165,6 +264,8 @@ export class FeeStructuresList implements OnInit {
     });
   }
 
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
   formatMonth(feeMonth: string | null): string {
     if (!feeMonth) return '—';
     const [y, m] = feeMonth.split('-');
@@ -185,7 +286,18 @@ export class FeeStructuresList implements OnInit {
     return `${months[parseInt(m) - 1]} ${y}`;
   }
 
-  trackById(_: number, item: FeeStructure): number {
+  getAcademicYearLabel(yearId: number): string {
+    return this.academicYears().find((y) => y.id === yearId)?.name ?? '—';
+  }
+
+  getClassSectionLabel(): string {
+    const id = this.filterClassSectionId();
+    if (!id) return '';
+    const cs = this.classSections().find((s) => s.id === id);
+    return cs ? `${cs.className} - ${cs.sectionName}` : '';
+  }
+
+  trackById(_: number, item: { id: number }): number {
     return item.id;
   }
 }

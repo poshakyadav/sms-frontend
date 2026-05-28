@@ -49,6 +49,8 @@ import { INDIAN_DATE_PROVIDERS } from '../../../../core/adapters/indian-date-ada
 export interface RolePersona {
   id: string;
   roleName: string;
+  /** Permission category used to fetch this persona's system role. */
+  roleCategory: RoleCategory | null;
   label: string;
   tagline: string;
   icon: string;
@@ -200,6 +202,7 @@ export const ROLE_PERSONAS: RolePersona[] = [
   {
     id: 'student',
     roleName: 'STUDENT',
+    roleCategory: 'student',
     label: 'Admit Student',
     tagline: 'Enrol a new learner into the school',
     icon: 'school',
@@ -227,6 +230,7 @@ export const ROLE_PERSONAS: RolePersona[] = [
   {
     id: 'teacher',
     roleName: 'TEACHER',
+    roleCategory: 'staff',
     label: 'Hire Teacher',
     tagline: 'Onboard a new teaching staff member',
     icon: 'cast_for_education',
@@ -252,6 +256,7 @@ export const ROLE_PERSONAS: RolePersona[] = [
   {
     id: 'parent',
     roleName: 'STUDENT_PARENT',
+    roleCategory: 'parent',
     label: 'Add Parent',
     tagline: 'Register a parent or guardian account',
     icon: 'family_restroom',
@@ -266,6 +271,7 @@ export const ROLE_PERSONAS: RolePersona[] = [
   {
     id: 'staff',
     roleName: 'STAFF',
+    roleCategory: 'staff',
     label: 'Add Staff',
     tagline: 'Create any other staff or management role',
     icon: 'badge',
@@ -287,6 +293,7 @@ export const ROLE_PERSONAS: RolePersona[] = [
   {
     id: 'bulk',
     roleName: '',
+    roleCategory: null,
     label: 'Bulk Upload',
     tagline: 'Add many students at once via Excel',
     icon: 'upload_file',
@@ -336,6 +343,12 @@ export class UserCreationHub implements OnInit {
   submitting = signal(false);
   loadingRoles = signal(false);
   createdUserId = signal<number | null>(null);
+
+  /**
+   * availableRoles holds ALL roles loaded from the backend.
+   * For the staff persona's role-picker it is filtered by filteredStaffRoles().
+   * For student/teacher/parent personas it is searched by roleName on submit.
+   */
   availableRoles = signal<RoleOption[]>([]);
 
   // Email check
@@ -573,10 +586,18 @@ export class UserCreationHub implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadRoles();
+    // Pre-load all roles for the staff persona role-picker.
+    // For student/teacher/parent personas, roles are fetched by category on demand.
+    this.loadAllRoles();
   }
 
-  private loadRoles(): void {
+  // ── Role loading ───────────────────────────────────────────────────────────
+
+  /**
+   * Load all roles (requires roles.manage). Used for the staff role picker.
+   * Failure is silent — non-staff personas use loadRolesByCategory() instead.
+   */
+  private loadAllRoles(): void {
     this.loadingRoles.set(true);
     this.api.get<{ success: boolean; roles: RoleOption[] }>('school/roles').subscribe({
       next: (res) => {
@@ -584,11 +605,32 @@ export class UserCreationHub implements OnInit {
         this.loadingRoles.set(false);
       },
       error: () => {
-        this.toast.error('Could not load roles');
+        // Non-fatal: staff persona will show empty list; other personas
+        // use loadRolesByCategory() which doesn't need roles.manage.
+        this.availableRoles.set([]);
         this.loadingRoles.set(false);
       },
     });
   }
+
+  /**
+   * Load roles filtered by category. Used as a fallback when loadAllRoles()
+   * returns nothing (e.g. user lacks roles.manage permission).
+   * Returns a Promise so submitUser() can await it inline.
+   */
+  private loadRolesByCategory(category: RoleCategory): Promise<RoleOption[]> {
+    const params = new HttpParams().set('category', category);
+    return new Promise((resolve) => {
+      this.api
+        .get<{ success: boolean; roles: RoleOption[] }>('school/roles', params)
+        .subscribe({
+          next: (res) => resolve(res.roles ?? []),
+          error: () => resolve([]),
+        });
+    });
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
 
   private isValidEmailFormat(email: string): boolean {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -672,6 +714,20 @@ export class UserCreationHub implements OnInit {
     this.currentStep.set(0);
     this.createdUserId.set(null);
     this.resetForms();
+
+    // Pre-fetch roles by category for non-staff personas so they're ready
+    // at submit time without an extra round trip.
+    // For the staff persona, loadAllRoles() already ran in ngOnInit.
+    if (persona.roleCategory && persona.id !== 'staff') {
+      this.loadRolesByCategory(persona.roleCategory).then((roles) => {
+        // Merge into availableRoles so the name-lookup in submitUser() succeeds
+        // without disturbing the staff role picker (which uses filteredStaffRoles).
+        const existing = this.availableRoles();
+        const existingIds = new Set(existing.map((r) => r.id));
+        const merged = [...existing, ...roles.filter((r) => !existingIds.has(r.id))];
+        this.availableRoles.set(merged);
+      });
+    }
   }
 
   private resetForms(): void {
@@ -808,7 +864,7 @@ export class UserCreationHub implements OnInit {
     return `XXXX XXXX ${last4.trim()}`;
   }
 
-  submitUser(): void {
+  async submitUser(): Promise<void> {
     const persona = this.selectedPersona();
     if (!persona) return;
 
@@ -816,26 +872,56 @@ export class UserCreationHub implements OnInit {
     const per = this.personalForm.value;
     const grd = this.guardianForm.value;
 
+    // ── Resolve primaryRoleId ──────────────────────────────────────────────
     let primaryRoleId: number | null = null;
+
     if (persona.id === 'staff') {
+      // Staff: user explicitly selected a role in the role step
       primaryRoleId = this.selectedStaffRole()?.id ?? null;
+      if (!primaryRoleId) {
+        this.toast.error('Please select a role first.');
+        return;
+      }
     } else {
-      const found = this.availableRoles().find((r) => r.name === persona.roleName);
-      primaryRoleId = found?.id ?? null;
+      // Student / Teacher / Parent: find the system role by name.
+      // 1. Try already-loaded availableRoles first (fast path).
+      const fromCache = this.availableRoles().find((r) => r.name === persona.roleName);
+      if (fromCache) {
+        primaryRoleId = fromCache.id;
+      } else {
+        // 2. Fallback: fetch by category (handles the case where the user lacks
+        //    roles.manage and loadAllRoles() returned an empty list).
+        if (!persona.roleCategory) {
+          this.toast.error('Cannot determine role category. Please refresh and try again.');
+          return;
+        }
+        this.submitting.set(true);
+        const roles = await this.loadRolesByCategory(persona.roleCategory);
+        const match = roles.find((r) => r.name === persona.roleName);
+        if (!match) {
+          this.submitting.set(false);
+          this.toast.error(
+            `System role "${persona.roleName}" not found. Please contact your administrator.`
+          );
+          return;
+        }
+        primaryRoleId = match.id;
+        // Cache it so a retry doesn't need another round trip
+        const existing = this.availableRoles();
+        const existingIds = new Set(existing.map((r) => r.id));
+        if (!existingIds.has(match.id)) {
+          this.availableRoles.set([...existing, match]);
+        }
+      }
     }
 
-    if (!primaryRoleId) {
-      this.toast.error('Role not found. Please refresh and try again.');
-      return;
-    }
-
+    // ── Build payload ──────────────────────────────────────────────────────
     const payload: CreateUserPayload = {
       name: acc.name!.trim(),
       email: acc.email!.trim().toLowerCase(),
       password: acc.password!,
       primaryRoleId,
       roleIds: [primaryRoleId],
-      // Personal
       phone: per.phone?.trim() || undefined,
       alternatePhone: per.alternatePhone?.trim() || undefined,
       dateOfBirth: per.dateOfBirth ? this.fmt(per.dateOfBirth) : undefined,
@@ -845,7 +931,6 @@ export class UserCreationHub implements OnInit {
       city: per.city?.trim() || undefined,
       state: per.state || undefined,
       postalCode: per.postalCode?.trim() || undefined,
-      // Guardian / parental
       fatherName: grd.fatherName?.trim() || undefined,
       motherName: grd.motherName?.trim() || undefined,
       guardianName: grd.guardianName?.trim() || undefined,
@@ -856,7 +941,6 @@ export class UserCreationHub implements OnInit {
       const aca = this.studentAcademicForm.value;
       const udi = this.udiseForm.value;
 
-      // Academic fields
       payload.admissionNumber = aca.admissionNumber?.trim() || undefined;
       payload.admissionDate = aca.admissionDate ? this.fmt(aca.admissionDate) : undefined;
       payload.previousSchool = aca.previousSchool?.trim() || undefined;
@@ -865,26 +949,22 @@ export class UserCreationHub implements OnInit {
       payload.enrollmentType = (aca.enrollmentType as any) || 'REGULAR';
       payload.previousClassResult = (aca.previousClassResult as any) || undefined;
 
-      // UDISE+ national identity
       payload.pen = udi.pen?.trim() || undefined;
       payload.apaarId = udi.apaarId?.trim() || undefined;
       payload.stateStudentId = udi.stateStudentId?.trim() || undefined;
-      // Build masked aadhaar from last-4 field
       payload.aadhaarMasked = this.buildAadhaarMasked((udi as any).aadhaarLast4);
       payload.aadhaarName = udi.aadhaarName?.trim() || undefined;
 
-      // UDISE+ demographic
       payload.socialCategory =
         udi.socialCategory != null ? (udi.socialCategory as unknown as SocialCategory) : undefined;
-      payload.religion = udi.religion != null ? (udi.religion as unknown as Religion) : undefined;
+      payload.religion =
+        udi.religion != null ? (udi.religion as unknown as Religion) : undefined;
       payload.isMinority = udi.isMinority ?? false;
       payload.motherTongueCode = udi.motherTongueCode ?? undefined;
 
-      // Socio-economic
       payload.isBpl = udi.isBpl ?? false;
       payload.localityType = (udi.localityType as any) || undefined;
 
-      // CWSN
       payload.isCwsn = udi.isCwsn ?? false;
       if (udi.isCwsn) {
         payload.disabilityType =
@@ -895,10 +975,7 @@ export class UserCreationHub implements OnInit {
         payload.udidNumber = udi.udidNumber?.trim() || undefined;
       }
 
-      // Facilities
       payload.facilitiesReceived = (udi.facilitiesReceived as any[]) ?? [];
-
-      // Verification
       payload.isAadhaarVerified = udi.isAadhaarVerified ?? false;
       payload.udiseVerified = udi.udiseVerified ?? false;
     }
@@ -924,6 +1001,7 @@ export class UserCreationHub implements OnInit {
       payload.joiningDate = wrk.joiningDate ? this.fmt(wrk.joiningDate) : undefined;
     }
 
+    // ── Send ───────────────────────────────────────────────────────────────
     this.submitting.set(true);
 
     this.usersService.createUser(payload).subscribe({

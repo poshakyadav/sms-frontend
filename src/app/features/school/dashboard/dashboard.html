@@ -268,7 +268,7 @@
         <div class="dash-card-header">
           <mat-icon>event_available</mat-icon>
           <h3>Attendance</h3>
-          <a class="card-link" routerLink="/school/attendance/student/child">View details</a>
+          <a class="card-link" routerLink="/school/attendance/child">View details</a>
         </div>
         <div class="attendance-summary">
           <div class="attendance-ring-wrap">
@@ -330,7 +330,7 @@
         <div class="dash-card-header">
           <mat-icon>account_balance_wallet</mat-icon>
           <h3>Fee Summary</h3>
-          <a class="card-link" routerLink="/school/fees/report">View report</a>
+          <a class="card-link" routerLink="/school/fees/child">View Details</a>
         </div>
 
         <!-- Top row: Billed / Concession / Net Due -->
@@ -415,7 +415,7 @@
           </span>
           <span class="banner-sub">Your child has unsubmitted work</span>
         </div>
-        <a class="banner-action" routerLink="/school/assignments/list">
+        <a class="banner-action" routerLink="/school/assignments/child">
           View <mat-icon>arrow_forward</mat-icon>
         </a>
       </div>
@@ -452,7 +452,7 @@
         <div class="dash-card-header">
           <mat-icon>notifications</mat-icon>
           <h3>Recent Notifications</h3>
-          <a class="card-link" routerLink="/school/notifications">View all</a>
+          <a class="card-link" routerLink="/school/notifications/list">View all</a>
         </div>
         <div class="notif-list">
           @for (n of data()!.lists['recentNotifications']; track n.id) {

@@ -287,13 +287,14 @@ export const NAV_GROUPS: NavGroup[] = [
             permissions: ['fees.report'],
             matchStrategy: 'prefix',
           },
-          {
-            label: 'Student Fee Detail',
-            route: '/school/fees/student-detail',
-            icon: 'manage_search',
-            permissions: ['fees.report'],
-            matchStrategy: 'prefix',
-          },
+          // Unwanted component for now, and need some fixes before re-enabling to show on sidebar
+          // {
+          //   label: 'Student Fee Detail',
+          //   route: '/school/fees/student-detail',
+          //   icon: 'manage_search',
+          //   permissions: ['fees.report'],
+          //   matchStrategy: 'prefix',
+          // },
           {
             label: 'Fee Ladger',
             route: '/school/fees/ledger',

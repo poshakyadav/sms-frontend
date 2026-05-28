@@ -618,6 +618,7 @@
                     <th class="text-right">Paid</th>
                     <th class="text-right">Remaining</th>
                     <th class="text-center">Due Date</th>
+                    <th class="text-center">Status</th>
                     @if (canManage()) {
                     <th class="text-center csfm-col-action">Action</th>
                     }
@@ -629,7 +630,7 @@
 
                   <!-- Month header row -->
                   <tr class="csfm-month-header-row">
-                    <td [attr.colspan]="(canManage() || canPay()) ? 9 : 8">
+                    <td [attr.colspan]="(canManage() || canPay()) ? 10 : 9">
                       <div class="csfm-month-header">
                         <mat-icon>calendar_month</mat-icon>
                         <span>{{ group.label }}</span>
@@ -678,6 +679,9 @@
                     <td class="cell-muted text-center">
                       @if (fee.dueDate) { {{ fee.dueDate | date : 'd MMM yyyy' }} } @else { — }
                     </td>
+                    <td class="text-center">
+                      <app-fee-status-badge [status]="getFeeItemStatus(fee)" />
+                    </td>
                     @if (canManage() || canPay()) {
                       <td class="text-center csfm-col-action">
                         <div class="csfm-row-actions">
@@ -718,7 +722,7 @@
                   <!-- Spacer between month groups -->
                   @if (!lastGroup) {
                   <tr class="csfm-month-spacer-row" aria-hidden="true">
-                    <td [attr.colspan]="(canManage() || canPay()) ? 9 : 8"></td>
+                    <td [attr.colspan]="(canManage() || canPay()) ? 10 : 9"></td>
                   </tr>
                   } }
                   <!-- end @for group -->

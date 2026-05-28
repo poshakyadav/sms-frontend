@@ -32,6 +32,7 @@ import { AssignmentsList } from '../fee-assignments/assignments-list/assignments
 import { PaymentHistory } from '../payments/payment-history/payment-history';
 import { ConcessionsList } from '../fee-concessions/concessions-list/concessions-list';
 import { AuthService } from '../../../../core/services/auth.service';
+import { FeeStatusBadge } from '../../../../shared/components/fee-status-badge/fee-status-badge';
 
 // ── Month group shape for standard fees ───────────────────────────────────────
 export interface StandardFeeMonthGroup {
@@ -60,6 +61,7 @@ export interface StandardFeeMonthGroup {
     AssignmentsList,
     PaymentHistory,
     ConcessionsList,
+    FeeStatusBadge
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './class-section-fee-manager.html',
@@ -319,7 +321,7 @@ export class ClassSectionFeeManager implements OnInit {
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
-   /**
+  /**
    * Opens the payment dialog.
    *
    * When called with a specific `feeItem` (from a standard fee row's pay button),
@@ -328,31 +330,31 @@ export class ClassSectionFeeManager implements OnInit {
    * When called without arguments (from the student header "Pay Now" button),
    * the dialog opens in 'all' mode showing every outstanding fee.
    */
-   openRecordPayment(feeItem?: DueFeeItem): void {
+  openRecordPayment(feeItem?: DueFeeItem): void {
     const student = this.selectedStudent();
     if (!student) return;
- 
+
     const cs = this.classSections().find((c) => c.id === this.selectedClassSectionId());
- 
+
     const dialogData: any = {
       enrollmentId: student.enrollmentId,
       studentName: student.name,
       className: cs?.className,
       sectionName: cs?.sectionName,
     };
- 
+
     // Structure-wise mode: only this fee
     if (feeItem) {
       dialogData['preselectedFeeStructureId'] = feeItem.id;
     }
- 
+
     const ref = this.dialog.open(RecordPaymentComponent, {
       width: '820px',
       maxWidth: '96vw',
       panelClass: 'payment-dialog',
       data: dialogData,
     });
- 
+
     ref.afterClosed().subscribe((result) => {
       if (result) {
         // Refresh balances — result dialog is already shown by RecordPaymentComponent
@@ -393,16 +395,14 @@ export class ClassSectionFeeManager implements OnInit {
   openGrantConcession(mode: 'STRUCTURE' | 'ASSIGNMENT', feeItem?: DueFeeItem): void {
     const student = this.selectedStudent();
     if (!student) return;
- 
+
     // ── Determine payment state for this fee item ─────────────────────────
     const isPaid = feeItem ? feeItem.remaining <= 0 : false;
- 
+
     // Partially paid: a payment exists but the balance is not yet cleared.
     // Only meaningful when a specific feeItem is clicked (not header-level action).
-    const isPartiallyPaid = feeItem
-      ? feeItem.paid > 0 && feeItem.remaining > 0
-      : false;
- 
+    const isPartiallyPaid = feeItem ? feeItem.paid > 0 && feeItem.remaining > 0 : false;
+
     const ref = this.dialog.open(ConcessionsFormComponent, {
       width: '580px',
       maxWidth: '95vw',
@@ -426,7 +426,7 @@ export class ClassSectionFeeManager implements OnInit {
         ...(feeItem && mode === 'ASSIGNMENT' ? { preselectedAssignmentId: feeItem.id } : {}),
       },
     });
- 
+
     ref.afterClosed().subscribe((saved) => {
       if (saved) {
         this.snack.open('Concession granted successfully', 'Close', { duration: 3000 });
@@ -489,6 +489,36 @@ export class ClassSectionFeeManager implements OnInit {
     if (balance <= 0) return 'balance--paid';
     if (balance > 0) return 'balance--due';
     return '';
+  }
+
+  /**
+   * Derives a FeeStatus value from a DueFeeItem for display in the standard
+   * fees table status column.
+   *
+   * Logic:
+   *   PAID     — effective amount > 0 and nothing remains (fully settled)
+   *   PARTIAL  — some amount has been collected but balance remains
+   *   OVERDUE  — no payment at all AND due date has passed today's date
+   *   PENDING  — no payment and either no due date or due date is in the future
+   *
+   * Zero-amount fees (effectiveAmount === 0 after a 100% concession) are
+   * treated as PAID since there is nothing left to collect.
+   */
+  getFeeItemStatus(fee: DueFeeItem): 'PAID' | 'PARTIAL' | 'PENDING' | 'OVERDUE' {
+    // Fully conceded or fully settled
+    if (fee.remaining <= 0) return 'PAID';
+
+    // Partial payment exists
+    if (fee.paid > 0) return 'PARTIAL';
+
+    // No payment — check overdue
+    if (fee.dueDate) {
+      const due = new Date(fee.dueDate);
+      due.setHours(23, 59, 59, 999); // end of due day
+      if (due < new Date()) return 'OVERDUE';
+    }
+
+    return 'PENDING';
   }
 
   statusIcon(student: StudentForPayment): string {

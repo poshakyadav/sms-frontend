@@ -72,8 +72,7 @@ export interface FeeConcession {
   originalAmount: number;
   concessionType: ConcessionType;
   concessionValue: number;
-  // Backend returns concessionAmount (not discountAmount) — see getConcessionsForStudent
-  concessionAmount: number;
+  discountAmount: number;
   effectiveAmount: number;
   reason: string;
   isActive: boolean;

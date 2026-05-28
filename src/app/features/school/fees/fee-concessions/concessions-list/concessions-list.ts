@@ -122,9 +122,8 @@ import { PaisePipe } from '../../../../../shared/pipes/paise-pipe';
                   }}
                 </span>
               </td>
-              <!-- FIX: was c.discountAmount — backend/service returns concessionAmount -->
               <td class="text-right amount-cell text-error">
-                -{{ c.concessionAmount | paise : 'compact' }}
+                -{{ c.discountAmount | paise : 'compact' }}
               </td>
               <td class="text-right amount-cell text-success">
                 {{ c.effectiveAmount | paise : 'compact' }}

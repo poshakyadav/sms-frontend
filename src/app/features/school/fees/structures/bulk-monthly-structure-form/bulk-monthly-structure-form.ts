@@ -1,5 +1,12 @@
-// features/school/fees/fee-structures/bulk-monthly-structure-form/bulk-monthly-structure-form.ts
-import { Component, OnInit, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+// bulk-monthly-structure-form.ts
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormsModule,
@@ -19,6 +26,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { Subscription } from 'rxjs';
 import { FeesService, rupeesToPaise } from '../../../../../core/services/fees.service';
 import { AcademicsService } from '../../../../../core/services/academics.service';
 
@@ -54,24 +62,21 @@ const MONTH_NAMES_FULL = [
   'December',
 ];
 
-const FEE_TYPE_SUGGESTIONS = ['MONTHLY','TUITION', 'LIBRARY', 'EXAM', 'SPORTS', 'DEVELOPMENT', 'COMPUTER'];
+const FEE_TYPE_SUGGESTIONS = [
+  'MONTHLY',
+  'TUITION',
+  'LIBRARY',
+  'EXAM',
+  'SPORTS',
+  'DEVELOPMENT',
+  'COMPUTER',
+];
 
-/** Build a range of years centred around the current year. */
 function buildYearOptions(spread = 3): number[] {
   const current = new Date().getFullYear();
   const years: number[] = [];
-  for (let y = current - 1; y <= current + spread; y++) {
-    years.push(y);
-  }
+  for (let y = current - 1; y <= current + spread; y++) years.push(y);
   return years;
-}
-
-/** Custom validator: endMonth must be ≥ startMonth */
-function monthRangeValidator(group: AbstractControl): ValidationErrors | null {
-  const start = group.get('startMonth')?.value as string;
-  const end = group.get('endMonth')?.value as string;
-  if (!start || !end) return null;
-  return start <= end ? null : { monthRangeInvalid: true };
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -97,7 +102,7 @@ function monthRangeValidator(group: AbstractControl): ValidationErrors | null {
   templateUrl: './bulk-monthly-structure-form.html',
   styleUrl: './bulk-monthly-structure-form.scss',
 })
-export class BulkMonthlyStructureFormComponent implements OnInit {
+export class BulkMonthlyStructureFormComponent implements OnInit, OnDestroy {
   // ── Form ────────────────────────────────────────────────────────────────────
   form!: FormGroup;
 
@@ -107,44 +112,26 @@ export class BulkMonthlyStructureFormComponent implements OnInit {
   academicYears = signal<any[]>([]);
   classSections = signal<any[]>([]);
 
+  // ── Derived month strings — kept as signals updated via valueChanges ────────
+  // IMPORTANT: Angular's computed() cannot track FormControl.value because
+  // ReactiveFormsModule is not signal-based. We use a valueChanges subscription
+  // to push updates into plain signals so the template stays reactive.
+  startMonthValue = signal<string>('');
+  endMonthValue = signal<string>('');
+  monthPreview = signal<string[]>([]);
+  rangeError = signal<boolean>(false);
+
   // ── Static options ──────────────────────────────────────────────────────────
   readonly feeTypeSuggestions = FEE_TYPE_SUGGESTIONS;
   readonly monthOptions = MONTH_NAMES_FULL.map((name, i) => ({
-    value: i + 1, // 1-based
+    value: i + 1,
     label: name,
     short: MONTH_NAMES_SHORT[i],
   }));
   readonly yearOptions = buildYearOptions();
 
-  // ── Derived: composed YYYY-MM strings ──────────────────────────────────────
-  readonly startMonthValue = computed<string>(() => {
-    const sm = this.form?.get('startMonthNum')?.value as number | null;
-    const sy = this.form?.get('startYear')?.value as number | null;
-    if (!sm || !sy) return '';
-    return `${sy}-${String(sm).padStart(2, '0')}`;
-  });
+  private sub = new Subscription();
 
-  readonly endMonthValue = computed<string>(() => {
-    const em = this.form?.get('endMonthNum')?.value as number | null;
-    const ey = this.form?.get('endYear')?.value as number | null;
-    if (!em || !ey) return '';
-    return `${ey}-${String(em).padStart(2, '0')}`;
-  });
-
-  readonly monthPreview = computed<string[]>(() => {
-    const start = this.startMonthValue();
-    const end = this.endMonthValue();
-    if (!start || !end || start > end) return [];
-    return this.generateMonthRange(start, end);
-  });
-
-  readonly rangeError = computed<boolean>(() => {
-    const start = this.startMonthValue();
-    const end = this.endMonthValue();
-    return !!(start && end && start > end);
-  });
-
-  // ── DI ──────────────────────────────────────────────────────────────────────
   constructor(
     private fb: FormBuilder,
     private fees: FeesService,
@@ -156,6 +143,17 @@ export class BulkMonthlyStructureFormComponent implements OnInit {
   ngOnInit(): void {
     this.buildForm();
     this.loadDropdowns();
+
+    // Subscribe to the four month/year controls together so any change
+    // immediately recomputes the derived YYYY-MM strings and preview list.
+    this.sub.add(this.form.valueChanges.subscribe(() => this.recomputeMonthRange()));
+
+    // Run once on init so the preview reflects the default values.
+    this.recomputeMonthRange();
+  }
+
+  ngOnDestroy(): void {
+    this.sub.unsubscribe();
   }
 
   // ── Form construction ───────────────────────────────────────────────────────
@@ -169,7 +167,6 @@ export class BulkMonthlyStructureFormComponent implements OnInit {
       feeType: ['TUITION', [Validators.required, Validators.minLength(2)]],
       amountRupees: [null, [Validators.required, Validators.min(1)]],
 
-      // Month-picker fields — four separate controls
       startMonthNum: [currentMonth, Validators.required],
       startYear: [currentYear, Validators.required],
       endMonthNum: [currentMonth, Validators.required],
@@ -179,6 +176,29 @@ export class BulkMonthlyStructureFormComponent implements OnInit {
       description: [''],
       isMandatory: [true],
     });
+  }
+
+  // ── Reactive month-range recomputation ──────────────────────────────────────
+  // Called on every valueChanges emission and once on init.
+  // Reads directly from the form so values are always current.
+  private recomputeMonthRange(): void {
+    const start = this.buildYYYYMM('startMonthNum', 'startYear');
+    const end = this.buildYYYYMM('endMonthNum', 'endYear');
+
+    this.startMonthValue.set(start);
+    this.endMonthValue.set(end);
+
+    const invalid = !!(start && end && start > end);
+    this.rangeError.set(invalid);
+    this.monthPreview.set(!start || !end || invalid ? [] : this.generateMonthRange(start, end));
+  }
+
+  // ── Build a YYYY-MM string from two form control names ─────────────────────
+  private buildYYYYMM(monthControl: string, yearControl: string): string {
+    const m = this.form?.get(monthControl)?.value as number | null;
+    const y = this.form?.get(yearControl)?.value as number | null;
+    if (!m || !y) return '';
+    return `${y}-${String(m).padStart(2, '0')}`;
   }
 
   // ── Dropdown data ───────────────────────────────────────────────────────────
@@ -223,9 +243,11 @@ export class BulkMonthlyStructureFormComponent implements OnInit {
       return;
     }
 
-    const start = this.startMonthValue();
-    const end = this.endMonthValue();
-    const months = this.monthPreview();
+    // Read the YYYY-MM values directly from form controls — never from stale
+    // computed/signal state — so the payload is always accurate at submit time.
+    const start = this.buildYYYYMM('startMonthNum', 'startYear');
+    const end = this.buildYYYYMM('endMonthNum', 'endYear');
+    const months = this.generateMonthRange(start, end);
 
     if (!start || !end) {
       this.error.set('Please select both start and end months.');
@@ -246,8 +268,8 @@ export class BulkMonthlyStructureFormComponent implements OnInit {
       classSectionId: v.classSectionId,
       feeType: (v.feeType as string).trim().toUpperCase(),
       amount: rupeesToPaise(v.amountRupees),
-      startMonth: start,
-      endMonth: end,
+      startMonth: start, // ← always freshly built, never from signal
+      endMonth: end, // ← always freshly built, never from signal
       dueDayOfMonth: v.dueDayOfMonth || undefined,
       description: v.description?.trim() || null,
       isMandatory: v.isMandatory,

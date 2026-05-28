@@ -150,14 +150,76 @@
   font-weight: 700;
   color: var(--color-text-primary);
 
-  &--success {
-    color: var(--color-success);
+  &--success { color: var(--color-success); }
+  &--error   { color: var(--color-error); }
+  &--info    { color: var(--color-info); }
+}
+
+// ── Payment mode tabs ─────────────────────────────────────────────────────────
+.mode-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 12px 16px 0;
+}
+
+.mode-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-bg-main);
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
   }
-  &--error {
-    color: var(--color-error);
+
+  &:hover:not(.mode-tab--active) {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 5%, transparent);
   }
-  &--info {
-    color: var(--color-info);
+
+  &--active {
+    border-color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    color: var(--color-primary);
+    font-weight: 700;
+  }
+}
+
+// ── Mode context bar ──────────────────────────────────────────────────────────
+.mode-context {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  background: var(--color-hover);
+  border-bottom: 1px solid var(--color-divider);
+
+  mat-icon {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+    color: var(--color-primary);
+    flex-shrink: 0;
+  }
+
+  &__hint {
+    margin-left: 4px;
+    font-style: italic;
+    color: var(--color-text-muted);
   }
 }
 
@@ -216,18 +278,10 @@
   }
 }
 
-.text-right {
-  text-align: right;
-}
-.text-success {
-  color: var(--color-success);
-}
-.text-error {
-  color: var(--color-error);
-}
-.cell-muted {
-  color: var(--color-text-muted);
-}
+.text-right  { text-align: right; }
+.text-success { color: var(--color-success); }
+.text-error   { color: var(--color-error); }
+.cell-muted   { color: var(--color-text-muted); }
 
 // ── Fee chips ─────────────────────────────────────────────────────────────────
 .fee-chip {
@@ -279,7 +333,13 @@
     border-color: var(--color-primary);
   }
 
-  // Remove spinner arrows
+  &[readonly] {
+    background: color-mix(in srgb, var(--color-hover) 80%, transparent);
+    color: var(--color-text-secondary);
+    cursor: default;
+    border-color: var(--color-divider);
+  }
+
   &::-webkit-outer-spin-button,
   &::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -294,6 +354,28 @@
   color: var(--color-error);
   text-align: right;
   margin-top: 2px;
+}
+
+// ── Partial hint bar ──────────────────────────────────────────────────────────
+.partial-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  background: color-mix(in srgb, var(--color-info) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-info) 15%, transparent);
+  border-radius: var(--radius-sm);
+  margin: 0 16px 4px;
+
+  mat-icon {
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
+    color: var(--color-info);
+    flex-shrink: 0;
+  }
 }
 
 // ── Method selector ───────────────────────────────────────────────────────────
@@ -428,5 +510,9 @@
   }
   .summary-item {
     min-width: 50%;
+  }
+
+  .mode-tabs {
+    padding: 10px 12px 0;
   }
 }

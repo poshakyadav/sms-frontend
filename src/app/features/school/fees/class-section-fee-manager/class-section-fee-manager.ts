@@ -319,31 +319,43 @@ export class ClassSectionFeeManager implements OnInit {
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
-  openRecordPayment(): void {
+   /**
+   * Opens the payment dialog.
+   *
+   * When called with a specific `feeItem` (from a standard fee row's pay button),
+   * the dialog opens in 'structure-wise' mode with that fee pre-selected.
+   *
+   * When called without arguments (from the student header "Pay Now" button),
+   * the dialog opens in 'all' mode showing every outstanding fee.
+   */
+   openRecordPayment(feeItem?: DueFeeItem): void {
     const student = this.selectedStudent();
     if (!student) return;
-
+ 
     const cs = this.classSections().find((c) => c.id === this.selectedClassSectionId());
-
+ 
+    const dialogData: any = {
+      enrollmentId: student.enrollmentId,
+      studentName: student.name,
+      className: cs?.className,
+      sectionName: cs?.sectionName,
+    };
+ 
+    // Structure-wise mode: only this fee
+    if (feeItem) {
+      dialogData['preselectedFeeStructureId'] = feeItem.id;
+    }
+ 
     const ref = this.dialog.open(RecordPaymentComponent, {
       width: '820px',
       maxWidth: '96vw',
       panelClass: 'payment-dialog',
-      data: {
-        enrollmentId: student.enrollmentId,
-        studentName: student.name,
-        className: cs?.className,
-        sectionName: cs?.sectionName,
-      },
+      data: dialogData,
     });
-
+ 
     ref.afterClosed().subscribe((result) => {
       if (result) {
-        this.snack.open(
-          `Payment recorded — ${result.meta?.receiptNumbers?.join(', ') ?? ''}`,
-          'Close',
-          { duration: 4000, panelClass: 'success-toast' }
-        );
+        // Refresh balances — result dialog is already shown by RecordPaymentComponent
         this.refreshStudent(student);
       }
     });

@@ -1594,6 +1594,31 @@
   }
 }
 
+// ── Standard fee table row actions ───────────────────────────────────────────
+// Container holding the pay + concession icon buttons in the action column
+.csfm-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+// Pay icon button (green tint) on the standard fee table row
+.csfm-row-pay-btn {
+  color: var(--color-success) !important;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-success) 10%, transparent) !important;
+  }
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // CONCESSIONS TAB ACTION BAR
 // ─────────────────────────────────────────────────────────────────────────────

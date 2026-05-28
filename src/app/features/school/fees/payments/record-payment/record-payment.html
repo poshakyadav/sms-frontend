@@ -36,10 +36,7 @@
       {{ error() }}
       <button mat-stroked-button (click)="loadDueFees()">Retry</button>
     </div>
-    }
-
-    <!-- Payment content -->
-    @if (!loading() && dueFees()) {
+    } @if (!loading() && dueFees()) {
 
     <!-- Summary strip -->
     <div class="summary-strip">
@@ -69,14 +66,45 @@
       </div>
     </div>
 
-    @if (rows().length === 0) {
+    @if (rows().length === 0 && mode() !== 'structure-wise') {
     <div class="state-center state-center--empty">
       <mat-icon>check_circle_outline</mat-icon>
       <span>All fees are paid up!</span>
     </div>
-    } @else {
+    } @if (mode() === 'structure-wise' && rows().length === 0) {
+    <div class="state-center state-center--empty">
+      <mat-icon>check_circle_outline</mat-icon>
+      <span>This fee is already fully paid.</span>
+    </div>
+    } @if (rows().length > 0 || mode() === 'partial') {
 
-    <!-- Standard Fees Section -->
+    <!-- ── Mode tabs (hidden in structure-wise mode opened from row) ─── -->
+    @if (!isStructureWise) {
+    <div class="mode-tabs">
+      @for (m of availableModes; track m) {
+      <button
+        type="button"
+        class="mode-tab"
+        [class.mode-tab--active]="mode() === m"
+        (click)="setMode(m)"
+      >
+        <mat-icon>{{ modeIcon(m) }}</mat-icon>
+        {{ modeLabel(m) }}
+      </button>
+      }
+    </div>
+    }
+
+    <!-- Mode context label -->
+    <div class="mode-context">
+      <mat-icon>{{ modeIcon(mode()) }}</mat-icon>
+      <span>{{ modeSummary }}</span>
+      @if (mode() === 'partial') {
+      <span class="mode-context__hint">Enter any amount up to the remaining balance per fee.</span>
+      }
+    </div>
+
+    <!-- ── STANDARD FEES section ──────────────────────────────────── -->
     @if (rows() | feeRowFilter: 'STRUCTURE'; as structureRows) { @if (structureRows.length > 0) {
     <div class="section-label">
       <mat-icon>receipt_long</mat-icon>
@@ -105,6 +133,19 @@
         <span class="text-right">
           <div class="pay-input-wrap">
             <span class="pay-prefix">₹</span>
+            @if (mode() === 'all' || mode() === 'structure-wise') {
+            <!-- Read-only in 'all' / 'structure-wise' modes for clarity; user can still click to partial -->
+            <input
+              class="pay-input"
+              type="number"
+              [value]="row.amountToPayRupees"
+              [max]="row.maxRupees"
+              min="0"
+              step="0.01"
+              [readonly]="mode() === 'all'"
+              (input)="onAmountChange(row, +$any($event.target).value)"
+            />
+            } @else {
             <input
               class="pay-input"
               type="number"
@@ -114,6 +155,7 @@
               step="0.01"
               (input)="onAmountChange(row, +$any($event.target).value)"
             />
+            }
           </div>
           @if (row.error) {
           <span class="row-error">{{ row.error }}</span>
@@ -124,7 +166,7 @@
     </div>
     } }
 
-    <!-- Custom Fee Assignments Section -->
+    <!-- ── CUSTOM FEE ASSIGNMENTS section ──────────────────────────── -->
     @if (rows() | feeRowFilter: 'ASSIGNMENT'; as assignmentRows) { @if (assignmentRows.length > 0) {
     <div class="section-label">
       <mat-icon>directions_bus</mat-icon>
@@ -160,6 +202,7 @@
               [max]="row.maxRupees"
               min="0"
               step="0.01"
+              [readonly]="mode() === 'all'"
               (input)="onAmountChange(row, +$any($event.target).value)"
             />
           </div>
@@ -171,6 +214,14 @@
       }
     </div>
     } }
+
+    <!-- ── Partial mode — all-zero warning ──────────────────────────── -->
+    @if (mode() === 'partial' && totalToPay() === 0 && rows().length > 0) {
+    <div class="partial-hint">
+      <mat-icon>info_outline</mat-icon>
+      Enter the amount you wish to pay for each fee above.
+    </div>
+    }
 
     <!-- Payment method selector -->
     <div class="method-section">
@@ -203,20 +254,25 @@
       </mat-form-field>
     </div>
 
-    <!-- Total + Submit -->
     @if (error()) {
     <div class="form-error-banner">
       <mat-icon>error_outline</mat-icon>
       {{ error() }}
     </div>
-    } } }
+    } }
+    <!-- /rows.length > 0 -->
+
+    }
+    <!-- /dueFees loaded -->
   </div>
 
   <!-- Footer -->
   @if (!loading() && rows().length > 0) {
   <div class="modal-footer">
     <div class="footer-total">
-      <span class="footer-total__label">Total to Pay</span>
+      <span class="footer-total__label">
+        @if (mode() === 'partial') { Amount to Pay } @else { Total to Pay }
+      </span>
       <span class="footer-total__value">{{ totalToPay() | paise }}</span>
     </div>
     <div class="footer-actions">
@@ -230,10 +286,10 @@
         @if (saving()) {
         <mat-spinner diameter="16" />
         Recording… } @else {
-        <ng-container>
+        <ng-container matButtonIcon>
           <mat-icon>payments</mat-icon>
-        </ng-container>
-        Record Payment }
+          @if (mode() === 'partial') { Pay Partial } @else { Record Payment } </ng-container
+        >}
       </button>
     </div>
   </div>

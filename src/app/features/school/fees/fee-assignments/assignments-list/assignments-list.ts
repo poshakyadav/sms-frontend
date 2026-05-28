@@ -156,15 +156,13 @@ export class AssignmentsList implements OnChanges {
       data: {
         enrollmentId: this.enrollmentId,
         studentName: this.studentName,
+        // Pre-select this specific assignment — opens in structure-wise mode
+        preselectedAssignmentId: a.id,
       },
     });
     ref.afterClosed().subscribe((result) => {
       if (result) {
-        this.snack.open(
-          `Payment recorded — ${result.meta?.receiptNumbers?.join(', ') ?? ''}`,
-          'Close',
-          { duration: 4000, panelClass: 'success-toast' }
-        );
+        // Result dialog already shown by RecordPaymentComponent — just refresh
         this.load();
         this.changed.emit();
       }

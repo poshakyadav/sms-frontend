@@ -1162,3 +1162,22 @@
     }
   }
 }
+
+// ── Fee summary section divider ───────────────────────────────────────────────
+.fee-section-divider {
+  height: 1px;
+  background: var(--color-divider);
+  margin: 0 16px;
+}
+
+.fee-summary-top,
+.fee-summary-bottom {
+  display: flex;
+  align-items: stretch;
+}
+
+// ── Concession value color ────────────────────────────────────────────────────
+.fee-concession {
+  color: var(--color-success) !important;
+  font-size: 1rem !important;
+}

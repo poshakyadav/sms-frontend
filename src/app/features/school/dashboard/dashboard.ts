@@ -345,8 +345,26 @@ export class Dashboard implements OnInit {
     return `${filled} ${circ - filled}`;
   }
 
-  getFeeProgress(paid: number | undefined, total: number | undefined): number {
-    if (!total || total === 0) return 0;
-    return Math.round(((paid ?? 0) / total) * 100);
+  formatRupees(paise: number | string | undefined): string {
+    if (paise === undefined || paise === null) return '₹0';
+    const val = typeof paise === 'string' ? parseFloat(paise) : paise;
+    if (isNaN(val)) return '₹0';
+    return '₹' + (val / 100).toLocaleString('en-IN');
+  }
+
+  getFeeProgress(paid: number | string | undefined, total: number | string | undefined): number {
+    if (!total) return 0;
+    const totalNum = typeof total === 'string' ? parseFloat(total) : total;
+    const paidNum = typeof paid === 'string' ? parseFloat(paid ?? '0') : paid ?? 0;
+    if (!totalNum || totalNum === 0) return 0;
+    return Math.round((paidNum / totalNum) * 100);
+  }
+
+  //  used in template for safe numeric comparisons
+  // on DashboardStats values (index signature returns string | number | undefined)
+  toNum(val: string | number | undefined): number {
+    if (val === undefined || val === null) return 0;
+    const n = typeof val === 'string' ? parseFloat(val) : val;
+    return isNaN(n) ? 0 : n;
   }
 }

@@ -324,7 +324,7 @@
       </div>
       }
 
-      <!-- ── Fee Summary Card ──────────────────────────────────────────── -->
+      <!-- ── Fee Summary Card ──────────────────────────────────────────────── -->
       @if (ps['totalFeeDue'] !== undefined) {
       <div class="dash-card parent-fee-card">
         <div class="dash-card-header">
@@ -332,29 +332,60 @@
           <h3>Fee Summary</h3>
           <a class="card-link" routerLink="/school/fees/report">View report</a>
         </div>
-        <div class="fee-summary-body">
+
+        <!-- Top row: Billed / Concession / Net Due -->
+        <div class="fee-summary-body fee-summary-top">
           <div class="fee-stat">
-            <span class="fee-label">Total Due</span>
-            <span class="fee-value fee-total">₹{{ ps['totalFeeDue']! | number }}</span>
+            <span class="fee-label">Total Billed</span>
+            <span class="fee-value fee-total">
+              {{ formatRupees(ps['totalOriginal']) }}
+            </span>
           </div>
           <div class="fee-divider-v"></div>
           <div class="fee-stat">
+            <span class="fee-label">Concessions</span>
+            <span class="fee-value fee-concession">
+              @if (toNum(ps['totalConcession']) > 0) { &minus;{{
+                formatRupees(ps['totalConcession'])
+              }}
+              } @else { ₹0 }
+            </span>
+          </div>
+          <div class="fee-divider-v"></div>
+          <div class="fee-stat">
+            <span class="fee-label">Net Due</span>
+            <span class="fee-value fee-total">
+              {{ formatRupees(ps['totalFeeDue']) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="fee-section-divider"></div>
+
+        <!-- Bottom row: Paid / Pending -->
+        <div class="fee-summary-body fee-summary-bottom">
+          <div class="fee-stat">
             <span class="fee-label">Paid</span>
-            <span class="fee-value fee-paid">₹{{ ps['feesCollected']! | number }}</span>
+            <span class="fee-value fee-paid">
+              {{ formatRupees(ps['feesCollected']) }}
+            </span>
           </div>
           <div class="fee-divider-v"></div>
           <div class="fee-stat">
             <span class="fee-label">Pending</span>
             <span
               class="fee-value"
-              [class.fee-pending]="ps['feesPending']! > 0"
-              [class.fee-clear]="ps['feesPending']! === 0"
+              [class.fee-pending]="toNum(ps['feesPending']) > 0"
+              [class.fee-clear]="toNum(ps['feesPending']) === 0"
             >
-              ₹{{ ps['feesPending']! | number }}
+              {{ formatRupees(ps['feesPending']) }}
             </span>
           </div>
         </div>
-        @if (ps['totalFeeDue']! > 0) {
+
+        <!-- Progress bar -->
+        @if (toNum(ps['totalFeeDue']) > 0) {
         <div class="fee-progress-wrap">
           <div class="fee-progress-bar">
             <div

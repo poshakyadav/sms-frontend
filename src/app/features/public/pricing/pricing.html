@@ -1,0 +1,320 @@
+<!-- features/public/pricing/pricing.html -->
+<div class="pricing-page">
+  <!-- ══════════════════════════════════════════════════════════════════
+         HERO
+         ══════════════════════════════════════════════════════════════════ -->
+  <section class="pricing-hero">
+    <div class="hero-glow hero-glow-1"></div>
+    <div class="hero-glow hero-glow-2"></div>
+
+    <div class="container">
+      <div class="hero-badge">
+        <span class="material-icons badge-icon">auto_awesome</span>
+        Simple, transparent pricing
+      </div>
+
+      <h1 class="hero-title">
+        Every feature.<br />
+        <span class="hero-title-accent">Every school.</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        Unrestricted access across all plans. No per-seat licensing or hidden feature paywalls. From
+        attendance to fee management, every tool is included. Select the deployment environment that
+        best aligns with your institution's goals.
+      </p>
+
+      <!-- Setup fee callout -->
+      <div class="setup-fee-callout">
+        <div class="setup-fee-icon">
+          <span class="material-icons">rocket_launch</span>
+        </div>
+        <div class="setup-fee-body">
+          <span class="setup-fee-label">One-time Implementation Fee</span>
+          <span class="setup-fee-amount">₹4,900</span>
+        </div>
+        <div class="setup-fee-desc">
+          Covers database setup, school environment provisioning &amp; onboarding support. Required
+          for all plans.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+         PLAN CARDS
+         ══════════════════════════════════════════════════════════════════ -->
+  <section class="plans-section">
+    <div class="container">
+      <div class="plans-grid">
+        <!-- ── Standard (Community) ──────────────────────────────────── -->
+        <div class="plan-card plan-standard">
+          <div class="plan-card-inner">
+            <div class="plan-header">
+              <div class="plan-icon plan-icon-standard">
+                <span class="material-icons">groups</span>
+              </div>
+              <div class="plan-name-group">
+                <h2 class="plan-name">Community</h2>
+                <span class="plan-subtitle">Standard Plan</span>
+              </div>
+            </div>
+
+            <div class="plan-price-block">
+              <div class="plan-price">
+                <span class="price-currency">₹</span>
+                <span class="price-amount">0</span>
+                <span class="price-period">/ month</span>
+              </div>
+              <p class="plan-price-note">After the one-time ₹4,900 implementation fee</p>
+            </div>
+
+            <p class="plan-description">
+              Full platform access for schools that want zero monthly overhead. Supported by vetted
+              educational partner notices shown to staff, parents, and students.
+            </p>
+
+            <a routerLink="/login" class="plan-cta plan-cta-standard">
+              Get started free
+              <span class="material-icons">arrow_forward</span>
+            </a>
+
+            <div class="plan-notice">
+              <span class="material-icons notice-icon">info_outline</span>
+              <span>
+                Displays contextual, family-safe educational notices. Student data is never tracked
+                or sold. <a routerLink="/public/privacy" class="notice-link">Privacy policy →</a>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Premium ───────────────────────────────────────────────── -->
+        <div class="plan-card plan-premium">
+          <div class="plan-badge-popular">Most Popular</div>
+          <div class="plan-card-inner">
+            <div class="plan-header">
+              <div class="plan-icon plan-icon-premium">
+                <span class="material-icons">workspace_premium</span>
+              </div>
+              <div class="plan-name-group">
+                <h2 class="plan-name">Premium</h2>
+                <span class="plan-subtitle">Institution Plan</span>
+              </div>
+            </div>
+
+            <div class="plan-price-block">
+              <div class="plan-price">
+                <span class="price-currency">₹</span>
+                <span class="price-amount">1,150</span>
+                <span class="price-period">/ month</span>
+              </div>
+              <p class="plan-price-note">After the one-time ₹4,900 implementation fee</p>
+            </div>
+
+            <p class="plan-description">
+              A completely distraction-free campus environment. No partner notices, custom school
+              branding, priority support — built for institutions that want a premium digital
+              experience.
+            </p>
+
+            <a routerLink="/login" class="plan-cta plan-cta-premium">
+              Upgrade to Premium
+              <span class="material-icons">arrow_forward</span>
+            </a>
+
+            <div class="plan-highlight-features">
+              <div class="highlight-feature">
+                <span class="material-icons">verified</span>
+                100% Distraction-Free Campus
+              </div>
+              <!-- <div class="highlight-feature">
+                <span class="material-icons">palette</span>
+                Custom School Branding
+              </div> -->
+              <div class="highlight-feature">
+                <span class="material-icons">headset_mic</span>
+                Priority Support SLA
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+         FEATURE COMPARISON TABLE
+         ══════════════════════════════════════════════════════════════════ -->
+  <section class="comparison-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">What's included</h2>
+        <p class="section-subtitle">Both plans unlock the full platform. No feature gating.</p>
+      </div>
+
+      <div class="comparison-table-wrap">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th class="col-feature">Feature</th>
+              <th class="col-plan">
+                <span class="th-plan-name">Community</span>
+                <span class="th-plan-price">₹0 / mo</span>
+              </th>
+              <th class="col-plan col-plan-premium">
+                <span class="th-plan-name">Premium</span>
+                <span class="th-plan-price">₹1,150 / mo</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (feature of features; track feature.label) {
+            <tr [class.row-highlight]="feature.highlight">
+              <td class="cell-feature">
+                @if (feature.highlight) {
+                <span class="feature-star material-icons">star</span>
+                }
+                {{ feature.label }}
+              </td>
+              <td class="cell-check">
+                @if (feature.standard === true) {
+                <span class="check check-yes material-icons">check_circle</span>
+                } @else if (feature.standard === false) {
+                <span class="check check-no material-icons">remove</span>
+                } @else {
+                <span class="check check-text">{{ feature.standard }}</span>
+                }
+              </td>
+              <td class="cell-check cell-premium">
+                @if (feature.premium === true) {
+                <span class="check check-yes material-icons">check_circle</span>
+                } @else if (feature.premium === false) {
+                <span class="check check-no material-icons">remove</span>
+                } @else {
+                <span class="check check-text check-premium-text">{{ feature.premium }}</span>
+                }
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+         TRUST STRIP
+         ══════════════════════════════════════════════════════════════════ -->
+  <section class="trust-section">
+    <div class="container">
+      <div class="trust-grid">
+        <div class="trust-item">
+          <div class="trust-icon">
+            <span class="material-icons">shield</span>
+          </div>
+          <div class="trust-body">
+            <span class="trust-title">DPDP Act Compliant</span>
+            <span class="trust-desc"
+              >Student data is never tracked, profiled, or sold. Static contextual notices
+              only.</span
+            >
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">
+            <span class="material-icons">lock</span>
+          </div>
+          <div class="trust-body">
+            <span class="trust-title">Family-Safe Content</span>
+            <span class="trust-desc"
+              >Every educational notice is manually reviewed before going live on any school.</span
+            >
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">
+            <span class="material-icons">upgrade</span>
+          </div>
+          <div class="trust-body">
+            <span class="trust-title">Upgrade Anytime</span>
+            <span class="trust-desc"
+              >Move to Premium instantly from your Admin Dashboard. Pro-rated to the day.</span
+            >
+          </div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">
+            <span class="material-icons">all_inclusive</span>
+          </div>
+          <div class="trust-body">
+            <span class="trust-title">No Per-Seat Fees</span>
+            <span class="trust-desc"
+              >Unlimited students, parents, teachers, and staff on both plans.</span
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+         FAQ
+         ══════════════════════════════════════════════════════════════════ -->
+  <section class="faq-section">
+    <div class="container faq-container">
+      <div class="section-header">
+        <h2 class="section-title">Frequently asked questions</h2>
+        <p class="section-subtitle">
+          Everything school administrators want to know before signing up.
+        </p>
+      </div>
+
+      <div class="faq-list">
+        @for (faq of faqs; track faq.q; let i = $index) {
+        <div class="faq-item" [class.faq-open]="activeFaq() === i">
+          <button
+            class="faq-trigger"
+            (click)="toggleFaq(i)"
+            [attr.aria-expanded]="activeFaq() === i"
+          >
+            <span class="faq-q">{{ faq.q }}</span>
+            <span class="faq-chevron material-icons">
+              {{ activeFaq() === i ? 'expand_less' : 'expand_more' }}
+            </span>
+          </button>
+          @if (activeFaq() === i) {
+          <div class="faq-answer" role="region">
+            <p>{{ faq.a }}</p>
+          </div>
+          }
+        </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+         CTA FOOTER
+         ══════════════════════════════════════════════════════════════════ -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-card">
+        <div class="cta-glow"></div>
+        <h2 class="cta-title">Ready to connect your school?</h2>
+        <p class="cta-desc">
+          Get started with zero monthly cost or go Premium for a fully distraction-free campus.
+          Either way, every feature is yours from day one.
+        </p>
+        <div class="cta-actions">
+          <!-- add router url on this link -->
+          <a class="cta-btn cta-btn-primary">
+            Register your school
+            <span class="material-icons">arrow_forward</span>
+          </a>
+          <a routerLink="/login" class="cta-btn cta-btn-secondary"> Sign in </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

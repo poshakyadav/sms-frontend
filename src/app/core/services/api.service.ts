@@ -40,6 +40,16 @@ export class ApiService {
     return this.http.delete<T>(`${this.baseUrl}/${path}`).pipe(catchError(this.handleError));
   }
 
+  // GET (Blob) — for binary file downloads (Excel, PDF, etc.)
+  getBlob(path: string, params?: HttpParams): Observable<Blob> {
+    return this.http
+      .get(`${this.baseUrl}/${path}`, {
+        params,
+        responseType: 'blob',
+      })
+      .pipe(catchError(this.handleError));
+  }
+
   // ── Error handler ────────────────────────────────────────────────────────
   // CRITICAL: always re-throw the original HttpErrorResponse intact.
   //

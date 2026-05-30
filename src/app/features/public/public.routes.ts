@@ -27,4 +27,9 @@ export const PUBLIC_ROUTES: Routes = [
     loadComponent: () =>
       import('./school-registration/school-registration').then((m) => m.SchoolRegistration),
   },
+
+  {
+    path: 'pricing',
+    loadComponent: () => import('./pricing/pricing').then((m) => m.Pricing),
+  },
 ];

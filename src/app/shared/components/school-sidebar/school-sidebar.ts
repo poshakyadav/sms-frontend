@@ -168,6 +168,20 @@ export const NAV_GROUPS: NavGroup[] = [
             matchStrategy: 'prefix',
           },
           {
+            label: 'Student History',
+            route: '/school/students/history',
+            icon: 'history',
+            permissions: ['students.list'],
+            matchStrategy: 'prefix', // keeps active on /school/students/history/:id
+          },
+          {
+            label: 'UDISE',
+            route: '/school/students/udise',
+            icon: 'assignment_ind',
+            permissions: ['students.profile.manage'],
+            matchStrategy: 'prefix', // keeps active on /school/students/udise/:id
+          },
+          {
             label: 'Parents',
             icon: 'family_restroom',
             route: '/school/parents/link',

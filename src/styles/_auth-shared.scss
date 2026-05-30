@@ -1,0 +1,25 @@
+// _auth-shared.scss
+
+.auth-form-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  box-sizing: border-box;
+
+  @media (max-height: 680px) {
+    justify-content: flex-start;
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+}
+
+.auth-form-panel--with-footer {
+  // kept for backward compatibility — base class now handles everything
+}
+
+// Optional: card-footer single-link variant (code-entry page)
+.auth-card-footer--single {
+  justify-content: center;
+}

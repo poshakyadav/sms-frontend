@@ -1,3 +1,4 @@
+// school-code-entry.ts
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -10,6 +11,7 @@ import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../../core/services/api.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { AuthFooter } from '../../../shared/components/auth-footer/auth-footer';
 
 interface ValidateSchoolResponse {
   valid: boolean;
@@ -39,6 +41,7 @@ interface ValidateSchoolResponse {
     MatInputModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    AuthFooter,
   ],
   templateUrl: './school-code-entry.html',
   styleUrl: './school-code-entry.scss',

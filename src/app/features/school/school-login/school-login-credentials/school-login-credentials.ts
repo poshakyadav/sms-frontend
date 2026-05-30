@@ -1,3 +1,4 @@
+// school-login-credentials.ts
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -13,6 +14,7 @@ import { ToastService } from '../../../../core/services/toast.service';
 import { ThemeService } from '../../../../core/services/theme.service';
 import { ParentService, ParentChild } from '../../../../core/services/parent.service';
 import { ParentChildSelectorComponent } from '../../parents/parent-child-selector/parent-child-selector';
+import { AuthFooter } from '../../../../shared/components/auth-footer/auth-footer';
 
 interface LoginErrorBody {
   requiresTermsAcceptance?: boolean;
@@ -42,6 +44,7 @@ interface SchoolInfo {
     MatIconModule,
     MatProgressSpinnerModule,
     ParentChildSelectorComponent,
+    AuthFooter,
   ],
   templateUrl: './school-login-credentials.html',
   styleUrl: './school-login-credentials.scss',

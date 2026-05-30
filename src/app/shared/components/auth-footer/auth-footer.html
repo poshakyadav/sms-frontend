@@ -1,0 +1,37 @@
+<!-- shared/components/auth-footer/auth-footer.html -->
+<footer class="auth-footer">
+  <div class="auth-footer-inner">
+    <!-- Brand -->
+    <div class="footer-brand">
+      <span class="material-icons footer-brand-icon">school</span>
+      <span class="footer-brand-name">EDUXO</span>
+    </div>
+
+    <!-- Nav links -->
+    <nav class="footer-nav" aria-label="Footer navigation">
+
+      <a routerLink="/public/about" class="footer-nav-link">About us</a>
+
+      <span class="footer-sep" aria-hidden="true">·</span>
+
+      <a routerLink="/public/pricing" class="footer-nav-link">Pricing</a>
+      <!-- <a routerLink="/public/pricing" class="footer-nav-link footer-nav-link--highlight">
+        <span class="material-icons footer-nav-icon">sell</span>
+        Pricing
+      </a> -->
+
+      <span class="footer-sep" aria-hidden="true">·</span>
+
+      <a routerLink="/public/terms" class="footer-nav-link">Terms</a>
+      <span class="footer-sep" aria-hidden="true">·</span>
+
+      <a routerLink="/public/privacy" class="footer-nav-link">Privacy</a>
+      <span class="footer-sep" aria-hidden="true">·</span>
+
+      <a routerLink="/public/security" class="footer-nav-link">Security</a>
+    </nav>
+
+    <!-- Copyright -->
+    <p class="footer-copy">&copy; {{ year }} Eduxo. All rights reserved.</p>
+  </div>
+</footer>

@@ -1,3 +1,4 @@
+<!-- dashboard.html -->
 
 <div class="dashboard">
   <header class="dashboard__header">
@@ -42,11 +43,11 @@
       </svg>
     </div>
     <div class="approval-alert__body">
-      <strong
-        >{{ pendingApprovalCount() }} payment{{ pendingApprovalCount() > 1 ? 's' : '' }} waiting for
-        verification</strong
-      >
-      <span>Review and approve to activate school accounts →</span>
+      <strong>
+        {{ pendingApprovalCount() }} school{{ pendingApprovalCount() > 1 ? 's' : '' }} paid via
+        Razorpay and {{ pendingApprovalCount() > 1 ? 'are' : 'is' }} waiting for activation
+      </strong>
+      <span>Razorpay payment confirmed — click to activate school accounts →</span>
     </div>
     <div class="approval-alert__count">{{ pendingApprovalCount() }}</div>
   </div>
@@ -420,19 +421,21 @@
     <div class="pending-approvals-card__header">
       <h3 class="pending-approvals-card__title">
         <span class="pending-dot"></span>
-        Payments Awaiting Verification
+        Schools Awaiting Activation
       </h3>
       <button class="btn-link" (click)="navigateTo('approvals')">View all →</button>
     </div>
     <div class="pending-list">
-      @for (approval of pendingApprovals(); track approval.id) {
+      @for (approval of pendingApprovals(); track approval.schoolId) {
       <div class="pending-item" (click)="navigateTo('approvals')" role="button">
         <div class="pending-item__avatar">{{ approval.schoolName.charAt(0) }}</div>
         <div class="pending-item__info">
           <div class="pending-item__name">{{ approval.schoolName }}</div>
-          <div class="pending-item__utr">UTR: {{ approval.utrNumber || 'Not provided' }}</div>
+          <div class="pending-item__utr">
+            {{ approval.razorpayPaymentId || 'Payment confirmed' }}
+          </div>
         </div>
-        <div class="pending-item__time">{{ daysSince(approval.submittedAt) }}</div>
+        <div class="pending-item__time">{{ daysSince(approval.capturedAt) }}</div>
       </div>
       }
     </div>

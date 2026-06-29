@@ -1,445 +1,764 @@
-<!-- features/super/approvals/approvals.html -->
+<!-- features/super/approvals/approvals/approvals.html -->
+<!-- REWRITTEN: Razorpay payment queue (primary) + Legacy UTR queue (secondary tab) -->
 
 <div class="apr-root">
+
+  <!-- ════════════════════════════════════════════════════════════
+       PAGE HEADER
+       ════════════════════════════════════════════════════════════ -->
   <header class="apr-header">
     <div class="apr-header__left">
-      <div class="apr-header__icon" [class.apr-header__icon--pulse]="pendingCount > 0">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <polyline points="9 11 12 14 22 4"></polyline>
-          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+      <div class="apr-header__icon" [class.apr-header__icon--pulse]="rzPendingCount > 0">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
         </svg>
-        @if (pendingCount > 0) {
-        <span class="apr-header__badge">{{ pendingCount }}</span>
+        @if (rzPendingCount > 0) {
+          <span class="apr-header__badge">{{ rzPendingCount }}</span>
         }
       </div>
       <div>
-        <h1 class="apr-header__title">Payment Approvals</h1>
-        <p class="apr-header__sub">Verify UTR numbers and activate school accounts</p>
+        <h1 class="apr-header__title">School Activations</h1>
+        <p class="apr-header__sub">Review Razorpay payments and activate school accounts</p>
       </div>
     </div>
-    <button class="btn btn--ghost" (click)="loadApprovals()">
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-      >
-        <polyline points="1 4 1 10 7 10"></polyline>
-        <path d="M3.51 15a9 9 0 1 0 .49-4.2"></path>
-      </svg>
-      Refresh
-    </button>
+    <div class="apr-header__actions">
+      @if (activeTab() === 'razorpay') {
+        <button class="btn btn--ghost" (click)="toggleRzHistory()">
+          @if (rzShowHistory()) {
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            Pending Only
+          } @else {
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            Show History
+          }
+        </button>
+        <button class="btn btn--ghost" (click)="loadRazorpayQueue()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 .49-4.2"></path>
+          </svg>
+          Refresh
+        </button>
+      } @else {
+        <button class="btn btn--ghost" (click)="loadLegacyApprovals()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 .49-4.2"></path>
+          </svg>
+          Refresh
+        </button>
+      }
+    </div>
   </header>
 
-  @if (pendingCount > 0) {
-  <div class="apr-alert">
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-    >
-      <path
-        d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
-      ></path>
-      <line x1="12" y1="9" x2="12" y2="13"></line>
-      <line x1="12" y1="17" x2="12.01" y2="17"></line>
-    </svg>
-    <strong>{{ pendingCount }} payment{{ pendingCount > 1 ? 's' : '' }}</strong> waiting for
-    verification. Check your UPI app to match UTR numbers before approving.
-  </div>
+  <!-- Alert for pending Razorpay activations -->
+  @if (rzPendingCount > 0 && activeTab() === 'razorpay') {
+    <div class="apr-alert">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+      <div>
+        <strong>{{ rzPendingCount }} school{{ rzPendingCount > 1 ? 's' : '' }}</strong>
+        paid via Razorpay and {{ rzPendingCount > 1 ? 'are' : 'is' }} waiting for activation.
+        Razorpay has confirmed the payment — click <strong>Activate School</strong> to provision their account.
+      </div>
+    </div>
   }
 
-  <!-- Filter tabs -->
-  @if (!loading() && !error()) {
-  <div class="apr-tabs">
-    @for (tab of [ { key: 'SUBMITTED', label: 'Pending' }, { key: 'VERIFIED', label: 'Approved' }, {
-    key: 'REJECTED', label: 'Rejected' }, { key: 'ALL', label: 'All' } ]; track tab.key) {
+  <!-- ════════════════════════════════════════════════════════════
+       TAB SWITCHER
+       ════════════════════════════════════════════════════════════ -->
+  <div class="apr-tabs-nav">
     <button
-      class="apr-tab"
-      [class.apr-tab--active]="filterStatus() === tab.key"
-      (click)="setFilter(tab.key)"
+      class="apr-tab-nav-btn"
+      [class.apr-tab-nav-btn--active]="activeTab() === 'razorpay'"
+      (click)="setTab('razorpay')"
     >
-      {{ tab.label }}
-      @if (tab.key === 'SUBMITTED' && pendingCount > 0) {
-      <span class="apr-tab__count">{{ pendingCount }}</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+        <line x1="1" y1="10" x2="23" y2="10"></line>
+      </svg>
+      Razorpay Queue
+      @if (rzPendingCount > 0) {
+        <span class="apr-tab-chip apr-tab-chip--red">{{ rzPendingCount }}</span>
       }
     </button>
-    }
+    <button
+      class="apr-tab-nav-btn"
+      [class.apr-tab-nav-btn--active]="activeTab() === 'legacy'"
+      (click)="setTab('legacy')"
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+      UTR Legacy
+      @if (legacyPendingCount > 0) {
+        <span class="apr-tab-chip apr-tab-chip--amber">{{ legacyPendingCount }}</span>
+      }
+    </button>
   </div>
-  } @if (loading()) {
-  <div class="apr-loading">
-    <div class="apr-spinner"></div>
-    <p>Loading payment records…</p>
-  </div>
-  } @if (!loading() && error()) {
-  <div class="apr-error">
-    <p>{{ error() }}</p>
-    <button class="btn btn--primary" (click)="loadApprovals()">Retry</button>
-  </div>
-  } @if (!loading() && !error()) {
-  <div class="apr-layout" [class.apr-layout--split]="selected()">
-    <!-- List -->
-    <div class="apr-list">
-      @if (filteredApprovals().length === 0) {
-      <div class="apr-empty">
-        <svg
-          width="40"
-          height="40"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1"
-        >
-          <polyline points="9 11 12 14 22 4"></polyline>
-          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
-        </svg>
-        <p>No {{ filterStatus() === 'ALL' ? '' : filterStatus().toLowerCase() }} records</p>
+
+  <!-- ════════════════════════════════════════════════════════════
+       TAB: RAZORPAY QUEUE
+       ════════════════════════════════════════════════════════════ -->
+  @if (activeTab() === 'razorpay') {
+
+    <!-- Status sub-tabs -->
+    @if (!rzLoading() && !rzError()) {
+      <div class="apr-subtabs">
+        @for (tab of [
+          { key: 'PENDING', label: 'Pending Activation' },
+          { key: 'ACTIVATED', label: 'Activated' },
+          { key: 'ALL', label: 'All' }
+        ]; track tab.key) {
+          <button
+            class="apr-subtab"
+            [class.apr-subtab--active]="rzFilterStatus() === tab.key"
+            (click)="setRzFilter(tab.key)"
+          >
+            {{ tab.label }}
+            @if (tab.key === 'PENDING' && rzPendingCount > 0) {
+              <span class="apr-subtab__count">{{ rzPendingCount }}</span>
+            }
+          </button>
+        }
       </div>
-      } @for (approval of filteredApprovals(); track approval.id) {
-      <div
-        class="apr-card"
-        [class.apr-card--selected]="selected()?.id === approval.id"
-        [class.apr-card--pending]="approval.status === 'SUBMITTED'"
-        [class.apr-card--approved]="approval.status === 'VERIFIED'"
-        [class.apr-card--rejected]="approval.status === 'REJECTED'"
-        (click)="selectApproval(approval)"
-      >
-        <div class="apr-card__top">
-          <div class="apr-card__school">
-            <div class="apr-card__avatar">{{ approval.schoolName.charAt(0) }}</div>
-            <div>
-              <div class="apr-card__name">{{ approval.schoolName }}</div>
-              @if (approval.invitationCity) {
-              <div class="apr-card__city">{{ approval.invitationCity }}</div>
+    }
+
+    <!-- Loading -->
+    @if (rzLoading()) {
+      <div class="apr-state-center">
+        <div class="apr-spinner"></div>
+        <p>Loading payment queue…</p>
+      </div>
+    }
+
+    <!-- Error -->
+    @if (!rzLoading() && rzError()) {
+      <div class="apr-state-center apr-state-center--error">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <p>{{ rzError() }}</p>
+        <button class="btn btn--primary" (click)="loadRazorpayQueue()">Retry</button>
+      </div>
+    }
+
+    <!-- Content -->
+    @if (!rzLoading() && !rzError()) {
+      <div class="apr-layout" [class.apr-layout--split]="rzSelected()">
+
+        <!-- LIST -->
+        <div class="apr-list">
+
+          @if (rzFiltered().length === 0) {
+            <div class="apr-empty">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+              <p>
+                @if (rzFilterStatus() === 'PENDING') {
+                  No schools waiting for activation
+                } @else {
+                  No records found
+                }
+              </p>
+              @if (rzFilterStatus() === 'PENDING' && !rzShowHistory()) {
+                <button class="btn btn--ghost btn--sm" (click)="toggleRzHistory()">View history</button>
+              }
+            </div>
+          }
+
+          @for (item of rzFiltered(); track item.schoolId) {
+            <div
+              class="apr-card"
+              [class.apr-card--selected]="rzSelected()?.schoolId === item.schoolId"
+              [class.apr-card--pending]="item.activationStatus === 'PENDING'"
+              [class.apr-card--activated]="item.activationStatus === 'ACTIVATED'"
+              (click)="selectRzItem(item)"
+            >
+              <!-- Top row -->
+              <div class="apr-card__top">
+                <div class="apr-card__school">
+                  <div class="apr-card__avatar">{{ item.schoolName.charAt(0) }}</div>
+                  <div>
+                    <div class="apr-card__name">{{ item.schoolName }}</div>
+                    <div class="apr-card__code">{{ item.schoolCode }}</div>
+                    @if (item.invitationCity) {
+                      <div class="apr-card__city">📍 {{ item.invitationCity }}</div>
+                    }
+                  </div>
+                </div>
+                @if (item.activationStatus === 'PENDING') {
+                  <span class="badge badge--amber">Pending Activation</span>
+                } @else {
+                  <span class="badge badge--green">Activated</span>
+                }
+              </div>
+
+              <!-- Payment meta -->
+              <div class="apr-card__meta">
+                <div class="apr-card__meta-item">
+                  <span class="apr-card__meta-label">Amount</span>
+                  <span class="apr-card__meta-val apr-card__meta-val--amount">
+                    {{ formatCurrency(item.amountPaise) }}
+                  </span>
+                </div>
+                <div class="apr-card__meta-item">
+                  <span class="apr-card__meta-label">Method</span>
+                  <span class="apr-card__meta-val">{{ formatMethod(item.method) }}</span>
+                </div>
+                <div class="apr-card__meta-item">
+                  <span class="apr-card__meta-label">Captured</span>
+                  <span class="apr-card__meta-val">{{ timeSince(item.capturedAt) }}</span>
+                </div>
+              </div>
+
+              <!-- Razorpay IDs chip -->
+              @if (item.razorpayPaymentId) {
+                <div class="apr-card__rzid">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                    <line x1="1" y1="10" x2="23" y2="10"></line>
+                  </svg>
+                  {{ item.razorpayPaymentId }}
+                </div>
+              }
+
+              <!-- Action -->
+              @if (item.activationStatus === 'PENDING') {
+                <div class="apr-card__actions" (click)="$event.stopPropagation()">
+                  <button
+                    class="btn-activate"
+                    [disabled]="rzActivatingId() === item.schoolId"
+                    (click)="openRzActivate(item.schoolId)"
+                  >
+                    @if (rzActivatingId() === item.schoolId) {
+                      <span class="mini-spinner"></span>
+                      Activating…
+                    } @else {
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                      Activate School
+                    }
+                  </button>
+                </div>
+              }
+
+            </div>
+          }
+        </div>
+
+        <!-- DETAIL PANEL -->
+        @if (rzSelected()) {
+          <div class="apr-detail">
+            <div class="apr-detail__header">
+              <h3 class="apr-detail__title">Payment Detail</h3>
+              <button class="apr-detail__close" (click)="rzSelected.set(null)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+
+            <div class="apr-detail__body">
+
+              <!-- School info -->
+              <div class="detail-school">
+                <div class="detail-school__avatar">{{ rzSelected()!.schoolName.charAt(0) }}</div>
+                <div>
+                  <div class="detail-school__name">{{ rzSelected()!.schoolName }}</div>
+                  <div class="detail-school__code">{{ rzSelected()!.schoolCode }}</div>
+                  <div class="detail-school__email">{{ rzSelected()!.schoolEmail }}</div>
+                  @if (rzSelected()!.invitationCity) {
+                    <div class="detail-school__city">📍 {{ rzSelected()!.invitationCity }}</div>
+                  }
+                </div>
+              </div>
+
+              <!-- Status badge -->
+              @if (rzSelected()!.activationStatus === 'PENDING') {
+                <span class="badge badge--amber detail-status-badge">Pending Activation</span>
+              } @else {
+                <span class="badge badge--green detail-status-badge">Activated</span>
+              }
+
+              <!-- Payment info -->
+              <div class="detail-section">
+                <div class="detail-section__title">Razorpay Payment</div>
+
+                <div class="detail-row">
+                  <span class="detail-row__label">Amount Paid</span>
+                  <span class="detail-row__val detail-row__val--amount">
+                    {{ formatCurrency(rzSelected()!.amountPaise) }}
+                  </span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-row__label">Payment Method</span>
+                  <span class="detail-row__val">{{ formatMethod(rzSelected()!.method) }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-row__label">Captured At</span>
+                  <span class="detail-row__val">{{ formatDateTime(rzSelected()!.capturedAt) }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-row__label">Razorpay Payment ID</span>
+                  <span class="detail-row__val detail-row__val--mono">
+                    {{ rzSelected()!.razorpayPaymentId || '—' }}
+                  </span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-row__label">Razorpay Order ID</span>
+                  <span class="detail-row__val detail-row__val--mono">
+                    {{ rzSelected()!.razorpayOrderId || '—' }}
+                  </span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-row__label">Payment Created</span>
+                  <span class="detail-row__val">{{ formatDateTime(rzSelected()!.paymentCreatedAt) }}</span>
+                </div>
+              </div>
+
+              <!-- Info tip for pending -->
+              @if (rzSelected()!.activationStatus === 'PENDING') {
+                <div class="detail-verify-tip detail-verify-tip--green">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  </svg>
+                  <p>
+                    Razorpay has confirmed this payment (ID: <strong>{{ rzSelected()!.razorpayPaymentId }}</strong>).
+                    Clicking <strong>Activate School</strong> will provision their Turso database,
+                    seed roles and permissions, and send login credentials to their email.
+                  </p>
+                </div>
+
+                <div class="detail-actions">
+                  <button
+                    class="btn btn--activate"
+                    [disabled]="rzActivatingId() === rzSelected()!.schoolId"
+                    (click)="openRzActivate(rzSelected()!.schoolId)"
+                  >
+                    @if (rzActivatingId() === rzSelected()!.schoolId) {
+                      <span class="btn-spinner"></span>
+                      Activating…
+                    } @else {
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                      Activate School
+                    }
+                  </button>
+                </div>
+              }
+
+              @if (rzSelected()!.activationStatus === 'ACTIVATED') {
+                <div class="detail-activated-note">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  School is live and operational.
+                </div>
+              }
+
+            </div>
+          </div>
+        }
+
+      </div>
+    }
+
+  }
+
+  <!-- ════════════════════════════════════════════════════════════
+       TAB: LEGACY UTR QUEUE
+       ════════════════════════════════════════════════════════════ -->
+  @if (activeTab() === 'legacy') {
+
+    <div class="apr-legacy-notice">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      These are manual bank-transfer records from before Razorpay was enabled.
+      New schools pay via Razorpay — check the <strong>Razorpay Queue</strong> tab for new activations.
+    </div>
+
+    <!-- Status sub-tabs -->
+    @if (!legacyLoading() && !legacyError()) {
+      <div class="apr-subtabs">
+        @for (tab of [
+          { key: 'SUBMITTED', label: 'Pending' },
+          { key: 'VERIFIED', label: 'Approved' },
+          { key: 'REJECTED', label: 'Rejected' },
+          { key: 'ALL', label: 'All' }
+        ]; track tab.key) {
+          <button
+            class="apr-subtab"
+            [class.apr-subtab--active]="legacyFilterStatus() === tab.key"
+            (click)="setLegacyFilter(tab.key)"
+          >
+            {{ tab.label }}
+            @if (tab.key === 'SUBMITTED' && legacyPendingCount > 0) {
+              <span class="apr-subtab__count">{{ legacyPendingCount }}</span>
+            }
+          </button>
+        }
+      </div>
+    }
+
+    @if (legacyLoading()) {
+      <div class="apr-state-center">
+        <div class="apr-spinner"></div>
+        <p>Loading UTR records…</p>
+      </div>
+    }
+
+    @if (!legacyLoading() && legacyError()) {
+      <div class="apr-state-center apr-state-center--error">
+        <p>{{ legacyError() }}</p>
+        <button class="btn btn--primary" (click)="loadLegacyApprovals()">Retry</button>
+      </div>
+    }
+
+    @if (!legacyLoading() && !legacyError()) {
+      <div class="apr-layout" [class.apr-layout--split]="legacySelected()">
+
+        <div class="apr-list">
+          @if (legacyFiltered().length === 0) {
+            <div class="apr-empty">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                <polyline points="9 11 12 14 22 4"></polyline>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+              </svg>
+              <p>No {{ legacyFilterStatus() === 'ALL' ? '' : legacyFilterStatus().toLowerCase() }} records</p>
+            </div>
+          }
+
+          @for (approval of legacyFiltered(); track approval.id) {
+            <div
+              class="apr-card"
+              [class.apr-card--selected]="legacySelected()?.id === approval.id"
+              [class.apr-card--pending]="approval.status === 'SUBMITTED'"
+              [class.apr-card--activated]="approval.status === 'VERIFIED'"
+              [class.apr-card--rejected]="approval.status === 'REJECTED'"
+              (click)="selectLegacyApproval(approval)"
+            >
+              <div class="apr-card__top">
+                <div class="apr-card__school">
+                  <div class="apr-card__avatar">{{ approval.schoolName.charAt(0) }}</div>
+                  <div>
+                    <div class="apr-card__name">{{ approval.schoolName }}</div>
+                    @if (approval.invitationCity) {
+                      <div class="apr-card__city">{{ approval.invitationCity }}</div>
+                    }
+                  </div>
+                </div>
+                <span class="badge" [class]="getLegacyStatusInfo(approval.status).cls">
+                  {{ getLegacyStatusInfo(approval.status).label }}
+                </span>
+              </div>
+
+              <div class="apr-card__meta">
+                <div class="apr-card__meta-item">
+                  <span class="apr-card__meta-label">UTR</span>
+                  <span class="apr-card__meta-val apr-card__meta-val--mono">
+                    {{ approval.utrNumber || '—' }}
+                  </span>
+                </div>
+                <div class="apr-card__meta-item">
+                  <span class="apr-card__meta-label">Amount</span>
+                  <span class="apr-card__meta-val">{{ formatCurrency(approval.amountPaid) }}</span>
+                </div>
+                <div class="apr-card__meta-item">
+                  <span class="apr-card__meta-label">Submitted</span>
+                  <span class="apr-card__meta-val">{{ daysSince(approval.submittedAt) }}</span>
+                </div>
+              </div>
+
+              @if (approval.status === 'SUBMITTED') {
+                <div class="apr-card__actions" (click)="$event.stopPropagation()">
+                  <button
+                    class="btn-sm btn-sm--approve"
+                    [disabled]="legacyApprovingId() === approval.id || legacyRejectingId() === approval.id"
+                    (click)="openLegacyApprove(approval.id)"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    class="btn-sm btn-sm--reject"
+                    [disabled]="legacyApprovingId() === approval.id || legacyRejectingId() === approval.id"
+                    (click)="openLegacyReject(approval.id)"
+                  >
+                    Reject
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Legacy detail panel -->
+        @if (legacySelected()) {
+          <div class="apr-detail">
+            <div class="apr-detail__header">
+              <h3 class="apr-detail__title">UTR Payment Detail</h3>
+              <button class="apr-detail__close" (click)="legacySelected.set(null)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <div class="apr-detail__body">
+              <div class="detail-school">
+                <div class="detail-school__avatar">{{ legacySelected()!.schoolName.charAt(0) }}</div>
+                <div>
+                  <div class="detail-school__name">{{ legacySelected()!.schoolName }}</div>
+                  <div class="detail-school__email">{{ legacySelected()!.schoolEmail }}</div>
+                  @if (legacySelected()!.invitationCity) {
+                    <div class="detail-school__city">📍 {{ legacySelected()!.invitationCity }}</div>
+                  }
+                </div>
+              </div>
+
+              <span class="badge detail-status-badge" [class]="getLegacyStatusInfo(legacySelected()!.status).cls">
+                {{ getLegacyStatusInfo(legacySelected()!.status).label }}
+              </span>
+
+              <div class="detail-section">
+                <div class="detail-section__title">UTR Payment Info</div>
+                <div class="detail-row">
+                  <span class="detail-row__label">UTR Number</span>
+                  <span class="detail-row__val detail-row__val--utr">
+                    {{ legacySelected()!.utrNumber || 'Not provided' }}
+                  </span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-row__label">Amount Expected</span>
+                  <span class="detail-row__val">{{ formatCurrency(legacySelected()!.amountExpected) }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-row__label">Amount Paid</span>
+                  <span class="detail-row__val">{{ formatCurrency(legacySelected()!.amountPaid) }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-row__label">Payer Name</span>
+                  <span class="detail-row__val">{{ legacySelected()!.payerName || '—' }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-row__label">Submitted</span>
+                  <span class="detail-row__val">{{ legacySelected()!.submittedAt | date: 'medium' }}</span>
+                </div>
+              </div>
+
+              @if (legacySelected()!.screenshotUrl) {
+                <div class="detail-section">
+                  <div class="detail-section__title">Screenshot</div>
+                  <a [href]="legacySelected()!.screenshotUrl!" target="_blank" class="screenshot-link">
+                    View Screenshot →
+                  </a>
+                </div>
+              }
+
+              @if (legacySelected()!.rejectionReason) {
+                <div class="detail-rejection">
+                  <div class="detail-rejection__title">Rejection Reason</div>
+                  <p>{{ legacySelected()!.rejectionReason }}</p>
+                </div>
+              }
+
+              @if (legacySelected()!.status === 'SUBMITTED') {
+                <div class="detail-verify-tip">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  </svg>
+                  <p>
+                    Open your UPI app and search for UTR <strong>{{ legacySelected()!.utrNumber }}</strong> before approving.
+                  </p>
+                </div>
+                <div class="detail-actions">
+                  <button
+                    class="btn btn--activate"
+                    [disabled]="legacyApprovingId() === legacySelected()!.id"
+                    (click)="openLegacyApprove(legacySelected()!.id)"
+                  >
+                    Approve & Activate School
+                  </button>
+                  <button
+                    class="btn btn--danger"
+                    [disabled]="legacyRejectingId() === legacySelected()!.id"
+                    (click)="openLegacyReject(legacySelected()!.id)"
+                  >
+                    Reject Payment
+                  </button>
+                </div>
               }
             </div>
           </div>
-          <span class="badge" [class]="getStatusInfo(approval.status).cls">
-            {{ getStatusInfo(approval.status).label }}
-          </span>
-        </div>
+        }
 
-        <div class="apr-card__meta">
-          <div class="apr-card__meta-item">
-            <span class="apr-card__meta-label">UTR</span>
-            <span class="apr-card__meta-val apr-card__meta-val--mono">
-              {{ approval.utrNumber || '—' }}
-            </span>
+      </div>
+    }
+
+  }
+
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     MODAL: RAZORPAY ACTIVATE CONFIRM
+     ════════════════════════════════════════════════════════════ -->
+@if (rzShowConfirm()) {
+  <div class="modal-overlay" (click)="closeRzActivate()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header modal__header--activate">
+        <div class="modal__header-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <h2 class="modal__title">Activate School Account</h2>
+      </div>
+      <div class="modal__body">
+        <p class="modal__desc">
+          This will provision the school's database, seed roles and permissions,
+          and send login credentials to the school owner's email.
+          Razorpay has already confirmed the payment — this is the final activation step.
+        </p>
+        <div class="modal__checklist">
+          <div class="modal__check-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Turso database assigned and provisioned
           </div>
-          <div class="apr-card__meta-item">
-            <span class="apr-card__meta-label">Amount</span>
-            <span class="apr-card__meta-val">{{ formatCurrency(approval.amountPaid) }}</span>
+          <div class="modal__check-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Owner account created with SCHOOL_OWNER role
           </div>
-          <div class="apr-card__meta-item">
-            <span class="apr-card__meta-label">Submitted</span>
-            <span class="apr-card__meta-val">{{ daysSince(approval.submittedAt) }}</span>
+          <div class="modal__check-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Default theme seeded and permissions configured
+          </div>
+          <div class="modal__check-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Activation email sent to school owner
           </div>
         </div>
-
-        @if (approval.status === 'SUBMITTED') {
-        <div class="apr-card__actions" (click)="$event.stopPropagation()">
-          <button
-            class="btn-sm btn-sm--approve"
-            [disabled]="approvingId() === approval.id || rejectingId() === approval.id"
-            (click)="openApproveConfirm(approval.id)"
-          >
-            @if (approvingId() === approval.id) {
-            <span class="mini-spinner"></span>
-            } @else {
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-            >
+        <div class="field">
+          <label class="field__label">Internal Notes (optional)</label>
+          <textarea
+            class="field__input field__input--textarea"
+            [(ngModel)]="rzConfirmNotes"
+            placeholder="e.g. Razorpay payment confirmed manually. School onboarded via referral."
+            rows="2"
+          ></textarea>
+        </div>
+        <div class="modal__actions">
+          <button class="btn btn--ghost" (click)="closeRzActivate()">Cancel</button>
+          <button class="btn btn--activate" (click)="confirmRzActivate()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
-            } Approve & Activate
-          </button>
-          <button
-            class="btn-sm btn-sm--reject"
-            [disabled]="approvingId() === approval.id || rejectingId() === approval.id"
-            (click)="openReject(approval.id)"
-          >
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-            Reject
+            Activate School
           </button>
         </div>
-        }
       </div>
-      }
     </div>
+  </div>
+}
 
-    <!-- Detail panel -->
-    @if (selected()) {
-    <div class="apr-detail">
-      <div class="apr-detail__header">
-        <h3 class="apr-detail__title">Payment Detail</h3>
-        <button class="apr-detail__close" (click)="selected.set(null)">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
+<!-- ════════════════════════════════════════════════════════════
+     MODAL: LEGACY UTR — APPROVE CONFIRM
+     ════════════════════════════════════════════════════════════ -->
+@if (legacyShowApproveConfirm()) {
+  <div class="modal-overlay" (click)="closeLegacyApprove()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header modal__header--activate">
+        <div class="modal__header-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <h2 class="modal__title">Confirm UTR Payment Approval</h2>
+      </div>
+      <div class="modal__body">
+        <p class="modal__desc">
+          Confirm you have verified the UTR number in your UPI app before proceeding.
+          This will provision the school's database and activate their account.
+        </p>
+        <div class="field">
+          <label class="field__label">Internal Notes (optional)</label>
+          <textarea
+            class="field__input field__input--textarea"
+            [(ngModel)]="legacyApproveNotes"
+            placeholder="e.g. Verified in PhonePe — UTR matches ₹5000 payment"
+            rows="2"
+          ></textarea>
+        </div>
+        <div class="modal__actions">
+          <button class="btn btn--ghost" (click)="closeLegacyApprove()">Cancel</button>
+          <button class="btn btn--activate" (click)="confirmLegacyApprove()">
+            Approve & Activate
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ════════════════════════════════════════════════════════════
+     MODAL: LEGACY UTR — REJECT
+     ════════════════════════════════════════════════════════════ -->
+@if (legacyShowRejectModal()) {
+  <div class="modal-overlay" (click)="closeLegacyReject()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header modal__header--danger">
+        <div class="modal__header-icon modal__header-icon--danger">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
-        </button>
+        </div>
+        <h2 class="modal__title">Reject UTR Payment</h2>
       </div>
-
-      <div class="apr-detail__body">
-        <div class="detail-school">
-          <div class="detail-school__avatar">{{ selected()!.schoolName.charAt(0) }}</div>
-          <div>
-            <div class="detail-school__name">{{ selected()!.schoolName }}</div>
-            <div class="detail-school__email">{{ selected()!.schoolEmail }}</div>
-            @if (selected()!.invitationCity) {
-            <div class="detail-school__city">📍 {{ selected()!.invitationCity }}</div>
-            }
-          </div>
+      <div class="modal__body">
+        <p class="modal__desc">
+          The school will be notified of the rejection reason.
+        </p>
+        <div class="field">
+          <label class="field__label">Rejection Reason <span class="req">*</span></label>
+          <textarea
+            class="field__input field__input--textarea"
+            [(ngModel)]="legacyRejectReason"
+            placeholder="e.g. UTR number not found. Please recheck and resubmit."
+            rows="3"
+          ></textarea>
         </div>
-
-        <span class="badge detail-status-badge" [class]="getStatusInfo(selected()!.status).cls">
-          {{ getStatusInfo(selected()!.status).label }}
-        </span>
-
-        <div class="detail-section">
-          <div class="detail-section__title">Payment Info</div>
-
-          <div class="detail-row">
-            <span class="detail-row__label">UTR Number</span>
-            <span class="detail-row__val detail-row__val--utr">
-              {{ selected()!.utrNumber || 'Not provided' }}
-            </span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-row__label">Amount Expected</span>
-            <span class="detail-row__val">{{ formatCurrency(selected()!.amountExpected) }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-row__label">Amount Paid</span>
-            <span class="detail-row__val">{{ formatCurrency(selected()!.amountPaid) }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-row__label">Payer Name</span>
-            <span class="detail-row__val">{{ selected()!.payerName || '—' }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-row__label">Payer Phone</span>
-            <span class="detail-row__val">{{ selected()!.payerPhone || '—' }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-row__label">Submitted</span>
-            <span class="detail-row__val">{{ selected()!.submittedAt | date : 'medium' }}</span>
-          </div>
-        </div>
-
-        @if (selected()!.screenshotUrl) {
-        <div class="detail-section">
-          <div class="detail-section__title">Payment Screenshot</div>
-          <a [href]="selected()!.screenshotUrl!" target="_blank" class="screenshot-link">
-            View Screenshot →
-          </a>
-        </div>
-        } @if (selected()!.rejectionReason) {
-        <div class="detail-rejection">
-          <div class="detail-rejection__title">Rejection Reason</div>
-          <p>{{ selected()!.rejectionReason }}</p>
-        </div>
-        } @if (selected()!.internalNotes) {
-        <div class="detail-section">
-          <div class="detail-section__title">Internal Notes</div>
-          <p class="detail-notes">{{ selected()!.internalNotes }}</p>
-        </div>
-        } @if (selected()!.status === 'SUBMITTED') {
-        <div class="detail-verify-tip">
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-          </svg>
-          <p>
-            Open your UPI app and search for UTR <strong>{{ selected()!.utrNumber }}</strong> to
-            verify this payment before approving.
-          </p>
-        </div>
-
-        <div class="detail-actions">
-          <button
-            class="btn btn--success"
-            [disabled]="approvingId() === selected()!.id"
-            (click)="openApproveConfirm(selected()!.id)"
-          >
-            @if (approvingId() === selected()!.id) {
-            <span class="btn-spinner"></span> Approving… } @else {
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-            >
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-            Approve & Activate School }
-          </button>
+        <div class="modal__actions">
+          <button class="btn btn--ghost" (click)="closeLegacyReject()">Cancel</button>
           <button
             class="btn btn--danger"
-            [disabled]="rejectingId() === selected()!.id"
-            (click)="openReject(selected()!.id)"
+            (click)="confirmLegacyReject()"
+            [disabled]="!legacyRejectReason.trim()"
           >
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-            Reject Payment
+            Reject & Notify School
           </button>
         </div>
-        }
-      </div>
-    </div>
-    }
-  </div>
-  }
-</div>
-
-<!-- Approve Confirm Modal -->
-@if (showApproveConfirm()) {
-<div class="modal-overlay" (click)="closeApproveConfirm()">
-  <div class="modal" (click)="$event.stopPropagation()">
-    <div class="modal__header modal__header--success">
-      <div class="modal__header-icon">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.5"
-        >
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
-      </div>
-      <h2 class="modal__title">Confirm Payment Approval</h2>
-    </div>
-    <div class="modal__body">
-      <p class="modal__desc">
-        Approving will immediately activate the school and provision their database. Make sure
-        you've verified the UTR number in your UPI app first.
-      </p>
-      <div class="field">
-        <label class="field__label">Internal Notes (optional)</label>
-        <textarea
-          class="field__input field__input--textarea"
-          [(ngModel)]="approveNotes"
-          placeholder="e.g. Verified in PhonePe — UTR matches ₹5000 payment"
-          rows="2"
-        ></textarea>
-      </div>
-      <div class="modal__actions">
-        <button class="btn btn--ghost" (click)="closeApproveConfirm()">Cancel</button>
-        <button class="btn btn--success" (click)="confirmApprove()">
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-          >
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-          Yes, Approve & Activate
-        </button>
       </div>
     </div>
   </div>
-</div>
-}
-
-<!-- Reject Modal -->
-@if (showRejectModal()) {
-<div class="modal-overlay" (click)="closeReject()">
-  <div class="modal" (click)="$event.stopPropagation()">
-    <div class="modal__header modal__header--danger">
-      <div class="modal__header-icon modal__header-icon--danger">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </div>
-      <h2 class="modal__title">Reject Payment</h2>
-    </div>
-    <div class="modal__body">
-      <p class="modal__desc">
-        The school will receive an email with your rejection reason and will be able to resubmit
-        payment proof.
-      </p>
-      <div class="field">
-        <label class="field__label">Rejection Reason <span class="req">*</span></label>
-        <textarea
-          class="field__input field__input--textarea"
-          [(ngModel)]="rejectReason"
-          placeholder="e.g. UTR number not found in our UPI app. Please recheck and resubmit the correct UTR."
-          rows="3"
-        ></textarea>
-      </div>
-      <div class="modal__actions">
-        <button class="btn btn--ghost" (click)="closeReject()">Cancel</button>
-        <button class="btn btn--danger" (click)="confirmReject()" [disabled]="!rejectReason.trim()">
-          Reject & Notify School
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
 }

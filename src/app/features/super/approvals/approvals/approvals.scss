@@ -1,14 +1,20 @@
 /* ============================================================
    approvals.scss
+   REWRITTEN: Razorpay-first two-tab layout.
+   Uses the project's CSS variable system (--st-*).
+   The signature element: the green "activate" CTA stands out
+   strongly against the neutral card surfaces — trust, authority,
+   and urgency all in one consistent design language.
    ============================================================ */
 
 .apr-root {
   padding: 2rem 2.5rem;
   max-width: 1280px;
   margin: 0 auto;
-  animation: fadeIn 0.25s ease;
-  background: transparent;
+  animation: fadeIn 0.2s ease;
 }
+
+// ─── Page header ──────────────────────────────────────────────────────────────
 
 .apr-header {
   display: flex;
@@ -70,11 +76,19 @@
     font-size: 0.875rem;
     color: var(--st-text-secondary);
   }
+
+  &__actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
 }
+
+// ─── Alert banner ─────────────────────────────────────────────────────────────
 
 .apr-alert {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.75rem;
   background: var(--st-amber-bg);
   border: 1px solid var(--st-amber-border);
@@ -83,17 +97,107 @@
   font-size: 0.875rem;
   color: var(--st-amber-text);
   margin-bottom: 1.25rem;
+  line-height: 1.5;
 
   svg {
     color: var(--st-amber);
     flex-shrink: 0;
+    margin-top: 1px;
   }
+
   strong {
     font-weight: 700;
   }
 }
 
-.apr-tabs {
+// ─── Legacy notice ────────────────────────────────────────────────────────────
+
+.apr-legacy-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--st-bg-subtle);
+  border: 1px solid var(--st-border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.82rem;
+  color: var(--st-text-secondary);
+  margin-bottom: 1rem;
+
+  svg {
+    color: var(--st-text-muted);
+    flex-shrink: 0;
+  }
+
+  strong {
+    color: var(--st-text-primary);
+  }
+}
+
+// ─── Tab navigation ───────────────────────────────────────────────────────────
+
+.apr-tabs-nav {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid var(--st-border);
+  margin-bottom: 1rem;
+}
+
+.apr-tab-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.6rem 1.1rem;
+  border: none;
+  background: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--st-text-secondary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.15s;
+  border-radius: 6px 6px 0 0;
+  font-family: inherit;
+
+  &:hover {
+    color: var(--st-text-primary);
+    background: var(--st-bg-subtle);
+  }
+
+  &--active {
+    color: var(--st-green);
+    border-bottom-color: var(--st-green);
+    font-weight: 600;
+    background: transparent;
+  }
+}
+
+.apr-tab-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 99px;
+  font-size: 0.68rem;
+  font-weight: 700;
+
+  &--red {
+    background: var(--st-red-bg);
+    color: var(--st-red-text);
+  }
+
+  &--amber {
+    background: var(--st-amber-bg);
+    color: var(--st-amber-text);
+  }
+}
+
+// ─── Sub-tabs (status filter) ─────────────────────────────────────────────────
+
+.apr-subtabs {
   display: flex;
   gap: 4px;
   margin-bottom: 1.25rem;
@@ -101,14 +205,14 @@
   padding-bottom: 0;
 }
 
-.apr-tab {
-  display: flex;
+.apr-subtab {
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 0.5rem 1rem;
+  padding: 0.45rem 0.875rem;
   border: none;
   background: none;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 500;
   color: var(--st-text-secondary);
   cursor: pointer;
@@ -120,32 +224,59 @@
 
   &:hover {
     color: var(--st-text-primary);
-    background: var(--st-bg-subtle);
   }
+
   &--active {
-    color: var(--st-green);
-    border-bottom-color: var(--st-green);
+    color: var(--st-primary);
+    border-bottom-color: var(--st-primary);
     font-weight: 600;
   }
 
   &__count {
     background: var(--st-red-bg);
     color: var(--st-red-text);
-    font-size: 0.68rem;
+    font-size: 0.65rem;
     font-weight: 700;
-    padding: 1px 6px;
+    padding: 1px 5px;
     border-radius: 99px;
   }
 }
 
-.apr-loading,
-.apr-error,
-.apr-empty {
+// ─── State screens ────────────────────────────────────────────────────────────
+
+.apr-state-center {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  padding: 5rem;
+  padding: 5rem 2rem;
+  color: var(--st-text-muted);
+  text-align: center;
+
+  p {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+
+  &--error {
+    color: var(--st-red-text);
+
+    svg {
+      color: var(--st-red);
+    }
+  }
+
+  svg {
+    color: var(--st-border-strong);
+  }
+}
+
+.apr-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 4rem 2rem;
   color: var(--st-text-muted);
 
   p {
@@ -153,6 +284,7 @@
     font-size: 0.9rem;
     text-align: center;
   }
+
   svg {
     color: var(--st-border-strong);
   }
@@ -167,14 +299,18 @@
   animation: spin 0.8s linear infinite;
 }
 
+// ─── Split layout ─────────────────────────────────────────────────────────────
+
 .apr-layout {
   display: grid;
   grid-template-columns: 1fr;
   gap: 1.5rem;
+  align-items: start;
+
   &--split {
     grid-template-columns: 1fr 380px;
-    align-items: start;
   }
+
   @media (max-width: 900px) {
     &--split {
       grid-template-columns: 1fr;
@@ -188,6 +324,8 @@
   gap: 0.75rem;
 }
 
+// ─── Cards ────────────────────────────────────────────────────────────────────
+
 .apr-card {
   background: var(--st-bg-surface);
   border: 1px solid var(--st-border);
@@ -195,6 +333,7 @@
   padding: 1.25rem;
   cursor: pointer;
   transition: all 0.15s;
+  border-left: 3px solid transparent;
 
   &:hover {
     border-color: var(--st-border-strong);
@@ -203,30 +342,34 @@
 
   &--selected {
     border-color: var(--st-green);
-    box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.15);
+    box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.12);
   }
 
   &--pending {
-    border-left: 3px solid var(--st-amber);
+    border-left-color: var(--st-amber);
   }
-  &--approved {
-    border-left: 3px solid var(--st-green);
+
+  &--activated {
+    border-left-color: var(--st-green);
   }
+
   &--rejected {
-    border-left: 3px solid var(--st-red);
+    border-left-color: var(--st-red);
   }
+
+  // ── Card inner layout ──────────────────────────────────────────────────────
 
   &__top {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
-    margin-bottom: 0.875rem;
     gap: 0.75rem;
+    margin-bottom: 0.875rem;
   }
 
   &__school {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 10px;
     min-width: 0;
   }
@@ -235,7 +378,7 @@
     width: 38px;
     height: 38px;
     border-radius: 10px;
-    background: linear-gradient(135deg, var(--st-green), #10b981);
+    background: linear-gradient(135deg, var(--st-primary), #7c3aed);
     color: #fff;
     font-size: 0.95rem;
     font-weight: 700;
@@ -254,16 +397,25 @@
     text-overflow: ellipsis;
   }
 
+  &__code {
+    font-size: 0.75rem;
+    color: var(--st-primary);
+    font-weight: 600;
+    font-family: monospace;
+    margin-top: 1px;
+  }
+
   &__city {
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     color: var(--st-text-muted);
+    margin-top: 2px;
   }
 
   &__meta {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 0.5rem;
-    margin-bottom: 0.875rem;
+    margin-bottom: 0.75rem;
     padding: 0.75rem;
     background: var(--st-bg-subtle);
     border-radius: 8px;
@@ -276,7 +428,7 @@
   }
 
   &__meta-label {
-    font-size: 0.68rem;
+    font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--st-text-muted);
@@ -284,18 +436,76 @@
   }
 
   &__meta-val {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     color: var(--st-text-primary);
     font-weight: 500;
+
     &--mono {
       font-family: monospace;
-      font-size: 0.82rem;
+      font-size: 0.78rem;
+    }
+
+    &--amount {
+      font-weight: 700;
+      color: var(--st-green);
+    }
+  }
+
+  // Razorpay payment ID chip
+  &__rzid {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: monospace;
+    font-size: 0.72rem;
+    color: var(--st-text-muted);
+    background: var(--st-bg-hover);
+    border: 1px solid var(--st-border);
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-bottom: 0.75rem;
+
+    svg {
+      flex-shrink: 0;
     }
   }
 
   &__actions {
     display: flex;
     gap: 8px;
+    margin-top: 0.5rem;
+  }
+}
+
+// ─── Activate button (inline in card) ─────────────────────────────────────────
+
+.btn-activate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, var(--st-green), #059669);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  letter-spacing: 0.01em;
+
+  &:hover:not(:disabled) {
+    opacity: 0.88;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
   }
 }
 
@@ -336,7 +546,8 @@
   }
 }
 
-// Detail panel
+// ─── Detail panel ─────────────────────────────────────────────────────────────
+
 .apr-detail {
   background: var(--st-bg-surface);
   border: 1px solid var(--st-border);
@@ -351,6 +562,7 @@
     justify-content: space-between;
     padding: 1rem 1.25rem;
     border-bottom: 1px solid var(--st-border);
+    background: var(--st-bg-subtle);
   }
 
   &__title {
@@ -371,6 +583,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+
     &:hover {
       background: var(--st-border);
     }
@@ -381,6 +594,8 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    max-height: calc(100vh - 280px);
+    overflow-y: auto;
   }
 }
 
@@ -393,7 +608,7 @@
     width: 44px;
     height: 44px;
     border-radius: 12px;
-    background: linear-gradient(135deg, var(--st-green), #10b981);
+    background: linear-gradient(135deg, var(--st-primary), #7c3aed);
     color: #fff;
     font-size: 1rem;
     font-weight: 700;
@@ -407,17 +622,20 @@
     font-size: 1rem;
     font-weight: 700;
     color: var(--st-text-primary);
-    margin: 0 0 2px;
   }
 
-  &__email {
-    font-size: 0.82rem;
-    color: var(--st-text-secondary);
+  &__code {
+    font-size: 0.75rem;
+    color: var(--st-primary);
+    font-weight: 600;
+    font-family: monospace;
+    margin: 1px 0;
   }
+
+  &__email,
   &__city {
     font-size: 0.78rem;
-    color: var(--st-text-muted);
-    margin-top: 2px;
+    color: var(--st-text-secondary);
   }
 }
 
@@ -427,10 +645,10 @@
 
 .detail-section {
   &__title {
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
     color: var(--st-text-muted);
     margin-bottom: 0.5rem;
   }
@@ -440,7 +658,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 0.5rem;
+  gap: 0.75rem;
   padding: 6px 0;
   border-bottom: 1px solid var(--st-border);
 
@@ -449,62 +667,38 @@
   }
 
   &__label {
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     color: var(--st-text-secondary);
     flex-shrink: 0;
   }
+
   &__val {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     color: var(--st-text-primary);
     font-weight: 500;
     text-align: right;
 
+    &--mono {
+      font-family: monospace;
+      font-size: 0.75rem;
+      background: var(--st-bg-hover);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
     &--utr {
       font-family: monospace;
-      font-size: 0.82rem;
       background: var(--st-bg-hover);
       padding: 2px 8px;
       border-radius: 4px;
     }
-  }
-}
 
-.screenshot-link {
-  font-size: 0.85rem;
-  color: var(--st-primary);
-  text-decoration: none;
-  font-weight: 600;
-  &:hover {
-    text-decoration: underline;
+    &--amount {
+      font-weight: 800;
+      color: var(--st-green);
+      font-size: 1rem;
+    }
   }
-}
-
-.detail-rejection {
-  background: var(--st-red-bg);
-  border: 1px solid var(--st-red-border);
-  border-radius: 8px;
-  padding: 0.875rem;
-
-  &__title {
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--st-red-text);
-    margin-bottom: 0.5rem;
-  }
-  p {
-    margin: 0;
-    font-size: 0.85rem;
-    color: var(--st-red-text);
-  }
-}
-
-.detail-notes {
-  font-size: 0.85rem;
-  color: var(--st-text-primary);
-  margin: 0;
-  line-height: 1.5;
 }
 
 .detail-verify-tip {
@@ -523,11 +717,41 @@
     color: var(--st-amber);
     margin-top: 1px;
   }
+
   p {
     margin: 0;
   }
   strong {
     font-weight: 700;
+  }
+
+  // Green variant for Razorpay (payment already confirmed)
+  &--green {
+    background: var(--st-green-bg);
+    border-color: var(--st-green-border);
+    color: var(--st-green-text);
+
+    svg {
+      color: var(--st-green);
+    }
+  }
+}
+
+.detail-activated-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--st-green-bg);
+  border: 1px solid var(--st-green-border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--st-green-text);
+
+  svg {
+    color: var(--st-green);
+    flex-shrink: 0;
   }
 }
 
@@ -537,13 +761,47 @@
   gap: 8px;
 }
 
-// Badges
+.detail-rejection {
+  background: var(--st-red-bg);
+  border: 1px solid var(--st-red-border);
+  border-radius: 8px;
+  padding: 0.875rem;
+
+  &__title {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--st-red-text);
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--st-red-text);
+  }
+}
+
+.screenshot-link {
+  font-size: 0.85rem;
+  color: var(--st-primary);
+  text-decoration: none;
+  font-weight: 600;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// ─── Badges ───────────────────────────────────────────────────────────────────
+
 .badge {
   display: inline-flex;
   align-items: center;
   padding: 3px 10px;
   border-radius: 99px;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
   white-space: nowrap;
 
@@ -552,16 +810,19 @@
     color: var(--st-amber-text);
     border: 1px solid var(--st-amber-border);
   }
+
   &--green {
     background: var(--st-green-bg);
     color: var(--st-green-text);
     border: 1px solid var(--st-green-border);
   }
+
   &--red {
     background: var(--st-red-bg);
     color: var(--st-red-text);
     border: 1px solid var(--st-red-border);
   }
+
   &--gray {
     background: var(--st-bg-hover);
     color: var(--st-text-secondary);
@@ -569,7 +830,8 @@
   }
 }
 
-// Buttons
+// ─── Buttons ──────────────────────────────────────────────────────────────────
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -583,50 +845,65 @@
   cursor: pointer;
   transition: all 0.15s;
   font-family: inherit;
-  width: 100%;
 
-  &--success {
-    background: var(--st-green);
+  &--activate {
+    background: linear-gradient(135deg, var(--st-green), #059669);
     color: #fff;
+    width: 100%;
+    justify-content: center;
+
     &:hover:not(:disabled) {
       opacity: 0.88;
     }
+
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
   }
+
   &--danger {
     background: var(--st-red);
     color: #fff;
+    width: 100%;
+    justify-content: center;
+
     &:hover:not(:disabled) {
       opacity: 0.88;
     }
+
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
   }
+
   &--ghost {
     background: var(--st-bg-hover);
     color: var(--st-text-primary);
     border: 1px solid var(--st-border);
+
     &:hover {
       background: var(--st-border);
     }
   }
+
   &--primary {
     background: var(--st-primary);
     color: #fff;
+
     &:hover:not(:disabled) {
       opacity: 0.88;
     }
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
+  }
+
+  &--sm {
+    font-size: 0.78rem;
+    padding: 0.4rem 0.75rem;
   }
 }
+
+// ─── Spinners ─────────────────────────────────────────────────────────────────
 
 .mini-spinner {
   width: 12px;
@@ -635,23 +912,24 @@
   border-top-color: transparent;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
-  opacity: 0.7;
+  opacity: 0.8;
 }
 
 .btn-spinner {
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.4);
   border-top-color: #fff;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
 
-// Modal
+// ─── Modals ───────────────────────────────────────────────────────────────────
+
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -664,7 +942,7 @@
   background: var(--st-bg-surface);
   border-radius: var(--st-radius-lg);
   width: 100%;
-  max-width: 460px;
+  max-width: 480px;
   box-shadow: var(--st-shadow-md);
   overflow: hidden;
   animation: slideUp 0.2s ease;
@@ -675,9 +953,11 @@
     gap: 0.875rem;
     padding: 1.25rem 1.5rem;
     border-bottom: 1px solid var(--st-border);
-    &--success {
+
+    &--activate {
       background: var(--st-green-bg);
     }
+
     &--danger {
       background: var(--st-red-bg);
     }
@@ -693,9 +973,12 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    border: 1px solid var(--st-green-border);
+
     &--danger {
       background: var(--st-red-bg);
       color: var(--st-red);
+      border-color: var(--st-red-border);
     }
   }
 
@@ -714,7 +997,32 @@
     font-size: 0.875rem;
     color: var(--st-text-secondary);
     margin: 0 0 1.25rem;
-    line-height: 1.5;
+    line-height: 1.6;
+  }
+
+  &__checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 1.25rem;
+    padding: 0.875rem 1rem;
+    background: var(--st-green-bg);
+    border: 1px solid var(--st-green-border);
+    border-radius: 8px;
+  }
+
+  &__check-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: var(--st-green-text);
+    font-weight: 500;
+
+    svg {
+      flex-shrink: 0;
+      color: var(--st-green);
+    }
   }
 
   &__actions {
@@ -724,22 +1032,26 @@
     margin-top: 1.25rem;
     padding-top: 1rem;
     border-top: 1px solid var(--st-border);
+
     .btn {
       width: auto;
     }
   }
 }
 
+// ─── Form fields ──────────────────────────────────────────────────────────────
+
 .field {
   &__label {
     display: block;
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     font-weight: 700;
     color: var(--st-text-primary);
     margin-bottom: 6px;
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
+
   &__input {
     width: 100%;
     padding: 0.6rem 0.875rem;
@@ -752,14 +1064,17 @@
     transition: border-color 0.15s;
     box-sizing: border-box;
     font-family: inherit;
+
     &::placeholder {
       color: var(--st-text-muted);
     }
+
     &:focus {
       border-color: var(--st-primary);
       background: var(--st-bg-surface);
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
     }
+
     &--textarea {
       resize: vertical;
       min-height: 70px;
@@ -771,11 +1086,14 @@
   color: var(--st-red);
 }
 
+// ─── Animations ───────────────────────────────────────────────────────────────
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -784,16 +1102,18 @@
     opacity: 1;
   }
 }
+
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(20px) scale(0.98);
+    transform: translateY(16px) scale(0.99);
   }
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
 }
+
 @keyframes iconPulse {
   0%,
   100% {
@@ -804,11 +1124,18 @@
   }
 }
 
+// ─── Responsive ───────────────────────────────────────────────────────────────
+
 @media (max-width: 640px) {
   .apr-root {
     padding: 1.25rem;
   }
+
   .apr-header__title {
     font-size: 1.25rem;
+  }
+
+  .apr-card__meta {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

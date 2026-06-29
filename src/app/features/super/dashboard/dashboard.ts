@@ -30,11 +30,11 @@ export interface DashboardStats {
 }
 
 interface PendingApproval {
-  id: number;
+  schoolId: number;
   schoolName: string;
-  utrNumber: string | null;
-  submittedAt: string | null;
-  status: string;
+  razorpayPaymentId: string | null;
+  capturedAt: string | null;
+  activationStatus: 'PENDING' | 'ACTIVATED';
 }
 
 // Quick action definition — resolved once at render time, no structural directive
@@ -140,19 +140,22 @@ export class Dashboard implements OnInit {
   }
 
   fetchPendingApprovals() {
-    // Only fetch if user has permission
     if (!this.auth.hasAnySuperPermission(['schools.manage', '*'])) return;
     this.loadingApprovals.set(true);
-    this.api.get<{ success: boolean; approvals: PendingApproval[] }>('approvals').subscribe({
-      next: (res) => {
-        const pending = res.approvals.filter((a) => a.status === 'SUBMITTED');
-        this.pendingApprovals.set(pending);
-        this.loadingApprovals.set(false);
-      },
-      error: () => {
-        this.loadingApprovals.set(false);
-      },
-    });
+    this.api
+      .get<{ success: boolean; queue: PendingApproval[]; pendingCount: number }>(
+        'approvals/razorpay'
+      )
+      .subscribe({
+        next: (res) => {
+          const pending = res.queue.filter((i) => i.activationStatus === 'PENDING');
+          this.pendingApprovals.set(pending);
+          this.loadingApprovals.set(false);
+        },
+        error: () => {
+          this.loadingApprovals.set(false);
+        },
+      });
   }
 
   refresh() {

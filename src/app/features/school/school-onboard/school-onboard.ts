@@ -425,6 +425,23 @@ export class SchoolOnboard implements OnInit, OnDestroy {
         contact: this.step2.ownerPhone || this.step1.phone || '',
       },
       theme: { color: '#4f46e5' },
+      // ── Hide payment methods irrelevant for a B2B school SaaS ──────────────
+      // Pay Later (BNPL) and EMI make no sense for a business paying a
+      // setup fee. Hiding them keeps the modal clean and avoids confusion.
+      // Wallet is also hidden — schools won't have Paytm/MobiKwik wallets
+      // loaded with business funds.
+      config: {
+        display: {
+          hide: [
+            { method: 'paylater' },
+            { method: 'emi' },
+            { method: 'wallet' },
+          ],
+          preferences: {
+            show_default_blocks: true, // still show Cards, Netbanking, UPI
+          },
+        },
+      },
       handler: (response: any) => {
         this.verifyPayment(response);
       },

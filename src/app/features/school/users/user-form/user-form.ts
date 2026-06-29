@@ -40,6 +40,7 @@ import {
   UpdateUserPayload,
   UsersService,
 } from '../../../../core/services/users.service';
+import { AvatarPicker } from '../../../../shared/components/avatar-picker/avatar-picker';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -118,6 +119,7 @@ export class FindByIdPipe implements PipeTransform {
     MatIconModule,
     MatTooltipModule,
     FindByIdPipe,
+    AvatarPicker,
   ],
   providers: [DatePipe, ...INDIAN_DATE_PROVIDERS],
   templateUrl: './user-form.html',
@@ -139,6 +141,9 @@ export class UserForm implements OnInit {
   userId = signal<number | null>(null);
   loading = signal(false);
   submitting = signal(false);
+
+  currentAvatarUrl = signal<string | null>(null);
+  currentUserName = signal<string>('');
 
   /** All roles of the user's category (drives the Additional Roles dropdown). */
   availableRoles = signal<RoleOption[]>([]);
@@ -1007,6 +1012,9 @@ export class UserForm implements OnInit {
         const primaryRole = user.primaryRole ?? '';
         this.primaryRoleName.set(primaryRole);
 
+        this.currentAvatarUrl.set(user.avatarUrl || null);
+        this.currentUserName.set(user.name);
+
         // Derive category and load roles filtered to that category
         const category = primaryRoleToCategory(primaryRole);
         const primaryId = user.roles.find((r) => r.name === primaryRole)?.id ?? null;
@@ -1340,5 +1348,13 @@ export class UserForm implements OnInit {
     } else {
       this.toast.error(serverError || 'Failed to update roles');
     }
+  }
+
+  onAvatarUploaded(newUrl: string): void {
+    this.currentAvatarUrl.set(newUrl);
+  }
+
+  onAvatarRemoved(): void {
+    this.currentAvatarUrl.set(null);
   }
 }

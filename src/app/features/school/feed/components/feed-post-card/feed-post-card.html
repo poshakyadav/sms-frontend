@@ -1,0 +1,61 @@
+<!-- features/school/feed/components/feed-post-card/feed-post-card.html -->
+
+<article class="feed-card" [class.is-pinned]="post().isPinned">
+  @if (post().isPinned) {
+  <div class="pinned-badge">📌 Pinned</div>
+  }
+
+  <header class="card-header">
+    <div class="author-info">
+      <div class="author-avatar">{{ post().createdByName.charAt(0) || 'S' }}</div>
+      <div>
+        <div class="author-name">{{ post().createdByName || 'School Admin' }}</div>
+        <div class="post-meta">
+          {{ post().createdAt | date : 'MMM d, y, h:mm a' }}
+          @if (post().classSectionLabel) {
+          <span class="audience-chip">{{ post().classSectionLabel }}</span>
+          } @else {
+          <span class="audience-chip">{{ humanizeAudience(post().targetAudience) }}</span>
+          }
+        </div>
+      </div>
+    </div>
+
+    @if (canManage()) {
+    <div class="card-actions">
+      <button type="button" class="icon-button" title="Pin/Unpin" (click)="togglePin.emit(post())">
+        {{ post().isPinned ? '📌' : '📍' }}
+      </button>
+      <button type="button" class="icon-button" title="Edit" (click)="edit.emit(post())">✏️</button>
+      <button
+        type="button"
+        class="icon-button danger"
+        title="Delete"
+        (click)="deletePost.emit(post())"
+      >
+        🗑️
+      </button>
+    </div>
+    }
+  </header>
+
+  <div class="card-body">
+    @if (post().postText) {
+    <p class="post-text">{{ post().postText }}</p>
+    } @if (post().imageUrl) {
+    <div class="post-image-wrap">
+      <img [src]="post().imageUrl" [alt]="post().postText || 'Post image'" loading="lazy" />
+    </div>
+    } @if (!post().isPublished) {
+    <div class="draft-badge">Draft — not visible to students/parents</div>
+    }
+  </div>
+
+  <footer class="card-footer">
+    <app-feed-reaction-bar
+      [reactions]="post().reactions"
+      [myReaction]="post().myReaction"
+      (react)="onReact($event)"
+    />
+  </footer>
+</article>

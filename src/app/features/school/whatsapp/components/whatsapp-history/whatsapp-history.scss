@@ -1,0 +1,89 @@
+// whatsapp-history.scss
+.wa-history {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wa-history__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text, #111);
+  margin: 0;
+  .ti {
+    color: var(--primary, #4f46e5);
+  }
+}
+
+.wa-history__filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  select {
+    padding: 8px 12px;
+    border: 1px solid var(--border, #e0e0e0);
+    border-radius: 8px;
+    font-size: 13px;
+    background: var(--surface, #fff);
+  }
+}
+
+.wa-history__loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary, #888);
+  font-size: 14px;
+  padding: 20px 0;
+}
+.wa-history__spin {
+  animation: wh-spin 0.8s linear infinite;
+}
+@keyframes wh-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.wa-history__table {
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #e0e0e0);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.wa-history__empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-secondary, #888);
+  font-size: 14px;
+}
+
+.wa-history__pagination {
+  display: flex;
+  justify-content: space-between;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid var(--border, #e0e0e0);
+    background: var(--surface, #fff);
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}

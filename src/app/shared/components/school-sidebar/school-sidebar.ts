@@ -17,6 +17,7 @@ import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { APP_CONSTANTS } from '../../../app-constants';
+import { WhatsappService } from '../../../features/school/whatsapp/services/whatsapp.service';
 
 /**
  * Slugs that belong ONLY to students. Never shown to staff even if they
@@ -506,6 +507,98 @@ export const NAV_GROUPS: NavGroup[] = [
   },
 
   {
+    groupLabel: 'Billing & Messaging',
+    items: [
+      {
+        label: 'WhatsApp',
+        icon: 'chat',
+        // Union of every /school/whatsapp/* route guard (see whatsapp.routes.ts) —
+        // ensures the parent shows for both billing.view-only and billing.manage users.
+        permissions: ['billing.view', 'billing.manage'],
+        children: [
+          {
+            label: 'Overview',
+            route: '/school/whatsapp',
+            icon: 'dashboard',
+            permissions: ['billing.view', 'billing.manage'],
+            // 'exact' — every other WhatsApp child route starts with this same
+            // prefix ('/school/whatsapp/send', '/bulk', '/history', '/inbound'),
+            // so without 'exact' this item would stay highlighted on every sub-page.
+            matchStrategy: 'exact',
+          },
+          {
+            label: 'Send Message',
+            route: '/school/whatsapp/send',
+            icon: 'send',
+            permissions: ['billing.manage'],
+            matchStrategy: 'prefix',
+          },
+          {
+            label: 'Bulk Send',
+            route: '/school/whatsapp/bulk',
+            icon: 'campaign',
+            // prefix — keeps "Bulk Send" highlighted on the detail page too,
+            // e.g. /school/whatsapp/bulk/42
+            permissions: ['billing.manage'],
+            matchStrategy: 'prefix',
+          },
+          {
+            label: 'Message History',
+            route: '/school/whatsapp/history',
+            icon: 'history',
+            permissions: ['billing.view', 'billing.manage'],
+            matchStrategy: 'prefix',
+          },
+          {
+            label: 'Inbound Messages',
+            route: '/school/whatsapp/inbound',
+            icon: 'inbox',
+            permissions: ['billing.view', 'billing.manage'],
+            matchStrategy: 'prefix',
+          },
+        ],
+      },
+      {
+        label: 'Billing',
+        icon: 'receipt_long',
+        permissions: ['billing.view', 'billing.manage'],
+        children: [
+          {
+            label: 'Overview',
+            route: '/school/billing',
+            icon: 'dashboard',
+            permissions: ['billing.view', 'billing.manage'],
+            // 'exact' for the same reason as WhatsApp → Overview above —
+            // '/school/billing/plans', '/bundles', '/history' all share this prefix.
+            matchStrategy: 'exact',
+          },
+          {
+            label: 'Access Plans',
+            route: '/school/billing/plans',
+            icon: 'card_membership',
+            permissions: ['billing.view', 'billing.manage'],
+            matchStrategy: 'prefix',
+          },
+          {
+            label: 'Buy WhatsApp Bundles',
+            route: '/school/billing/bundles',
+            icon: 'shopping_cart',
+            permissions: ['billing.view', 'billing.manage'],
+            matchStrategy: 'prefix',
+          },
+          {
+            label: 'Payment History',
+            route: '/school/billing/history',
+            icon: 'history',
+            permissions: ['billing.view', 'billing.manage'],
+            matchStrategy: 'prefix',
+          },
+        ],
+      },
+    ],
+  },
+
+  {
     groupLabel: 'System',
     items: [
       {
@@ -558,6 +651,7 @@ export class SchoolSidebar implements OnInit, OnDestroy {
   mobileOpen = signal(false);
   currentRoute = signal('');
   expandedItems = signal<Set<string>>(new Set());
+  wa = inject(WhatsappService);
 
   /** Controls the logout confirmation modal */
   logoutModalOpen = signal(false);
@@ -621,6 +715,15 @@ export class SchoolSidebar implements OnInit, OnDestroy {
 
     const saved = localStorage.getItem('sidebarCollapsed');
     if (saved === 'true') this.isCollapsed.set(true);
+
+    // ── WhatsApp credit balance (for the low-credit nav badge) ─────────────
+    // Guarded behind the same permissions the backend route requires
+    // (requirePermission("billing.view") on GET /school/whatsapp/balance) —
+    // skips a guaranteed 403 for roles like teachers/students/parents who
+    // have no billing permission at all.
+    if (this.auth.hasPermission('billing.view') || this.auth.hasPermission('billing.manage')) {
+      this.wa.loadBalance().subscribe();
+    }
   }
 
   ngOnDestroy(): void {

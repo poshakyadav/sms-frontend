@@ -1,0 +1,120 @@
+<!-- whatsapp-send.html -->
+<div class="wa-send">
+  <div class="wa-send__header">
+    <div>
+      <h1 class="wa-send__title">
+        <i class="ti ti-send" aria-hidden="true"></i>
+        Send a WhatsApp message
+      </h1>
+      <a routerLink="/school/whatsapp" class="wa-send__cancel">Cancel</a>
+    </div>
+    <app-credit-balance-chip [creditsRemaining]="wa.creditsRemaining()" />
+  </div>
+
+  <app-no-credits-banner *ngIf="!wa.hasCredits()" />
+
+  <div class="wa-send__steps">
+    <div
+      *ngFor="let s of steps; let i = index"
+      class="wa-step"
+      [class.wa-step--active]="step() === s.key"
+      [class.wa-step--done]="stepIndex(step()) > i"
+    >
+      <span class="wa-step__num">{{ i + 1 }}</span>
+      <span class="wa-step__label">{{ s.label }}</span>
+    </div>
+  </div>
+
+  <!-- Step 1: Template -->
+  <section class="wa-send__panel" *ngIf="step() === 'template'">
+    <app-template-picker
+      [items]="templateItems()"
+      [selectedKey]="selectedTemplate()?.key ?? null"
+      (templateSelected)="onTemplateSelected($event)"
+    />
+  </section>
+
+  <!-- Step 2: Recipient & variables -->
+  <section class="wa-send__panel" *ngIf="step() === 'details' && selectedTemplate()">
+    <div class="wa-send__recipient-type">
+      <label for="recipientType">Recipient type</label>
+      <select id="recipientType" [(ngModel)]="recipientType">
+        <option value="PARENT">Parent</option>
+        <option value="STUDENT">Student</option>
+        <option value="STAFF">Staff</option>
+        <option value="EXTERNAL">Other / External</option>
+      </select>
+    </div>
+
+    <app-variable-form
+      [template]="selectedTemplate()"
+      (formChange)="onFormChange($event)"
+      (formValidChange)="onFormValidChange($event)"
+    />
+
+    <div class="wa-send__actions">
+      <button class="wa-btn wa-btn--secondary" type="button" (click)="backTo('template')">
+        <i class="ti ti-arrow-left" aria-hidden="true"></i> Back
+      </button>
+      <button
+        class="wa-btn wa-btn--primary"
+        type="button"
+        [disabled]="!formValid()"
+        (click)="goToPreview()"
+      >
+        Continue to preview <i class="ti ti-arrow-right" aria-hidden="true"></i>
+      </button>
+    </div>
+  </section>
+
+  <!-- Step 3: Preview & send -->
+  <section class="wa-send__panel" *ngIf="step() === 'preview' && selectedTemplate()">
+    <app-template-body-preview
+      [bodyText]="previewBodyText"
+      [variables]="previewVariables"
+      [values]="formValue()?.variables ?? {}"
+      [templateName]="previewTemplateName"
+    />
+
+    <div class="wa-send__summary">
+      <div class="wa-send__summary-row">
+        <span>Sending to</span>
+        <strong>{{ formValue()?.recipientName }} ({{ formValue()?.recipientPhone }})</strong>
+      </div>
+      <div class="wa-send__summary-row">
+        <span>Credit cost</span>
+        <strong>1 credit</strong>
+      </div>
+    </div>
+
+    <div class="wa-send__error" *ngIf="submitError()">
+      <i class="ti ti-alert-circle" aria-hidden="true"></i>
+      {{ submitError() }}
+    </div>
+
+    <div class="wa-send__actions">
+      <button
+        class="wa-btn wa-btn--secondary"
+        type="button"
+        (click)="backTo('details')"
+        [disabled]="isSubmitting()"
+      >
+        <i class="ti ti-arrow-left" aria-hidden="true"></i> Back
+      </button>
+      <button
+        class="wa-btn wa-btn--primary"
+        type="button"
+        [disabled]="isSubmitting() || !wa.hasCredits()"
+        (click)="send()"
+      >
+        <i
+          class="ti"
+          [class.ti-send]="!isSubmitting()"
+          [class.ti-loader-2]="isSubmitting()"
+          aria-hidden="true"
+        ></i>
+        {{ isSubmitting() ? 'Sending...' : 'Send message' }}
+      </button>
+    </div>
+  </section>
+</div>

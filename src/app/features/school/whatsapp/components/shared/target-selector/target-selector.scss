@@ -1,0 +1,156 @@
+// target-selector.scss
+
+.target-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ts-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ts-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text, #111);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ts-required {
+  color: #e53935;
+}
+
+.ts-hint {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-secondary, #888);
+}
+
+.ts-input {
+  padding: 9px 12px;
+  border: 1px solid var(--border, #e0e0e0);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--surface, #fff);
+  color: var(--text, #111);
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:focus {
+    border-color: var(--primary, #4f46e5);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  }
+}
+
+.ts-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.ts-textarea {
+  resize: vertical;
+  line-height: 1.6;
+  min-height: 120px;
+}
+
+.ts-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ts-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 2px solid var(--border, #e0e0e0);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover {
+    border-color: var(--primary, #4f46e5);
+    background: rgba(79, 70, 229, 0.02);
+  }
+
+  &--selected {
+    border-color: var(--primary, #4f46e5);
+    background: rgba(79, 70, 229, 0.05);
+  }
+
+  .ti {
+    font-size: 20px;
+    color: var(--primary, #4f46e5);
+    flex-shrink: 0;
+    width: 24px;
+    text-align: center;
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+  }
+
+  &__label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text, #111);
+  }
+
+  &__desc {
+    font-size: 12px;
+    color: var(--text-secondary, #888);
+  }
+}
+
+.ts-radio {
+  display: none; // Visually hidden — the label acts as the selector
+}
+
+.ts-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary, #888);
+  font-size: 14px;
+  padding: 10px 0;
+}
+
+.ts-spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ts-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #2e7d32;
+  margin: 0;
+
+  .ti {
+    font-size: 14px;
+  }
+}

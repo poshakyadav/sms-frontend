@@ -1,0 +1,36 @@
+<!-- whatsapp-history.html -->
+<div class="wa-history">
+  <div class="wa-history__header">
+    <h1 class="wa-history__title">
+      <i class="ti ti-history" aria-hidden="true"></i> Message history
+    </h1>
+  </div>
+
+  <div class="wa-history__filters">
+    <select [(ngModel)]="statusFilter" (ngModelChange)="applyFilters()">
+      <option value="">All statuses</option>
+      <option *ngFor="let opt of statusOptions" [value]="opt[0]">{{ opt[1] }}</option>
+    </select>
+    <select [(ngModel)]="moduleFilter" (ngModelChange)="applyFilters()">
+      <option *ngFor="let opt of moduleOptions" [value]="opt.value">{{ opt.label }}</option>
+    </select>
+  </div>
+
+  <div *ngIf="wa.isLoadingHistory()" class="wa-history__loading">
+    <i class="ti ti-loader-2 wa-history__spin" aria-hidden="true"></i> Loading...
+  </div>
+
+  <div class="wa-history__table" *ngIf="!wa.isLoadingHistory()">
+    <app-message-row *ngFor="let msg of wa.messageHistory()" [message]="msg" />
+    <p *ngIf="wa.messageHistory().length === 0" class="wa-history__empty">No messages found.</p>
+  </div>
+
+  <div class="wa-history__pagination" *ngIf="!wa.isLoadingHistory()">
+    <button type="button" (click)="prevPage()" [disabled]="!canGoPrev">
+      <i class="ti ti-chevron-left" aria-hidden="true"></i> Previous
+    </button>
+    <button type="button" (click)="nextPage()" [disabled]="wa.messageHistory().length < pageSize">
+      Next <i class="ti ti-chevron-right" aria-hidden="true"></i>
+    </button>
+  </div>
+</div>

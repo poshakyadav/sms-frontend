@@ -1,0 +1,87 @@
+<!-- bulk-progress.html -->
+<div class="bulk-progress">
+  <!-- Loading state before first poll -->
+  <div *ngIf="!bulkSend && isPolling" class="bp-loading">
+    <div class="bp-spinner">
+      <i class="ti ti-loader-2 bp-spin" aria-hidden="true"></i>
+    </div>
+    <p>Sending messages... this may take a moment</p>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="pollError" class="bp-error">
+    <i class="ti ti-alert-circle" aria-hidden="true"></i>
+    <span>{{ pollError }}</span>
+    <a [routerLink]="['/school/whatsapp/bulk', bulkSendId]" class="bp-link"> View details </a>
+  </div>
+
+  <!-- Progress display -->
+  <div *ngIf="bulkSend" class="bp-body">
+    <!-- Status row -->
+    <div class="bp-status-row">
+      <i
+        class="ti {{ statusIcon }} bp-status-icon"
+        [class.bp-spin]="statusAnimated"
+        aria-hidden="true"
+      ></i>
+      <div class="bp-status-text">
+        <strong>{{ bulkSend.title }}</strong>
+        <app-status-badge [status]="bulkSend.status" mode="bulk" />
+      </div>
+    </div>
+
+    <!-- Progress bar -->
+    <div
+      class="bp-progress-track"
+      role="progressbar"
+      [attr.aria-valuenow]="progressPercent"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      [attr.aria-label]="'Send progress: ' + progressPercent + '%'"
+    >
+      <div
+        class="bp-progress-fill"
+        [class.bp-progress-fill--sending]="bulkSend.status === 'SENDING'"
+        [style.width.%]="progressPercent"
+      ></div>
+    </div>
+    <p class="bp-progress-label">
+      {{ bulkSend.sentCount | number }} of {{ bulkSend.totalRecipients | number }} sent ({{
+        progressPercent
+      }}%)
+    </p>
+
+    <!-- Stats grid -->
+    <div class="bp-stats">
+      <div class="bp-stat bp-stat--sent">
+        <i class="ti ti-send" aria-hidden="true"></i>
+        <span class="bp-stat__value">{{ bulkSend.sentCount | number }}</span>
+        <span class="bp-stat__label">Sent</span>
+      </div>
+      <div class="bp-stat bp-stat--delivered">
+        <i class="ti ti-checks" aria-hidden="true"></i>
+        <span class="bp-stat__value">{{ bulkSend.deliveredCount | number }}</span>
+        <span class="bp-stat__label">Delivered</span>
+      </div>
+      <div class="bp-stat bp-stat--failed" *ngIf="bulkSend.failedCount > 0">
+        <i class="ti ti-x" aria-hidden="true"></i>
+        <span class="bp-stat__value">{{ bulkSend.failedCount | number }}</span>
+        <span class="bp-stat__label">Failed</span>
+      </div>
+      <div class="bp-stat bp-stat--credits">
+        <i class="ti ti-coin" aria-hidden="true"></i>
+        <span class="bp-stat__value">{{ bulkSend.creditsDeducted | number }}</span>
+        <span class="bp-stat__label">Credits used</span>
+      </div>
+    </div>
+
+    <!-- Completion actions -->
+    <div class="bp-actions" *ngIf="isTerminal(bulkSend.status)">
+      <a [routerLink]="['/school/whatsapp/bulk', bulkSendId]" class="bp-btn bp-btn--primary">
+        <i class="ti ti-chart-bar" aria-hidden="true"></i>
+        View full report
+      </a>
+      <a routerLink="/school/whatsapp/bulk" class="bp-btn bp-btn--secondary"> All bulk sends </a>
+    </div>
+  </div>
+</div>

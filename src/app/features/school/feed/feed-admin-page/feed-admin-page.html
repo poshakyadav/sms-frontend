@@ -1,0 +1,112 @@
+<!-- features/school/feed/feed-admin-page/feed-admin-page.html -->
+
+<div class="feed-admin-page">
+  <header class="feed-admin-header">
+    <div>
+      <h1>Manage School Feed</h1>
+      <p>Create announcements, posts, and YouTube videos for students and parents</p>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" class="btn btn-secondary" (click)="openCreateVideo()">
+        🎬 Add Video
+      </button>
+      <button type="button" class="btn btn-primary" (click)="openCreatePost()">✏️ New Post</button>
+    </div>
+  </header>
+
+  <div class="filter-tabs">
+    <button
+      type="button"
+      class="filter-tab"
+      [class.is-active]="!showDraftsOnly()"
+      (click)="showDraftsOnly.set(false)"
+    >
+      All Posts
+    </button>
+    <button
+      type="button"
+      class="filter-tab"
+      [class.is-active]="showDraftsOnly()"
+      (click)="showDraftsOnly.set(true)"
+    >
+      Drafts
+    </button>
+  </div>
+
+  @if (isLoading()) {
+  <div class="feed-state">Loading feed…</div>
+  } @else if (errorMessage()) {
+  <div class="feed-state feed-state-error">{{ errorMessage() }}</div>
+  } @else if (visiblePosts.length === 0) {
+  <div class="feed-state">
+    <p>{{ showDraftsOnly() ? 'No drafts.' : 'No posts yet.' }}</p>
+    <p class="feed-state-hint">Click "New Post" or "Add Video" to get started.</p>
+  </div>
+  } @else {
+  <div class="feed-list">
+    @for (post of visiblePosts; track post.id) { @if (post.contentType === 'VIDEO') {
+    <app-feed-video-card
+      [post]="post"
+      [canManage]="true"
+      (react)="onReact($event)"
+      (edit)="openEdit($event)"
+      (deletePost)="confirmDelete($event)"
+      (togglePin)="onTogglePin($event)"
+    />
+    } @else {
+    <app-feed-post-card
+      [post]="post"
+      [canManage]="true"
+      (react)="onReact($event)"
+      (edit)="openEdit($event)"
+      (deletePost)="confirmDelete($event)"
+      (togglePin)="onTogglePin($event)"
+    />
+    } }
+  </div>
+
+  @if (hasMore() && !showDraftsOnly()) {
+  <div class="load-more-wrap">
+    <button
+      type="button"
+      class="load-more-button"
+      [disabled]="isLoadingMore()"
+      (click)="loadMore()"
+    >
+      @if (isLoadingMore()) { Loading… } @else { Load more }
+    </button>
+  </div>
+  } }
+</div>
+
+<!-- Create/Edit dialogs -->
+@if (dialogMode() === 'post') {
+<app-create-post-dialog
+  [editingPost]="editingPost()"
+  (closed)="closeDialog()"
+  (saved)="onSaved($event)"
+/>
+} @if (dialogMode() === 'video') {
+<app-create-video-dialog
+  [editingPost]="editingPost()"
+  (closed)="closeDialog()"
+  (saved)="onSaved($event)"
+/>
+}
+
+<!-- Delete confirmation -->
+@if (pendingDelete()) {
+<div class="dialog-overlay" (click)="cancelDelete()">
+  <div class="confirm-panel" (click)="$event.stopPropagation()">
+    <h3>Delete this post?</h3>
+    <p>This cannot be undone. The post will be permanently removed from the feed.</p>
+    <div class="confirm-actions">
+      <button type="button" class="btn btn-secondary" (click)="cancelDelete()">Cancel</button>
+      <button type="button" class="btn btn-danger" (click)="onDelete(pendingDelete()!)">
+        Delete
+      </button>
+    </div>
+  </div>
+</div>
+}

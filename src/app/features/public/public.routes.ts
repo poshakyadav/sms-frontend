@@ -32,4 +32,10 @@ export const PUBLIC_ROUTES: Routes = [
     path: 'pricing',
     loadComponent: () => import('./pricing/pricing').then((m) => m.Pricing),
   },
+
+  {
+    path: 'verify/:token',
+    loadComponent: () =>
+      import('./id-card-verify.component/id-card-verify.component').then((m) => m.IdCardVerifyComponent),
+  },
 ];

@@ -1,3 +1,5 @@
+// super-sidebar.ts
+
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
   Component,
@@ -72,6 +74,18 @@ export const SUPER_NAV_GROUPS: SuperNavGroup[] = [
         icon: 'sync_lock',
         route: '/super/permission-sync',
         permissions: ['schools.manage'],
+      },
+      {
+        label: 'School Requests',
+        icon: 'domain_add',
+        route: '/super/school-requests',
+        permissions: ['school-requests.view'],
+      },
+      {
+        label: 'Contact Messages',
+        icon: 'mark_email_unread',
+        route: '/super/contact-messages',
+        permissions: ['contact-messages.view'],
       },
     ],
   },

@@ -1,0 +1,827 @@
+// school-onboard.scss
+// Clean, trust-building design for school onboarding.
+// Palette: Indigo primary, clean whites, warm greys.
+// Signature: the step progress connector with fill animation.
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #f8f9fc;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+// ─── Shell & Header ───────────────────────────────────────────────────────────
+
+.onboard-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.ob-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  height: 64px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  flex-shrink: 0;
+}
+
+.ob-header-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ob-logo-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.ob-logo-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.02em;
+}
+
+.ob-header-link {
+  font-size: 13px;
+  color: #4f46e5;
+  text-decoration: none;
+  font-weight: 500;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// ─── Center states (loading / error) ─────────────────────────────────────────
+
+.ob-center-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.ob-loading-ring {
+  margin-bottom: 20px;
+}
+
+.ob-loading-text {
+  color: #6b7280;
+  font-size: 15px;
+  margin: 0;
+}
+
+.ob-error-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #fef2f2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+
+  mat-icon {
+    font-size: 36px;
+    width: 36px;
+    height: 36px;
+    color: #ef4444;
+  }
+}
+
+.ob-error-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 8px;
+}
+
+.ob-error-desc {
+  font-size: 15px;
+  color: #6b7280;
+  margin: 0 0 28px;
+  max-width: 400px;
+}
+
+.ob-error-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+// ─── Main wizard content ──────────────────────────────────────────────────────
+
+.ob-main {
+  flex: 1;
+  padding: 40px 16px 60px;
+  max-width: 620px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+// ─── Progress steps ───────────────────────────────────────────────────────────
+
+.ob-progress {
+  display: flex;
+  align-items: center;
+  margin-bottom: 36px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.ob-progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.ob-step-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #d1d5db;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #9ca3af;
+  transition: all 0.25s ease;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.ob-step-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #9ca3af;
+  white-space: nowrap;
+  transition: color 0.25s ease;
+}
+
+.ob-progress-step.active {
+  .ob-step-circle {
+    border-color: #4f46e5;
+    background: #4f46e5;
+    color: white;
+  }
+
+  .ob-step-label {
+    color: #4f46e5;
+    font-weight: 600;
+  }
+}
+
+.ob-progress-step.done {
+  .ob-step-circle {
+    border-color: #10b981;
+    background: #10b981;
+    color: white;
+  }
+
+  .ob-step-label {
+    color: #10b981;
+  }
+}
+
+.ob-progress-connector {
+  flex: 1;
+  height: 2px;
+  background: #d1d5db;
+  min-width: 32px;
+  margin-bottom: 22px;
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: #10b981;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+
+  &.done::after {
+    transform: scaleX(1);
+  }
+}
+
+// ─── Card ─────────────────────────────────────────────────────────────────────
+
+.ob-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e5e7eb;
+}
+
+.ob-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.ob-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    color: white;
+  }
+
+  &.indigo {
+    background: linear-gradient(135deg, #4f46e5, #6d28d9);
+  }
+  &.violet {
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+  }
+  &.green {
+    background: linear-gradient(135deg, #059669, #10b981);
+  }
+  &.amber {
+    background: linear-gradient(135deg, #d97706, #f59e0b);
+  }
+}
+
+.ob-card-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 4px;
+  line-height: 1.3;
+}
+
+.ob-card-sub {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+// ─── Form fields ──────────────────────────────────────────────────────────────
+
+.ob-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ob-field-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 4px;
+
+  &.ob-two-col {
+    > * {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+}
+
+.ob-field-full {
+  width: 100%;
+}
+
+.ob-terms-row {
+  margin: 8px 0 16px;
+
+  .ob-link {
+    color: #4f46e5;
+    text-decoration: none;
+    font-weight: 500;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+// ─── Alerts ───────────────────────────────────────────────────────────────────
+
+.ob-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  &.ob-alert-error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+
+    mat-icon {
+      color: #dc2626;
+    }
+  }
+}
+
+// ─── Form actions ─────────────────────────────────────────────────────────────
+
+.ob-form-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+  flex-direction: column;
+
+  &.ob-two-col-actions {
+    flex-direction: row;
+    align-items: center;
+
+    .ob-btn-outline {
+      flex-shrink: 0;
+    }
+    .ob-btn-primary {
+      flex: 1;
+    }
+  }
+}
+
+// ─── Buttons ──────────────────────────────────────────────────────────────────
+
+.ob-btn-primary {
+  background: linear-gradient(135deg, #4f46e5, #6d28d9) !important;
+  color: white !important;
+  height: 48px !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  font-size: 15px !important;
+  letter-spacing: 0.01em;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  mat-spinner {
+    display: inline-flex;
+    margin-right: 8px;
+  }
+}
+
+.ob-btn-full {
+  width: 100%;
+}
+
+.ob-btn-pay {
+  background: linear-gradient(135deg, #059669, #047857) !important;
+  height: 52px !important;
+  font-size: 16px !important;
+}
+
+.ob-btn-lg {
+  height: 52px !important;
+  padding: 0 32px !important;
+  font-size: 16px !important;
+}
+
+.ob-btn-outline {
+  height: 48px !important;
+  border-radius: 10px !important;
+  color: #374151 !important;
+}
+
+// ─── Payment summary ──────────────────────────────────────────────────────────
+
+.ob-payment-summary {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.ob-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 6px 0;
+}
+
+.ob-summary-label {
+  font-size: 13px;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.ob-summary-val {
+  font-size: 14px;
+  color: #111827;
+  font-weight: 500;
+  text-align: right;
+}
+
+.ob-summary-desc {
+  font-size: 13px;
+  font-weight: 400;
+  color: #4b5563;
+  text-align: right;
+}
+
+.ob-summary-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 10px 0;
+}
+
+.ob-summary-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.ob-total-amount {
+  font-size: 24px;
+  font-weight: 800;
+  color: #059669;
+}
+
+.ob-payment-features {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.ob-payment-feature {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #374151;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: #10b981;
+    flex-shrink: 0;
+  }
+}
+
+.ob-school-code-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #1d4ed8;
+  margin-bottom: 20px;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+
+  strong {
+    font-weight: 700;
+  }
+}
+
+.ob-pay-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #9ca3af;
+  margin: 8px 0 0;
+  text-align: center;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    color: #6b7280;
+  }
+}
+
+// ─── Activation states ────────────────────────────────────────────────────────
+
+.ob-activated {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0;
+  text-align: center;
+}
+
+.ob-activated-icon {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #10b981;
+    position: relative;
+    z-index: 2;
+  }
+}
+
+.ob-activated-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid #10b981;
+  animation: pulse-ring 2s ease-out infinite;
+
+  &.ring-1 {
+    inset: 0;
+    animation-delay: 0s;
+  }
+
+  &.ring-2 {
+    inset: -12px;
+    animation-delay: 0.5s;
+    opacity: 0.5;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+.ob-activated-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 10px;
+}
+
+.ob-activated-sub {
+  font-size: 15px;
+  color: #6b7280;
+  margin: 0 0 28px;
+  line-height: 1.6;
+  max-width: 360px;
+
+  strong {
+    color: #111827;
+  }
+}
+
+// ─── School code block ────────────────────────────────────────────────────────
+
+.ob-code-block {
+  background: #fafafa;
+  border: 2px dashed #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.ob-code-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+  margin-bottom: 8px;
+}
+
+.ob-code-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.ob-code-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: #4f46e5;
+  letter-spacing: 0.08em;
+  font-family: 'Courier New', monospace;
+}
+
+.ob-copy-btn {
+  color: #6b7280 !important;
+}
+
+.ob-code-note {
+  font-size: 12px;
+  color: #9ca3af;
+  margin: 8px 0 0;
+}
+
+// ─── Timeline ─────────────────────────────────────────────────────────────────
+
+.ob-timeline {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 24px;
+}
+
+.ob-tl-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  opacity: 0.4;
+  transition: opacity 0.3s ease;
+
+  &.done,
+  &.active {
+    opacity: 1;
+  }
+  &.active .ob-tl-dot {
+    border-color: #f59e0b;
+    background: #fef3c7;
+  }
+  &.active .ob-tl-dot mat-icon {
+    color: #d97706;
+  }
+  &.done .ob-tl-dot {
+    border-color: #10b981;
+    background: #d1fae5;
+  }
+  &.done .ob-tl-dot mat-icon {
+    color: #059669;
+  }
+}
+
+.ob-tl-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #d1d5db;
+  background: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: #9ca3af;
+  }
+}
+
+.ob-tl-connector {
+  width: 2px;
+  height: 28px;
+  background: #e5e7eb;
+  margin-left: 17px;
+}
+
+.ob-tl-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 6px;
+}
+
+.ob-tl-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.ob-tl-desc {
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+// ─── Polling section ──────────────────────────────────────────────────────────
+
+.ob-poll-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f3f4f6;
+  margin-top: 8px;
+}
+
+.ob-poll-note {
+  font-size: 12px;
+  color: #9ca3af;
+  text-align: center;
+  margin: 0;
+}
+
+// ─── Responsive ───────────────────────────────────────────────────────────────
+
+@media (max-width: 480px) {
+  .ob-header {
+    padding: 0 16px;
+  }
+  .ob-main {
+    padding: 24px 12px 48px;
+  }
+  .ob-card {
+    padding: 20px 16px;
+  }
+
+  .ob-field-row.ob-two-col {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .ob-form-actions.ob-two-col-actions {
+    flex-direction: column;
+
+    .ob-btn-outline,
+    .ob-btn-primary {
+      width: 100%;
+    }
+  }
+
+  .ob-progress {
+    gap: 0;
+
+    .ob-step-label {
+      display: none;
+    }
+    .ob-progress-connector {
+      min-width: 20px;
+    }
+  }
+}

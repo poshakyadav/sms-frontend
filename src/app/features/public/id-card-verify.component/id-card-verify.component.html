@@ -1,0 +1,42 @@
+<!-- src/app/features/public/id-card-verify/id-card-verify.component.html -->
+
+<div class="verify-page">
+  <div class="verify-card" *ngIf="!loading">
+    <ng-container *ngIf="errorMessage">
+      <div class="verify-icon verify-icon--unknown">!</div>
+      <h1 class="verify-title">Verification Unavailable</h1>
+      <p class="verify-message">{{ errorMessage }}</p>
+    </ng-container>
+
+    <ng-container *ngIf="!errorMessage && result">
+      <div
+        class="verify-icon"
+        [class.verify-icon--valid]="result.status === 'ACTIVE'"
+        [class.verify-icon--invalid]="result.status !== 'ACTIVE'"
+      >
+        {{ result.status === 'ACTIVE' ? '✓' : '✕' }}
+      </div>
+
+      <h1 class="verify-title">{{ statusLabel }}</h1>
+
+      <div class="verify-holder" *ngIf="result.holderName">
+        <img *ngIf="result.photoUrl" [src]="result.photoUrl" alt="" class="verify-holder__photo" />
+        <div class="verify-holder__info">
+          <div class="verify-holder__name">{{ result.holderName }}</div>
+          <div class="verify-holder__role">{{ result.roleLabel }}</div>
+        </div>
+      </div>
+
+      <p class="verify-detail" *ngIf="result.cardNumber">Card No. {{ result.cardNumber }}</p>
+      <p class="verify-detail" *ngIf="result.validUntil">
+        Valid until {{ result.validUntil | date : 'mediumDate' }}
+      </p>
+
+      <p class="verify-message" *ngIf="result.status === 'NOT_FOUND'">
+        This card could not be found. It may not exist or the link may be incorrect.
+      </p>
+    </ng-container>
+  </div>
+
+  <div class="verify-loading" *ngIf="loading">Checking card…</div>
+</div>

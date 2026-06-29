@@ -1,0 +1,72 @@
+<!-- template-picker.html -->
+<div class="template-picker">
+  <!-- Search -->
+  <div class="template-picker__search">
+    <i class="ti ti-search" aria-hidden="true"></i>
+    <input
+      type="text"
+      placeholder="Search templates..."
+      [(ngModel)]="searchQuery"
+      class="template-picker__search-input"
+      aria-label="Search templates"
+    />
+    <button
+      *ngIf="searchQuery"
+      class="template-picker__search-clear"
+      (click)="searchQuery = ''"
+      aria-label="Clear search"
+    >
+      <i class="ti ti-x"></i>
+    </button>
+  </div>
+
+  <!-- Grid -->
+  <div class="template-picker__grid" *ngIf="filteredItems.length > 0; else noResults">
+    <button
+      *ngFor="let item of filteredItems; trackBy: trackByKey"
+      class="template-card"
+      [class.template-card--selected]="selectedKey === item.definition.key"
+      [class.template-card--disabled]="!isSelectable(item)"
+      [disabled]="!isSelectable(item)"
+      (click)="select(item)"
+      type="button"
+      [attr.aria-pressed]="selectedKey === item.definition.key"
+      [title]="
+        !isSelectable(item)
+          ? 'Template not approved — sync to refresh status'
+          : item.definition.description
+      "
+    >
+      <div class="template-card__header">
+        <span class="template-card__category">{{ categoryLabel(item.definition.category) }}</span>
+        <span
+          class="template-card__status"
+          [class]="'template-card__status--' + getStatusClass(item)"
+        >
+          {{ getStatusLabel(item) }}
+        </span>
+      </div>
+
+      <div class="template-card__name">{{ item.definition.description }}</div>
+
+      <div class="template-card__footer">
+        <span class="template-card__vars">
+          <i class="ti ti-variable" aria-hidden="true"></i>
+          {{ item.definition.variables.length }} variables
+        </span>
+        <i
+          *ngIf="selectedKey === item.definition.key"
+          class="ti ti-circle-check template-card__check"
+          aria-hidden="true"
+        ></i>
+      </div>
+    </button>
+  </div>
+
+  <ng-template #noResults>
+    <div class="template-picker__empty">
+      <i class="ti ti-search-off" aria-hidden="true"></i>
+      <p>No templates match "{{ searchQuery }}"</p>
+    </div>
+  </ng-template>
+</div>

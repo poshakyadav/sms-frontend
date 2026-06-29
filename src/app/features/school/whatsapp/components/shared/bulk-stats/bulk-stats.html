@@ -1,0 +1,53 @@
+<!-- bulk-stats.html -->
+<div class="bulk-stats">
+  <div class="bulk-stats__header">
+    <div class="bulk-stats__heading">
+      <h3 class="bulk-stats__title">{{ bulkSend.title }}</h3>
+      <span class="bulk-stats__template">{{ bulkSend.templateName }}</span>
+    </div>
+    <app-status-badge [status]="bulkSend.status" mode="bulk" />
+  </div>
+
+  <div class="bulk-stats__progress-track">
+    <div class="bulk-stats__progress-fill" [style.width.%]="progressPercent"></div>
+  </div>
+  <p class="bulk-stats__progress-label">
+    {{ bulkSend.sentCount | number }} of {{ bulkSend.totalRecipients | number }} sent ({{
+      progressPercent
+    }}%)
+  </p>
+
+  <div class="bulk-stats__grid">
+    <div class="bulk-stat bulk-stat--sent">
+      <span class="bulk-stat__value">{{ bulkSend.sentCount | number }}</span>
+      <span class="bulk-stat__label">Sent</span>
+    </div>
+    <div class="bulk-stat bulk-stat--delivered">
+      <span class="bulk-stat__value">{{ bulkSend.deliveredCount | number }}</span>
+      <span class="bulk-stat__label">Delivered</span>
+    </div>
+    <div class="bulk-stat bulk-stat--failed">
+      <span class="bulk-stat__value">{{ bulkSend.failedCount | number }}</span>
+      <span class="bulk-stat__label">Failed</span>
+    </div>
+    <div class="bulk-stat bulk-stat--total">
+      <span class="bulk-stat__value">{{ bulkSend.totalRecipients | number }}</span>
+      <span class="bulk-stat__label">Total recipients</span>
+    </div>
+    <div class="bulk-stat bulk-stat--credits">
+      <span class="bulk-stat__value">{{ bulkSend.creditsDeducted | number }}</span>
+      <span class="bulk-stat__label">Credits used</span>
+    </div>
+  </div>
+
+  <div class="bulk-stats__meta">
+    <span
+      ><i class="ti ti-calendar" aria-hidden="true"></i> Created
+      {{ bulkSend.createdAt | date : 'd MMM y, h:mm a' }}</span
+    >
+    <span *ngIf="bulkSend.completedAt">
+      <i class="ti ti-circle-check" aria-hidden="true"></i> Completed
+      {{ bulkSend.completedAt | date : 'd MMM y, h:mm a' }}
+    </span>
+  </div>
+</div>

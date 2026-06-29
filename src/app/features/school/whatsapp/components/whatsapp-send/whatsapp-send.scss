@@ -1,0 +1,227 @@
+// whatsapp-send.scss
+
+.wa-send {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.wa-send__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.wa-send__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text, #111);
+  margin: 0 0 4px;
+  .ti {
+    color: #25d366;
+    font-size: 22px;
+  }
+}
+
+.wa-send__cancel {
+  font-size: 13px;
+  color: var(--text-secondary, #888);
+  text-decoration: underline;
+}
+
+.wa-send__steps {
+  display: flex;
+  gap: 8px;
+}
+
+.wa-step {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-2, #f5f5f5);
+  color: var(--text-secondary, #888);
+  font-size: 13px;
+  font-weight: 600;
+
+  &__num {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--border, #e0e0e0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  &--active {
+    background: rgba(79, 70, 229, 0.08);
+    color: var(--primary, #4f46e5);
+    .wa-step__num {
+      background: var(--primary, #4f46e5);
+      color: #fff;
+    }
+  }
+  &--done {
+    color: #2e7d32;
+    .wa-step__num {
+      background: #2e7d32;
+      color: #fff;
+    }
+  }
+}
+
+.wa-send__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #e0e0e0);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.wa-send__loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary, #888);
+  font-size: 14px;
+  padding: 16px 0;
+}
+.wa-send__spin {
+  animation: ws-spin 0.8s linear infinite;
+}
+@keyframes ws-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.wa-send__sync-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-radius: 8px;
+  color: #0d47a1;
+  font-size: 13px;
+  flex-wrap: wrap;
+
+  span {
+    flex: 1;
+  }
+}
+
+.wa-send__sync-btn {
+  background: #1565c0;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.wa-send__recipient-type {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 280px;
+
+  label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text, #111);
+  }
+  select {
+    padding: 9px 12px;
+    border: 1px solid var(--border, #e0e0e0);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--surface, #fff);
+  }
+}
+
+.wa-send__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--surface-2, #f9f9f9);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.wa-send__summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--text-secondary, #555);
+  strong {
+    color: var(--text, #111);
+  }
+}
+
+.wa-send__error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #ffebee;
+  border: 1px solid #ef9a9a;
+  border-radius: 8px;
+  color: #b71c1c;
+  font-size: 14px;
+}
+
+.wa-send__actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.wa-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  &--primary {
+    background: var(--primary, #4f46e5);
+    color: #fff;
+  }
+  &--secondary {
+    background: var(--surface-2, #f5f5f5);
+    color: var(--text, #333);
+    border: 1px solid var(--border, #e0e0e0);
+  }
+}

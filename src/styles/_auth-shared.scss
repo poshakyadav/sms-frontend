@@ -1,25 +1,501 @@
 // _auth-shared.scss
+// Shared layout for school-code-entry and school-login-credentials.
+// ─────────────────────────────────────────────────────────────────────────────
+// FIX SUMMARY (mobile alignment bug):
+//
+//  Root cause 1 — Grid column ghost:
+//    .auth-page used `grid-template-columns: 1fr 1fr`. On mobile the media
+//    query hid .auth-panel (display:none) but the two-column track still
+//    existed, so .auth-form-panel was placed in COLUMN 2 — starting at 50%
+//    of the viewport. The card appeared right-aligned and overflowed.
+//
+//    Fix: on mobile set `grid-template-columns: 1fr` AND explicitly place
+//    .auth-form-panel at `grid-column: 1` so it always occupies the only
+//    visible track regardless of how many columns the parent grid had.
+//
+//  Root cause 2 — Card width overflow:
+//    .auth-card had no `max-width: 100%` guard, so its fixed/min-width
+//    (e.g. 420 px) overflowed the narrow viewport and was clipped on the
+//    right.
+//
+//    Fix: add `max-width: 100%` and `box-sizing: border-box` to .auth-card,
+//    and ensure .auth-form-panel uses `width: 100%; box-sizing: border-box`
+//    so padding doesn't push content outside the viewport.
+// ─────────────────────────────────────────────────────────────────────────────
 
+@use 'tokens' as *;
+
+// ── Component host guard ──────────────────────────────────────────────────────
+// Angular renders <app-school-code-entry> and <app-school-login-credentials>
+// as inline-block by default. Making them display:block + clipping overflow
+// stops any child element from widening the document past 100vw, which was
+// causing the card to be clipped on the right side on real mobile devices.
+:host {
+  display: block;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+// ── Page shell ────────────────────────────────────────────────────────────────
+// Two-column grid on desktop; single-column (right panel only) on mobile.
+// The left panel is purely decorative and hidden below $bp-xl.
+.auth-page {
+  display: grid;
+  grid-template-columns: 1fr 1fr; // desktop: side-by-side
+  min-height: 100vh;
+  background: var(--color-bg-main);
+  // Prevent decorative orbs or any overflowing child from creating
+  // a horizontal scrollbar on mobile.
+  overflow-x: hidden;
+  max-width: 100vw;
+
+  // ── KEY FIX: collapse to a single column on mobile ─────────────────────────
+  @media (max-width: $bp-xl) {
+    // $bp-xl = 900px
+    grid-template-columns: 1fr; // single track — no ghost column
+    align-items: flex-start;
+  }
+}
+
+// ── Left decorative panel ─────────────────────────────────────────────────────
+.auth-panel {
+  position: relative;
+  background: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  min-height: 100vh;
+
+  // Hide entirely on mobile — the grid column is removed above, so there
+  // is no layout gap left behind.
+  @media (max-width: $bp-xl) {
+    display: none;
+  }
+}
+
+// Decorative orbs on the left panel
+.auth-panel-orbs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden; // orbs are larger than the panel — clip here, not on body
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-on-primary) 10%, transparent);
+}
+.orb-1 {
+  width: 320px;
+  height: 320px;
+  top: -80px;
+  left: -80px;
+}
+.orb-2 {
+  width: 200px;
+  height: 200px;
+  bottom: 60px;
+  right: -60px;
+}
+.orb-3 {
+  width: 120px;
+  height: 120px;
+  top: 50%;
+  right: 40px;
+  opacity: 0.6;
+}
+
+// Panel content
+.auth-panel-content {
+  position: relative;
+  z-index: 1;
+  padding: 48px 40px;
+  color: var(--color-on-primary);
+  max-width: 400px;
+}
+
+.auth-panel-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--color-on-primary) 18%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32px;
+
+  .material-icons {
+    font-size: 28px;
+    color: var(--color-on-primary);
+  }
+}
+
+.auth-panel-heading {
+  margin: 0 0 16px;
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--color-on-primary);
+
+  span {
+    opacity: 0.82;
+  }
+}
+
+.auth-panel-sub {
+  margin: 0 0 28px;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: color-mix(in srgb, var(--color-on-primary) 80%, transparent);
+}
+
+.auth-panel-features {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth-panel-feature {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+  color: color-mix(in srgb, var(--color-on-primary) 88%, transparent);
+}
+
+.feature-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-on-primary);
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+// ── Right form panel ──────────────────────────────────────────────────────────
+// ── KEY FIX: must be width:100% + box-sizing so padding never overflows ───────
 .auth-form-panel {
+  // Always place in column 1 of whatever grid is active.
+  // On desktop this is the second 1fr track; on mobile the grid is reset to
+  // 1 column so column 1 IS the only column.  Explicit placement prevents
+  // the ghost-column shift.
+  grid-column: 1;
+
+  @media (min-width: #{$bp-xl + 1px}) {
+    grid-column: 2; // desktop: right-hand column
+  }
+
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  box-sizing: border-box;
+  // 20px each side gives the card visible breathing room on a ~390px phone
+  // without wasting space. The previous 12px was too tight and the card's
+  // box-shadow was getting clipped by the viewport edge.
+  padding: 32px 20px;
+  box-sizing: border-box; // ← padding stays inside the track width
+  width: 100%; // ← fill the column track, not overflow it
+  overflow-x: hidden; // ← clip any Angular Material internal overflow
+
+  @media (max-width: $bp-md) {
+    padding: 20px 16px;
+    justify-content: flex-start;
+  }
+
+  // Extra-small phones (< 360px)
+  @media (max-width: $bp-xs) {
+    padding: 16px 10px;
+  }
+}
+
+// Variant used when an <app-auth-footer> sits below the card
+.auth-form-panel--with-footer {
+  justify-content: center;
+  gap: 0;
 
   @media (max-height: 680px) {
     justify-content: flex-start;
     padding-top: 24px;
-    padding-bottom: 24px;
   }
 }
 
-.auth-form-panel--with-footer {
-  // kept for backward compatibility — base class now handles everything
+// ── Auth card ─────────────────────────────────────────────────────────────────
+// ── KEY FIX: use min(440px, 100%) so the card is never wider than the
+//    space left after the panel's horizontal padding is subtracted.
+.auth-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-border);
+  // min() = use 440px when there's room; shrink to 100% of the available
+  // track on narrow viewports. This is the hard guard against right-overflow.
+  width: min(440px, 100%);
+  box-sizing: border-box;
+  overflow: hidden; // clips Angular Material ripple layers that can overflow
+
+  @media (max-width: $bp-sm) {
+    // ≤ 420 px — full-bleed on tiny phones
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+  }
 }
 
-// Optional: card-footer single-link variant (code-entry page)
+// Scoped box-sizing reset — Angular Material does not always inherit
+// box-sizing from the parent, which can cause internal elements to
+// push past the card boundary on narrow viewports.
+.auth-card *,
+.auth-card *::before,
+.auth-card *::after {
+  box-sizing: border-box;
+}
+
+// ── Mobile top bar (school/app branding) ──────────────────────────────────────
+// Shown only on mobile (≤ $bp-xl) where the left panel is hidden.
+.auth-mobile-bar {
+  display: none;
+
+  @media (max-width: $bp-xl) {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--color-divider);
+    background: color-mix(in srgb, var(--color-primary) 6%, var(--color-bg-card));
+  }
+}
+
+.mobile-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  .material-icons {
+    font-size: 18px;
+    color: var(--color-on-primary);
+  }
+}
+
+.auth-logo-initials {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--color-on-primary);
+  letter-spacing: 0.04em;
+}
+
+.mobile-app-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+// ── Card header ───────────────────────────────────────────────────────────────
+.auth-card-header {
+  padding: 28px 28px 0;
+  text-align: left;
+
+  @media (max-width: $bp-sm) {
+    padding: 20px 20px 0;
+  }
+}
+
+.auth-logo-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  color: var(--color-primary);
+
+  .material-icons {
+    font-size: 26px;
+  }
+}
+
+.auth-card-title {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1.25;
+}
+
+.auth-card-subtitle {
+  margin: 0 0 20px;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+}
+
+// Verified school code badge (credentials page)
+.school-code-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
+  color: var(--color-primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+
+  .badge-icon {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+  }
+}
+
+// ── Card body ─────────────────────────────────────────────────────────────────
+.auth-card-body {
+  padding: 20px 28px;
+
+  @media (max-width: $bp-sm) {
+    padding: 16px 20px;
+  }
+}
+
+// ── Auth form ─────────────────────────────────────────────────────────────────
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field-full {
+  width: 100%;
+}
+
+// Prefix icon inside mat-form-field
+.field-prefix-icon {
+  font-size: 20px;
+  height: 20px;
+  width: 20px;
+  color: var(--color-text-muted);
+  margin-right: 4px;
+}
+
+// ── Inline error block ────────────────────────────────────────────────────────
+.auth-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--color-error) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-error) 20%, transparent);
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+  font-size: 0.82rem;
+  color: var(--color-error);
+  line-height: 1.5;
+  animation: auth-error-in 0.18s ease;
+}
+
+@keyframes auth-error-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.error-icon {
+  font-size: 17px;
+  height: 17px;
+  width: 17px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+// ── Submit button ─────────────────────────────────────────────────────────────
+.auth-submit-btn {
+  width: 100%;
+  height: 48px;
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  margin-top: 8px;
+  border-radius: var(--radius-sm) !important;
+  letter-spacing: 0.02em;
+}
+
+// Spinner inside submit button
+.btn-spinner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: inherit;
+}
+
+// ── Card footer ───────────────────────────────────────────────────────────────
+.auth-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px 20px;
+  border-top: 1px solid var(--color-divider);
+
+  @media (max-width: $bp-sm) {
+    padding: 12px 20px 18px;
+  }
+}
+
+// Footer hint text
+.auth-footer-hint {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+// Footer link / button
+.auth-footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 0.78;
+    text-decoration: underline;
+  }
+}
+
+// Single-link centred variant
 .auth-card-footer--single {
   justify-content: center;
 }

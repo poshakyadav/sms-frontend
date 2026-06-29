@@ -664,6 +664,14 @@ $bp-xl: 900px;
   }
 }
 
+.uf-photo-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-divider);
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // ROLES SECTION
 // ══════════════════════════════════════════════════════════════════════════════

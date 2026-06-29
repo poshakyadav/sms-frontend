@@ -1,34 +1,47 @@
 /* features/super/schools-component/schools-component.scss */
+//
+// Uses only CSS custom properties from styles.scss :root so dark mode
+// works automatically via _dark-theme.scss — no [data-theme] selectors needed here.
 
+// ── Page shell ────────────────────────────────────────────────────────────────
 .page {
   padding: 2rem 2.5rem;
   max-width: 1280px;
   margin: 0 auto;
 
+  @media (max-width: 768px) { padding: 1.25rem 1rem; }
+
   &__header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
+    gap: 1rem;
     margin-bottom: 1.25rem;
     flex-wrap: wrap;
-    gap: 1rem;
+  }
+
+  &__header-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
   }
 
   &__title {
     font-size: 1.5rem;
     font-weight: 800;
-    color: #111827;
+    color: var(--color-text-primary);
     margin: 0;
     letter-spacing: -0.02em;
   }
 
   &__subtitle {
-    color: #6b7280;
+    color: var(--color-text-secondary);
     font-size: 0.875rem;
-    margin: 0.2rem 0 0;
+    margin: 0;
   }
 }
 
+// ── Header actions ────────────────────────────────────────────────────────────
 .header-actions {
   display: flex;
   align-items: center;
@@ -36,24 +49,25 @@
   flex-wrap: wrap;
 }
 
-// Info banner
+// ── Info banner ───────────────────────────────────────────────────────────────
 .info-banner {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-info) 8%, var(--color-bg-card));
+  border: 1px solid color-mix(in srgb, var(--color-info) 22%, transparent);
+  border-radius: var(--radius-md);
   padding: 0.75rem 1rem;
   margin-bottom: 1.25rem;
   font-size: 0.875rem;
-  color: #1e40af;
+  color: color-mix(in srgb, var(--color-info) 70%, var(--color-text-primary));
 
   mat-icon {
     font-size: 18px;
     width: 18px;
     height: 18px;
     flex-shrink: 0;
+    color: var(--color-info);
   }
 
   &__link {
@@ -61,18 +75,17 @@
     text-decoration: underline;
     cursor: pointer;
 
-    &:hover {
-      opacity: 0.8;
-    }
+    &:hover { opacity: 0.8; }
   }
 }
 
-// Table card
+// ── Table card ────────────────────────────────────────────────────────────────
 .table-card {
-  background: white;
-  border-radius: 12px;
+  background: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
-  border: 1px solid #e5e7eb;
   position: relative;
 }
 
@@ -81,10 +94,116 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1;
+  z-index: 2;
 }
 
-// School cell
+.overflow-x {
+  overflow-x: auto;
+}
+
+// ── Skeleton loaders ──────────────────────────────────────────────────────────
+.skeleton-list {
+  padding: 0.5rem 0;
+}
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid var(--color-divider);
+
+  &:last-child { border-bottom: none; }
+}
+
+.skeleton-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.skeleton-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.skeleton-line {
+  height: 12px;
+  border-radius: var(--radius-sm);
+
+  &.skeleton--wide   { width: 55%; }
+  &.skeleton--narrow { width: 35%; }
+}
+
+.skeleton-badge {
+  width: 80px;
+  height: 24px;
+  border-radius: 99px;
+  flex-shrink: 0;
+
+  @media (max-width: 640px) { display: none; }
+}
+
+// ── Native data table ─────────────────────────────────────────────────────────
+// Uses global .data-table + .table-row from _tables.scss.
+// Only component-specific overrides live here.
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 640px;
+
+  thead tr {
+    background: color-mix(in srgb, var(--color-bg-main) 40%, var(--color-bg-card));
+  }
+
+  th {
+    padding: 11px 16px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-text-secondary);
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 13px 16px;
+    font-size: 0.875rem;
+    color: var(--color-text-primary);
+    border-bottom: 1px solid var(--color-divider);
+    vertical-align: middle;
+  }
+
+  .table-row {
+    transition: background 0.12s ease;
+
+    &:last-child td { border-bottom: none; }
+    &:hover { background: var(--color-hover); }
+  }
+}
+
+// ── Table footer ──────────────────────────────────────────────────────────────
+.table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: color-mix(in srgb, var(--color-bg-main) 30%, var(--color-bg-card));
+  border-top: 1px solid var(--color-divider);
+
+  &__count {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    font-weight: 500;
+  }
+}
+
+// ── School cell ───────────────────────────────────────────────────────────────
 .school-cell {
   display: flex;
   align-items: center;
@@ -99,60 +218,62 @@
   &__name {
     font-weight: 600;
     font-size: 0.9rem;
-    color: #111827;
+    color: var(--color-text-primary);
   }
 
   &__addr {
     font-size: 0.78rem;
-    color: #9ca3af;
+    color: var(--color-text-muted);
   }
 }
 
 .school-avatar {
   width: 38px;
   height: 38px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
-  color: white;
-  font-size: 0.95rem;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: var(--color-on-primary);
+  font-size: 0.9rem;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  user-select: none;
 }
 
-// Contact cell
+// ── Contact cell ──────────────────────────────────────────────────────────────
 .contact-cell {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 
   &__email {
     font-size: 0.85rem;
-    color: #374151;
+    color: var(--color-text-primary);
   }
 
   &__phone {
     font-size: 0.78rem;
-    color: #9ca3af;
+    color: var(--color-text-muted);
   }
 }
 
-// Code badge
-.code-badge {
+// ── Code chip ─────────────────────────────────────────────────────────────────
+.code-chip {
   display: inline-block;
-  font-family: monospace;
-  font-size: 0.82rem;
-  background: #f3f4f6;
-  color: #374151;
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg-card));
+  color: var(--color-primary);
   padding: 3px 8px;
   border-radius: 6px;
   font-weight: 700;
-  border: 1px solid #e5e7eb;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+  letter-spacing: 0.03em;
 }
 
-// Onboarding status badges
+// ── Onboarding status badges ──────────────────────────────────────────────────
 .onboarding-status {
   display: inline-flex;
   align-items: center;
@@ -163,49 +284,21 @@
   white-space: nowrap;
   border: 1px solid;
 
-  &.status--amber {
-    background: #fffbeb;
-    color: #b45309;
-    border-color: #fde68a;
-  }
-
-  &.status--blue {
-    background: #eff6ff;
-    color: #1d4ed8;
-    border-color: #bfdbfe;
-  }
-
-  &.status--purple {
-    background: #f5f3ff;
-    color: #6d28d9;
-    border-color: #ddd6fe;
-  }
-
-  &.status--green {
-    background: #ecfdf5;
-    color: #065f46;
-    border-color: #6ee7b7;
-  }
-
-  &.status--red {
-    background: #fef2f2;
-    color: #b91c1c;
-    border-color: #fecaca;
-  }
-
-  &.status--gray {
-    background: #f3f4f6;
-    color: #6b7280;
-    border-color: #e5e7eb;
-  }
+  &.status--amber  { background: color-mix(in srgb, var(--color-warning) 12%, transparent); color: color-mix(in srgb, var(--color-warning) 70%, #000); border-color: color-mix(in srgb, var(--color-warning) 30%, transparent); }
+  &.status--blue   { background: color-mix(in srgb, var(--color-info) 10%, transparent);    color: var(--color-info);                                   border-color: color-mix(in srgb, var(--color-info) 25%, transparent);    }
+  &.status--purple { background: color-mix(in srgb, var(--color-secondary) 12%, transparent); color: var(--color-secondary);                            border-color: color-mix(in srgb, var(--color-secondary) 25%, transparent); }
+  &.status--green  { background: color-mix(in srgb, var(--color-success) 10%, transparent); color: color-mix(in srgb, var(--color-success) 70%, #000); border-color: color-mix(in srgb, var(--color-success) 25%, transparent);  }
+  &.status--red    { background: color-mix(in srgb, var(--color-error) 10%, transparent);   color: var(--color-error);                                  border-color: color-mix(in srgb, var(--color-error) 25%, transparent);    }
+  &.status--gray   { background: color-mix(in srgb, var(--color-text-muted) 10%, transparent); color: var(--color-text-muted);                         border-color: transparent;                                                 }
 }
 
-// DB status
+// ── DB status ─────────────────────────────────────────────────────────────────
 .db-status {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   font-size: 0.82rem;
+  font-weight: 500;
 
   &__dot {
     width: 8px;
@@ -215,67 +308,55 @@
   }
 
   &--assigned {
-    color: #065f46;
-    .db-status__dot {
-      background: #22c55e;
-    }
+    color: color-mix(in srgb, var(--color-success) 70%, #000);
+    .db-status__dot { background: var(--color-success); }
   }
 
   &--pending {
-    color: #9ca3af;
-    .db-status__dot {
-      background: #d1d5db;
-    }
+    color: var(--color-text-muted);
+    .db-status__dot { background: var(--color-text-muted); }
   }
 }
 
-// Actions cell
+// ── Actions cell ──────────────────────────────────────────────────────────────
 .actions-cell {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 4px;
 }
 
-// Table rows
-.table-row {
-  transition: background 0.1s;
-  &:hover {
-    background: #f9fafb;
-  }
-}
-
-// Empty state
-.empty-state {
-  padding: 0 !important;
-}
-
-.empty-state__content {
+// ── State containers (loading / empty / error) ────────────────────────────────
+.state-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
   padding: 4rem 2rem;
-  color: #9ca3af;
-
-  mat-icon {
-    font-size: 48px;
-    width: 48px;
-    height: 48px;
-    color: #d1d5db;
-  }
-
-  p {
-    margin: 0;
-    font-size: 0.9rem;
-    text-align: center;
-  }
+  text-align: center;
+  color: var(--color-text-secondary);
 }
 
-@media (max-width: 640px) {
-  .page {
-    padding: 1.25rem;
-  }
-  .page__title {
-    font-size: 1.25rem;
-  }
+.state-icon {
+  font-size: 52px;
+  width: 52px;
+  height: 52px;
+  color: var(--color-text-muted);
+  opacity: 0.6;
+
+  &--error { color: var(--color-error); opacity: 0.8; }
+}
+
+.state-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.state-sub {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  max-width: 360px;
 }

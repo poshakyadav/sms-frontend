@@ -5,12 +5,15 @@ import {
   HttpRequest,
   HttpHandlerFn,
   HttpErrorResponse,
+  HttpEventType,
 } from '@angular/common/http';
 import { inject, PLATFORM_ID } from '@angular/core';
-import { catchError, filter, switchMap, take, throwError, BehaviorSubject, Observable } from 'rxjs';
+import { catchError, filter, switchMap, take, throwError, BehaviorSubject, Observable, tap } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { ParentService } from '../services/parent.service';
 import { isPlatformBrowser } from '@angular/common';
+import { BillingService } from '../services/billing.service';
+import { Router } from '@angular/router';
 
 // ── Module-level refresh state (shared across all interceptor invocations) ───
 // These MUST be outside the function so all concurrent requests share the same
@@ -66,6 +69,8 @@ export const authInterceptor: HttpInterceptorFn = (
 ) => {
   const auth = inject(AuthService);
   const parentService = inject(ParentService);
+  const billing = inject(BillingService);
+  const router = inject(Router);
   const platformId = inject(PLATFORM_ID);
 
   // ── SSR guard ────────────────────────────────────────────────────────────
@@ -78,7 +83,27 @@ export const authInterceptor: HttpInterceptorFn = (
   const authReq = token ? addToken(req, token, auth, parentService) : req;
 
   return next(authReq).pipe(
+    // ── Capture the "renew soon" header on ANY successful response ─────────
+    tap((event) => {
+      if (event.type === HttpEventType.Response) {
+        const daysHeader = event.headers.get('X-Access-Expires-In-Days');
+        if (daysHeader !== null) {
+          const days = parseInt(daysHeader, 10);
+          if (!isNaN(days)) billing.setExpiresInDaysFromHeader(days);
+        }
+      }
+    }),
+
     catchError((error: HttpErrorResponse) => {
+      // ── Access expired (402) — not an auth problem, don't try to refresh.
+      // Redirect straight to the renewal page instead.
+      if (error.status === 402 && error.error?.code === 'ACCESS_EXPIRED') {
+        if (!router.url.startsWith('/school/billing')) {
+          router.navigate(['/school/billing/plans'], { queryParams: { expired: 'true' } });
+        }
+        return throwError(() => error);
+      }
+
       // ── Only handle 401s, and never for auth endpoints ───────────────────
       if (
         error.status !== 401 ||

@@ -1,0 +1,20 @@
+<!-- message-row.html -->
+<div class="message-row">
+  <div class="message-row__recipient">
+    <span class="message-row__name">{{ message.recipientName }}</span>
+    <span class="message-row__phone">{{ message.recipientPhone }}</span>
+  </div>
+  <div class="message-row__template">{{ message.templateName }}</div>
+  <div class="message-row__module">{{ message.triggeredByModule || '—' }}</div>
+  <div class="message-row__status">
+    <app-status-badge [status]="message.status" mode="message" />
+  </div>
+  <div class="message-row__credits">
+    <i class="ti ti-coin" aria-hidden="true"></i> {{ message.creditsUsed }}
+  </div>
+  <div class="message-row__time">{{ message.createdAt | date : 'd MMM, h:mm a' }}</div>
+</div>
+<div class="message-row__failure" *ngIf="message.failureMessage">
+  <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+  {{ message.failureMessage }}
+</div>

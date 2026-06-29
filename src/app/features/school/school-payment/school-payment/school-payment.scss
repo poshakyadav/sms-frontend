@@ -1,1190 +1,382 @@
-/* features/school/school-payment/school-payment/school-payment.scss */
+// school-payment.scss
 
-// ─── Design Tokens ────────────────────────────────────────────────────────────
-$surface-0: #080813;
-$surface-1: #0d0d1c;
-$surface-2: rgba(255, 255, 255, 0.04);
-$surface-3: rgba(255, 255, 255, 0.07);
-$border-sub: rgba(255, 255, 255, 0.08);
-$border-main: rgba(255, 255, 255, 0.12);
-$text-hi: #f0f4ff;
-$text-mid: #9ba6bf;
-$text-lo: #545d7a;
-$primary: var(--color-primary, #4f7ef8);
-$success: var(--color-success, #22c78b);
-$error: #f56565;
-$warning: #f59e0b;
-
-// Place them near the top, after the design tokens block.
- 
-// Hide utility — used instead of @if to keep DOM stable for SSR hydration.
-// [hidden] sets display:none natively in browsers, but we reinforce it here
-// to override any display flex/grid set on the container.
-[hidden] {
-  display: none !important;
-}
- 
-.sp-state--hidden {
-  display: none !important;
-}
- 
-.sp-content--hidden {
-  display: none !important;
-}
-
-// ─── Root ─────────────────────────────────────────────────────────────────────
 :host {
   display: block;
   min-height: 100vh;
-}
-
-.sp-root {
-  min-height: 100vh;
-  background: $surface-0;
-  position: relative;
-  overflow-x: hidden;
+  background: #f8f9fc;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  color: $text-hi;
 }
 
-// ─── Background ───────────────────────────────────────────────────────────────
-.sp-bg {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-
-  &__grid {
-    position: absolute;
-    inset: 0;
-    background-image: linear-gradient(rgba(255, 255, 255, 0.011) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.011) 1px, transparent 1px);
-    background-size: 48px 48px;
-  }
-
-  &__orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(110px);
-    animation: orb-drift 24s ease-in-out infinite alternate;
-
-    &--a {
-      width: 700px;
-      height: 700px;
-      background: radial-gradient(
-        circle,
-        color-mix(in srgb, #{$primary} 30%, transparent),
-        transparent 70%
-      );
-      top: -250px;
-      left: -200px;
-      opacity: 0.14;
-    }
-    &--b {
-      width: 500px;
-      height: 500px;
-      background: radial-gradient(
-        circle,
-        color-mix(in srgb, #8b5cf6 25%, transparent),
-        transparent 70%
-      );
-      bottom: -150px;
-      right: -100px;
-      opacity: 0.1;
-      animation-direction: alternate-reverse;
-    }
-  }
-}
-
-@keyframes orb-drift {
-  from {
-    transform: translate(0, 0) scale(1);
-  }
-  to {
-    transform: translate(40px, 30px) scale(1.08);
-  }
-}
-
-// ─── Page container ───────────────────────────────────────────────────────────
-.sp-page {
-  position: relative;
-  z-index: 1;
-  max-width: 980px;
-  margin: 0 auto;
-  padding: 1.5rem 1rem 4rem;
-
-  @media (min-width: 640px) {
-    padding: 2rem 1.5rem 4rem;
-  }
-  @media (min-width: 960px) {
-    padding: 2.5rem 2rem 5rem;
-  }
-}
-
-.sp-content {
+.sp-shell {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  animation: fade-up 0.4s ease;
 }
 
-@keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+// Header
+.sp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  height: 64px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.sp-header-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sp-logo-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
   }
 }
 
-// ─── State screens ────────────────────────────────────────────────────────────
-.sp-state {
+.sp-logo-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.sp-header-link {
+  font-size: 13px;
+  color: #4f46e5;
+  text-decoration: none;
+  font-weight: 500;
+
+  &:hover { text-decoration: underline; }
+}
+
+// Center states
+.sp-center {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 60vh;
+  padding: 48px 24px;
   text-align: center;
-  padding: 3rem 1rem;
+  gap: 16px;
+}
 
-  &__icon {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-  }
-  &__title {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: $error;
-    margin: 0 0 0.5rem;
-  }
-  &__body {
-    font-size: 0.875rem;
-    color: $text-mid;
-    margin: 0;
-    max-width: 380px;
-  }
-  &__text {
-    font-size: 0.875rem;
-    color: $text-mid;
-    margin: 0;
-  }
+.sp-loading-text {
+  color: #6b7280;
+  font-size: 15px;
+  margin: 0;
+}
 
-  &--loading {
-    gap: 0;
-  }
-  &--error {
-    background: rgba($error, 0.05);
-    border: 1px solid rgba($error, 0.15);
-    border-radius: 16px;
+.sp-error-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #fef2f2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  mat-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    color: #ef4444;
   }
 }
 
-// ─── Loading ring ─────────────────────────────────────────────────────────────
-.sp-ring {
-  display: inline-block;
-  border-radius: 50%;
-  border-style: solid;
-  animation: spin 0.8s linear infinite;
-  flex-shrink: 0;
+.sp-error-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
 
-  // Default large size (loading state)
-  width: 44px;
-  height: 44px;
-  border-width: 3px;
-  border-color: rgba(255, 255, 255, 0.1);
-  border-top-color: $primary;
-  margin-bottom: 1.25rem;
+.sp-error-desc {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  max-width: 360px;
+}
 
-  &--sm {
+// Main layout
+.sp-main {
+  flex: 1;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 48px 16px 60px;
+  width: 100%;
+}
+
+.sp-intro {
+  margin-bottom: 28px;
+}
+
+.sp-step-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  background: #ede9fe;
+  color: #5b21b6;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 12px;
+}
+
+.sp-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 8px;
+  line-height: 1.25;
+}
+
+.sp-subtitle {
+  font-size: 15px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.6;
+}
+
+// Card
+.sp-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  overflow: hidden;
+}
+
+.sp-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6b7280;
+  margin: 0 0 16px;
+
+  mat-icon {
+    font-size: 16px;
     width: 16px;
     height: 16px;
-    border-width: 2px;
-    border-top-color: #fff;
-    margin-bottom: 0;
-  }
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-// ─── School Header ────────────────────────────────────────────────────────────
-.sp-school-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.1rem 1.25rem;
-  background: $surface-2;
-  border: 1px solid $border-sub;
-  border-radius: 16px;
-  backdrop-filter: blur(12px);
-
-  @media (max-width: 460px) {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-  }
-
-  &__avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 14px;
-    background: linear-gradient(135deg, $primary, #8b5cf6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.35rem;
-    font-weight: 900;
-    color: #fff;
-    flex-shrink: 0;
-    box-shadow: 0 6px 20px color-mix(in srgb, #{$primary} 25%, transparent);
-  }
-
-  &__info {
-    flex: 1;
-    min-width: 0;
-  }
-
-  &__name {
-    font-size: clamp(1.05rem, 2.5vw, 1.3rem);
-    font-weight: 800;
-    color: $text-hi;
-    margin: 0 0 0.35rem;
-    letter-spacing: -0.02em;
-    line-height: 1.2;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  &__meta {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    flex-wrap: wrap;
-  }
-}
-
-.sp-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 10px;
-  background: $surface-3;
-  border: 1px solid $border-sub;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  color: $text-mid;
-  font-family: monospace;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-}
-
-.sp-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-
-  &--registered {
-    background: rgba(79, 126, 248, 0.12);
-    border: 1px solid rgba(79, 126, 248, 0.25);
-    color: color-mix(in srgb, #{$primary} 80%, #fff);
-  }
-  &--pending {
-    background: rgba($warning, 0.1);
-    border: 1px solid rgba($warning, 0.25);
-    color: $warning;
-  }
-  &--rejected {
-    background: rgba($error, 0.1);
-    border: 1px solid rgba($error, 0.25);
-    color: $error;
-  }
-}
-
-// ─── Accordion ────────────────────────────────────────────────────────────────
-.sp-accordion {
-  background: $surface-2;
-  border: 1px solid $border-sub;
-  border-radius: 14px;
-  overflow: hidden;
-  transition: border-color 0.2s;
-
-  &:hover {
-    border-color: $border-main;
-  }
-  &--open {
-    border-color: color-mix(in srgb, #{$primary} 35%, transparent);
-  }
-
-  &__trigger {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    padding: 1rem 1.125rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: inherit;
-    text-align: left;
-    transition: background 0.15s;
-    -webkit-tap-highlight-color: transparent;
-
-    &:hover {
-      background: $surface-2;
-    }
-
-    @media (max-width: 480px) {
-      padding: 0.875rem 1rem;
-      align-items: flex-start;
-    }
-  }
-
-  &__trigger-left {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    flex: 1;
-    min-width: 0;
-  }
-
-  &__trigger-right {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    flex-shrink: 0;
-  }
-
-  &__trigger-icon {
-    font-size: 1rem;
-    width: 34px;
-    height: 34px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: $surface-3;
-    border: 1px solid $border-sub;
-    border-radius: 9px;
-    flex-shrink: 0;
-  }
-
-  &__trigger-title {
-    display: block;
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: $text-hi;
-    margin-bottom: 2px;
-  }
-
-  &__trigger-sub {
-    display: block;
-    font-size: 0.75rem;
-    color: $text-lo;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 260px;
-
-    @media (max-width: 500px) {
-      max-width: 160px;
-    }
-  }
-
-  &__chevron {
-    font-size: 1.25rem;
-    color: $text-lo;
-    transition: transform 0.25s ease, color 0.2s;
-    line-height: 1;
-
-    &--open {
-      transform: rotate(90deg);
-      color: $primary;
-    }
-  }
-
-  &__body {
-    padding: 0 1.125rem 1.125rem;
-    border-top: 1px solid $border-sub;
-    animation: expand 0.2s ease;
-  }
-}
-
-@keyframes expand {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-// Edit button
-.sp-edit-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 12px;
-  background: color-mix(in srgb, #{$primary} 10%, transparent);
-  border: 1px solid color-mix(in srgb, #{$primary} 25%, transparent);
-  border-radius: 8px;
-  color: color-mix(in srgb, #{$primary} 80%, #fff);
-  font-size: 0.75rem;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s;
-  font-family: inherit;
-
-  &:hover {
-    background: color-mix(in srgb, #{$primary} 20%, transparent);
-    border-color: color-mix(in srgb, #{$primary} 45%, transparent);
-  }
-
-  &__text {
-    @media (max-width: 400px) {
-      display: none;
-    }
-  }
-}
-
-// ─── Loading dots ─────────────────────────────────────────────────────────────
-.sp-dots-loader {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 2rem;
-
-  span {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: $primary;
-    animation: dot-pulse 1.2s ease-in-out infinite;
-    opacity: 0.5;
-
-    &:nth-child(2) {
-      animation-delay: 0.2s;
-    }
-    &:nth-child(3) {
-      animation-delay: 0.4s;
-    }
-  }
-}
-
-@keyframes dot-pulse {
-  0%,
-  60%,
-  100% {
-    transform: scale(0.8);
-    opacity: 0.4;
-  }
-  30% {
-    transform: scale(1.2);
-    opacity: 1;
-  }
-}
-
-// ─── Details grid ─────────────────────────────────────────────────────────────
-.sp-details-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.875rem;
-  margin-top: 0.875rem;
-
-  @media (max-width: 560px) {
-    grid-template-columns: 1fr;
   }
 }
 
 .sp-details-section {
-  background: $surface-2;
-  border: 1px solid $border-sub;
-  border-radius: 10px;
-  padding: 0.875rem;
+  padding: 24px;
 }
 
-.sp-details-badge {
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: 999px;
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  margin-bottom: 0.75rem;
-
-  &--owner {
-    background: color-mix(in srgb, #{$primary} 12%, transparent);
-    border: 1px solid color-mix(in srgb, #{$primary} 22%, transparent);
-    color: color-mix(in srgb, #{$primary} 80%, #fff);
-  }
-  &--school {
-    background: color-mix(in srgb, #{$success} 10%, transparent);
-    border: 1px solid color-mix(in srgb, #{$success} 22%, transparent);
-    color: color-mix(in srgb, #{$success} 80%, #fff);
-  }
-}
-
-.sp-details-list {
-  margin: 0;
-  padding: 0;
+.sp-details-grid {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
-.sp-details-row {
+.sp-detail-row {
   display: flex;
-  flex-direction: column;
-  gap: 1px;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
 
-  dt {
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: $text-lo;
+.sp-detail-key {
+  font-size: 13px;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.sp-detail-val {
+  font-size: 14px;
+  color: #111827;
+  font-weight: 500;
+  text-align: right;
+}
+
+.sp-code-inline {
+  font-size: 13px;
+  color: #6b7280;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 6px;
+  padding: 8px 12px;
+
+  strong {
+    color: #0369a1;
     font-weight: 700;
-  }
-  dd {
-    font-size: 0.85rem;
-    color: $text-hi;
-    margin: 0;
-    font-weight: 500;
-    word-break: break-word;
-
-    &.mono {
-      font-family: monospace;
-      font-size: 0.8rem;
-      color: $text-mid;
-    }
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.05em;
   }
 }
 
-.sp-details-edit-cta {
+.sp-divider {
+  height: 1px;
+  background: #f3f4f6;
+}
+
+.sp-payment-section {
+  padding: 24px;
+}
+
+.sp-fee-desc {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.sp-amount-display {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin-top: 0.875rem;
-  padding: 0.75rem 1rem;
-  background: color-mix(in srgb, #{$primary} 06%, transparent);
-  border: 1px solid color-mix(in srgb, #{$primary} 15%, transparent);
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
   border-radius: 10px;
-
-  @media (max-width: 500px) {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  &__text {
-    font-size: 0.8rem;
-    color: $text-lo;
-    line-height: 1.4;
-  }
+  padding: 16px 20px;
+  margin-bottom: 20px;
 }
 
-.sp-details-empty {
-  padding: 1.5rem;
-  text-align: center;
-  font-size: 0.83rem;
-  color: $text-lo;
-  margin: 0;
+.sp-amount-label {
+  font-size: 13px;
+  color: #065f46;
+  font-weight: 600;
 }
 
-// ─── Status Cards ─────────────────────────────────────────────────────────────
-.sp-status-card {
-  border-radius: 14px;
-  overflow: hidden;
-  position: relative;
+.sp-amount-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: #059669;
+}
 
-  &--pending {
-    background: rgba($warning, 0.05);
-    border: 1px solid rgba($warning, 0.18);
-    .sp-status-card__accent {
-      background: linear-gradient(180deg, $warning, #f59e0b);
-    }
-  }
-  &--rejected {
-    background: rgba($error, 0.05);
-    border: 1px solid rgba($error, 0.18);
-    .sp-status-card__accent {
-      background: linear-gradient(180deg, $error, #dc2626);
-    }
-  }
+.sp-payment-points {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
 
-  &__accent {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    border-radius: 3px 0 0 3px;
-  }
+.sp-point {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #374151;
 
-  &__body {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.875rem;
-    padding: 1.125rem 1.25rem 1.125rem 1.5rem;
-
-    @media (max-width: 480px) {
-      padding: 1rem 1rem 1rem 1.25rem;
-    }
-  }
-
-  &__icon {
-    font-size: 1.3rem;
+  mat-icon {
+    font-size: 15px;
+    width: 15px;
+    height: 15px;
+    color: #10b981;
     flex-shrink: 0;
-    padding-top: 1px;
-  }
-
-  &__content {
-    flex: 1;
-    min-width: 0;
-
-    h3 {
-      margin: 0 0 0.35rem;
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: $text-hi;
-    }
-    p {
-      margin: 0 0 0.625rem;
-      font-size: 0.83rem;
-      color: $text-mid;
-      line-height: 1.5;
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
-  }
-
-  &__hint {
-    font-size: 0.75rem !important;
-    color: $text-lo !important;
-    font-style: italic;
   }
 }
 
-.sp-meta-row {
+.sp-alert-error {
   display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-  margin: 0.5rem 0;
-}
-
-.sp-meta-item {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-
-  &__label {
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: $text-lo;
-    font-weight: 700;
-  }
-
-  &__value {
-    font-size: 0.85rem;
-    color: $text-hi;
-    font-weight: 600;
-
-    &.mono {
-      font-family: monospace;
-    }
-  }
-}
-
-.sp-rejection-reason {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  background: rgba($error, 0.08);
-  border: 1px solid rgba($error, 0.18);
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
   border-radius: 8px;
-  padding: 0.625rem 0.875rem;
-  margin-top: 0.5rem;
+  font-size: 13px;
+  color: #dc2626;
+  margin-bottom: 16px;
 
-  &__label {
-    font-size: 0.65rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: $error;
-  }
-  &__text {
-    font-size: 0.83rem;
-    color: color-mix(in srgb, $error 80%, #fff);
-  }
-}
-
-// ─── Payment Layout ───────────────────────────────────────────────────────────
-.sp-payment-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  align-items: start;
-
-  @media (max-width: 780px) {
-    grid-template-columns: 1fr;
-  }
-}
-
-// ─── Panels ───────────────────────────────────────────────────────────────────
-.sp-panel {
-  background: $surface-2;
-  border: 1px solid $border-sub;
-  border-radius: 16px;
-  overflow: hidden;
-
-  &--instructions {
-    padding: 1.375rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.125rem;
-
-    @media (max-width: 480px) {
-      padding: 1.125rem 1rem;
-    }
-  }
-
-  &--form {
-    display: flex;
-    flex-direction: column;
-  }
-}
-
-// ─── Fee Display ──────────────────────────────────────────────────────────────
-.sp-fee-display {
-  border-radius: 12px;
-  overflow: hidden;
-
-  &__inner {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    padding: 1.125rem 1.25rem;
-    background: color-mix(in srgb, #{$success} 08%, transparent);
-    border: 1px solid color-mix(in srgb, #{$success} 20%, transparent);
-    border-radius: 12px;
-  }
-
-  &__label {
-    font-size: 0.68rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    color: color-mix(in srgb, #{$success} 80%, #fff);
-  }
-
-  &__amount {
-    font-size: 2rem;
-    font-weight: 900;
-    color: $success;
-    letter-spacing: -0.03em;
-    line-height: 1.1;
-  }
-
-  &__desc {
-    font-size: 0.75rem;
-    color: color-mix(in srgb, #{$success} 60%, rgba(255, 255, 255, 0.5));
-    margin-top: 3px;
-    line-height: 1.4;
-  }
-}
-
-// ─── How-to section ───────────────────────────────────────────────────────────
-.sp-how-to {
-  &__title {
-    font-size: 0.78rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    color: $text-lo;
-    margin: 0 0 0.75rem;
-  }
-}
-
-.sp-how-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-
-  &__item {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.625rem;
-    font-size: 0.83rem;
-    color: $text-mid;
-    line-height: 1.4;
-
-    strong {
-      color: $text-hi;
-    }
-  }
-
-  &__num {
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
     flex-shrink: 0;
-    width: 26px;
-    height: 26px;
-    border-radius: 7px;
-    background: color-mix(in srgb, #{$primary} 10%, transparent);
-    border: 1px solid color-mix(in srgb, #{$primary} 20%, transparent);
-    color: color-mix(in srgb, #{$primary} 80%, #fff);
-    font-size: 0.65rem;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    letter-spacing: 0.02em;
-    margin-top: 2px;
+    margin-top: 1px;
   }
 }
 
-// ─── UPI Chip ─────────────────────────────────────────────────────────────────
-.sp-upi-chip {
-  padding: 0.875rem 1rem;
-  background: $surface-3;
-  border: 1px solid $border-sub;
-  border-radius: 11px;
-
-  &__label {
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    color: $text-lo;
-    font-weight: 700;
-    margin-bottom: 6px;
-    display: block;
-  }
-
-  &__row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.625rem;
-    flex-wrap: wrap;
-  }
-
-  &__value {
-    font-size: 0.875rem;
-    color: $text-hi;
-    font-weight: 600;
-    font-family: monospace;
-    word-break: break-all;
-  }
-}
-
-.sp-copy-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 12px;
-  background: color-mix(in srgb, #{$primary} 12%, transparent);
-  border: 1px solid color-mix(in srgb, #{$primary} 25%, transparent);
-  border-radius: 7px;
-  color: color-mix(in srgb, #{$primary} 80%, #fff);
-  font-size: 0.73rem;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s;
-  font-family: inherit;
-  flex-shrink: 0;
-
-  &:hover {
-    background: color-mix(in srgb, #{$primary} 25%, transparent);
-  }
-}
-
-// ─── QR Section ───────────────────────────────────────────────────────────────
-.sp-qr {
-  padding: 1.375rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  border-bottom: 1px solid $border-sub;
-
-  @media (max-width: 780px) {
-    padding: 1.125rem;
-  }
-
-  &__frame {
-    background: #fff;
-    border-radius: 12px;
-    padding: 10px;
-    display: inline-block;
-    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
-  }
-
-  &__img {
-    display: block;
-    width: 100%;
-    max-width: 170px;
-    height: auto;
-    border-radius: 4px;
-  }
-
-  &__caption {
-    font-size: 0.75rem;
-    color: $text-lo;
-    margin: 0.625rem 0 0;
-    font-weight: 600;
-    text-align: center;
-    letter-spacing: 0.02em;
-  }
-}
-
-// ─── Divider ─────────────────────────────────────────────────────────────────
-.sp-divider {
-  height: 1px;
-  background: $border-sub;
-  margin: 0;
-  display: none;
-
-  @media (max-width: 780px) {
-    display: block;
-  }
-}
-
-// ─── Form Wrap ────────────────────────────────────────────────────────────────
-.sp-form-wrap {
-  padding: 1.375rem;
-
-  @media (max-width: 480px) {
-    padding: 1.125rem 1rem;
-  }
-}
-
-.sp-form-header {
-  margin-bottom: 1.125rem;
-
-  h3 {
-    margin: 0 0 0.2rem;
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: $text-hi;
-  }
-  p {
-    margin: 0;
-    font-size: 0.78rem;
-    color: $text-lo;
-  }
-}
-
-// ─── Fields ───────────────────────────────────────────────────────────────────
-.sp-field {
-  margin-bottom: 0.875rem;
-
-  &__label {
-    display: block;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: $text-mid;
-    margin-bottom: 5px;
-  }
-
-  &__input {
-    width: 100%;
-    padding: 0.65rem 0.875rem;
-    background: $surface-2;
-    border: 1.5px solid $border-sub;
-    border-radius: 9px;
-    color: $text-hi;
-    font-size: 0.875rem;
-    outline: none;
-    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
-    box-sizing: border-box;
-    font-family: inherit;
-    -webkit-appearance: none;
-
-    &::placeholder {
-      color: $text-lo;
-    }
-
-    &:focus {
-      border-color: $primary;
-      background: color-mix(in srgb, #{$primary} 05%, transparent);
-      box-shadow: 0 0 0 3px color-mix(in srgb, #{$primary} 12%, transparent);
-    }
-
-    &:hover:not(:focus) {
-      border-color: $border-main;
-    }
-  }
-
-  &__hint {
-    display: block;
-    font-size: 0.7rem;
-    color: $text-lo;
-    margin-top: 4px;
-    line-height: 1.4;
-  }
-
-  &__error {
-    display: block;
-    font-size: 0.72rem;
-    color: $error;
-    margin-top: 4px;
-  }
-
-  &--error .sp-field__input {
-    border-color: rgba($error, 0.45);
-    background: rgba($error, 0.04);
-
-    &:focus {
-      border-color: $error;
-      box-shadow: 0 0 0 3px rgba($error, 0.1);
-    }
-  }
-}
-
-.sp-req {
-  color: $error;
-  margin-left: 1px;
-}
-.sp-optional {
-  color: $text-lo;
-  font-weight: 400;
-  font-size: 0.65rem;
-}
-
-// ─── Amount Row ───────────────────────────────────────────────────────────────
-.sp-amount-row {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  flex-wrap: wrap;
-  padding: 0.7rem 0.875rem;
-  background: color-mix(in srgb, #{$success} 07%, transparent);
-  border: 1px solid color-mix(in srgb, #{$success} 18%, transparent);
-  border-radius: 9px;
-  margin-bottom: 1rem;
-
-  &__label {
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: color-mix(in srgb, #{$success} 70%, rgba(255, 255, 255, 0.5));
-    flex-shrink: 0;
-  }
-
-  &__value {
-    font-size: 1.2rem;
-    font-weight: 900;
-    color: $success;
-    letter-spacing: -0.02em;
-    flex: 1;
-  }
-
-  &__note {
-    font-size: 0.68rem;
-    color: color-mix(in srgb, #{$success} 50%, rgba(255, 255, 255, 0.3));
-    white-space: nowrap;
-  }
-}
-
-// ─── Submit Button ────────────────────────────────────────────────────────────
-.sp-submit-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+.sp-btn-pay {
   width: 100%;
-  padding: 0.825rem 1.5rem;
-  background: linear-gradient(135deg, $primary, color-mix(in srgb, #{$primary} 70%, #8b5cf6));
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  font-size: 0.875rem;
-  font-weight: 700;
-  cursor: pointer;
-  letter-spacing: 0.02em;
-  transition: all 0.2s;
-  font-family: inherit;
-  box-shadow: 0 4px 16px color-mix(in srgb, #{$primary} 25%, transparent);
-  -webkit-tap-highlight-color: transparent;
+  height: 52px !important;
+  background: linear-gradient(135deg, #059669, #047857) !important;
+  color: white !important;
+  border-radius: 10px !important;
+  font-weight: 700 !important;
+  font-size: 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
 
-  &:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 22px color-mix(in srgb, #{$primary} 35%, transparent);
-  }
-  &:active:not(:disabled) {
-    transform: translateY(0);
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
   }
 
-  &:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
+  mat-spinner {
+    display: inline-flex;
   }
 
-  &__arrow {
-    font-style: normal;
-    transition: transform 0.2s;
-  }
-
-  &:hover:not(:disabled) &__arrow {
-    transform: translateX(3px);
-  }
+  &:disabled { opacity: 0.55; }
 }
 
-// ─── Generic Buttons ──────────────────────────────────────────────────────────
-.sp-btn {
-  display: inline-flex;
+.sp-btn-primary {
+  background: linear-gradient(135deg, #4f46e5, #6d28d9) !important;
+  color: white !important;
+  border-radius: 10px !important;
+  height: 44px !important;
+  font-weight: 600 !important;
+}
+
+.sp-secure-note {
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  border: none;
-  border-radius: 9px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
-  white-space: nowrap;
+  gap: 6px;
+  font-size: 12px;
+  color: #9ca3af;
+  margin: 12px 0 0;
 
-  &--primary {
-    background: $primary;
-    color: #fff;
-    box-shadow: 0 3px 12px color-mix(in srgb, #{$primary} 25%, transparent);
-
-    &:hover {
-      background: color-mix(in srgb, #{$primary} 85%, #000);
-      transform: translateY(-1px);
-    }
-  }
-
-  &--sm {
-    padding: 0.45rem 1rem;
-    font-size: 0.8rem;
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
   }
 }
 
-// ─── Utility ─────────────────────────────────────────────────────────────────
-.mono {
-  font-family: monospace !important;
+.sp-help-text {
+  text-align: center;
+  font-size: 13px;
+  color: #9ca3af;
+  margin: 20px 0 0;
+}
+
+.sp-link {
+  color: #4f46e5;
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
+}
+
+@media (max-width: 480px) {
+  .sp-header { padding: 0 16px; }
+  .sp-main { padding: 24px 12px 48px; }
+  .sp-title { font-size: 22px; }
 }

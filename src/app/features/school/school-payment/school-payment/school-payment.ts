@@ -1,313 +1,254 @@
-// features/school/school-payment/school-payment/school-payment.ts
+// src/app/features/school/school-payment/school-payment.ts
+//
+// /school/payment?code=<schoolCode>
+// Payment resume page — for schools that completed signup but didn't pay.
+// Reached via the payment instructions email link.
 
-import { Component, OnInit, signal, computed } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import {
-  FormBuilder,
-  FormGroup,
-  FormsModule,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
-import { CommonModule, DatePipe } from '@angular/common';
-import { ApiService } from '../../../../core/services/api.service';
-import { ToastService } from '../../../../core/services/toast.service';
+import { CommonModule } from '@angular/common';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatIconModule } from '@angular/material/icon';
+import { environment } from '../../../../../environments/environment';
 
-interface PaymentStatus {
-  school: {
-    name: string;
-    onboardingStatus: string;
-    isActive: boolean;
-  };
-  paymentRecord: {
-    status: string;
-    utrNumber: string;
-    submittedAt: string;
-    rejectionReason?: string;
-  } | null;
-  paymentConfig: {
-    setupFeeAmount: number;
-    upiId: string;
-    qrCodeUrl: string;
-    feeDescription: string;
-    isFeeEnabled: boolean;
-  } | null;
+// Declare Razorpay global
+declare const Razorpay: any;
+
+interface RegistrationDetails {
+  schoolName?: string;
+  ownerName?: string;
+  ownerEmail?: string;
+  ownerPhone?: string;
+  addressLineOne?: string;
+  phone?: string;
+  schoolEmail?: string;
 }
 
-interface RegisteredDetails {
-  ownerName: string;
-  ownerEmail: string;
-  ownerPhone?: string;
-  ownerAlternatePhone?: string;
-  schoolName: string;
-  addressLineOne: string;
-  addressLineTwo?: string;
-  phone?: string;
-  alternatePhone?: string;
-  schoolEmail?: string;
-  schoolWebsite?: string;
-  registeredAt?: string;
-  termsAcceptedAt?: string;
+interface PaymentConfig {
+  setupFeeFinalAmountPaise: number;
+  isFeeEnabled: boolean;
+  feeDescription?: string;
+  razorpayKeyId?: string;
 }
 
 @Component({
   selector: 'app-school-payment',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, DatePipe],
+  imports: [CommonModule, RouterModule, MatButtonModule, MatProgressSpinnerModule, MatIconModule],
   templateUrl: './school-payment.html',
   styleUrl: './school-payment.scss',
-  // ── FIX 1: skip SSR hydration entirely for this page ──────────────────────
-  // This component is public (pre-login), so there is no SEO need for SSR.
-  // Skipping hydration eliminates NG0502 which is triggered by @if blocks
-  // inside the accordion whose DOM differs between server and client renders.
-  host: { ngSkipHydration: 'true' },
 })
 export class SchoolPayment implements OnInit {
-  schoolCode = '';
-  inviteToken = signal<string | null>(null);
-  loading = signal(true);
-  submitting = signal(false);
-  error = signal<string | null>(null);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private http = inject(HttpClient);
 
-  paymentStatus = signal<PaymentStatus | null>(null);
-  copiedUpi = signal(false);
+  // State
+  pageState = signal<'loading' | 'ready' | 'error' | 'paid'>('loading');
+  errorMessage = signal('');
+  schoolCode = signal<string | null>(null);
+  registrationDetails = signal<RegistrationDetails | null>(null);
+  paymentConfig = signal<PaymentConfig | null>(null);
+  paymentLoading = signal(false);
+  paymentError = signal('');
 
-  registeredDetails = signal<RegisteredDetails | null>(null);
-  loadingDetails = signal(false);
-  showDetailsPanel = signal(false);
-
-  readonly onboardingStatus = computed(() => this.paymentStatus()?.school?.onboardingStatus ?? '');
-  readonly paymentRecord = computed(() => this.paymentStatus()?.paymentRecord ?? null);
-  readonly paymentConfig = computed(() => this.paymentStatus()?.paymentConfig ?? null);
-
-  readonly feeFormatted = computed(() => {
-    const cfg = this.paymentConfig();
-    if (!cfg || !cfg.isFeeEnabled || cfg.setupFeeAmount === 0) return 'Contact support';
-    return `₹${(cfg.setupFeeAmount / 100).toLocaleString('en-IN')}`;
+  formattedFee = computed(() => {
+    const config = this.paymentConfig();
+    if (!config || !config.isFeeEnabled) return '₹0';
+    return `₹${(config.setupFeeFinalAmountPaise / 100).toLocaleString('en-IN')}`;
   });
 
-  readonly canEditRegistration = computed(() => {
-    const status = this.onboardingStatus();
-    // ── FIX 2: canEditRegistration no longer requires inviteToken to be set ──
-    // We always have schoolCode; token is fetched async. The edit action itself
-    // will re-check and wait if needed.
-    return status === 'REGISTERED' || status === 'PAYMENT_SUBMITTED';
-  });
+  ngOnInit(): void {
+    this.loadRazorpayScript();
 
-  readonly isPaymentPending = computed(
-    () =>
-      this.onboardingStatus() === 'PAYMENT_SUBMITTED' &&
-      this.paymentRecord()?.status === 'SUBMITTED'
-  );
-
-  readonly isPaymentRejected = computed(() => this.paymentRecord()?.status === 'REJECTED');
-
-  paymentForm: FormGroup;
-
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private fb: FormBuilder,
-    private api: ApiService,
-    private toast: ToastService
-  ) {
-    this.paymentForm = this.fb.group({
-      utrNumber: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(30)]],
-      payerName: ['', [Validators.required, Validators.minLength(2)]],
-      payerPhone: [''],
-      amountPaidPaise: [0],
-    });
-  }
-
-  ngOnInit() {
-    this.schoolCode = this.route.snapshot.queryParamMap.get('code') || '';
-    const token = this.route.snapshot.queryParamMap.get('token');
-    if (token) this.inviteToken.set(token);
-
-    if (!this.schoolCode) {
-      this.error.set('Missing school code. Please use the link from your registration email.');
-      this.loading.set(false);
-      return;
-    }
-    this.loadPaymentStatus();
-  }
-
-  loadPaymentStatus() {
-    this.loading.set(true);
-    this.api.get<any>(`school/auth/payment-status/${this.schoolCode}`).subscribe({
-      next: (res) => {
-        if (!res.success) {
-          this.error.set('Failed to load payment details');
-        } else {
-          this.paymentStatus.set(res);
-
-          const fee = res.paymentConfig?.setupFeeAmount;
-          if (fee) {
-            this.paymentForm.patchValue({ amountPaidPaise: fee });
-          }
-
-          if (res.school?.isActive) {
-            this.toast.success('Your account is already active! Please log in.');
-            this.router.navigate(['/login']);
-            return;
-          }
-
-          const status = res.school?.onboardingStatus;
-          if (status === 'REGISTERED' || status === 'PAYMENT_SUBMITTED') {
-            this.loadRegisteredDetails();
-          }
-        }
-        this.loading.set(false);
-      },
-      error: () => {
-        this.error.set('Failed to load payment status. Please try again.');
-        this.loading.set(false);
-      },
-    });
-  }
-
-  loadRegisteredDetails() {
-    const token = this.inviteToken();
-    if (!token) {
-      // No token in URL — fetch from school code endpoint which also returns the token
-      this.fetchTokenFromSchoolCode();
-      return;
-    }
-    this.fetchRegistrationDetailsByToken(token);
-  }
-
-  private fetchTokenFromSchoolCode() {
-    this.loadingDetails.set(true);
-    this.api.get<any>(`school/auth/registration-details/${this.schoolCode}`).subscribe({
-      next: (res) => {
-        if (res.success && res.details) {
-          this.registeredDetails.set(res.details);
-        }
-        // ── FIX 3: always persist the token returned by this endpoint ─────────
-        // registration-details/:schoolCode returns `inviteToken` so subsequent
-        // calls to editRegistration() have it available synchronously.
-        if (res.inviteToken) {
-          this.inviteToken.set(res.inviteToken);
-        }
-        this.loadingDetails.set(false);
-      },
-      error: () => {
-        console.warn('Could not load registration details');
-        this.loadingDetails.set(false);
-      },
-    });
-  }
-
-  private fetchRegistrationDetailsByToken(token: string) {
-    this.loadingDetails.set(true);
-    this.api.get<any>(`school/auth/validate-invite/${token}`).subscribe({
-      next: (res) => {
-        if (res.valid && res.registeredDetails) {
-          this.registeredDetails.set(res.registeredDetails);
-        }
-        this.loadingDetails.set(false);
-      },
-      error: () => {
-        this.loadingDetails.set(false);
-      },
-    });
-  }
-
-  toggleDetailsPanel() {
-    this.showDetailsPanel.update((v) => !v);
-  }
-
-  // ── FIX 4: editRegistration — handle missing token gracefully ─────────────
-  // If token is still null (details endpoint hasn't responded yet, or the
-  // endpoint didn't return one), fall back to re-fetching it first, then
-  // navigate once it resolves.
-  editRegistration() {
-    const token = this.inviteToken();
-
-    if (token) {
-      this.router.navigate(['/school/register'], {
-        queryParams: { token, edit: '1' },
-      });
+    const code = this.route.snapshot.queryParamMap.get('code');
+    if (!code) {
+      this.pageState.set('error');
+      this.errorMessage.set('No school code provided. Please use the link from your email.');
       return;
     }
 
-    // Token not yet available — fetch it, then navigate
-    this.toast.info('Loading your registration details…');
-    this.api.get<any>(`school/auth/registration-details/${this.schoolCode}`).subscribe({
-      next: (res) => {
-        const fetchedToken = res.inviteToken;
-        if (fetchedToken) {
-          this.inviteToken.set(fetchedToken);
-          this.router.navigate(['/school/register'], {
-            queryParams: { token: fetchedToken, edit: '1' },
-          });
-        } else {
-          this.toast.error(
-            'Cannot edit registration — invite token not found. Please contact support.'
-          );
-        }
-      },
-      error: () => {
-        this.toast.error('Failed to load registration link. Please try again.');
-      },
-    });
+    this.schoolCode.set(code.toUpperCase());
+    this.loadRegistrationDetails(code.toUpperCase());
   }
 
-  copyUpiId() {
-    const upi = this.paymentConfig()?.upiId;
-    if (!upi) return;
-    navigator.clipboard.writeText(upi).then(() => {
-      this.copiedUpi.set(true);
-      setTimeout(() => this.copiedUpi.set(false), 2500);
-    });
-  }
+  private loadRegistrationDetails(code: string): void {
+    // Load registration details + payment config in parallel
+    const detailsReq = this.http.get<any>(
+      `${environment.apiUrl}/school/auth/registration-details/${code}`
+    );
+    const statusReq = this.http.get<any>(
+      `${environment.apiUrl}/school/auth/payment-status/${code}`
+    );
+    const configReq = this.http.get<any>(
+      `${environment.apiUrl}/school/auth/validate-invite/dummy` // fallback — handled below
+    );
 
-  submitPayment() {
-    if (this.paymentForm.invalid) {
-      this.paymentForm.markAllAsTouched();
-      return;
-    }
-
-    const amountPaise = this.paymentForm.value.amountPaidPaise;
-    if (!amountPaise || amountPaise <= 0) {
-      this.toast.error('Payment amount not configured. Please refresh the page.');
-      return;
-    }
-
-    this.submitting.set(true);
-    const raw = this.paymentForm.value;
-
-    const payload: any = {
-      schoolCode: this.schoolCode,
-      utrNumber: raw.utrNumber.trim(),
-      payerName: raw.payerName.trim(),
-      amountPaid: amountPaise,
-    };
-    if (raw.payerPhone?.trim()) payload.payerPhone = raw.payerPhone.trim();
-
-    this.api.post<any>('school/auth/submit-payment', payload).subscribe({
+    // Fetch registration details
+    detailsReq.subscribe({
       next: (res) => {
         if (res.success) {
-          this.toast.success('Payment submitted! We will verify within 24 hours.');
-          this.loadPaymentStatus();
-        } else {
-          this.toast.error(res.error || 'Failed to submit payment');
+          this.registrationDetails.set(res.details ?? null);
         }
-        this.submitting.set(false);
+      },
+      error: () => {
+        // Non-critical — page still works without pre-fill
+      },
+    });
+
+    // Fetch payment status to get config + check if already paid
+    statusReq.subscribe({
+      next: (res) => {
+        if (!res.success) {
+          this.pageState.set('error');
+          this.errorMessage.set('School not found. Please check the link in your email.');
+          return;
+        }
+
+        const status = res.school?.onboardingStatus;
+
+        // Already active — redirect to login
+        if (status === 'ACTIVE' || res.school?.isActive) {
+          this.router.navigate(['/school/payment-status'], {
+            queryParams: { code, activated: 'true' },
+          });
+          return;
+        }
+
+        // Already submitted — go to status page
+        if (status === 'PAYMENT_SUBMITTED') {
+          this.router.navigate(['/school/payment-status'], { queryParams: { code } });
+          return;
+        }
+
+        // Extract payment config from razorpay payment if available
+        if (res.paymentConfig) {
+          this.paymentConfig.set(res.paymentConfig);
+        } else {
+          // Try to get from payment initiate — leave as null, will be fetched on pay
+          this.paymentConfig.set({
+            setupFeeFinalAmountPaise: 0,
+            isFeeEnabled: true,
+            feeDescription: 'One-time school setup fee',
+          });
+        }
+
+        this.pageState.set('ready');
       },
       error: (err) => {
-        this.toast.error(err.error?.error || 'Failed to submit. Please try again.');
-        this.submitting.set(false);
+        this.pageState.set('error');
+        this.errorMessage.set(
+          err?.error?.error || 'Failed to load payment details. Please try again.'
+        );
       },
     });
   }
 
-  fieldInvalid(name: string): boolean {
-    const ctrl = this.paymentForm.get(name);
-    return !!(ctrl?.touched && ctrl?.invalid);
+  initiatePayment(): void {
+    const code = this.schoolCode();
+    if (!code || this.paymentLoading()) return;
+
+    this.paymentLoading.set(true);
+    this.paymentError.set('');
+
+    this.http
+      .post<any>(`${environment.apiUrl}/payments/setup-fee/initiate`, { schoolCode: code })
+      .subscribe({
+        next: (res) => {
+          this.paymentLoading.set(false);
+          // Update fee display with actual amount from server
+          this.paymentConfig.update((c) =>
+            c
+              ? { ...c, setupFeeFinalAmountPaise: res.amountPaise }
+              : { setupFeeFinalAmountPaise: res.amountPaise, isFeeEnabled: true }
+          );
+          this.openRazorpay(res);
+        },
+        error: (err) => {
+          this.paymentLoading.set(false);
+          this.paymentError.set(
+            err?.error?.error || 'Failed to initiate payment. Please try again.'
+          );
+        },
+      });
   }
 
-  get schoolInitial(): string {
-    return this.paymentStatus()?.school.name?.charAt(0)?.toUpperCase() ?? '?';
+  private openRazorpay(orderData: any): void {
+    const details = this.registrationDetails();
+    const keyId = orderData.keyId || '';
+
+    const options = {
+      key: keyId,
+      amount: orderData.amountPaise,
+      currency: orderData.currency || 'INR',
+      name: 'School Management System',
+      description: 'One-time School Setup Fee',
+      order_id: orderData.razorpayOrderId,
+      prefill: {
+        name: details?.ownerName || '',
+        email: details?.ownerEmail || details?.schoolEmail || '',
+        contact: details?.ownerPhone || details?.phone || '',
+      },
+      theme: { color: '#4f46e5' },
+      handler: (response: any) => {
+        this.verifyPayment(response);
+      },
+      modal: {
+        ondismiss: () => {
+          this.paymentError.set('Payment was cancelled. You can try again.');
+        },
+      },
+    };
+
+    try {
+      const rzp = new Razorpay(options);
+      rzp.on('payment.failed', (response: any) => {
+        this.paymentError.set(response?.error?.description || 'Payment failed. Please try again.');
+      });
+      rzp.open();
+    } catch {
+      this.paymentError.set('Could not open payment window. Please refresh and try again.');
+    }
+  }
+
+  private verifyPayment(response: any): void {
+    const code = this.schoolCode();
+    if (!code) return;
+
+    this.paymentLoading.set(true);
+    this.paymentError.set('');
+
+    const payload = {
+      schoolCode: code,
+      razorpayOrderId: response.razorpay_order_id,
+      razorpayPaymentId: response.razorpay_payment_id,
+      razorpaySignature: response.razorpay_signature,
+    };
+
+    this.http.post<any>(`${environment.apiUrl}/payments/setup-fee/verify`, payload).subscribe({
+      next: () => {
+        this.paymentLoading.set(false);
+        // Redirect to status page
+        this.router.navigate(['/school/payment-status'], { queryParams: { code } });
+      },
+      error: (err) => {
+        this.paymentLoading.set(false);
+        this.paymentError.set(
+          err?.error?.error || 'Payment verification failed. Contact support with your payment ID.'
+        );
+      },
+    });
+  }
+
+  private loadRazorpayScript(): void {
+    if (typeof Razorpay !== 'undefined') return;
+    if (document.querySelector('script[src*="checkout.razorpay.com"]')) return;
+
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.head.appendChild(script);
   }
 }

@@ -1,11 +1,13 @@
 <!-- features/super/schools-component/schools-component.html -->
 
 <div class="page">
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
   <header class="page__header">
-    <div>
+    <div class="page__header-info">
       <h1 class="page__title">Schools</h1>
       <p class="page__subtitle">View all registered schools and manage database assignments</p>
     </div>
+
     <div class="header-actions">
       <ng-container *hasSuperPermission="'schools.manage'">
         <button
@@ -20,7 +22,6 @@
         </button>
       </ng-container>
 
-      <!-- Now points to the Invitations page instead of inline create -->
       <ng-container *hasSuperPermission="'schools.invite'">
         <button mat-flat-button color="primary" (click)="goToInvitations()">
           <mat-icon>send</mat-icon>
@@ -30,7 +31,7 @@
     </div>
   </header>
 
-  <!-- Info banner linking to invitations -->
+  <!-- ── Info banner ─────────────────────────────────────────────────────── -->
   <div class="info-banner" *hasSuperPermission="'schools.invite'">
     <mat-icon>info_outline</mat-icon>
     <span>
@@ -40,121 +41,154 @@
     </span>
   </div>
 
-  <!-- Table -->
-  <div class="table-card mat-elevation-z1">
-    <mat-progress-bar
-      *ngIf="loading()"
-      mode="indeterminate"
-      color="primary"
-      class="loading-bar"
-    ></mat-progress-bar>
+  <!-- ── Table card ──────────────────────────────────────────────────────── -->
+  <div class="table-card">
+    <!-- Top loading bar — absolute so it doesn't shift layout -->
+    @if (loading()) {
+    <mat-progress-bar mode="indeterminate" color="primary" class="loading-bar" />
+    }
 
-    <mat-table [dataSource]="schools()">
-      <!-- School info column -->
-      <ng-container matColumnDef="school">
-        <mat-header-cell *matHeaderCellDef>School</mat-header-cell>
-        <mat-cell *matCellDef="let s">
-          <div class="school-cell">
-            <div class="school-avatar">{{ nameInitial(s.name) }}</div>
-            <div class="school-cell__info">
-              <span class="school-cell__name">{{ s.name }}</span>
-              <span class="school-cell__addr">{{ s.addressLineOne }}</span>
-            </div>
-          </div>
-        </mat-cell>
-      </ng-container>
+    <!-- ── Loading skeleton ─────────────────────────────────────────────── -->
+    @if (loading() && schools().length === 0) {
+    <div class="skeleton-list">
+      @for (i of [1, 2, 3, 4, 5]; track i) {
+      <div class="skeleton-row">
+        <div class="skeleton-avatar skeleton"></div>
+        <div class="skeleton-info">
+          <div class="skeleton-line skeleton skeleton--wide"></div>
+          <div class="skeleton-line skeleton skeleton--narrow"></div>
+        </div>
+        <div class="skeleton-badge skeleton"></div>
+        <div class="skeleton-badge skeleton"></div>
+        <div class="skeleton-badge skeleton"></div>
+      </div>
+      }
+    </div>
+    }
 
-      <!-- Contact column -->
-      <ng-container matColumnDef="contact">
-        <mat-header-cell *matHeaderCellDef>Contact</mat-header-cell>
-        <mat-cell *matCellDef="let s">
-          <div class="contact-cell">
-            <span class="contact-cell__email">{{ s.email }}</span>
-            <span class="contact-cell__phone">{{ s.phone }}</span>
-          </div>
-        </mat-cell>
-      </ng-container>
+    <!-- ── Error state ──────────────────────────────────────────────────── -->
+    @else if (error()) {
+    <div class="state-container">
+      <mat-icon class="state-icon state-icon--error">error_outline</mat-icon>
+      <p class="state-title">Failed to load schools</p>
+      <p class="state-sub">{{ error() }}</p>
+      <button mat-flat-button color="primary" (click)="fetchSchools()">
+        <mat-icon>refresh</mat-icon>
+        Retry
+      </button>
+    </div>
+    }
 
-      <!-- Unique code column -->
-      <ng-container matColumnDef="code">
-        <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
-        <mat-cell *matCellDef="let s">
-          <code class="code-badge">{{ s.uniqueCode || '—' }}</code>
-        </mat-cell>
-      </ng-container>
+    <!-- ── Data table ───────────────────────────────────────────────────── -->
+    @else if (schools().length > 0) {
+    <div class="overflow-x">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>School</th>
+            <th>Contact</th>
+            <th>Code</th>
+            <th>Onboarding</th>
+            <th>Database</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of schools(); track trackBySchoolId($index, s)) {
+          <tr class="table-row">
+            <!-- School info -->
+            <td>
+              <div class="school-cell">
+                <div class="school-avatar">{{ nameInitial(s.name) }}</div>
+                <div class="school-cell__info">
+                  <span class="school-cell__name">{{ s.name }}</span>
+                  <span class="school-cell__addr">{{ s.addressLineOne }}</span>
+                </div>
+              </div>
+            </td>
 
-      <!-- Onboarding status column (NEW) -->
-      <ng-container matColumnDef="status">
-        <mat-header-cell *matHeaderCellDef>Onboarding</mat-header-cell>
-        <mat-cell *matCellDef="let s">
-          <span class="onboarding-status" [ngClass]="getStatusInfo(s.onboardingStatus).cls">
-            {{ getStatusInfo(s.onboardingStatus).label }}
-          </span>
-        </mat-cell>
-      </ng-container>
+            <!-- Contact -->
+            <td>
+              <div class="contact-cell">
+                <span class="contact-cell__email">{{ s.email }}</span>
+                <span class="contact-cell__phone">{{ s.phone }}</span>
+              </div>
+            </td>
 
-      <!-- DB status column -->
-      <ng-container matColumnDef="db">
-        <mat-header-cell *matHeaderCellDef>Database</mat-header-cell>
-        <mat-cell *matCellDef="let s">
-          @if (s.tursoDbId) {
-          <div class="db-status db-status--assigned">
-            <span class="db-status__dot"></span>
-            DB #{{ s.tursoDbId }}
-          </div>
-          } @else {
-          <div class="db-status db-status--pending">
-            <span class="db-status__dot"></span>
-            Not assigned
-          </div>
+            <!-- Unique code -->
+            <td>
+              <code class="code-chip">{{ s.uniqueCode || '—' }}</code>
+            </td>
+
+            <!-- Onboarding status -->
+            <td>
+              <span class="onboarding-status" [ngClass]="getStatusInfo(s.onboardingStatus).cls">
+                {{ getStatusInfo(s.onboardingStatus).label }}
+              </span>
+            </td>
+
+            <!-- DB status -->
+            <td>
+              @if (s.tursoDbId) {
+              <div class="db-status db-status--assigned">
+                <span class="db-status__dot"></span>
+                DB #{{ s.tursoDbId }}
+              </div>
+              } @else {
+              <div class="db-status db-status--pending">
+                <span class="db-status__dot"></span>
+                Not assigned
+              </div>
+              }
+            </td>
+
+            <!-- Actions -->
+            <td>
+              <div class="actions-cell">
+                @if (s.tursoDbId) {
+                <ng-container *hasSuperPermission="'schools.manage'">
+                  <button
+                    mat-icon-button
+                    color="warn"
+                    (click)="unassignDb(s)"
+                    matTooltip="Unassign database (use with caution)"
+                  >
+                    <mat-icon>link_off</mat-icon>
+                  </button>
+                </ng-container>
+                }
+              </div>
+            </td>
+          </tr>
           }
-        </mat-cell>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Row count footer -->
+    <div class="table-footer">
+      <span class="table-footer__count">
+        {{ schools().length }} school{{ schools().length !== 1 ? 's' : '' }} total
+      </span>
+      <button mat-icon-button (click)="fetchSchools()" matTooltip="Refresh" [disabled]="loading()">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+    }
+
+    <!-- ── Empty state ──────────────────────────────────────────────────── -->
+    @else if (isEmpty()) {
+    <div class="state-container">
+      <mat-icon class="state-icon">corporate_fare</mat-icon>
+      <p class="state-title">No schools yet</p>
+      <p class="state-sub">Send an invitation to onboard your first school.</p>
+      <ng-container *hasSuperPermission="'schools.invite'">
+        <button mat-flat-button color="primary" (click)="goToInvitations()">
+          <mat-icon>send</mat-icon>
+          Send first invitation
+        </button>
       </ng-container>
-
-      <!-- Actions column -->
-      <ng-container matColumnDef="actions">
-        <mat-header-cell *matHeaderCellDef></mat-header-cell>
-        <mat-cell *matCellDef="let s">
-          <div class="actions-cell">
-            <!-- Only show unassign if DB is assigned -->
-            @if (s.tursoDbId) {
-            <ng-container *hasSuperPermission="'schools.manage'">
-              <button
-                mat-icon-button
-                color="warn"
-                (click)="unassignDb(s)"
-                matTooltip="Unassign database (use with caution)"
-              >
-                <mat-icon>link_off</mat-icon>
-              </button>
-            </ng-container>
-            }
-          </div>
-        </mat-cell>
-      </ng-container>
-
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns" class="table-row"></mat-row>
-
-      <tr class="mat-row" *matNoDataRow>
-        <td class="mat-cell empty-state" [attr.colspan]="displayedColumns.length">
-          <div class="empty-state__content">
-            <mat-icon>corporate_fare</mat-icon>
-            <p>
-              {{ loading() ? 'Loading...' : 'No schools yet — send an invitation to get started' }}
-            </p>
-            <button
-              mat-flat-button
-              color="primary"
-              (click)="goToInvitations()"
-              *hasSuperPermission="'schools.invite'"
-            >
-              <mat-icon>send</mat-icon>
-              Send first invitation
-            </button>
-          </div>
-        </td>
-      </tr>
-    </mat-table>
+    </div>
+    }
   </div>
 </div>

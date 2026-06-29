@@ -43,6 +43,8 @@ import { ToastService } from '../../../../core/services/toast.service';
 import { StudentParentsManager } from '../../../school/parents/student-parents-manager/student-parents-manager';
 import { RoleCategory } from '../../../../core/services/roles.service';
 import { INDIAN_DATE_PROVIDERS } from '../../../../core/adapters/indian-date-adapter';
+import { AvatarPicker } from '../../../../shared/components/avatar-picker/avatar-picker';
+import { UserAvatarService } from '../../../../core/services/user-avatar.service';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -324,6 +326,7 @@ export const ROLE_PERSONAS: RolePersona[] = [
     MatCheckboxModule,
     MatTooltipModule,
     StudentParentsManager,
+    AvatarPicker,
   ],
   templateUrl: './user-creation-hub.html',
   styleUrl: './user-creation-hub.scss',
@@ -336,6 +339,8 @@ export class UserCreationHub implements OnInit {
   private datePipe = inject(DatePipe);
   readonly router = inject(Router);
 
+  private avatarService = inject(UserAvatarService);
+
   // ── UI state ───────────────────────────────────────────────────────────────
   personas = ROLE_PERSONAS;
   selectedPersona = signal<RolePersona | null>(null);
@@ -343,6 +348,12 @@ export class UserCreationHub implements OnInit {
   submitting = signal(false);
   loadingRoles = signal(false);
   createdUserId = signal<number | null>(null);
+
+  /** Compressed avatar file selected during the Account step, held in memory
+   *  until the user record is actually created (no userId exists before
+   *  that point — see AvatarPicker's "deferred mode" when no [userId] input
+   *  is bound). Cleared on resetForms() / persona switch. */
+  pendingAvatarFile = signal<File | null>(null);
 
   /**
    * availableRoles holds ALL roles loaded from the backend.
@@ -621,12 +632,10 @@ export class UserCreationHub implements OnInit {
   private loadRolesByCategory(category: RoleCategory): Promise<RoleOption[]> {
     const params = new HttpParams().set('category', category);
     return new Promise((resolve) => {
-      this.api
-        .get<{ success: boolean; roles: RoleOption[] }>('school/roles', params)
-        .subscribe({
-          next: (res) => resolve(res.roles ?? []),
-          error: () => resolve([]),
-        });
+      this.api.get<{ success: boolean; roles: RoleOption[] }>('school/roles', params).subscribe({
+        next: (res) => resolve(res.roles ?? []),
+        error: () => resolve([]),
+      });
     });
   }
 
@@ -753,6 +762,7 @@ export class UserCreationHub implements OnInit {
     this.motherTongueSearch.set('');
     this.emailCheckStatus.set('idle');
     this.emailCheckMessage.set('');
+    this.pendingAvatarFile.set(null);
   }
 
   backToHub(): void {
@@ -850,6 +860,14 @@ export class UserCreationHub implements OnInit {
 
   selectStaffRole(role: RoleOption): void {
     this.selectedStaffRole.set(role);
+  }
+
+  onAvatarSelected(file: File): void {
+    this.pendingAvatarFile.set(file);
+  }
+
+  onAvatarRemoved(): void {
+    this.pendingAvatarFile.set(null);
   }
 
   // ── Submit ─────────────────────────────────────────────────────────────────
@@ -957,8 +975,7 @@ export class UserCreationHub implements OnInit {
 
       payload.socialCategory =
         udi.socialCategory != null ? (udi.socialCategory as unknown as SocialCategory) : undefined;
-      payload.religion =
-        udi.religion != null ? (udi.religion as unknown as Religion) : undefined;
+      payload.religion = udi.religion != null ? (udi.religion as unknown as Religion) : undefined;
       payload.isMinority = udi.isMinority ?? false;
       payload.motherTongueCode = udi.motherTongueCode ?? undefined;
 
@@ -1009,6 +1026,29 @@ export class UserCreationHub implements OnInit {
         this.submitting.set(false);
         const newUserId = (res as any).user?.id ?? null;
         this.createdUserId.set(newUserId);
+
+        // ── NEW: upload the staged avatar now that the user exists ──────────
+        const photo = this.pendingAvatarFile();
+        if (newUserId && photo) {
+          this.avatarService.uploadAvatar(newUserId, photo).subscribe({
+            next: () => {
+              // Non-blocking — the user record itself already succeeded, so
+              // we don't want a photo-upload hiccup to look like the whole
+              // creation failed. Just inform and move on.
+              this.toast.success(`${acc.name} admitted successfully!`);
+            },
+            error: () => {
+              // Creation still succeeded; only the photo failed. Tell the
+              // admin so they can retry from the edit screen, but don't block
+              // navigation — the rest of the account is fully usable.
+              this.toast.error(
+                `${acc.name} was created, but the profile photo failed to upload. You can add it from Edit User.`
+              );
+            },
+          });
+        } else if (persona.id !== 'student') {
+          this.toast.success(`${acc.name} created successfully!`);
+        }
 
         if (persona.id === 'student') {
           this.toast.success(`${acc.name} admitted successfully!`);

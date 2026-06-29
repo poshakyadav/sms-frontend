@@ -1,0 +1,314 @@
+<!-- school-payment-status.html -->
+<div class="sps-shell">
+
+    <!-- ══════════════════════════════════════════════════════════
+         HEADER
+         ══════════════════════════════════════════════════════════ -->
+    <header class="sps-header">
+      <div class="sps-header-logo">
+        <div class="sps-logo-mark">
+          <mat-icon>school</mat-icon>
+        </div>
+        <span class="sps-logo-name">SMS</span>
+      </div>
+      <a routerLink="/login" class="sps-header-link">Go to Login</a>
+    </header>
+  
+    <!-- ══════════════════════════════════════════════════════════
+         LOADING
+         ══════════════════════════════════════════════════════════ -->
+    @if (pageState() === 'loading') {
+    <div class="sps-center">
+      <mat-spinner diameter="48"></mat-spinner>
+      <p class="sps-loading-text">Checking your activation status…</p>
+    </div>
+    }
+  
+    <!-- ══════════════════════════════════════════════════════════
+         ERROR
+         ══════════════════════════════════════════════════════════ -->
+    @if (pageState() === 'error') {
+    <div class="sps-center">
+      <div class="sps-error-icon">
+        <mat-icon>error_outline</mat-icon>
+      </div>
+      <h2 class="sps-error-title">Something went wrong</h2>
+      <p class="sps-error-desc">{{ errorMessage() }}</p>
+      <div class="sps-error-actions">
+        <a routerLink="/public/register" mat-stroked-button class="sps-btn-outline">
+          Request New Invitation
+        </a>
+      </div>
+    </div>
+    }
+  
+    <!-- ══════════════════════════════════════════════════════════
+         ACTIVATED — SUCCESS STATE
+         ══════════════════════════════════════════════════════════ -->
+    @if (pageState() === 'activated') {
+    <div class="sps-main">
+      <div class="sps-success-card">
+  
+        <!-- Animated success icon -->
+        <div class="sps-success-icon-wrap">
+          <div class="sps-success-ring ring-1"></div>
+          <div class="sps-success-ring ring-2"></div>
+          <div class="sps-success-icon-circle">
+            <mat-icon>check</mat-icon>
+          </div>
+        </div>
+  
+        <h1 class="sps-success-title">Your school is live!</h1>
+        <p class="sps-success-sub">
+          @if (schoolName()) {
+            <strong>{{ schoolName() }}</strong> has been activated successfully.
+          } @else {
+            Your school has been activated successfully.
+          }
+          You can now log in and start setting up your school management system.
+        </p>
+  
+        <!-- School code -->
+        @if (schoolCode()) {
+        <div class="sps-code-block">
+          <span class="sps-code-label">Your School Code</span>
+          <div class="sps-code-row">
+            <span class="sps-code-value">{{ schoolCode() }}</span>
+            <button mat-icon-button class="sps-copy-btn" (click)="copySchoolCode()"
+                    matTooltip="Copy school code">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </div>
+          <p class="sps-code-note">You'll need this code every time you log in.</p>
+        </div>
+        }
+  
+        <div class="sps-activated-checklist">
+          @for (item of [
+            'School account created',
+            'School database provisioned',
+            'Default roles & permissions configured',
+            'You can now log in as school owner'
+          ]; track item) {
+          <div class="sps-check-row">
+            <div class="sps-check-dot">
+              <mat-icon>check_circle</mat-icon>
+            </div>
+            <span>{{ item }}</span>
+          </div>
+          }
+        </div>
+  
+        <button mat-flat-button class="sps-btn-primary sps-btn-login" (click)="goToLogin()">
+          <mat-icon>login</mat-icon>
+          Go to Login
+        </button>
+      </div>
+    </div>
+    }
+  
+    <!-- ══════════════════════════════════════════════════════════
+         POLLING — WAITING FOR ACTIVATION
+         ══════════════════════════════════════════════════════════ -->
+    @if (pageState() === 'polling') {
+    <div class="sps-main">
+  
+      <!-- Intro -->
+      <div class="sps-intro">
+        <div class="sps-status-badge">
+          <div class="sps-pulse-dot"></div>
+          Payment Received · Pending Activation
+        </div>
+        <h1 class="sps-title">
+          @if (schoolName()) {
+            {{ schoolName() }}
+          } @else {
+            Your school
+          }
+          is being set up
+        </h1>
+        <p class="sps-subtitle">
+          Our team has received your payment and is activating your account.
+          This usually takes less than 24 hours.
+        </p>
+      </div>
+  
+      <div class="sps-card">
+  
+        <!-- School code block -->
+        @if (schoolCode()) {
+        <div class="sps-code-section">
+          <div class="sps-code-inner">
+            <div class="sps-code-text-wrap">
+              <span class="sps-code-section-label">Your School Code</span>
+              <span class="sps-code-display">{{ schoolCode() }}</span>
+            </div>
+            <button mat-icon-button class="sps-copy-btn-sm" (click)="copySchoolCode()"
+                    matTooltip="Copy code">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </div>
+          <p class="sps-code-note-sm">Keep this safe — you'll use it to log in after activation.</p>
+        </div>
+        }
+  
+        <!-- Payment timestamp -->
+        @if (paymentCapturedAt() || submissionTimestamp()) {
+        <div class="sps-timestamp">
+          <mat-icon>receipt_long</mat-icon>
+          <span>
+            Payment confirmed on
+            <strong>{{ formatTimestamp(paymentCapturedAt() || submissionTimestamp()) }}</strong>
+          </span>
+        </div>
+        }
+  
+        <!-- Timeline -->
+        <div class="sps-timeline">
+  
+          <!-- Step 1: Payment Received -->
+          <div class="sps-tl-item" [class.done]="currentStep() >= 1" [class.active]="currentStep() === 1">
+            <div class="sps-tl-icon-wrap">
+              <div class="sps-tl-icon">
+                @if (currentStep() > 1) {
+                  <mat-icon>check</mat-icon>
+                } @else {
+                  <mat-icon>payments</mat-icon>
+                }
+              </div>
+              @if (true) {
+              <div class="sps-tl-line"></div>
+              }
+            </div>
+            <div class="sps-tl-content">
+              <span class="sps-tl-title">Payment Received</span>
+              <span class="sps-tl-desc">
+                @if (paymentCapturedAt()) {
+                  Confirmed on {{ formatTimestamp(paymentCapturedAt()) }}
+                } @else {
+                  Your setup fee payment has been captured successfully.
+                }
+              </span>
+            </div>
+          </div>
+  
+          <!-- Step 2: Under Review -->
+          <div class="sps-tl-item" [class.done]="currentStep() > 2" [class.active]="currentStep() === 2">
+            <div class="sps-tl-icon-wrap">
+              <div class="sps-tl-icon">
+                @if (currentStep() > 2) {
+                  <mat-icon>check</mat-icon>
+                } @else if (currentStep() === 2) {
+                  <div class="sps-tl-spinner">
+                    <mat-spinner diameter="18"></mat-spinner>
+                  </div>
+                } @else {
+                  <mat-icon>manage_search</mat-icon>
+                }
+              </div>
+              <div class="sps-tl-line"></div>
+            </div>
+            <div class="sps-tl-content">
+              <span class="sps-tl-title">
+                Under Review
+                @if (currentStep() === 2) {
+                  <span class="sps-tl-badge">In Progress</span>
+                }
+              </span>
+              <span class="sps-tl-desc">
+                Our team is verifying your payment and provisioning your school database.
+                This typically takes a few hours.
+              </span>
+            </div>
+          </div>
+  
+          <!-- Step 3: Activated -->
+          <div class="sps-tl-item" [class.done]="currentStep() >= 3">
+            <div class="sps-tl-icon-wrap">
+              <div class="sps-tl-icon">
+                @if (currentStep() >= 3) {
+                  <mat-icon>check</mat-icon>
+                } @else {
+                  <mat-icon>rocket_launch</mat-icon>
+                }
+              </div>
+              <!-- No line after last step -->
+            </div>
+            <div class="sps-tl-content">
+              <span class="sps-tl-title">Activated</span>
+              <span class="sps-tl-desc">
+                You'll receive an activation email and can log in immediately.
+              </span>
+            </div>
+          </div>
+  
+        </div>
+  
+        <!-- Auto-poll status + manual check -->
+        <div class="sps-poll-section">
+          <div class="sps-poll-info">
+            <div class="sps-auto-check">
+              <div class="sps-auto-dot" [class.polling]="isPolling()"></div>
+              <span>
+                @if (isPolling()) {
+                  Checking status…
+                } @else if (lastCheckedAt()) {
+                  Last checked at {{ formattedLastChecked() }}
+                } @else {
+                  Auto-checks every 30 seconds
+                }
+              </span>
+            </div>
+            <span class="sps-poll-note">
+              <mat-icon>schedule</mat-icon>
+              Auto-refreshes every 30 seconds
+            </span>
+          </div>
+  
+          <button mat-stroked-button class="sps-btn-check" (click)="checkNow()"
+                  [disabled]="isPolling()">
+            @if (isPolling()) {
+              <mat-spinner diameter="16"></mat-spinner>
+              Checking…
+            } @else {
+              <mat-icon>refresh</mat-icon>
+              Check Status Now
+            }
+          </button>
+        </div>
+  
+      </div>
+  
+      <!-- Help section -->
+      <div class="sps-help">
+        <div class="sps-help-items">
+          <div class="sps-help-item">
+            <mat-icon>mail_outline</mat-icon>
+            <div>
+              <span class="sps-help-label">Activation Email</span>
+              <span class="sps-help-desc">We'll send an email to your registered address when your account is ready.</span>
+            </div>
+          </div>
+          <div class="sps-help-item">
+            <mat-icon>bookmark_border</mat-icon>
+            <div>
+              <span class="sps-help-label">Bookmark This Page</span>
+              <span class="sps-help-desc">You can revisit this URL anytime to check your activation status.</span>
+            </div>
+          </div>
+          <div class="sps-help-item">
+            <mat-icon>support_agent</mat-icon>
+            <div>
+              <span class="sps-help-label">Need Help?</span>
+              <span class="sps-help-desc">
+                Contact our support team if your account hasn't been activated within 24 hours.
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+    </div>
+    }
+  
+  </div>

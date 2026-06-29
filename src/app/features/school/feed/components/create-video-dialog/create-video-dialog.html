@@ -1,0 +1,91 @@
+<!-- features/school/feed/components/create-video-dialog/create-video-dialog.html -->
+
+<div class="dialog-overlay" (click)="close()">
+  <div class="dialog-panel" (click)="$event.stopPropagation()">
+    <header class="dialog-header">
+      <h2>{{ isEditMode() ? 'Edit Video' : 'Add YouTube Video' }}</h2>
+      <button type="button" class="close-button" (click)="close()">✕</button>
+    </header>
+
+    <div class="dialog-body">
+      @if (errorMessage()) {
+      <div class="alert alert-error">{{ errorMessage() }}</div>
+      }
+
+      <div class="form-field">
+        <label for="youtube-url">YouTube URL</label>
+        <input
+          id="youtube-url"
+          type="url"
+          placeholder="https://www.youtube.com/watch?v=..."
+          [ngModel]="youtubeUrl()"
+          (ngModelChange)="youtubeUrl.set($event)"
+        />
+        @if (youtubeUrl().trim().length > 0 && !extractedVideoId()) {
+        <div class="field-error">
+          Please paste a valid YouTube video URL (youtube.com/watch, youtu.be, or
+          youtube.com/shorts)
+        </div>
+        }
+      </div>
+
+      @if (thumbnailUrl()) {
+      <div class="form-field">
+        <label>Preview</label>
+        <div class="thumbnail-preview">
+          <img [src]="thumbnailUrl()!" alt="Video thumbnail preview" />
+        </div>
+      </div>
+      }
+
+      <div class="form-field">
+        <label for="video-title">Title</label>
+        <input
+          id="video-title"
+          type="text"
+          placeholder="e.g. Annual Day Highlights 2026"
+          [ngModel]="videoTitle()"
+          (ngModelChange)="videoTitle.set($event)"
+        />
+        <div class="char-counter">{{ titleCharsRemaining() }} characters remaining</div>
+      </div>
+
+      <div class="form-field">
+        <label for="video-description">Description (optional)</label>
+        <textarea
+          id="video-description"
+          rows="3"
+          placeholder="A short description shown below the video…"
+          [ngModel]="videoDescription()"
+          (ngModelChange)="videoDescription.set($event)"
+        ></textarea>
+        <div class="char-counter">{{ descriptionCharsRemaining() }} characters remaining</div>
+      </div>
+
+      <app-feed-target-selector
+        [initialValue]="targetValue()"
+        (valueChange)="onTargetChange($event)"
+      />
+
+      <div class="form-field checkbox-field">
+        <label>
+          <input
+            type="checkbox"
+            [ngModel]="isPublished()"
+            (ngModelChange)="isPublished.set($event)"
+          />
+          Publish immediately (uncheck to save as draft)
+        </label>
+      </div>
+    </div>
+
+    <footer class="dialog-footer">
+      <button type="button" class="btn btn-secondary" (click)="close()">Cancel</button>
+      <button type="button" class="btn btn-primary" [disabled]="!canSubmit()" (click)="submit()">
+        @if (isSubmitting()) { Saving… } @else {
+        {{ isEditMode() ? 'Save Changes' : 'Publish Video' }}
+        }
+      </button>
+    </footer>
+  </div>
+</div>

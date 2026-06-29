@@ -1,0 +1,436 @@
+<!-- school-onboard.html -->
+<div class="onboard-shell">
+
+    <!-- ══════════════════════════════════════════════════════════
+         TOP BRAND BAR
+         ══════════════════════════════════════════════════════════ -->
+    <header class="ob-header">
+      <div class="ob-header-logo">
+        <div class="ob-logo-mark">
+          <mat-icon>school</mat-icon>
+        </div>
+        <span class="ob-logo-name">Eduxo</span>
+      </div>
+      <a routerLink="/login" class="ob-header-link">Already have an account?</a>
+    </header>
+  
+    <!-- ══════════════════════════════════════════════════════════
+         LOADING
+         ══════════════════════════════════════════════════════════ -->
+    @if (wizardState() === 'loading') {
+    <div class="ob-center-state">
+      <div class="ob-loading-ring">
+        <mat-spinner diameter="48"></mat-spinner>
+      </div>
+      <p class="ob-loading-text">Validating your invitation…</p>
+    </div>
+    }
+  
+    <!-- ══════════════════════════════════════════════════════════
+         ERROR STATE
+         ══════════════════════════════════════════════════════════ -->
+    @if (wizardState() === 'error') {
+    <div class="ob-center-state">
+      <div class="ob-error-icon">
+        <mat-icon>link_off</mat-icon>
+      </div>
+      <h2 class="ob-error-title">Invalid Invitation Link</h2>
+      <p class="ob-error-desc">{{ errorMessage() }}</p>
+      <div class="ob-error-actions">
+        <a routerLink="/school/login" mat-stroked-button class="ob-btn-outline">
+          Go to Login
+        </a>
+        <a routerLink="/public/register" mat-flat-button class="ob-btn-primary">
+          Request New Invitation
+        </a>
+      </div>
+    </div>
+    }
+  
+    <!-- ══════════════════════════════════════════════════════════
+         WIZARD CONTENT (steps 1–4 + already_submitted)
+         ══════════════════════════════════════════════════════════ -->
+    @if (['step1','step2','step3','step4','already_submitted'].includes(wizardState())) {
+    <div class="ob-main">
+  
+      <!-- Step progress indicator -->
+      @if (['step1','step2','step3','step4'].includes(wizardState())) {
+      <div class="ob-progress">
+        @for (step of [1,2,3,4]; track step) {
+        <div class="ob-progress-step" [class.active]="getStepNumber() === step"
+             [class.done]="getStepNumber() > step">
+          <div class="ob-step-circle">
+            @if (getStepNumber() > step) {
+              <mat-icon>check</mat-icon>
+            } @else {
+              {{ step }}
+            }
+          </div>
+          <span class="ob-step-label">
+            @switch (step) {
+              @case (1) { School Details }
+              @case (2) { Your Account }
+              @case (3) { Payment }
+              @case (4) { Activation }
+            }
+          </span>
+        </div>
+        @if (step < 4) {
+        <div class="ob-progress-connector" [class.done]="getStepNumber() > step"></div>
+        }
+        }
+      </div>
+      }
+  
+      <!-- ────────────────────────────────────────────────────────
+           STEP 1 — School Details
+           ──────────────────────────────────────────────────────── -->
+      @if (wizardState() === 'step1') {
+      <div class="ob-card">
+        <div class="ob-card-head">
+          <div class="ob-card-icon indigo"><mat-icon>domain</mat-icon></div>
+          <div>
+            <h2 class="ob-card-title">Tell us about your school</h2>
+            <p class="ob-card-sub">This information will appear in your school's profile.</p>
+          </div>
+        </div>
+  
+        <form class="ob-form" #step1Form="ngForm">
+          <div class="ob-field-row">
+            <mat-form-field appearance="outline" class="ob-field-full">
+              <mat-label>School Name *</mat-label>
+              <input matInput [(ngModel)]="step1.schoolName" name="schoolName"
+                     placeholder="e.g. Delhi Public School, Sector 9" required maxlength="200" />
+            </mat-form-field>
+          </div>
+  
+          <div class="ob-field-row">
+            <mat-form-field appearance="outline" class="ob-field-full">
+              <mat-label>Address Line 1 *</mat-label>
+              <input matInput [(ngModel)]="step1.addressLineOne" name="addressLineOne"
+                     placeholder="Street address, building, block number" required />
+            </mat-form-field>
+          </div>
+  
+          <div class="ob-field-row">
+            <mat-form-field appearance="outline" class="ob-field-full">
+              <mat-label>Address Line 2</mat-label>
+              <input matInput [(ngModel)]="step1.addressLineTwo" name="addressLineTwo"
+                     placeholder="Area, landmark, city" />
+            </mat-form-field>
+          </div>
+  
+          <div class="ob-field-row ob-two-col">
+            <mat-form-field appearance="outline">
+              <mat-label>Phone Number *</mat-label>
+              <input matInput type="tel" [(ngModel)]="step1.phone" name="phone"
+                     placeholder="10-digit number" required maxlength="15" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Alternate Phone</mat-label>
+              <input matInput type="tel" [(ngModel)]="step1.alternatePhone" name="alternatePhone"
+                     placeholder="Optional" maxlength="15" />
+            </mat-form-field>
+          </div>
+  
+          <div class="ob-field-row ob-two-col">
+            <mat-form-field appearance="outline">
+              <mat-label>School Email *</mat-label>
+              <input matInput type="email" [(ngModel)]="step1.schoolEmail" name="schoolEmail"
+                     placeholder="school@example.com" required />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Website</mat-label>
+              <input matInput type="url" [(ngModel)]="step1.website" name="website"
+                     placeholder="https://yourschool.com" />
+            </mat-form-field>
+          </div>
+  
+          <div class="ob-form-actions">
+            <button mat-flat-button class="ob-btn-primary ob-btn-full"
+                    [disabled]="!isStep1Valid()"
+                    (click)="goToStep2()">
+              Continue to Account Setup
+              <mat-icon iconPositionEnd>arrow_forward</mat-icon>
+            </button>
+          </div>
+        </form>
+      </div>
+      }
+  
+      <!-- ────────────────────────────────────────────────────────
+           STEP 2 — Owner Account
+           ──────────────────────────────────────────────────────── -->
+      @if (wizardState() === 'step2') {
+      <div class="ob-card">
+        <div class="ob-card-head">
+          <div class="ob-card-icon violet"><mat-icon>manage_accounts</mat-icon></div>
+          <div>
+            <h2 class="ob-card-title">Create your owner account</h2>
+            <p class="ob-card-sub">This will be the primary administrator account for your school.</p>
+          </div>
+        </div>
+  
+        <form class="ob-form" #step2Form="ngForm">
+          <div class="ob-field-row">
+            <mat-form-field appearance="outline" class="ob-field-full">
+              <mat-label>Owner / Principal Name *</mat-label>
+              <input matInput [(ngModel)]="step2.ownerName" name="ownerName"
+                     placeholder="Full name" required maxlength="100" />
+            </mat-form-field>
+          </div>
+  
+          <div class="ob-field-row ob-two-col">
+            <mat-form-field appearance="outline">
+              <mat-label>Email Address *</mat-label>
+              <input matInput type="email" [(ngModel)]="step2.ownerEmail" name="ownerEmail"
+                     placeholder="owner@school.com" required />
+              <mat-hint>Pre-filled from your invitation</mat-hint>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Phone Number *</mat-label>
+              <input matInput type="tel" [(ngModel)]="step2.ownerPhone" name="ownerPhone"
+                     placeholder="10-digit mobile" required maxlength="15" />
+            </mat-form-field>
+          </div>
+  
+          <div class="ob-field-row ob-two-col">
+            <mat-form-field appearance="outline">
+              <mat-label>Password *</mat-label>
+              <input matInput [type]="showPassword() ? 'text' : 'password'"
+                     [(ngModel)]="step2.password" name="password"
+                     placeholder="Minimum 8 characters" required minlength="8"
+                     (ngModelChange)="onPasswordChange()" />
+              <button matSuffix mat-icon-button type="button"
+                      (click)="showPassword.set(!showPassword())">
+                <mat-icon>{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Confirm Password *</mat-label>
+              <input matInput [type]="showConfirmPassword() ? 'text' : 'password'"
+                     [(ngModel)]="step2.confirmPassword" name="confirmPassword"
+                     placeholder="Re-enter password" required
+                     (ngModelChange)="onPasswordChange()" />
+              <button matSuffix mat-icon-button type="button"
+                      (click)="showConfirmPassword.set(!showConfirmPassword())">
+                <mat-icon>{{ showConfirmPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+              @if (passwordMismatch()) {
+              <mat-error>Passwords do not match</mat-error>
+              }
+            </mat-form-field>
+          </div>
+  
+          <div class="ob-terms-row">
+            <mat-checkbox [(ngModel)]="step2.termsAccepted" name="termsAccepted" color="primary">
+              I agree to the
+              <a routerLink="/public/terms" target="_blank" class="ob-link">Terms & Conditions</a>
+              and
+              <a routerLink="/public/privacy" target="_blank" class="ob-link">Privacy Policy</a>
+            </mat-checkbox>
+          </div>
+  
+          @if (signupError()) {
+          <div class="ob-alert ob-alert-error">
+            <mat-icon>error_outline</mat-icon>
+            <span>{{ signupError() }}</span>
+          </div>
+          }
+  
+          <div class="ob-form-actions ob-two-col-actions">
+            <button mat-stroked-button class="ob-btn-outline" (click)="backToStep1()">
+              <mat-icon>arrow_back</mat-icon>
+              Back
+            </button>
+            <button mat-flat-button class="ob-btn-primary"
+                    [disabled]="!isStep2Valid() || loading()"
+                    (click)="createAccount()">
+              @if (loading()) {
+                <mat-spinner diameter="18"></mat-spinner>
+                Creating account…
+              } @else {
+                Create Account & Continue
+                <mat-icon iconPositionEnd>arrow_forward</mat-icon>
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+      }
+  
+      <!-- ────────────────────────────────────────────────────────
+           STEP 3 — Payment
+           ──────────────────────────────────────────────────────── -->
+      @if (wizardState() === 'step3') {
+      <div class="ob-card">
+        <div class="ob-card-head">
+          <div class="ob-card-icon green"><mat-icon>payments</mat-icon></div>
+          <div>
+            <h2 class="ob-card-title">Complete your setup payment</h2>
+            <p class="ob-card-sub">One-time fee to activate your school account.</p>
+          </div>
+        </div>
+  
+        <div class="ob-payment-summary">
+          <div class="ob-summary-row">
+            <span class="ob-summary-label">School</span>
+            <span class="ob-summary-val">{{ step1.schoolName || schoolName() || 'Your School' }}</span>
+          </div>
+          <div class="ob-summary-row">
+            <span class="ob-summary-label">Plan</span>
+            <span class="ob-summary-val">School Onboarding — One-time Setup</span>
+          </div>
+          @if (paymentConfig()?.feeDescription) {
+          <div class="ob-summary-row">
+            <span class="ob-summary-label">Includes</span>
+            <span class="ob-summary-val ob-summary-desc">{{ paymentConfig()!.feeDescription }}</span>
+          </div>
+          }
+          <div class="ob-summary-divider"></div>
+          <div class="ob-summary-total">
+            <span>Total</span>
+            <span class="ob-total-amount">{{ formattedFee() }}</span>
+          </div>
+        </div>
+  
+        <div class="ob-payment-features">
+          @for (f of ['Secure payment via Razorpay','UPI, Cards, Net Banking accepted','Payment confirmation within seconds','24-hour activation after review']; track f) {
+          <div class="ob-payment-feature">
+            <mat-icon>check_circle</mat-icon>
+            <span>{{ f }}</span>
+          </div>
+          }
+        </div>
+  
+        @if (paymentError()) {
+        <div class="ob-alert ob-alert-error">
+          <mat-icon>error_outline</mat-icon>
+          <span>{{ paymentError() }}</span>
+        </div>
+        }
+  
+        @if (schoolCode()) {
+        <div class="ob-school-code-note">
+          <mat-icon>info_outline</mat-icon>
+          Your school code: <strong>{{ schoolCode() }}</strong>
+          — keep this safe, you'll need it to log in.
+        </div>
+        }
+  
+        <div class="ob-form-actions">
+          <button mat-flat-button class="ob-btn-primary ob-btn-full ob-btn-pay"
+                  [disabled]="paymentLoading()"
+                  (click)="initiatePayment()">
+            @if (paymentLoading()) {
+              <mat-spinner diameter="20"></mat-spinner>
+              Processing…
+            } @else {
+              <mat-icon>lock</mat-icon>
+              Pay {{ formattedFee() }} Securely
+            }
+          </button>
+          <p class="ob-pay-note">
+            <mat-icon>security</mat-icon>
+            Secured by Razorpay. Your payment details are never stored on our servers.
+          </p>
+        </div>
+      </div>
+      }
+  
+      <!-- ────────────────────────────────────────────────────────
+           STEP 4 — Done / Pending Activation
+           ──────────────────────────────────────────────────────── -->
+      @if (wizardState() === 'step4' || wizardState() === 'already_submitted') {
+      <div class="ob-card">
+        @if (isActivated()) {
+        <!-- ─── ACTIVATED ─── -->
+        <div class="ob-activated">
+          <div class="ob-activated-icon">
+            <div class="ob-activated-ring ring-1"></div>
+            <div class="ob-activated-ring ring-2"></div>
+            <mat-icon>check_circle</mat-icon>
+          </div>
+          <h2 class="ob-activated-title">Your account is ready!</h2>
+          <p class="ob-activated-sub">
+            <strong>{{ schoolName() }}</strong> has been activated.
+            You can now log in and start setting up your school.
+          </p>
+          <button mat-flat-button class="ob-btn-primary ob-btn-lg" (click)="goToLogin()">
+            <mat-icon>login</mat-icon>
+            Go to Login
+          </button>
+        </div>
+  
+        } @else {
+        <!-- ─── PENDING ─── -->
+        <div class="ob-card-head">
+          <div class="ob-card-icon amber"><mat-icon>hourglass_top</mat-icon></div>
+          <div>
+            <h2 class="ob-card-title">Payment received — pending activation</h2>
+            <p class="ob-card-sub">Our team will verify and activate your account.</p>
+          </div>
+        </div>
+  
+        @if (schoolCode()) {
+        <div class="ob-code-block">
+          <div class="ob-code-label">Your School Code</div>
+          <div class="ob-code-row">
+            <span class="ob-code-value">{{ schoolCode() }}</span>
+            <button mat-icon-button class="ob-copy-btn" (click)="copySchoolCode()"
+                    matTooltip="Copy code">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </div>
+          <p class="ob-code-note">Save this code — you'll need it to log in once activated.</p>
+        </div>
+        }
+  
+        <div class="ob-timeline">
+          <div class="ob-tl-item done">
+            <div class="ob-tl-dot"><mat-icon>check</mat-icon></div>
+            <div class="ob-tl-content">
+              <span class="ob-tl-title">Payment Received</span>
+              <span class="ob-tl-desc">Your setup fee payment has been confirmed.</span>
+            </div>
+          </div>
+          <div class="ob-tl-connector"></div>
+          <div class="ob-tl-item active">
+            <div class="ob-tl-dot"><mat-icon>pending</mat-icon></div>
+            <div class="ob-tl-content">
+              <span class="ob-tl-title">Under Review</span>
+              <span class="ob-tl-desc">Our team is verifying your payment and preparing your account.</span>
+            </div>
+          </div>
+          <div class="ob-tl-connector"></div>
+          <div class="ob-tl-item">
+            <div class="ob-tl-dot"><mat-icon>rocket_launch</mat-icon></div>
+            <div class="ob-tl-content">
+              <span class="ob-tl-title">Activation</span>
+              <span class="ob-tl-desc">You'll receive an email when your account is live (usually within 24 hours).</span>
+            </div>
+          </div>
+        </div>
+  
+        <div class="ob-poll-section">
+          <button mat-stroked-button class="ob-btn-outline" (click)="checkStatus()"
+                  [disabled]="pollingLoading()">
+            @if (pollingLoading()) {
+              <mat-spinner diameter="16"></mat-spinner>
+              Checking…
+            } @else {
+              <mat-icon>refresh</mat-icon>
+              Check Activation Status
+            }
+          </button>
+          <p class="ob-poll-note">Auto-checks every 30 seconds. You can also bookmark this page.</p>
+        </div>
+  
+        }
+      </div>
+      }
+  
+    </div><!-- /ob-main -->
+    }
+  
+  </div><!-- /onboard-shell -->

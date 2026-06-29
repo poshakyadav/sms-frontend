@@ -1,0 +1,105 @@
+<!-- src/app/features/school/id-cards/id-card-management/id-card-management.component.html -->
+
+<div class="id-card-mgmt">
+  <header class="id-card-mgmt__header">
+    <h1>ID Cards</h1>
+    <div class="id-card-mgmt__actions">
+      <button
+        class="btn btn--secondary"
+        [disabled]="selectedIds.size === 0 || printing"
+        (click)="printSelected()"
+      >
+        {{ printing ? 'Preparing…' : 'Print Selected (' + selectedIds.size + ')' }}
+      </button>
+      <!-- "Generate Cards" opens the bulk-generate dialog component (built
+             separately — holder picker by class-section or staff list +
+             template + validity date). Omitted here to keep this file focused
+             on the list/print flow already specified. -->
+      <button class="btn btn--primary">Generate Cards</button>
+    </div>
+  </header>
+
+  <div class="id-card-mgmt__filters">
+    <select [(ngModel)]="holderTypeFilter" (ngModelChange)="onFilterChange()">
+      <option value="ALL">All Holders</option>
+      <option value="STUDENT">Students</option>
+      <option value="STAFF">Staff</option>
+    </select>
+
+    <select [(ngModel)]="statusFilter" (ngModelChange)="onFilterChange()">
+      <option value="ALL">All Statuses</option>
+      <option value="ACTIVE">Active</option>
+      <option value="REVOKED">Revoked</option>
+      <option value="EXPIRED">Expired</option>
+      <option value="REISSUED">Reissued</option>
+    </select>
+  </div>
+
+  <div class="id-card-mgmt__loading" *ngIf="loading">Loading cards…</div>
+
+  <table class="id-card-mgmt__table" *ngIf="!loading">
+    <thead>
+      <tr>
+        <th>
+          <input
+            type="checkbox"
+            [checked]="selectedIds.size === cards.length && cards.length > 0"
+            (change)="toggleSelectAll()"
+          />
+        </th>
+        <th>Photo</th>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Card No.</th>
+        <th>Status</th>
+        <th>Valid Until</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let card of cards">
+        <td>
+          <input type="checkbox" [checked]="isSelected(card.id)" (change)="toggleSelect(card.id)" />
+        </td>
+        <td>
+          <img *ngIf="card.photoUrl" [src]="card.photoUrl" class="id-card-mgmt__thumb" alt="" />
+        </td>
+        <td>{{ card.holderName }}</td>
+        <td>{{ card.holderType }}</td>
+        <td>{{ card.cardNumber }}</td>
+        <td>
+          <span class="status-badge" [class]="'status-badge--' + card.status.toLowerCase()">
+            {{ card.status }}
+          </span>
+        </td>
+        <td>{{ card.validUntil | date : 'mediumDate' }}</td>
+        <td class="id-card-mgmt__row-actions">
+          <button class="link-btn" (click)="printSingle(card)" [disabled]="printing">Print</button>
+          <button class="link-btn" (click)="revokeCard(card)" *ngIf="card.status === 'ACTIVE'">
+            Revoke
+          </button>
+          <button
+            class="link-btn"
+            (click)="reissueCard(card)"
+            *ngIf="card.status === 'REVOKED' || card.status === 'EXPIRED'"
+          >
+            Reissue
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="id-card-mgmt__empty" *ngIf="!loading && cards.length === 0">
+    No ID cards found for the selected filters.
+  </p>
+
+  <!-- ── Off-screen print queue ──────────────────────────────────────────────
+         Rendered but visually hidden (not display:none — html2canvas can't
+         capture elements with display:none — instead positioned off-canvas).
+         Each card in printQueue gets its own IdCardPreviewComponent instance,
+         which IdCardPdfService then captures via getCardElement(). -->
+  <div class="id-card-mgmt__print-staging" aria-hidden="true">
+    <app-id-card-preview *ngFor="let card of printQueue" [card]="card"></app-id-card-preview>
+  </div>
+</div>

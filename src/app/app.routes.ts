@@ -48,12 +48,36 @@ export const routes: Routes = [
         loadChildren: () => import('./features/public/public.routes').then((m) => m.PUBLIC_ROUTES),
       },
 
-      // ── School sign-up / payment (invite-token based onboarding) ──────────
+      // ══════════════════════════════════════════════════════════════════════
+      // SCHOOL ONBOARDING FLOW — public routes, no JWT required
+      //
+      // These 3 routes must stay OUTSIDE the schoolAuthGuard so schools can:
+      //   1. Complete their signup via invite link   → /school/onboard
+      //   2. Resume payment after closing browser   → /school/payment
+      //   3. Check activation status after payment  → /school/payment-status
+      //
+      // /school/login already lives in the login routes (path: 'login').
+      // ══════════════════════════════════════════════════════════════════════
+
+      // Path B entry point — interest form / public registration
+      // (existing component, already at /public/register; this alias keeps
+      //  backward compatibility with any email links that use /register)
       {
-        path: 'school/register',
-        loadComponent: () =>
-          import('./features/school/school-sign-up/school-sign-up').then((m) => m.SchoolSignUp),
+        path: 'register',
+        redirectTo: '/public/register',
+        pathMatch: 'full',
       },
+
+      // Step 1+2+3+4 wizard — reached via invite email link (?token=<uuid>)
+      // Handles: validate token → school details → owner account → payment → activation
+      {
+        path: 'school/onboard',
+        loadComponent: () =>
+          import('./features/school/school-onboard/school-onboard').then((m) => m.SchoolOnboard),
+      },
+
+      // Payment resume page — reached via payment instructions email (?code=<schoolCode>)
+      // School already completed signup but closed browser before paying
       {
         path: 'school/payment',
         loadComponent: () =>
@@ -61,6 +85,30 @@ export const routes: Routes = [
             (m) => m.SchoolPayment
           ),
       },
+
+      // Activation polling page — reached after payment is verified (?code=<schoolCode>)
+      // Also bookmarkable; auto-polls every 30 seconds
+      {
+        path: 'school/payment-status',
+        loadComponent: () =>
+          import('./features/school/school-payment-status/school-payment-status').then(
+            (m) => m.SchoolPaymentStatus
+          ),
+      },
+
+      // ── School sign-up / payment (invite-token based onboarding) ──────────
+      // {
+      //   path: 'school/register',
+      //   loadComponent: () =>
+      //     import('./features/school/school-sign-up/school-sign-up').then((m) => m.SchoolSignUp),
+      // },
+      // {
+      //   path: 'school/payment',
+      //   loadComponent: () =>
+      //     import('./features/school/school-payment/school-payment/school-payment').then(
+      //       (m) => m.SchoolPayment
+      //     ),
+      // },
 
       // ══════════════════════════════════════════════════════════════════════
       // SCHOOL PORTAL — all school users (guarded by schoolAuthGuard)
@@ -219,6 +267,37 @@ export const routes: Routes = [
             path: 'settings',
             loadChildren: () =>
               import('./features/school/settings/settings.routes').then((m) => m.SETTINGS_ROUTES),
+          },
+
+          // ── ID Cards ──────────────────────────────────────────────────────
+          {
+            path: 'id-cards',
+            canActivate: [permissionGuard('id-cards.view')],
+            loadComponent: () =>
+              import('./features/school/id-cards/id-card-management/id-card-management').then(
+                (m) => m.IdCardManagementComponent
+              ),
+          },
+
+          // ── Feed ──────────────────────────────────────────────────────────
+          {
+            path: 'feed',
+            loadChildren: () =>
+              import('./features/school/feed/feed.routes').then((m) => m.FEED_ROUTES),
+          },
+
+          // ── Billing (access plans + WhatsApp bundles) ───────────────────────
+          {
+            path: 'billing',
+            loadChildren: () =>
+              import('./features/school/billing/billing.routes').then((m) => m.BILLING_ROUTES),
+          },
+
+          // ── WhatsApp (templates, single/bulk send, history, inbound) ──────────────
+          {
+            path: 'whatsapp',
+            loadChildren: () =>
+              import('./features/school/whatsapp/whatsapp.routes').then((m) => m.WHATSAPP_ROUTES),
           },
         ],
       },

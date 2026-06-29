@@ -1,0 +1,188 @@
+<!-- whatsapp-overview.html -->
+<div class="wa-overview">
+  <!-- Page header -->
+  <div class="wa-overview__header">
+    <div class="wa-overview__title-row">
+      <div class="wa-overview__title-block">
+        <h1 class="wa-overview__title">
+          <i class="ti ti-brand-whatsapp wa-overview__title-icon" aria-hidden="true"></i>
+          WhatsApp
+        </h1>
+        <p class="wa-overview__subtitle">
+          Send notifications, reminders, and announcements directly to parents and students.
+        </p>
+      </div>
+      <app-credit-balance-chip [creditsRemaining]="wa.creditsRemaining()" [showBuyLink]="true" />
+    </div>
+  </div>
+
+  <!-- Loading skeleton -->
+  <div *ngIf="isLoading" class="wa-overview__skeleton">
+    <div class="skeleton-card"></div>
+    <div class="skeleton-card"></div>
+    <div class="skeleton-card skeleton-card--wide"></div>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="error && !isLoading" class="wa-overview__error">
+    <i class="ti ti-alert-circle" aria-hidden="true"></i>
+    <span>{{ error }}</span>
+  </div>
+
+  <ng-container *ngIf="!isLoading && !error">
+    <!-- Action cards -->
+    <div class="wa-overview__actions" *ngIf="canManage()">
+      <a routerLink="/school/whatsapp/send" class="wa-action-card wa-action-card--primary">
+        <div class="wa-action-card__icon">
+          <i class="ti ti-send" aria-hidden="true"></i>
+        </div>
+        <div class="wa-action-card__body">
+          <span class="wa-action-card__title">Send a message</span>
+          <span class="wa-action-card__desc"
+            >Send to one recipient using any approved template</span
+          >
+        </div>
+        <i class="ti ti-arrow-right wa-action-card__arrow" aria-hidden="true"></i>
+      </a>
+
+      <a routerLink="/school/whatsapp/bulk" class="wa-action-card wa-action-card--secondary">
+        <div class="wa-action-card__icon">
+          <i class="ti ti-speakerphone" aria-hidden="true"></i>
+        </div>
+        <div class="wa-action-card__body">
+          <span class="wa-action-card__title">Bulk send</span>
+          <span class="wa-action-card__desc"
+            >Send to all parents, students, or a class section at once</span
+          >
+        </div>
+        <i class="ti ti-arrow-right wa-action-card__arrow" aria-hidden="true"></i>
+      </a>
+    </div>
+
+    <!-- Stats strip -->
+    <div class="wa-overview__stats">
+      <div class="wa-stat">
+        <i class="ti ti-coin" aria-hidden="true"></i>
+        <span class="wa-stat__value">{{ wa.creditsRemaining() | number }}</span>
+        <span class="wa-stat__label">Credits remaining</span>
+      </div>
+      <div class="wa-stat">
+        <i class="ti ti-template" aria-hidden="true"></i>
+        <span class="wa-stat__value"
+          >{{ approvedCount() }}<span class="wa-stat__of">/{{ totalCount() }}</span></span
+        >
+        <span class="wa-stat__label">Templates approved</span>
+      </div>
+      <div class="wa-stat">
+        <i class="ti ti-send" aria-hidden="true"></i>
+        <span class="wa-stat__value">{{ wa.messageHistory().length }}</span>
+        <span class="wa-stat__label">Recent messages</span>
+      </div>
+    </div>
+
+    <!-- Templates sync notice -->
+    <div class="wa-overview__sync-notice" *ngIf="wa.templatesNeedSync() && canManage()">
+      <div class="wa-sync-notice">
+        <i class="ti ti-refresh" aria-hidden="true"></i>
+        <div class="wa-sync-notice__text">
+          <strong>Templates not synced yet.</strong>
+          Sync with Meta to see which templates are approved and ready to use.
+        </div>
+        <button class="wa-sync-notice__btn" (click)="syncTemplates()" [disabled]="wa.isSyncing()">
+          <i
+            class="ti"
+            [class.ti-refresh]="!wa.isSyncing()"
+            [class.ti-loader-2]="wa.isSyncing()"
+            [class.ti-spin]="wa.isSyncing()"
+            aria-hidden="true"
+          ></i>
+          {{ wa.isSyncing() ? 'Syncing...' : 'Sync templates' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Sync error -->
+    <div class="wa-overview__sync-error" *ngIf="wa.syncError()">
+      {{ wa.syncError() }}
+    </div>
+
+    <!-- Templates grid -->
+    <section class="wa-overview__section" *ngIf="wa.definitions().length > 0">
+      <div class="wa-section-header">
+        <h2 class="wa-section-title">Message templates</h2>
+        <button
+          class="wa-section-action"
+          (click)="syncTemplates()"
+          [disabled]="wa.isSyncing()"
+          *ngIf="canManage()"
+        >
+          <i
+            class="ti"
+            [class.ti-refresh]="!wa.isSyncing()"
+            [class.ti-loader-2]="wa.isSyncing()"
+            aria-hidden="true"
+          ></i>
+          {{ wa.isSyncing() ? 'Syncing...' : 'Sync' }}
+        </button>
+      </div>
+
+      <div class="wa-templates-grid">
+        <div
+          *ngFor="let item of templateItems()"
+          class="wa-template-row"
+          [class.wa-template-row--approved]="item.cached?.status === 'APPROVED'"
+          [class.wa-template-row--pending]="
+            item.cached?.status !== 'APPROVED' && item.cached?.status !== undefined
+          "
+        >
+          <div class="wa-template-row__name">{{ item.definition.description }}</div>
+          <div class="wa-template-row__vars">
+            <i class="ti ti-variable" aria-hidden="true"></i>
+            {{ item.definition.variables.length }} vars
+          </div>
+          <div class="wa-template-row__status">
+            <span
+              class="wa-template-status"
+              [class.wa-template-status--approved]="item.cached?.status === 'APPROVED'"
+              [class.wa-template-status--pending]="item.cached?.status === 'PENDING'"
+              [class.wa-template-status--rejected]="
+                item.cached?.status === 'REJECTED' || item.cached?.status === 'PAUSED'
+              "
+              [class.wa-template-status--unknown]="!item.cached"
+            >
+              {{ item.cached?.status || 'Not synced' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recent message history -->
+    <section class="wa-overview__section" *ngIf="recentMessages().length > 0">
+      <div class="wa-section-header">
+        <h2 class="wa-section-title">Recent messages</h2>
+        <a routerLink="/school/whatsapp/history" class="wa-section-link">
+          View all <i class="ti ti-arrow-right" aria-hidden="true"></i>
+        </a>
+      </div>
+
+      <div class="wa-recent-table">
+        <div class="wa-recent-row wa-recent-row--head">
+          <span>Recipient</span>
+          <span>Template</span>
+          <span>Status</span>
+          <span>Sent</span>
+        </div>
+        <div *ngFor="let msg of recentMessages()" class="wa-recent-row">
+          <span class="wa-recent-recipient">
+            <span class="wa-recent-name">{{ msg.recipientName }}</span>
+            <span class="wa-recent-phone">{{ msg.recipientPhone }}</span>
+          </span>
+          <span class="wa-recent-template">{{ msg.templateName }}</span>
+          <span><app-status-badge [status]="msg.status" mode="message" /></span>
+          <span class="wa-recent-time">{{ msg.createdAt | date : 'd MMM, h:mm a' }}</span>
+        </div>
+      </div>
+    </section>
+  </ng-container>
+</div>

@@ -1,0 +1,763 @@
+/* school-payment-status.scss */
+/* Matches the visual language of SchoolOnboard and SchoolPayment */
+
+// ── Shell & Header ────────────────────────────────────────────────────────────
+
+.sps-shell {
+  min-height: 100vh;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+}
+
+.sps-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.sps-header-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sps-logo-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.sps-logo-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: -0.02em;
+}
+
+.sps-header-link {
+  font-size: 14px;
+  font-weight: 500;
+  color: #4f46e5;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// ── Centered states (loading, error) ─────────────────────────────────────────
+
+.sps-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 64px 24px;
+  text-align: center;
+}
+
+.sps-loading-text {
+  font-size: 16px;
+  color: #64748b;
+  margin: 0;
+}
+
+.sps-error-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #fef2f2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  mat-icon {
+    font-size: 36px;
+    width: 36px;
+    height: 36px;
+    color: #ef4444;
+  }
+}
+
+.sps-error-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.sps-error-desc {
+  font-size: 15px;
+  color: #64748b;
+  margin: 0;
+  max-width: 400px;
+}
+
+.sps-error-actions {
+  display: flex;
+  gap: 12px;
+}
+
+// ── Main content wrapper ──────────────────────────────────────────────────────
+
+.sps-main {
+  flex: 1;
+  max-width: 680px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 40px 24px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+// ── ACTIVATED SUCCESS CARD ────────────────────────────────────────────────────
+
+.sps-success-card {
+  background: white;
+  border-radius: 20px;
+  padding: 48px 40px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+  border: 1px solid #e2e8f0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+// Animated check icon
+.sps-success-icon-wrap {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sps-success-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid #22c55e;
+  opacity: 0;
+  animation: sps-ring-pulse 2s ease-out infinite;
+
+  &.ring-2 {
+    animation-delay: 0.5s;
+  }
+}
+
+@keyframes sps-ring-pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.sps-success-icon-circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.35);
+
+  mat-icon {
+    font-size: 36px;
+    width: 36px;
+    height: 36px;
+    color: white;
+  }
+}
+
+.sps-success-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+.sps-success-sub {
+  font-size: 16px;
+  color: #475569;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 440px;
+}
+
+// School code in success state
+.sps-code-block {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px 24px;
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+}
+
+.sps-code-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  margin-bottom: 10px;
+}
+
+.sps-code-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.sps-code-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: #4f46e5;
+  letter-spacing: 0.08em;
+  font-family: 'Courier New', monospace;
+}
+
+.sps-copy-btn {
+  color: #94a3b8;
+
+  &:hover {
+    color: #4f46e5;
+  }
+}
+
+.sps-code-note {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 10px 0 0;
+}
+
+// Activated checklist
+.sps-activated-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 360px;
+}
+
+.sps-check-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sps-check-dot {
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: #22c55e;
+  }
+}
+
+.sps-check-row span {
+  font-size: 14px;
+  color: #374151;
+}
+
+// ── INTRO (polling state) ─────────────────────────────────────────────────────
+
+.sps-intro {
+  text-align: center;
+  padding: 8px 0;
+}
+
+.sps-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fefce8;
+  border: 1px solid #fde047;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #854d0e;
+  margin-bottom: 16px;
+}
+
+.sps-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #eab308;
+  animation: sps-dot-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes sps-dot-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.75);
+  }
+}
+
+.sps-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+  margin: 0 0 12px;
+}
+
+.sps-subtitle {
+  font-size: 16px;
+  color: #475569;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 520px;
+  margin-inline: auto;
+}
+
+// ── POLLING CARD ──────────────────────────────────────────────────────────────
+
+.sps-card {
+  background: white;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+// Code section inside polling card
+.sps-code-section {
+  background: linear-gradient(135deg, #eef2ff, #f5f3ff);
+  border: 1px solid #c7d2fe;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.sps-code-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sps-code-text-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sps-code-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6366f1;
+}
+
+.sps-code-display {
+  font-size: 24px;
+  font-weight: 800;
+  color: #312e81;
+  letter-spacing: 0.06em;
+  font-family: 'Courier New', monospace;
+}
+
+.sps-copy-btn-sm {
+  color: #6366f1;
+
+  &:hover {
+    background: rgba(99, 102, 241, 0.08);
+  }
+}
+
+.sps-code-note-sm {
+  font-size: 12px;
+  color: #6366f1;
+  margin: 10px 0 0;
+}
+
+// Timestamp
+.sps-timestamp {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #64748b;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 10px 14px;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: #94a3b8;
+  }
+}
+
+// ── TIMELINE ──────────────────────────────────────────────────────────────────
+
+.sps-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.sps-tl-item {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+
+  &.done {
+    .sps-tl-icon {
+      background: #22c55e;
+      border-color: #22c55e;
+      color: white;
+    }
+
+    .sps-tl-line {
+      background: #22c55e;
+    }
+
+    .sps-tl-title {
+      color: #16a34a;
+    }
+  }
+
+  &.active {
+    .sps-tl-icon {
+      background: #4f46e5;
+      border-color: #4f46e5;
+      color: white;
+    }
+
+    .sps-tl-line {
+      background: #e2e8f0;
+    }
+
+    .sps-tl-title {
+      color: #4338ca;
+    }
+  }
+}
+
+.sps-tl-icon-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.sps-tl-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #e2e8f0;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  transition: all 0.3s ease;
+  z-index: 1;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.sps-tl-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sps-tl-line {
+  width: 2px;
+  flex: 1;
+  min-height: 32px;
+  background: #e2e8f0;
+  margin: 4px 0;
+}
+
+.sps-tl-content {
+  padding: 8px 0 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.sps-tl-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sps-tl-badge {
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.03em;
+}
+
+.sps-tl-desc {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+// ── POLL SECTION ─────────────────────────────────────────────────────────────
+
+.sps-poll-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+}
+
+.sps-poll-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sps-auto-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #374151;
+  font-weight: 500;
+}
+
+.sps-auto-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #94a3b8;
+  transition: background 0.3s;
+
+  &.polling {
+    background: #4f46e5;
+    animation: sps-dot-pulse 1s ease-in-out infinite;
+  }
+}
+
+.sps-poll-note {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #94a3b8;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.sps-btn-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  color: #4f46e5;
+  border-color: #c7d2fe;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover:not([disabled]) {
+    background: #eef2ff;
+  }
+
+  mat-spinner {
+    margin-right: 4px;
+  }
+}
+
+// ── HELP SECTION ──────────────────────────────────────────────────────────────
+
+.sps-help {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+}
+
+.sps-help-items {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sps-help-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: #94a3b8;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+}
+
+.sps-help-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 2px;
+}
+
+.sps-help-desc {
+  display: block;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+// ── Buttons ───────────────────────────────────────────────────────────────────
+
+.sps-btn-primary {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+  color: white !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  font-size: 15px !important;
+  height: 48px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 0 28px !important;
+
+  mat-icon {
+    font-size: 20px !important;
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  &:hover {
+    opacity: 0.9;
+    box-shadow: 0 4px 16px rgba(79, 70, 229, 0.35) !important;
+  }
+}
+
+.sps-btn-login {
+  padding: 0 36px !important;
+  height: 52px !important;
+  font-size: 16px !important;
+}
+
+.sps-btn-outline {
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  border-color: #4f46e5 !important;
+  color: #4f46e5 !important;
+  height: 44px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+
+@media (max-width: 600px) {
+  .sps-header {
+    padding: 12px 16px;
+  }
+
+  .sps-main {
+    padding: 24px 16px 48px;
+  }
+
+  .sps-success-card {
+    padding: 32px 20px;
+  }
+
+  .sps-card {
+    padding: 24px 20px;
+  }
+
+  .sps-title {
+    font-size: 22px;
+  }
+
+  .sps-success-title {
+    font-size: 22px;
+  }
+
+  .sps-poll-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sps-btn-check {
+    width: 100%;
+    justify-content: center;
+  }
+}

@@ -1,0 +1,102 @@
+// credit-balance-chip.scss
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+
+  .ti {
+    font-size: 15px;
+  }
+
+  &__label {
+    white-space: nowrap;
+  }
+
+  &__link {
+    margin-left: 4px;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    white-space: nowrap;
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+
+  // ── Tier variants ──────────────────────────────────────────────────────
+
+  &--healthy {
+    background: #e8f5e9;
+    border-color: #a5d6a7;
+    color: #2e7d32;
+
+    :host-context([data-theme='dark']) & {
+      background: #1b5e20;
+      border-color: #388e3c;
+      color: #a5d6a7;
+    }
+  }
+
+  &--low {
+    background: #fff8e1;
+    border-color: #ffe082;
+    color: #f57f17;
+
+    :host-context([data-theme='dark']) & {
+      background: #3e2800;
+      border-color: #f9a825;
+      color: #ffe082;
+    }
+  }
+
+  &--critical {
+    background: #fff3e0;
+    border-color: #ffcc80;
+    color: #e65100;
+
+    :host-context([data-theme='dark']) & {
+      background: #3e1a00;
+      border-color: #ff8f00;
+      color: #ffcc80;
+    }
+  }
+
+  &--empty {
+    background: #ffebee;
+    border-color: #ef9a9a;
+    color: #b71c1c;
+
+    .chip__link {
+      color: #b71c1c;
+    }
+
+    :host-context([data-theme='dark']) & {
+      background: #3e0000;
+      border-color: #e53935;
+      color: #ef9a9a;
+
+      .chip__link {
+        color: #ef9a9a;
+      }
+    }
+  }
+
+  // ── Compact mode ───────────────────────────────────────────────────────
+
+  &--compact {
+    padding: 4px 8px;
+    font-size: 12px;
+
+    .ti {
+      font-size: 13px;
+    }
+  }
+}

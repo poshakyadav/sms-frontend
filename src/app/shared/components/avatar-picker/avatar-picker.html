@@ -1,0 +1,48 @@
+<!-- src/app/shared/components/avatar-picker/avatar-picker.html -->
+
+<div class="avatar-picker" [class.avatar-picker--disabled]="disabled">
+  <div class="avatar-picker__circle">
+    @if (displayUrl) {
+    <img [src]="displayUrl" alt="Profile photo" class="avatar-picker__img" />
+    } @else {
+    <span class="avatar-picker__fallback">{{ fallbackInitial }}</span>
+    } @if (uploading()) {
+    <div class="avatar-picker__overlay">
+      <mat-spinner diameter="28"></mat-spinner>
+    </div>
+    }
+
+    <label
+      class="avatar-picker__edit-badge"
+      [matTooltip]="hasPhoto ? 'Change photo' : 'Add photo'"
+      [class.avatar-picker__edit-badge--disabled]="disabled || uploading()"
+    >
+      <mat-icon>{{ hasPhoto ? 'edit' : 'add_a_photo' }}</mat-icon>
+      <input
+        type="file"
+        accept="image/*"
+        class="avatar-picker__input"
+        [disabled]="disabled || uploading()"
+        (change)="onFileChosen($event)"
+      />
+    </label>
+  </div>
+
+  <div class="avatar-picker__meta">
+    @if (hasPhoto && !uploading()) {
+    <button
+      type="button"
+      class="avatar-picker__remove-btn"
+      [disabled]="disabled"
+      (click)="removePhoto()"
+    >
+      <mat-icon>delete_outline</mat-icon>
+      Remove
+    </button>
+    } @if (compressedSizeLabel()) {
+    <span class="avatar-picker__size-hint">{{ compressedSizeLabel() }} · optimized</span>
+    } @if (!hasPhoto && !uploading()) {
+    <span class="avatar-picker__hint">Optional — JPG or PNG</span>
+    }
+  </div>
+</div>

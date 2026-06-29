@@ -1,12 +1,19 @@
-import { Component, signal, OnInit } from '@angular/core';
+// features/super/turso-dbs/turso-dbs-component.ts
+
+import {
+  Component,
+  signal,
+  computed,
+  inject,
+  afterNextRender,
+} from '@angular/core';
 import {
   FormBuilder,
-  FormGroup,
   FormsModule,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -26,12 +33,13 @@ export interface TursoDB {
 }
 
 @Component({
-  selector: 'app-turso-dbs-component',
+  selector: 'app-turso-dbs',
   standalone: true,
   imports: [
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
+    DatePipe,
     MatTableModule,
     MatButtonModule,
     MatIconModule,
@@ -42,36 +50,53 @@ export interface TursoDB {
   templateUrl: './turso-dbs-component.html',
   styleUrl: './turso-dbs-component.scss',
 })
-export class TursoDbsComponent implements OnInit {
-  dbs = signal<TursoDB[]>([]);
-  displayedColumns = ['id', 'url', 'createdByEmail', 'lastMigrationAt', 'isAssigned'];
-  loading = signal(false);
-  saving = signal(false);
+export class TursoDbsComponent {
+  // ── DI via inject() ───────────────────────────────────────────────────────
+  private readonly api = inject(ApiService);
+  private readonly fb = inject(FormBuilder);
+  private readonly toast = inject(ToastService);
 
-  form: FormGroup;
+  // ── State ─────────────────────────────────────────────────────────────────
+  readonly dbs = signal<TursoDB[]>([]);
+  readonly loading = signal(false);
+  readonly saving = signal(false);
 
-  availableCount = signal(0);
-  assignedCount = signal(0);
+  // ── Derived counts (computed signals — no manual sync needed) ─────────────
+  readonly availableCount = computed(
+    () => this.dbs().filter((d) => !d.isAssigned).length
+  );
+  readonly assignedCount = computed(
+    () => this.dbs().filter((d) => d.isAssigned).length
+  );
 
-  constructor(private api: ApiService, private fb: FormBuilder, private toast: ToastService) {
-    this.form = fb.group({
-      url: ['', [Validators.required, Validators.pattern(/^libsql:\/\/.+/)]],
-      authToken: ['', Validators.required],
-      createdByEmail: ['', [Validators.required, Validators.email]],
-    });
+  readonly displayedColumns = [
+    'id',
+    'url',
+    'createdByEmail',
+    'lastMigrationAt',
+    'isAssigned',
+  ] as const;
+
+  // ── Form ──────────────────────────────────────────────────────────────────
+  readonly form = this.fb.group({
+    url: [
+      '',
+      [Validators.required, Validators.pattern(/^libsql:\/\/.+/)],
+    ],
+    authToken: ['', Validators.required],
+    createdByEmail: ['', [Validators.required, Validators.email]],
+  });
+
+  constructor() {
+    afterNextRender(() => this.fetchDbs());
   }
 
-  ngOnInit() {
-    this.fetchDbs();
-  }
-
-  fetchDbs() {
+  // ── Data ──────────────────────────────────────────────────────────────────
+  fetchDbs(): void {
     this.loading.set(true);
     this.api.get<TursoDB[]>('turso-dbs').subscribe({
       next: (res) => {
         this.dbs.set(res);
-        this.availableCount.set(res.filter((d) => !d.isAssigned).length);
-        this.assignedCount.set(res.filter((d) => d.isAssigned).length);
         this.loading.set(false);
       },
       error: () => {
@@ -81,8 +106,12 @@ export class TursoDbsComponent implements OnInit {
     });
   }
 
-  addDb() {
-    if (this.form.invalid) return;
+  addDb(): void {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
     this.saving.set(true);
     this.api.post('turso-dbs', this.form.value).subscribe({
       next: () => {
@@ -91,7 +120,7 @@ export class TursoDbsComponent implements OnInit {
         this.saving.set(false);
         this.fetchDbs();
       },
-      error: (err: any) => {
+      error: (err: { error?: { error?: string } }) => {
         this.toast.error(err?.error?.error ?? 'Failed to add database');
         this.saving.set(false);
       },

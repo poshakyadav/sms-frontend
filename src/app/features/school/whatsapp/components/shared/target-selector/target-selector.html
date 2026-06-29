@@ -1,0 +1,90 @@
+<!-- target-selector.html -->
+<div class="target-selector">
+  <!-- Bulk send title -->
+  <div class="ts-field">
+    <label class="ts-label" for="bulkTitle">
+      Send title <span class="ts-required">*</span>
+      <span class="ts-hint">Internal label for your records</span>
+    </label>
+    <input
+      id="bulkTitle"
+      type="text"
+      class="ts-input"
+      [(ngModel)]="bulkTitle"
+      (ngModelChange)="onTitleChange()"
+      placeholder="e.g. Fee Reminder — June 2026"
+      maxlength="200"
+    />
+  </div>
+
+  <!-- Target type -->
+  <div class="ts-field">
+    <label class="ts-label"
+      >Who should receive this message? <span class="ts-required">*</span></label
+    >
+    <div class="ts-options">
+      <label
+        *ngFor="let opt of targetOptions"
+        class="ts-option"
+        [class.ts-option--selected]="selectedTargetType === opt.value"
+      >
+        <input
+          type="radio"
+          name="targetType"
+          [value]="opt.value"
+          [(ngModel)]="selectedTargetType"
+          (ngModelChange)="onTargetTypeChange()"
+          class="ts-radio"
+        />
+        <i class="ti {{ opt.icon }}" aria-hidden="true"></i>
+        <div class="ts-option__text">
+          <span class="ts-option__label">{{ opt.label }}</span>
+          <span class="ts-option__desc">{{ opt.description }}</span>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <!-- Class section picker -->
+  <div class="ts-field" *ngIf="needsClassSection">
+    <label class="ts-label" for="classSection">
+      Select class-section <span class="ts-required">*</span>
+    </label>
+    <div *ngIf="isLoadingClasses" class="ts-loading">
+      <i class="ti ti-loader-2 ts-spin" aria-hidden="true"></i>
+      Loading class sections...
+    </div>
+    <select
+      *ngIf="!isLoadingClasses"
+      id="classSection"
+      class="ts-input ts-select"
+      [(ngModel)]="selectedClassSectionId"
+      (ngModelChange)="onClassSectionChange()"
+    >
+      <option [ngValue]="null">— Select a class-section —</option>
+      <option *ngFor="let cs of classSections" [ngValue]="cs.id">
+        {{ cs.label }}
+      </option>
+    </select>
+  </div>
+
+  <!-- Phone list -->
+  <div class="ts-field" *ngIf="needsPhoneList">
+    <label class="ts-label" for="phoneList">
+      Phone numbers <span class="ts-required">*</span>
+      <span class="ts-hint">One per line, e.g. 9876543210</span>
+    </label>
+    <textarea
+      id="phoneList"
+      class="ts-input ts-textarea"
+      [(ngModel)]="phoneListRaw"
+      (ngModelChange)="onPhoneListChange()"
+      placeholder="9876543210&#10;9123456789&#10;9000000001"
+      rows="6"
+    ></textarea>
+    <p class="ts-count" *ngIf="parsedPhones.length > 0">
+      <i class="ti ti-circle-check" aria-hidden="true"></i>
+      {{ parsedPhones.length }} valid number{{ parsedPhones.length !== 1 ? 's' : '' }} detected
+    </p>
+  </div>
+</div>

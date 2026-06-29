@@ -1,0 +1,93 @@
+// whatsapp-bulk-detail.scss
+.wa-bulk-detail {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.wa-bulk-detail__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wa-bulk-detail__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary, #4f46e5);
+  text-decoration: none;
+}
+
+.wa-bulk-detail__refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid var(--border, #e0e0e0);
+  border-radius: 7px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: var(--text, #333);
+  cursor: pointer;
+}
+
+.wa-bulk-detail__loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary, #888);
+  font-size: 14px;
+  padding: 20px 0;
+}
+.wa-bulk-detail__spin {
+  animation: wbd-spin 0.8s linear infinite;
+}
+@keyframes wbd-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.wa-bulk-detail__error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  background: #ffebee;
+  border-radius: 8px;
+  color: #b71c1c;
+  font-size: 14px;
+}
+
+.wa-bulk-detail__messages {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wa-bulk-detail__section-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text, #111);
+}
+
+.wa-bulk-detail__table {
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #e0e0e0);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.wa-bulk-detail__empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-secondary, #888);
+  font-size: 14px;
+}

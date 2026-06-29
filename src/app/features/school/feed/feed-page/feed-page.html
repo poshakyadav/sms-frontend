@@ -1,0 +1,39 @@
+<!-- features/school/feed/feed-page/feed-page.html -->
+
+<div class="feed-page">
+  <header class="feed-page-header">
+    <h1>School Feed</h1>
+    <p>Announcements, updates, and videos from your school</p>
+  </header>
+
+  @if (isLoading()) {
+  <div class="feed-state">Loading feed…</div>
+  } @else if (errorMessage()) {
+  <div class="feed-state feed-state-error">{{ errorMessage() }}</div>
+  } @else if (posts().length === 0) {
+  <div class="feed-state">
+    <p>No posts yet.</p>
+    <p class="feed-state-hint">Check back later for updates from your school.</p>
+  </div>
+  } @else {
+  <div class="feed-list">
+    @for (post of posts(); track post.id) { @if (post.contentType === 'VIDEO') {
+    <app-feed-video-card [post]="post" (react)="onReact($event)" />
+    } @else {
+    <app-feed-post-card [post]="post" (react)="onReact($event)" />
+    } }
+  </div>
+
+  @if (hasMore()) {
+  <div class="load-more-wrap">
+    <button
+      type="button"
+      class="load-more-button"
+      [disabled]="isLoadingMore()"
+      (click)="loadMore()"
+    >
+      @if (isLoadingMore()) { Loading… } @else { Load more }
+    </button>
+  </div>
+  } }
+</div>

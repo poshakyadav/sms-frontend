@@ -1,0 +1,43 @@
+<!-- whatsapp-inbound.html -->
+<div class="wa-inbound">
+  <div class="wa-inbound__header">
+    <h1 class="wa-inbound__title">
+      <i class="ti ti-message-circle" aria-hidden="true"></i> Inbound messages
+    </h1>
+  </div>
+
+  <div *ngIf="isLoading()" class="wa-inbound__loading">
+    <i class="ti ti-loader-2 wa-inbound__spin" aria-hidden="true"></i> Loading...
+  </div>
+
+  <div *ngIf="error() && !isLoading()" class="wa-inbound__error">
+    <i class="ti ti-alert-circle" aria-hidden="true"></i> {{ error() }}
+  </div>
+
+  <div class="wa-inbound__list" *ngIf="!isLoading() && !error()">
+    <div class="wa-inbound__item" *ngFor="let msg of wa.inboundMessages()">
+      <div class="wa-inbound__avatar"><i class="ti ti-user" aria-hidden="true"></i></div>
+      <div class="wa-inbound__body">
+        <div class="wa-inbound__top">
+          <strong>{{ msg.fromName || msg.fromPhone }}</strong>
+          <span class="wa-inbound__phone">{{ msg.fromPhone }}</span>
+          <span class="wa-inbound__time">{{ msg.createdAt | date : 'd MMM, h:mm a' }}</span>
+        </div>
+        <p class="wa-inbound__text" *ngIf="msg.textBody">{{ msg.textBody }}</p>
+        <p class="wa-inbound__media" *ngIf="!msg.textBody">
+          <i class="ti ti-paperclip" aria-hidden="true"></i> {{ msg.messageType }} message
+        </p>
+      </div>
+    </div>
+    <p class="wa-inbound__empty" *ngIf="wa.inboundMessages().length === 0">
+      No inbound messages yet.
+    </p>
+  </div>
+
+  <div class="wa-inbound__pagination" *ngIf="!isLoading() && !error()">
+    <button type="button" (click)="prevPage()" [disabled]="offset() === 0">Previous</button>
+    <button type="button" (click)="nextPage()" [disabled]="wa.inboundMessages().length < pageSize">
+      Next
+    </button>
+  </div>
+</div>

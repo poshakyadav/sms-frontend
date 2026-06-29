@@ -1,201 +1,230 @@
+// features/super/invitations/invitations.scss
+//
+// All colours reference the app-wide --color-* design tokens from styles.scss.
+// No custom --st-* variables needed — this keeps the component consistent with
+// the rest of the app and fully dark-mode aware.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Page root ─────────────────────────────────────────────────────────────────
 .inv-root {
   padding: 2rem 2.5rem;
   max-width: 1280px;
   margin: 0 auto;
-  animation: fadeIn 0.25s ease;
-  background: transparent;
+  animation: inv-fade-in 0.2s ease;
+
+  @media (max-width: 640px) {
+    padding: 1.25rem 1rem;
+  }
 }
 
+// ── Page header ───────────────────────────────────────────────────────────────
 .inv-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 1rem;
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
-  gap: 1rem;
 
   &__left {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.875rem;
   }
 
   &__icon {
+    flex-shrink: 0;
     width: 44px;
     height: 44px;
     border-radius: 12px;
-    background: var(--st-primary-bg);
-    color: var(--st-primary);
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    color: var(--color-primary);
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
   }
+
   &__title {
+    margin: 0;
     font-size: 1.5rem;
     font-weight: 800;
-    color: var(--st-text-primary);
-    margin: 0;
+    color: var(--color-text-primary);
     letter-spacing: -0.02em;
+
+    @media (max-width: 640px) {
+      font-size: 1.25rem;
+    }
   }
+
   &__sub {
     margin: 0.2rem 0 0;
     font-size: 0.875rem;
-    color: var(--st-text-secondary);
+    color: var(--color-text-secondary);
   }
 }
 
+// ── Stats row ─────────────────────────────────────────────────────────────────
 .inv-stats {
   display: flex;
-  gap: 0.75rem;
-  margin-bottom: 1.25rem;
+  gap: 0.625rem;
+  margin-bottom: 1.125rem;
   flex-wrap: wrap;
 }
 
 .stat-pill {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
-  background: var(--st-bg-hover);
+  padding: 5px 14px;
   border-radius: 99px;
-  border: 1px solid var(--st-border);
+  border: 1px solid var(--color-border);
+  background: var(--color-hover);
 
   &__val {
     font-size: 1rem;
     font-weight: 800;
-    color: var(--st-text-primary);
+    color: var(--color-text-primary);
   }
+
   &__label {
-    font-size: 0.78rem;
-    color: var(--st-text-secondary);
+    font-size: 0.775rem;
     font-weight: 500;
+    color: var(--color-text-secondary);
   }
 
   &--amber {
-    background: var(--st-amber-bg);
-    border-color: var(--st-amber-border);
-    .stat-pill__val {
-      color: var(--st-amber-text);
-    }
+    background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+    border-color: color-mix(in srgb, var(--color-warning) 25%, transparent);
+    .stat-pill__val,
     .stat-pill__label {
-      color: var(--st-amber-text);
-      opacity: 0.8;
+      color: color-mix(in srgb, var(--color-warning) 70%, #000);
     }
   }
+
   &--green {
-    background: var(--st-green-bg);
-    border-color: var(--st-green-border);
-    .stat-pill__val {
-      color: var(--st-green-text);
-    }
+    background: color-mix(in srgb, var(--color-success) 10%, transparent);
+    border-color: color-mix(in srgb, var(--color-success) 25%, transparent);
+    .stat-pill__val,
     .stat-pill__label {
-      color: var(--st-green-text);
-      opacity: 0.8;
+      color: color-mix(in srgb, var(--color-success) 70%, #000);
     }
   }
 }
 
+// ── Filter tab bar ────────────────────────────────────────────────────────────
 .inv-tabs {
   display: flex;
-  gap: 4px;
+  gap: 2px;
   margin-bottom: 1.25rem;
   flex-wrap: wrap;
-  border-bottom: 1px solid var(--st-border);
+  border-bottom: 1px solid var(--color-border);
   padding-bottom: 0;
 }
 
 .inv-tab {
   padding: 0.5rem 1rem;
   border: none;
-  background: none;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--st-text-secondary);
-  cursor: pointer;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
-  transition: all 0.15s;
+  background: none;
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
   border-radius: 4px 4px 0 0;
   font-family: inherit;
+  white-space: nowrap;
 
   &:hover {
-    color: var(--st-text-primary);
-    background: var(--st-bg-subtle);
+    color: var(--color-text-primary);
+    background: var(--color-hover);
   }
+
   &--active {
-    color: var(--st-primary);
-    border-bottom-color: var(--st-primary);
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
     font-weight: 600;
   }
 }
 
-.inv-loading,
-.inv-error,
-.inv-empty {
+// ── Shared state panels (loading / error / empty) ──────────────────────────────
+.inv-state-panel {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 1rem;
-  padding: 5rem;
-  color: var(--st-text-muted);
+  padding: 5rem 2rem;
+  color: var(--color-text-muted);
+
   p {
     margin: 0;
     font-size: 0.9rem;
     text-align: center;
   }
+
   svg {
-    color: var(--st-border-strong);
+    color: color-mix(in srgb, var(--color-text-muted) 50%, transparent);
+  }
+
+  &--error svg {
+    color: color-mix(in srgb, var(--color-error) 60%, transparent);
   }
 }
 
+// Loading spinner
 .inv-spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid var(--st-border);
-  border-top-color: var(--st-primary);
+  width: 34px;
+  height: 34px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary);
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: inv-spin 0.75s linear infinite;
 }
 
-// Table
+// ── Table ─────────────────────────────────────────────────────────────────────
 .inv-table-wrap {
-  background: var(--st-bg-surface);
-  border: 1px solid var(--st-border);
-  border-radius: var(--st-radius-md);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   overflow: hidden;
   overflow-x: auto;
+  box-shadow: var(--shadow-sm);
 }
 
 .inv-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 800px;
+  min-width: 820px;
 
   thead tr {
-    background: var(--st-bg-subtle);
-    border-bottom: 1px solid var(--st-border);
+    background: var(--color-hover);
+    border-bottom: 1px solid var(--color-border);
   }
 
   th {
     padding: 0.75rem 1rem;
     text-align: left;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--st-text-muted);
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+    white-space: nowrap;
   }
 
   &__row {
-    border-bottom: 1px solid var(--st-border);
+    border-bottom: 1px solid var(--color-divider);
     transition: background 0.1s;
+
     &:last-child {
       border-bottom: none;
     }
     &:hover {
-      background: var(--st-bg-subtle);
+      background: var(--color-hover);
     }
+
     td {
       padding: 0.875rem 1rem;
       vertical-align: middle;
@@ -203,166 +232,226 @@
   }
 }
 
+// School name cell
 .inv-school-cell {
   display: flex;
   align-items: center;
   gap: 10px;
 
   &__avatar {
+    flex-shrink: 0;
     width: 36px;
     height: 36px;
     border-radius: 10px;
-    background: linear-gradient(135deg, var(--st-primary), var(--st-purple));
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
     color: #fff;
-    font-size: 0.9rem;
+    font-size: 0.875rem;
     font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
   }
+
   &__name {
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     font-weight: 600;
-    color: var(--st-text-primary);
+    color: var(--color-text-primary);
   }
+
   &__city {
-    font-size: 0.78rem;
-    color: var(--st-text-muted);
+    font-size: 0.775rem;
+    color: var(--color-text-muted);
     margin-top: 1px;
   }
 }
 
+// Contact cell
 .inv-contact {
   &__email {
-    font-size: 0.85rem;
-    color: var(--st-text-primary);
+    font-size: 0.84rem;
+    color: var(--color-text-primary);
   }
   &__phone {
-    font-size: 0.78rem;
-    color: var(--st-text-muted);
+    font-size: 0.775rem;
+    color: var(--color-text-muted);
     margin-top: 1px;
   }
 }
 
-// Badges
+// Status badges
 .badge {
   display: inline-flex;
   align-items: center;
   padding: 3px 10px;
   border-radius: 99px;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
   white-space: nowrap;
 
   &--amber {
-    background: var(--st-amber-bg);
-    color: var(--st-amber-text);
-    border: 1px solid var(--st-amber-border);
+    background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+    color: color-mix(in srgb, var(--color-warning) 70%, #000);
+    border: 1px solid color-mix(in srgb, var(--color-warning) 28%, transparent);
   }
   &--blue {
-    background: var(--st-blue-bg);
-    color: var(--st-blue-text);
-    border: 1px solid var(--st-blue-border);
+    background: color-mix(in srgb, var(--color-info) 12%, transparent);
+    color: var(--color-info);
+    border: 1px solid color-mix(in srgb, var(--color-info) 28%, transparent);
   }
   &--purple {
-    background: var(--st-purple-bg);
-    color: var(--st-purple-text);
-    border: 1px solid var(--st-purple-border);
+    background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
+    color: var(--color-secondary);
+    border: 1px solid color-mix(in srgb, var(--color-secondary) 28%, transparent);
   }
   &--green {
-    background: var(--st-green-bg);
-    color: var(--st-green-text);
-    border: 1px solid var(--st-green-border);
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    color: color-mix(in srgb, var(--color-success) 70%, #000);
+    border: 1px solid color-mix(in srgb, var(--color-success) 28%, transparent);
   }
   &--gray {
-    background: var(--st-bg-hover);
-    color: var(--st-text-secondary);
-    border: 1px solid var(--st-border);
+    background: var(--color-hover);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
   }
   &--red {
-    background: var(--st-red-bg);
-    color: var(--st-red-text);
-    border: 1px solid var(--st-red-border);
+    background: color-mix(in srgb, var(--color-error) 12%, transparent);
+    color: var(--color-error);
+    border: 1px solid color-mix(in srgb, var(--color-error) 28%, transparent);
   }
 }
 
+// Inviter + expiry
 .inv-inviter {
-  font-size: 0.85rem;
-  color: var(--st-text-secondary);
+  font-size: 0.84rem;
+  color: var(--color-text-secondary);
 }
 
 .inv-expiry {
-  font-size: 0.82rem;
-  color: var(--st-text-secondary);
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+
   &--expired {
-    color: var(--st-text-muted);
+    color: var(--color-text-muted);
   }
+
   &__tag {
-    font-size: 0.68rem;
-    background: var(--st-red-bg);
-    color: var(--st-red-text);
+    font-size: 0.67rem;
+    font-weight: 600;
     padding: 1px 6px;
     border-radius: 99px;
-    font-weight: 600;
+    background: color-mix(in srgb, var(--color-error) 10%, transparent);
+    color: var(--color-error);
   }
 }
 
+// Row action buttons
 .inv-actions {
   display: flex;
-  gap: 6px;
+  gap: 5px;
   align-items: center;
 }
 
 .action-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   padding: 4px 10px;
   border: 1px solid;
   border-radius: 6px;
-  font-size: 0.78rem;
+  font-size: 0.77rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s;
   font-family: inherit;
+  transition: filter 0.15s, opacity 0.15s;
+  white-space: nowrap;
 
   &--resend {
-    background: var(--st-blue-bg);
-    border-color: var(--st-blue-border);
-    color: var(--st-blue-text);
+    background: color-mix(in srgb, var(--color-info) 10%, transparent);
+    border-color: color-mix(in srgb, var(--color-info) 28%, transparent);
+    color: var(--color-info);
     &:hover:not(:disabled) {
-      filter: brightness(0.95);
+      filter: brightness(0.92);
     }
   }
+
   &--cancel {
-    background: var(--st-red-bg);
-    border-color: var(--st-red-border);
-    color: var(--st-red-text);
+    background: color-mix(in srgb, var(--color-error) 10%, transparent);
+    border-color: color-mix(in srgb, var(--color-error) 28%, transparent);
+    color: var(--color-error);
     &:hover:not(:disabled) {
-      filter: brightness(0.95);
+      filter: brightness(0.92);
     }
   }
+
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.45;
     cursor: not-allowed;
   }
 }
 
 .mini-spinner {
-  width: 12px;
-  height: 12px;
+  width: 11px;
+  height: 11px;
   border: 2px solid currentColor;
   border-top-color: transparent;
   border-radius: 50%;
-  animation: spin 0.7s linear infinite;
+  animation: inv-spin 0.65s linear infinite;
   opacity: 0.7;
 }
 
-// Modal
+// ── Shared button atoms ───────────────────────────────────────────────────────
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0.6rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s, background 0.15s;
+  white-space: nowrap;
+
+  &--primary {
+    background: var(--color-primary);
+    color: #fff;
+    &:hover:not(:disabled) {
+      opacity: 0.88;
+    }
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+  }
+
+  &--ghost {
+    background: var(--color-hover);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border);
+    &:hover {
+      background: var(--color-border);
+    }
+  }
+}
+
+.btn-spinner {
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: inv-spin 0.65s linear infinite;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MODAL — fully responsive, constrained, scrollable body
+// ══════════════════════════════════════════════════════════════════════════════
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -371,190 +460,234 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 1rem;
-  animation: fadeIn 0.15s ease;
+  padding: 5rem 1rem 1rem; // ← top padding bumped to 5rem to clear the app navbar
+  animation: inv-fade-in 0.15s ease;
+
+  @media (max-height: 600px) {
+    align-items: flex-start;
+    padding-top: 5rem;
+  }
 }
 
 .modal {
-  background: var(--st-bg-surface);
-  border-radius: var(--st-radius-lg);
+  // ── Size constraints ───────────────────────────────────────────────────────
   width: 100%;
   max-width: 520px;
-  box-shadow: var(--st-shadow-md);
-  overflow: hidden;
-  animation: slideUp 0.2s ease;
 
+  // Key fix: modal can never exceed the overlay minus padding.
+  // The 2rem = 1rem top + 1rem bottom from overlay padding.
+  max-height: calc(100dvh - 6rem);
+
+  // ── Layout: header (fixed) + body (scrollable) + footer (fixed) ───────────
+  display: flex;
+  flex-direction: column;
+
+  // ── Appearance ────────────────────────────────────────────────────────────
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden; // clip border-radius cleanly
+  animation: inv-slide-up 0.2s ease;
+
+  // ── Header ─────────────────────────────────────────────────────────────────
   &__header {
+    flex-shrink: 0; // never compress header
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid var(--st-border);
+    gap: 0.75rem;
+    padding: 1.125rem 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+    background: color-mix(in srgb, var(--color-bg-surface) 60%, var(--color-bg-card));
   }
-  &__title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--st-text-primary);
-    margin: 0;
-  }
-  &__close {
-    width: 32px;
-    height: 32px;
-    border: none;
-    background: var(--st-bg-hover);
-    border-radius: 8px;
-    cursor: pointer;
-    color: var(--st-text-secondary);
+
+  &__header-icon {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    color: var(--color-primary);
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.15s;
-    &:hover {
-      background: var(--st-border);
-    }
-  }
-  &__body {
-    padding: 1.5rem;
   }
 
-  &__info {
+  &__title {
+    flex: 1;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+
+  &__close {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    border-radius: 7px;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s;
+    font-family: inherit;
+
+    &:hover {
+      background: var(--color-hover);
+      color: var(--color-text-primary);
+    }
+  }
+
+  // ── Scrollable body ─────────────────────────────────────────────────────────
+  // This is the only flex-growing part — it scrolls when the viewport is short.
+  &__body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.375rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0; // fields carry their own margin-bottom
+
+    // Thin custom scrollbar
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: var(--color-border);
+      border-radius: 2px;
+    }
+  }
+
+  // Info banner at bottom of body
+  &__info-banner {
     display: flex;
     gap: 8px;
     align-items: flex-start;
-    background: var(--st-blue-bg);
-    border: 1px solid var(--st-blue-border);
+    background: color-mix(in srgb, var(--color-info) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-info) 22%, transparent);
     border-radius: 8px;
-    padding: 0.75rem 1rem;
-    font-size: 0.82rem;
-    color: var(--st-blue-text);
+    padding: 0.7rem 0.875rem;
+    font-size: 0.81rem;
+    color: color-mix(in srgb, var(--color-info) 70%, var(--color-text-primary));
     line-height: 1.5;
     margin-top: 0.5rem;
+
     svg {
-      flex-shrink: 0;
-      margin-top: 1px;
+      color: var(--color-info);
     }
   }
 
-  &__actions {
+  // ── Footer (sticky) ─────────────────────────────────────────────────────────
+  &__footer {
+    flex-shrink: 0; // never compress footer
     display: flex;
     justify-content: flex-end;
     gap: 0.75rem;
-    margin-top: 1.25rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--st-border);
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--color-border);
+    background: color-mix(in srgb, var(--color-bg-surface) 60%, var(--color-bg-card));
+  }
+}
+
+// ── Form fields ───────────────────────────────────────────────────────────────
+.field {
+  margin-bottom: 1rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &__label {
+    display: block;
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.575rem 0.875rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    font-size: 0.88rem;
+    color: var(--color-text-primary);
+    background: var(--color-bg-surface);
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s;
+
+    &::placeholder {
+      color: var(--color-text-muted);
+    }
+
+    &:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 14%, transparent);
+    }
+
+    &--textarea {
+      resize: vertical;
+      min-height: 70px;
+    }
+
+    &--number {
+      // Hide native arrows — cleaner look
+      &::-webkit-inner-spin-button,
+      &::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      -moz-appearance: textfield;
+    }
+  }
+
+  &__error {
+    display: block;
+    font-size: 0.76rem;
+    color: var(--color-error);
+    margin-top: 4px;
+  }
+
+  &__hint {
+    display: block;
+    font-size: 0.76rem;
+    color: var(--color-text-muted);
+    margin-top: 4px;
+    line-height: 1.4;
   }
 }
 
 .field-row-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.field {
+  gap: 0.875rem;
   margin-bottom: 1rem;
 
-  &__label {
-    display: block;
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: var(--st-text-primary);
-    margin-bottom: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+  @media (max-width: 400px) {
+    grid-template-columns: 1fr;
   }
-  &__input {
-    width: 100%;
-    padding: 0.6rem 0.875rem;
-    border: 1px solid var(--st-border);
-    border-radius: 8px;
-    font-size: 0.9rem;
-    color: var(--st-text-primary);
-    background: var(--st-bg-subtle);
-    outline: none;
-    transition: border-color 0.15s;
-    box-sizing: border-box;
-    font-family: inherit;
-    &::placeholder {
-      color: var(--st-text-muted);
-    }
-    &:focus {
-      border-color: var(--st-primary);
-      background: var(--st-bg-surface);
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
-    }
-    &--textarea {
-      resize: vertical;
-      min-height: 60px;
-    }
-  }
-  &__error {
-    display: block;
-    font-size: 0.78rem;
-    color: var(--st-red);
-    margin-top: 4px;
-  }
-  &__hint {
-    display: block;
-    font-size: 0.775rem;
-    color: var(--st-text-muted);
-    margin-top: 4px;
+
+  .field {
+    margin-bottom: 0;
   }
 }
 
 .req {
-  color: var(--st-red);
+  color: var(--color-error);
 }
 
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0.6rem 1.25rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-  font-family: inherit;
-
-  &--primary {
-    background: var(--st-primary);
-    color: #fff;
-    &:hover:not(:disabled) {
-      opacity: 0.88;
-    }
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  }
-  &--ghost {
-    background: var(--st-bg-hover);
-    color: var(--st-text-primary);
-    border: 1px solid var(--st-border);
-    &:hover {
-      background: var(--st-border);
-    }
-  }
-}
-
-.btn-spinner {
-  width: 14px;
-  height: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-@keyframes fadeIn {
+// ── Animations ────────────────────────────────────────────────────────────────
+@keyframes inv-fade-in {
   from {
     opacity: 0;
   }
@@ -562,10 +695,11 @@
     opacity: 1;
   }
 }
-@keyframes slideUp {
+
+@keyframes inv-slide-up {
   from {
     opacity: 0;
-    transform: translateY(20px) scale(0.98);
+    transform: translateY(18px) scale(0.98);
   }
   to {
     opacity: 1;
@@ -573,14 +707,8 @@
   }
 }
 
-@media (max-width: 640px) {
-  .inv-root {
-    padding: 1.25rem;
-  }
-  .inv-header__title {
-    font-size: 1.25rem;
-  }
-  .field-row-2 {
-    grid-template-columns: 1fr;
+@keyframes inv-spin {
+  to {
+    transform: rotate(360deg);
   }
 }

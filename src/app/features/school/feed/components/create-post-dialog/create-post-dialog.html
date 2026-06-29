@@ -1,0 +1,83 @@
+<!-- features/school/feed/components/create-post-dialog/create-post-dialog.html -->
+
+<div class="dialog-overlay" (click)="close()">
+  <div class="dialog-panel" (click)="$event.stopPropagation()">
+    <header class="dialog-header">
+      <h2>{{ isEditMode() ? 'Edit Post' : 'New Post' }}</h2>
+      <button type="button" class="close-button" (click)="close()">✕</button>
+    </header>
+
+    <div class="dialog-body">
+      @if (errorMessage()) {
+      <div class="alert alert-error">{{ errorMessage() }}</div>
+      }
+
+      <div class="form-field">
+        <label for="post-text">What's happening?</label>
+        <textarea
+          id="post-text"
+          rows="5"
+          placeholder="Share an announcement, update, or news with the school…"
+          [ngModel]="postText()"
+          (ngModelChange)="postText.set($event)"
+        ></textarea>
+        <div class="char-counter" [class.is-over]="isOverLimit()">
+          {{ charsRemaining() }} characters remaining
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label>Image (optional)</label>
+
+        @if (displayImageUrl()) {
+        <div class="image-preview">
+          <img [src]="displayImageUrl()" alt="Preview" />
+          <button type="button" class="remove-image-button" (click)="removeImage()">
+            Remove image
+          </button>
+        </div>
+        } @else {
+        <label class="file-upload-zone">
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            (change)="onFileSelected($event)"
+            hidden
+          />
+          <span>📷 Click to choose an image</span>
+          <span class="file-upload-hint"
+            >JPEG, PNG, or WebP — will be compressed automatically</span
+          >
+        </label>
+        } @if (isUploadingImage()) {
+        <div class="field-hint">Compressing and uploading image…</div>
+        }
+      </div>
+
+      <app-feed-target-selector
+        [initialValue]="targetValue()"
+        (valueChange)="onTargetChange($event)"
+      />
+
+      <div class="form-field checkbox-field">
+        <label>
+          <input
+            type="checkbox"
+            [ngModel]="isPublished()"
+            (ngModelChange)="isPublished.set($event)"
+          />
+          Publish immediately (uncheck to save as draft)
+        </label>
+      </div>
+    </div>
+
+    <footer class="dialog-footer">
+      <button type="button" class="btn btn-secondary" (click)="close()">Cancel</button>
+      <button type="button" class="btn btn-primary" [disabled]="!canSubmit()" (click)="submit()">
+        @if (isSubmitting()) { Saving… } @else {
+        {{ isEditMode() ? 'Save Changes' : 'Publish Post' }}
+        }
+      </button>
+    </footer>
+  </div>
+</div>

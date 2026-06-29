@@ -1,0 +1,160 @@
+// src/app/features/school/id-cards/id-card-management/id-card-management.component.scss
+
+.id-card-mgmt {
+  padding: 24px;
+}
+
+.id-card-mgmt__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+
+  h1 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+  }
+}
+
+.id-card-mgmt__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.id-card-mgmt__filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+
+  select {
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid #d8dae0;
+    font-size: 13px;
+  }
+}
+
+.id-card-mgmt__table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+
+  th,
+  td {
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 13px;
+    border-bottom: 1px solid #eef0f4;
+  }
+
+  th {
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    background: #fafbfc;
+  }
+}
+
+.id-card-mgmt__thumb {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.id-card-mgmt__row-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #4f46e5;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+
+  &:disabled {
+    color: #b3b6c2;
+    cursor: not-allowed;
+  }
+}
+
+.status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+
+  &--active {
+    background: #e7f6ec;
+    color: #16a34a;
+  }
+  &--revoked {
+    background: #fde8e8;
+    color: #dc2626;
+  }
+  &--expired {
+    background: #fef3e0;
+    color: #b45309;
+  }
+  &--reissued {
+    background: #eef0f4;
+    color: #6b7280;
+  }
+}
+
+.id-card-mgmt__empty,
+.id-card-mgmt__loading {
+  text-align: center;
+  color: #9aa1b1;
+  padding: 40px 0;
+  font-size: 13.5px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+
+  &--primary {
+    background: #4f46e5;
+    color: #fff;
+  }
+  &--secondary {
+    background: #eef0f4;
+    color: #1f2430;
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// ── Off-screen print staging ─────────────────────────────────────────────────
+// CRITICAL: must NOT use display:none — html2canvas cannot rasterize an
+// element that isn't actually laid out/painted by the browser. Positioning
+// far off-canvas (rather than visibility:hidden, which also skips layout in
+// some browsers) is the reliable approach: the element is fully rendered
+// and painted, just outside the visible viewport, so html2canvas captures
+// it correctly while the user never sees it flash on screen.
+.id-card-mgmt__print-staging {
+  position: fixed;
+  top: 0;
+  left: -10000px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}

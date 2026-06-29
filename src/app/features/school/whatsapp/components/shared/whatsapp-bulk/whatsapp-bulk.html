@@ -1,0 +1,75 @@
+<!-- whatsapp-bulk.html -->
+<div class="wa-bulk">
+  <div class="wa-bulk__header">
+    <div>
+      <h1 class="wa-bulk__title">
+        <i class="ti ti-speakerphone" aria-hidden="true"></i>
+        Bulk send
+      </h1>
+      <a routerLink="/school/whatsapp" class="wa-bulk__cancel">Cancel</a>
+    </div>
+    <app-credit-balance-chip [creditsRemaining]="wa.creditsRemaining()" />
+  </div>
+
+  <app-no-credits-banner *ngIf="!wa.hasCredits()" />
+
+  <div class="wa-bulk__steps">
+    <div
+      *ngFor="let s of steps; let i = index"
+      class="wa-step"
+      [class.wa-step--active]="step() === s.key"
+      [class.wa-step--done]="stepIndex(step()) > i"
+    >
+      <span class="wa-step__num">{{ i + 1 }}</span>
+      <span class="wa-step__label">{{ s.label }}</span>
+    </div>
+  </div>
+
+  <!-- Step 1: Template -->
+  <section class="wa-bulk__panel" *ngIf="step() === 'template'">
+    <app-template-picker
+      [items]="templateItems()"
+      [selectedKey]="selectedTemplate()?.key ?? null"
+      (templateSelected)="onTemplateSelected($event)"
+    />
+  </section>
+
+  <!-- Step 2: Audience -->
+  <section class="wa-bulk__panel" *ngIf="step() === 'audience'">
+    <app-target-selector
+      [value]="targetSelection()"
+      (selectionChange)="onTargetSelectionChange($event)"
+      (validChange)="onTargetValidChange($event)"
+    />
+    <div class="wa-bulk__actions">
+      <button class="wa-btn wa-btn--secondary" type="button" (click)="backTo('template')">
+        <i class="ti ti-arrow-left" aria-hidden="true"></i> Back
+      </button>
+      <button
+        class="wa-btn wa-btn--primary"
+        type="button"
+        [disabled]="!targetValid()"
+        (click)="proceedToConfirm()"
+      >
+        Review & confirm <i class="ti ti-arrow-right" aria-hidden="true"></i>
+      </button>
+    </div>
+  </section>
+
+  <!-- Step 3: Confirm -->
+  <section class="wa-bulk__panel" *ngIf="step() === 'confirm' && selectedTemplate()">
+    <app-bulk-confirm
+      [template]="selectedTemplate()!"
+      [targetSelection]="targetSelection()"
+      [title]="bulkTitle()"
+      (initiated)="onBulkInitiated($event)"
+      (started)="onSendStarted()"
+      (back)="backTo('audience')"
+    />
+  </section>
+
+  <!-- Step 4: Progress -->
+  <section class="wa-bulk__panel" *ngIf="step() === 'progress' && bulkSendId()">
+    <app-bulk-progress [bulkSendId]="bulkSendId()!" (completed)="onProgressCompleted($event)" />
+  </section>
+</div>

@@ -1,401 +1,129 @@
-<!-- features/school/school-payment/school-payment/school-payment.html -->
+<!-- school-payment.html -->
+<div class="sp-shell">
 
-<div class="sp-root">
-  <!-- Ambient background -->
-  <div class="sp-bg" aria-hidden="true">
-    <div class="sp-bg__grid"></div>
-    <div class="sp-bg__orb sp-bg__orb--a"></div>
-    <div class="sp-bg__orb sp-bg__orb--b"></div>
+  <!-- Header -->
+  <header class="sp-header">
+    <div class="sp-header-logo">
+      <div class="sp-logo-mark"><mat-icon>school</mat-icon></div>
+      <span class="sp-logo-name">SMS</span>
+    </div>
+    <a routerLink="/school/login" class="sp-header-link">Already activated? Login</a>
+  </header>
+
+  <!-- Loading -->
+  @if (pageState() === 'loading') {
+  <div class="sp-center">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p class="sp-loading-text">Loading payment details…</p>
   </div>
+  }
 
-  <div class="sp-page">
-    <!-- ── LOADING ──────────────────────────────────────────────────────────── -->
-    <div class="sp-state sp-state--loading" [class.sp-state--hidden]="!loading()">
-      <div class="sp-ring"></div>
-      <p class="sp-state__text">Fetching your payment details…</p>
+  <!-- Error -->
+  @if (pageState() === 'error') {
+  <div class="sp-center">
+    <div class="sp-error-icon"><mat-icon>error_outline</mat-icon></div>
+    <h2 class="sp-error-title">Something went wrong</h2>
+    <p class="sp-error-desc">{{ errorMessage() }}</p>
+    <a routerLink="/public/register" mat-flat-button class="sp-btn-primary">
+      Request New Invitation
+    </a>
+  </div>
+  }
+
+  <!-- Ready -->
+  @if (pageState() === 'ready') {
+  <div class="sp-main">
+    <div class="sp-intro">
+      <div class="sp-step-badge">Resume Payment</div>
+      <h1 class="sp-title">Complete your school activation</h1>
+      <p class="sp-subtitle">
+        Your account details are saved. Just complete the one-time setup payment to activate your school.
+      </p>
     </div>
 
-    <!-- ── ERROR ─────────────────────────────────────────────────────────────── -->
-    <div class="sp-state sp-state--error" [class.sp-state--hidden]="loading() || !error()">
-      <div class="sp-state__icon">⚠️</div>
-      <h2 class="sp-state__title">Something went wrong</h2>
-      <p class="sp-state__body">{{ error() }}</p>
-    </div>
-
-    <!-- ── MAIN ───────────────────────────────────────────────────────────────── -->
-    <!--
-      FIX (NG0502): replaced top-level @if blocks with [hidden] / CSS-based
-      show/hide so the DOM structure is stable between SSR and client renders.
-      Angular hydration requires the element count inside a parent to match
-      exactly — conditional @if at the top level of sp-page was causing a
-      mismatch when Angular rehydrated on the client.
-    -->
-    <div class="sp-content" [class.sp-content--hidden]="loading() || !!error() || !paymentStatus()">
-      <!-- ── School Header ───────────────────────────────────────────────── -->
-      <header class="sp-school-header">
-        <div class="sp-school-header__avatar">{{ schoolInitial }}</div>
-        <div class="sp-school-header__info">
-          <h1 class="sp-school-header__name">{{ paymentStatus()?.school?.name }}</h1>
-          <div class="sp-school-header__meta">
-            <span class="sp-tag"> <span aria-hidden="true">🏫</span> {{ schoolCode }} </span>
-            <span
-              class="sp-pill"
-              [class.sp-pill--registered]="onboardingStatus() === 'REGISTERED'"
-              [class.sp-pill--pending]="isPaymentPending()"
-              [class.sp-pill--rejected]="isPaymentRejected()"
-            >
-              <ng-container [ngSwitch]="true">
-                <ng-container *ngSwitchCase="onboardingStatus() === 'REGISTERED'"
-                  >✦ Registered</ng-container
-                >
-                <ng-container *ngSwitchCase="isPaymentPending()"
-                  >⏳ Awaiting Verification</ng-container
-                >
-                <ng-container *ngSwitchCase="isPaymentRejected()">✕ Payment Rejected</ng-container>
-              </ng-container>
-            </span>
+    <div class="sp-card">
+      <!-- Registration summary -->
+      @if (registrationDetails()) {
+      <div class="sp-details-section">
+        <h3 class="sp-section-title"><mat-icon>domain</mat-icon> Your Registration</h3>
+        <div class="sp-details-grid">
+          @if (registrationDetails()?.schoolName) {
+          <div class="sp-detail-row">
+            <span class="sp-detail-key">School</span>
+            <span class="sp-detail-val">{{ registrationDetails()!.schoolName }}</span>
           </div>
+          }
+          @if (registrationDetails()?.ownerName) {
+          <div class="sp-detail-row">
+            <span class="sp-detail-key">Owner</span>
+            <span class="sp-detail-val">{{ registrationDetails()!.ownerName }}</span>
+          </div>
+          }
+          @if (registrationDetails()?.ownerEmail) {
+          <div class="sp-detail-row">
+            <span class="sp-detail-key">Email</span>
+            <span class="sp-detail-val">{{ registrationDetails()!.ownerEmail }}</span>
+          </div>
+          }
         </div>
-      </header>
+        <div class="sp-code-inline">
+          School Code: <strong>{{ schoolCode() }}</strong>
+        </div>
+      </div>
+      <div class="sp-divider"></div>
+      }
 
-      <!-- ── Registration Details Accordion ─────────────────────────────── -->
-      <!--
-        Show accordion whenever the school has registered (REGISTERED or PAYMENT_SUBMITTED).
-        We use [hidden] instead of @if to keep the DOM node stable for hydration.
-      -->
-      <div
-        class="sp-accordion"
-        [class.sp-accordion--open]="showDetailsPanel()"
-        [hidden]="onboardingStatus() !== 'REGISTERED' && onboardingStatus() !== 'PAYMENT_SUBMITTED'"
-      >
-        <!-- Trigger row -->
-        <button class="sp-accordion__trigger" type="button" (click)="toggleDetailsPanel()">
-          <div class="sp-accordion__trigger-left">
-            <span class="sp-accordion__trigger-icon" aria-hidden="true">👤</span>
-            <div>
-              <span class="sp-accordion__trigger-title">Registration Details</span>
-              <span class="sp-accordion__trigger-sub">
-                <ng-container *ngIf="registeredDetails(); else detailsPlaceholder">
-                  {{ registeredDetails()!.ownerName }} · {{ registeredDetails()!.ownerEmail }}
-                </ng-container>
-                <ng-template #detailsPlaceholder>View your submitted information</ng-template>
-              </span>
-            </div>
+      <!-- Payment details -->
+      <div class="sp-payment-section">
+        <h3 class="sp-section-title"><mat-icon>payments</mat-icon> Setup Fee</h3>
+
+        @if (paymentConfig()?.feeDescription) {
+        <p class="sp-fee-desc">{{ paymentConfig()!.feeDescription }}</p>
+        }
+
+        <div class="sp-amount-display">
+          <span class="sp-amount-label">Total Amount</span>
+          <span class="sp-amount-value">{{ formattedFee() }}</span>
+        </div>
+
+        <div class="sp-payment-points">
+          @for (point of ['UPI, Cards, Net Banking all accepted','Secured by Razorpay','Instant confirmation','Account activated within 24 hours']; track point) {
+          <div class="sp-point">
+            <mat-icon>check_circle</mat-icon>
+            <span>{{ point }}</span>
           </div>
-          <div class="sp-accordion__trigger-right">
-            <button
-              class="sp-edit-btn"
-              type="button"
-              *ngIf="canEditRegistration()"
-              (click)="$event.stopPropagation(); editRegistration()"
-              title="Edit your registration details"
-            >
-              <span aria-hidden="true">✏️</span>
-              <span class="sp-edit-btn__text">Edit</span>
-            </button>
-            <span
-              class="sp-accordion__chevron"
-              [class.sp-accordion__chevron--open]="showDetailsPanel()"
-              aria-hidden="true"
-              >›</span
-            >
-          </div>
+          }
+        </div>
+
+        @if (paymentError()) {
+        <div class="sp-alert-error">
+          <mat-icon>error_outline</mat-icon>
+          <span>{{ paymentError() }}</span>
+        </div>
+        }
+
+        <button mat-flat-button class="sp-btn-pay" (click)="initiatePayment()"
+                [disabled]="paymentLoading()">
+          @if (paymentLoading()) {
+            <mat-spinner diameter="20"></mat-spinner>
+            Processing…
+          } @else {
+            <mat-icon>lock</mat-icon>
+            Pay {{ formattedFee() }} & Activate
+          }
         </button>
 
-        <!-- Panel body — always rendered, shown/hidden via CSS height transition -->
-        <div class="sp-accordion__body" [hidden]="!showDetailsPanel()">
-          <!-- Loading dots -->
-          <div class="sp-dots-loader" *ngIf="loadingDetails()">
-            <span></span><span></span><span></span>
-          </div>
-
-          <!-- Details grid — shown when loaded -->
-          <div class="sp-details-grid" *ngIf="!loadingDetails() && registeredDetails()">
-            <!-- ── Owner section ──────────────────────────────────────────── -->
-            <div class="sp-details-section">
-              <span class="sp-details-badge sp-details-badge--owner">Owner</span>
-              <dl class="sp-details-list">
-                <div class="sp-details-row" *ngIf="registeredDetails()!.ownerName">
-                  <dt>Full Name</dt>
-                  <dd>{{ registeredDetails()!.ownerName }}</dd>
-                </div>
-                <div class="sp-details-row" *ngIf="registeredDetails()!.ownerEmail">
-                  <dt>Email</dt>
-                  <dd class="mono">{{ registeredDetails()!.ownerEmail }}</dd>
-                </div>
-                <div class="sp-details-row" *ngIf="registeredDetails()!.ownerPhone">
-                  <dt>Phone</dt>
-                  <dd>{{ registeredDetails()!.ownerPhone }}</dd>
-                </div>
-                <div class="sp-details-row" *ngIf="registeredDetails()!.ownerAlternatePhone">
-                  <dt>Alternate Phone</dt>
-                  <dd>{{ registeredDetails()!.ownerAlternatePhone }}</dd>
-                </div>
-              </dl>
-            </div>
-
-            <!-- ── School section ─────────────────────────────────────────── -->
-            <div class="sp-details-section">
-              <span class="sp-details-badge sp-details-badge--school">School</span>
-              <dl class="sp-details-list">
-                <div class="sp-details-row" *ngIf="registeredDetails()!.schoolName">
-                  <dt>Name</dt>
-                  <dd>{{ registeredDetails()!.schoolName }}</dd>
-                </div>
-                <div class="sp-details-row" *ngIf="registeredDetails()!.addressLineOne">
-                  <dt>Address</dt>
-                  <dd>
-                    {{ registeredDetails()!.addressLineOne
-                    }}<ng-container *ngIf="registeredDetails()!.addressLineTwo"
-                      >, {{ registeredDetails()!.addressLineTwo }}</ng-container
-                    >
-                  </dd>
-                </div>
-                <div class="sp-details-row" *ngIf="registeredDetails()!.phone">
-                  <dt>Phone</dt>
-                  <dd>{{ registeredDetails()!.phone }}</dd>
-                </div>
-                <div class="sp-details-row" *ngIf="registeredDetails()!.alternatePhone">
-                  <dt>Alternate Phone</dt>
-                  <dd>{{ registeredDetails()!.alternatePhone }}</dd>
-                </div>
-                <div class="sp-details-row" *ngIf="registeredDetails()!.schoolEmail">
-                  <dt>Email</dt>
-                  <dd class="mono">{{ registeredDetails()!.schoolEmail }}</dd>
-                </div>
-                <div class="sp-details-row" *ngIf="registeredDetails()!.schoolWebsite">
-                  <dt>Website</dt>
-                  <dd class="mono">{{ registeredDetails()!.schoolWebsite }}</dd>
-                </div>
-                <div class="sp-details-row" *ngIf="registeredDetails()!.registeredAt">
-                  <dt>Registered</dt>
-                  <dd>{{ registeredDetails()!.registeredAt | date : 'mediumDate' }}</dd>
-                </div>
-              </dl>
-            </div>
-          </div>
-
-          <!-- Edit CTA inside panel -->
-          <div
-            class="sp-details-edit-cta"
-            *ngIf="!loadingDetails() && registeredDetails() && canEditRegistration()"
-          >
-            <span class="sp-details-edit-cta__text">
-              Something incorrect? Edit before payment is approved.
-            </span>
-            <button
-              class="sp-btn sp-btn--primary sp-btn--sm"
-              type="button"
-              (click)="editRegistration()"
-            >
-              ✏️ Edit Registration
-            </button>
-          </div>
-
-          <!-- Empty state -->
-          <p class="sp-details-empty" *ngIf="!loadingDetails() && !registeredDetails()">
-            Details unavailable. Please contact support if this persists.
-          </p>
-        </div>
-      </div>
-
-      <!-- ── Status Cards ────────────────────────────────────────────────── -->
-
-      <!-- Payment pending -->
-      <div class="sp-status-card sp-status-card--pending" *ngIf="isPaymentPending()">
-        <div class="sp-status-card__accent"></div>
-        <div class="sp-status-card__body">
-          <div class="sp-status-card__icon">⏳</div>
-          <div class="sp-status-card__content">
-            <h3>Payment Under Verification</h3>
-            <p>Our team will review and activate your account within 24 hours.</p>
-            <div class="sp-meta-row">
-              <div class="sp-meta-item">
-                <span class="sp-meta-item__label">UTR Reference</span>
-                <span class="sp-meta-item__value mono">{{ paymentRecord()!.utrNumber }}</span>
-              </div>
-              <div class="sp-meta-item">
-                <span class="sp-meta-item__label">Submitted</span>
-                <span class="sp-meta-item__value">{{
-                  paymentRecord()!.submittedAt | date : 'medium'
-                }}</span>
-              </div>
-            </div>
-            <p class="sp-status-card__hint">
-              Made an error? You can resubmit your payment proof below.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Payment rejected -->
-      <div class="sp-status-card sp-status-card--rejected" *ngIf="isPaymentRejected()">
-        <div class="sp-status-card__accent"></div>
-        <div class="sp-status-card__body">
-          <div class="sp-status-card__icon">❌</div>
-          <div class="sp-status-card__content">
-            <h3>Payment Verification Failed</h3>
-            <p>Our team could not verify your payment. Please pay again and resubmit.</p>
-            <div class="sp-rejection-reason" *ngIf="paymentRecord()?.rejectionReason">
-              <span class="sp-rejection-reason__label">Reason</span>
-              <span class="sp-rejection-reason__text">{{ paymentRecord()!.rejectionReason }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── Payment Area ────────────────────────────────────────────────── -->
-      <div class="sp-payment-layout" *ngIf="paymentConfig()">
-        <!-- LEFT: Instructions -->
-        <div class="sp-panel sp-panel--instructions">
-          <!-- Fee display -->
-          <div class="sp-fee-display">
-            <div class="sp-fee-display__inner">
-              <span class="sp-fee-display__label">One-time Setup Fee</span>
-              <span class="sp-fee-display__amount">{{ feeFormatted() }}</span>
-              <span class="sp-fee-display__desc" *ngIf="paymentConfig()!.feeDescription">
-                {{ paymentConfig()!.feeDescription }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Steps -->
-          <div class="sp-how-to">
-            <h2 class="sp-how-to__title">How to Pay</h2>
-            <ol class="sp-how-list">
-              <li class="sp-how-list__item">
-                <span class="sp-how-list__num">01</span>
-                <span>Open any UPI app — Google Pay, PhonePe, Paytm, or BHIM</span>
-              </li>
-              <li class="sp-how-list__item">
-                <span class="sp-how-list__num">02</span>
-                <span>Scan the QR code or copy the UPI ID</span>
-              </li>
-              <li class="sp-how-list__item">
-                <span class="sp-how-list__num">03</span>
-                <span
-                  >Send exactly <strong>{{ feeFormatted() }}</strong></span
-                >
-              </li>
-              <li class="sp-how-list__item">
-                <span class="sp-how-list__num">04</span>
-                <span>Note the UTR / Transaction ID from your UPI app</span>
-              </li>
-              <li class="sp-how-list__item">
-                <span class="sp-how-list__num">05</span>
-                <span>Fill the form on the right and submit your proof</span>
-              </li>
-            </ol>
-          </div>
-
-          <!-- UPI ID chip -->
-          <div class="sp-upi-chip" *ngIf="paymentConfig()!.upiId">
-            <span class="sp-upi-chip__label">UPI ID</span>
-            <div class="sp-upi-chip__row">
-              <span class="sp-upi-chip__value mono">{{ paymentConfig()!.upiId }}</span>
-              <button class="sp-copy-btn" type="button" (click)="copyUpiId()">
-                <span aria-hidden="true">{{ copiedUpi() ? '✓' : '⎘' }}</span>
-                {{ copiedUpi() ? 'Copied!' : 'Copy' }}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- RIGHT: QR + Form -->
-        <div class="sp-panel sp-panel--form">
-          <!-- QR Code -->
-          <div class="sp-qr" *ngIf="paymentConfig()!.qrCodeUrl">
-            <div class="sp-qr__frame">
-              <img [src]="paymentConfig()!.qrCodeUrl" alt="UPI QR Code" class="sp-qr__img" />
-            </div>
-            <p class="sp-qr__caption">Scan with any UPI app</p>
-          </div>
-
-          <!-- Divider on mobile between QR and form -->
-          <div class="sp-divider" *ngIf="paymentConfig()!.qrCodeUrl" aria-hidden="true"></div>
-
-          <!-- Payment Form -->
-          <div class="sp-form-wrap">
-            <div class="sp-form-header">
-              <h3>Submit Payment Proof</h3>
-              <p>Fill in your transaction details after paying</p>
-            </div>
-
-            <form [formGroup]="paymentForm" (ngSubmit)="submitPayment()" novalidate>
-              <!-- UTR -->
-              <div class="sp-field" [class.sp-field--error]="fieldInvalid('utrNumber')">
-                <label class="sp-field__label" for="utrNumber">
-                  UTR / Transaction ID <span class="sp-req">*</span>
-                </label>
-                <input
-                  id="utrNumber"
-                  class="sp-field__input"
-                  formControlName="utrNumber"
-                  placeholder="e.g. 123456789012"
-                  autocomplete="off"
-                  type="text"
-                />
-                <span class="sp-field__hint">Find this in your UPI app → Transaction History</span>
-                <span class="sp-field__error" role="alert" *ngIf="fieldInvalid('utrNumber')">
-                  UTR number required (min. 6 chars)
-                </span>
-              </div>
-
-              <!-- Payer name -->
-              <div class="sp-field" [class.sp-field--error]="fieldInvalid('payerName')">
-                <label class="sp-field__label" for="payerName">
-                  Your Name <span class="sp-req">*</span>
-                </label>
-                <input
-                  id="payerName"
-                  class="sp-field__input"
-                  formControlName="payerName"
-                  placeholder="Name as shown in your UPI app"
-                  type="text"
-                />
-                <span class="sp-field__error" role="alert" *ngIf="fieldInvalid('payerName')">
-                  Name is required
-                </span>
-              </div>
-
-              <!-- Payer phone -->
-              <div class="sp-field">
-                <label class="sp-field__label" for="payerPhone">
-                  Your Phone <span class="sp-optional">(optional)</span>
-                </label>
-                <input
-                  id="payerPhone"
-                  class="sp-field__input"
-                  formControlName="payerPhone"
-                  placeholder="+91 98765 43210"
-                  type="tel"
-                />
-              </div>
-
-              <!-- Amount row -->
-              <div class="sp-amount-row">
-                <span class="sp-amount-row__label">Amount to Pay</span>
-                <span class="sp-amount-row__value">{{ feeFormatted() }}</span>
-                <span class="sp-amount-row__note">Exact amount required</span>
-              </div>
-
-              <!-- Submit -->
-              <button
-                type="submit"
-                class="sp-submit-btn"
-                [disabled]="submitting() || paymentForm.invalid"
-              >
-                <span class="sp-ring sp-ring--sm" *ngIf="submitting()"></span>
-                <span>{{ submitting() ? 'Submitting…' : 'Submit Payment Proof' }}</span>
-                <span class="sp-submit-btn__arrow" aria-hidden="true" *ngIf="!submitting()">→</span>
-              </button>
-            </form>
-          </div>
-        </div>
+        <p class="sp-secure-note">
+          <mat-icon>security</mat-icon>
+          Payment secured by Razorpay. We never store your card details.
+        </p>
       </div>
     </div>
-    <!-- /.sp-content -->
+
+    <p class="sp-help-text">
+      Need help? <a href="mailto:support@yourdomain.com" class="sp-link">Contact our support team</a>
+    </p>
   </div>
-  <!-- /.sp-page -->
+  }
+
 </div>
-<!-- /.sp-root -->

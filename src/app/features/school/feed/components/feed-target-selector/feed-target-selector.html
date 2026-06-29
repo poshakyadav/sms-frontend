@@ -1,0 +1,44 @@
+<!-- features/school/feed/components/feed-target-selector/feed-target-selector.html -->
+
+<div class="target-selector">
+  <div class="form-field">
+    <label for="target-audience">Who should see this?</label>
+    <select
+      id="target-audience"
+      class="form-select"
+      [ngModel]="selectedAudience()"
+      (ngModelChange)="onAudienceChange($event)"
+    >
+      @for (option of audienceOptions; track option.value) {
+      <option [value]="option.value">{{ option.label }}</option>
+      }
+    </select>
+  </div>
+
+  @if (isClassScoped()) {
+  <div class="form-field">
+    <label for="class-section">Class-Section</label>
+
+    @if (isLoadingClassSections()) {
+    <div class="field-hint">Loading class-sections…</div>
+    } @else if (loadError()) {
+    <div class="field-error">{{ loadError() }}</div>
+    } @else {
+    <select
+      id="class-section"
+      class="form-select"
+      [ngModel]="selectedClassSectionId()"
+      (ngModelChange)="onClassSectionChange($event)"
+    >
+      <option [value]="null" disabled>Select a class-section</option>
+      @for (cs of classSections(); track cs.id) {
+      <option [value]="cs.id">{{ cs.className }} - {{ cs.sectionName }}</option>
+      }
+    </select>
+
+    @if (!isValid()) {
+    <div class="field-error">Please select a class-section.</div>
+    } }
+  </div>
+  }
+</div>

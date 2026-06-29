@@ -1,260 +1,404 @@
-/* features/super/turso-dbs-component/turso-dbs-component.scss */
+// features/super/turso-dbs/turso-dbs-component.scss
+//
+// All colours use the global --color-* tokens (styles.scss :root).
+// No --st-* variables — keeps dark-mode and theming consistent.
+// ─────────────────────────────────────────────────────────────────────────────
 
-.page {
-  padding: 2.5rem;
+// ── Page root ──────────────────────────────────────────────────────────────
+.tdb-root {
+  padding: 2rem 2.5rem;
   max-width: 1280px;
   margin: 0 auto;
-  background: transparent;
-}
-.page__header {
-  margin-bottom: 1.5rem;
-}
-.page__title {
-  font-size: 1.875rem;
-  font-weight: 800;
-  color: var(--st-text-primary);
-  margin: 0;
-  letter-spacing: -0.02em;
-}
-.page__subtitle {
-  color: var(--st-text-secondary);
-  margin: 0.25rem 0 0;
-  font-size: 0.9rem;
+  animation: tdb-fade-in 0.2s ease;
+
+  @media (max-width: 640px) {
+    padding: 1.25rem 1rem;
+  }
 }
 
-.stats-row {
+// ── Header ─────────────────────────────────────────────────────────────────
+.tdb-header {
   display: flex;
-  gap: 10px;
-  margin-bottom: 1.75rem;
+  align-items: center;
+  gap: 0.875rem;
+  margin-bottom: 1.5rem;
+
+  &__icon {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+    letter-spacing: -0.02em;
+
+    @media (max-width: 640px) {
+      font-size: 1.25rem;
+    }
+  }
+
+  &__sub {
+    margin: 0.2rem 0 0;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+  }
+}
+
+// ── Stats row ───────────────────────────────────────────────────────────────
+.tdb-stats {
+  display: flex;
+  gap: 0.625rem;
+  margin-bottom: 1.5rem;
   flex-wrap: wrap;
 }
 
-.stat-chip {
+.stat-pill {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   padding: 5px 14px;
-  border-radius: 999px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  border: 1px solid var(--st-border);
+  border-radius: 99px;
+  border: 1px solid var(--color-border);
+  background: var(--color-hover);
 
-  &--total {
-    background: var(--st-bg-subtle);
-    color: var(--st-text-secondary);
+  &__val {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
   }
-  &--available {
-    background: var(--st-green-bg);
-    color: var(--st-green-text);
-    border-color: var(--st-green-border);
-    .stat-chip__dot {
-      background: var(--st-green);
-    }
+
+  &__label {
+    font-size: 0.775rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
   }
-  &--assigned {
-    background: var(--st-blue-bg);
-    color: var(--st-blue-text);
-    border-color: var(--st-blue-border);
-    .stat-chip__dot {
-      background: var(--st-blue);
-    }
-  }
+
   &__dot {
     width: 7px;
     height: 7px;
     border-radius: 50%;
     flex-shrink: 0;
   }
-}
 
-.form-card {
-  background: var(--st-bg-surface);
-  border: 1px solid var(--st-border);
-  border-radius: var(--st-radius-lg);
-  padding: 1.75rem;
-  margin-bottom: 1.5rem;
-}
-.form-card__title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--st-text-primary);
-  margin: 0 0 1.5rem;
   svg {
-    color: var(--st-primary);
+    color: var(--color-text-muted);
     flex-shrink: 0;
   }
+
+  // Green — available
+  &--green {
+    background: color-mix(in srgb, var(--color-success) 10%, transparent);
+    border-color: color-mix(in srgb, var(--color-success) 25%, transparent);
+
+    .stat-pill__val,
+    .stat-pill__label {
+      color: color-mix(in srgb, var(--color-success) 70%, #000);
+    }
+    .stat-pill__dot {
+      background: var(--color-success);
+    }
+  }
+
+  // Blue — assigned
+  &--blue {
+    background: color-mix(in srgb, var(--color-info) 10%, transparent);
+    border-color: color-mix(in srgb, var(--color-info) 25%, transparent);
+
+    .stat-pill__val,
+    .stat-pill__label {
+      color: var(--color-info);
+    }
+    .stat-pill__dot {
+      background: var(--color-info);
+    }
+  }
 }
-.db-form {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  flex-wrap: wrap;
+
+// ── Register form card ──────────────────────────────────────────────────────
+.tdb-form-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-sm);
+
+  @media (max-width: 640px) {
+    padding: 1.125rem 1rem;
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+
+    svg {
+      color: var(--color-primary);
+      flex-shrink: 0;
+    }
+  }
 }
-.form-fields {
+
+// Form grid: 3 fields + button in one responsive row
+.tdb-form-grid {
   display: grid;
-  grid-template-columns: 2fr 1.5fr 1.5fr;
+  // URL gets more space; token + email share the rest; button is fixed
+  grid-template-columns: 2fr 1.5fr 1.5fr auto;
   gap: 1rem;
-  flex: 1;
-  min-width: 0;
-  @media (max-width: 900px) {
+  align-items: flex-start;
+
+  @media (max-width: 1024px) {
     grid-template-columns: 1fr 1fr;
   }
+
   @media (max-width: 600px) {
     grid-template-columns: 1fr;
   }
 }
-.add-btn {
-  height: 56px;
-  padding: 0 1.5rem;
-  border-radius: 10px;
-  font-weight: 600;
+
+// All mat-form-fields fill their grid cell
+.tdb-field {
+  width: 100%;
+}
+
+// Register button
+.tdb-add-btn {
+  height: 56px; // matches default mat-form-field outline height
+  padding: 0 1.375rem;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
   white-space: nowrap;
-  flex-shrink: 0;
   align-self: flex-start;
-  margin-top: 4px;
+  margin-top: 0; // grid alignment handles vertical position
+
   mat-icon {
     font-size: 18px;
     width: 18px;
     height: 18px;
   }
+
+  // On small screens the button fills the full width
+  @media (max-width: 600px) {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
-.table-card {
-  background: var(--st-bg-surface);
-  border: 1px solid var(--st-border);
-  border-radius: var(--st-radius-lg);
+// ── Table card ──────────────────────────────────────────────────────────────
+.tdb-table-wrap {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   overflow: hidden;
-  position: relative;
+  box-shadow: var(--shadow-sm);
+  position: relative; // anchors the progress bar
 }
-.loading-bar {
+
+.tdb-progress {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 3px;
+  z-index: 1;
 }
 
-mat-header-cell {
-  background: var(--st-bg-subtle);
-  color: var(--st-text-muted);
-  font-weight: 700;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 0.875rem 1rem;
-  border-bottom: 1px solid var(--st-border);
-}
-mat-cell {
-  padding: 1rem;
-  border-bottom: 1px solid var(--st-bg-subtle);
-  color: var(--st-text-primary);
-}
-.table-row:hover mat-cell {
-  background: var(--st-bg-subtle);
-}
+// Horizontal scroll wrapper so the table never breaks layout
+.tdb-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 
-.mono-id {
-  font-family: monospace;
-  color: var(--st-text-muted);
-  font-size: 0.85rem;
-}
-.url-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  code {
-    font-family: monospace;
-    font-size: 0.82rem;
-    color: var(--st-text-primary);
-    background: var(--st-bg-subtle);
-    padding: 3px 8px;
-    border-radius: 6px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 320px;
-    display: block;
+  // Thin scrollbar
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
   }
 }
-.email-cell {
+
+.tdb-table {
+  min-width: 760px; // prevent columns from collapsing on small screens
+  width: 100%;
+}
+
+// ── Mat-table cell overrides ────────────────────────────────────────────────
+// Using deep element selectors because Angular Material renders these
+// outside the component's shadow (global styles pick them up via ::ng-deep
+// but we avoid that; instead rely on view-encapsulation: Emulated which
+// adds the host attribute to descendant element selectors automatically).
+
+mat-header-cell {
+  background: var(--color-hover);
+  color: var(--color-text-muted);
+  font-weight: 700;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.75rem 1rem !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  white-space: nowrap;
+}
+
+mat-cell {
+  padding: 0.875rem 1rem !important;
+  border-bottom: 1px solid var(--color-divider) !important;
+  color: var(--color-text-primary);
   font-size: 0.875rem;
-  color: var(--st-text-primary);
 }
-.date-cell {
-  font-size: 0.82rem;
-  color: var(--st-text-secondary);
+
+.tdb-row {
+  transition: background 0.1s;
+
+  &:last-child mat-cell {
+    border-bottom: none !important;
+  }
+
+  &:hover mat-cell {
+    background: var(--color-hover);
+  }
 }
-.never-cell {
+
+// ── Cell content helpers ────────────────────────────────────────────────────
+.tdb-mono {
+  font-family: 'Courier New', monospace;
   font-size: 0.82rem;
-  color: var(--st-text-muted);
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.tdb-url-cell {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.tdb-url-icon {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.tdb-url-code {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  color: var(--color-text-primary);
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-hover));
+  border: 1px solid var(--color-divider);
+  padding: 2px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+  display: block;
+  cursor: default;
+}
+
+.tdb-email {
+  font-size: 0.85rem;
+  color: var(--color-text-primary);
+}
+
+.tdb-date {
+  font-size: 0.81rem;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.tdb-never {
+  font-size: 0.81rem;
+  color: var(--color-text-muted);
   font-style: italic;
 }
 
-.status-badge {
+// ── Status badges ───────────────────────────────────────────────────────────
+.tdb-badge {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 0.78rem;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 0.72rem;
   font-weight: 700;
+  white-space: nowrap;
+
   &__dot {
     width: 7px;
     height: 7px;
     border-radius: 50%;
     flex-shrink: 0;
   }
+
+  // Assigned — blue
   &--assigned {
-    background: var(--st-blue-bg);
-    color: var(--st-blue-text);
-    .status-badge__dot {
-      background: var(--st-blue);
+    background: color-mix(in srgb, var(--color-info) 12%, transparent);
+    color: var(--color-info);
+    border: 1px solid color-mix(in srgb, var(--color-info) 28%, transparent);
+    .tdb-badge__dot {
+      background: var(--color-info);
     }
   }
+
+  // Available — green
   &--free {
-    background: var(--st-green-bg);
-    color: var(--st-green-text);
-    .status-badge__dot {
-      background: var(--st-green);
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    color: color-mix(in srgb, var(--color-success) 70%, #000);
+    border: 1px solid color-mix(in srgb, var(--color-success) 28%, transparent);
+    .tdb-badge__dot {
+      background: var(--color-success);
     }
   }
 }
 
-.empty-state {
-  padding: 4rem 2rem !important;
-  text-align: center;
-}
-.empty-state__content {
+// ── Empty state ─────────────────────────────────────────────────────────────
+// <mat-table> is flex-based — colspan on <td> is meaningless.
+// *matNoDataRow on a plain <div> renders as a full-width flex row correctly.
+.tdb-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: var(--st-text-muted);
+  justify-content: center;
   gap: 0.75rem;
+  padding: 4rem 2rem;
+  width: 100%;
+  text-align: center;
+  color: var(--color-text-muted);
+
+  svg {
+    color: color-mix(in srgb, var(--color-text-muted) 40%, transparent);
+  }
+
   p {
     margin: 0;
+    font-size: 0.875rem;
     font-weight: 500;
-    font-size: 0.9rem;
   }
 }
 
-@media (max-width: 768px) {
-  .page {
-    padding: 1.25rem;
+// ── Animations ──────────────────────────────────────────────────────────────
+@keyframes tdb-fade-in {
+  from {
+    opacity: 0;
   }
-  .table-card {
-    overflow-x: auto;
-  }
-  mat-table {
-    min-width: 700px;
-  }
-  .db-form {
-    flex-direction: column;
-  }
-  .add-btn {
-    width: 100%;
-    justify-content: center;
+  to {
+    opacity: 1;
   }
 }

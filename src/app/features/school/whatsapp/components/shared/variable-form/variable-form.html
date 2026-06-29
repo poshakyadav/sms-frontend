@@ -1,0 +1,93 @@
+<!-- variable-form.html -->
+<div class="variable-form" *ngIf="template">
+  <!-- Recipient section -->
+  <div class="variable-form__section">
+    <h4 class="variable-form__section-title">
+      <i class="ti ti-user" aria-hidden="true"></i>
+      Recipient
+    </h4>
+
+    <div class="vf-grid" [formGroup]="recipientForm">
+      <div class="vf-field">
+        <label class="vf-label" for="recipientName"
+          >Recipient name <span class="vf-required">*</span></label
+        >
+        <input
+          id="recipientName"
+          type="text"
+          class="vf-input"
+          [class.vf-input--error]="hasError(recipientForm, 'recipientName')"
+          formControlName="recipientName"
+          placeholder="e.g. Mr. Suresh Kumar"
+          autocomplete="off"
+        />
+        <p *ngIf="hasError(recipientForm, 'recipientName')" class="vf-error">
+          Name is required (min 2 characters)
+        </p>
+      </div>
+
+      <div class="vf-field">
+        <label class="vf-label" for="recipientPhone"
+          >WhatsApp number <span class="vf-required">*</span></label
+        >
+        <input
+          id="recipientPhone"
+          type="tel"
+          class="vf-input"
+          [class.vf-input--error]="hasError(recipientForm, 'recipientPhone')"
+          formControlName="recipientPhone"
+          placeholder="e.g. 9876543210"
+          autocomplete="off"
+        />
+        <p *ngIf="hasError(recipientForm, 'recipientPhone')" class="vf-error">
+          Enter a valid phone number (7–15 digits)
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Variables section -->
+  <div class="variable-form__section" [formGroup]="variablesForm">
+    <h4 class="variable-form__section-title">
+      <i class="ti ti-variable" aria-hidden="true"></i>
+      Message variables
+      <span class="variable-form__var-count">{{ displayVariables.length }} fields</span>
+    </h4>
+
+    <div class="vf-grid">
+      <ng-container *ngFor="let varName of displayVariables">
+        <!-- Skip visually repeated vars (_2, _3) — auto-filled in code -->
+        <div class="vf-field" *ngIf="!isRepeatVar(varName)">
+          <label class="vf-label" [for]="'var-' + varName">
+            {{ getLabelFor(varName) }}
+            <span class="vf-required">*</span>
+          </label>
+
+          <textarea
+            *ngIf="isMultiline(varName); else singleLine"
+            [id]="'var-' + varName"
+            class="vf-input vf-input--textarea"
+            [class.vf-input--error]="hasError(variablesForm, varName)"
+            [formControlName]="varName"
+            [placeholder]="getPlaceholder(varName)"
+            rows="3"
+          ></textarea>
+
+          <ng-template #singleLine>
+            <input
+              [id]="'var-' + varName"
+              type="text"
+              class="vf-input"
+              [class.vf-input--error]="hasError(variablesForm, varName)"
+              [formControlName]="varName"
+              [placeholder]="getPlaceholder(varName)"
+              autocomplete="off"
+            />
+          </ng-template>
+
+          <p *ngIf="hasError(variablesForm, varName)" class="vf-error">This field is required</p>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>

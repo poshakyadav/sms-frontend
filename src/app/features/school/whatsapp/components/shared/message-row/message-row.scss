@@ -1,0 +1,71 @@
+// message-row.scss
+.message-row {
+  display: grid;
+  grid-template-columns: 1.6fr 1.4fr 0.9fr 1fr 0.7fr 1.1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border, #f0f0f0);
+  font-size: 13px;
+  background: var(--surface, #fff);
+
+  &__recipient {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  &__name {
+    font-weight: 500;
+    color: var(--text, #111);
+  }
+  &__phone {
+    font-size: 11px;
+    color: var(--text-secondary, #888);
+    font-family: monospace;
+  }
+  &__template,
+  &__module {
+    color: var(--text-secondary, #555);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  &__credits {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-secondary, #888);
+    .ti {
+      font-size: 13px;
+    }
+  }
+  &__time {
+    font-size: 12px;
+    color: var(--text-secondary, #888);
+  }
+}
+
+.message-row__failure {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px 10px;
+  font-size: 12px;
+  color: #e65100;
+  background: var(--surface, #fff);
+  border-bottom: 1px solid var(--border, #f0f0f0);
+  .ti {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 720px) {
+  .message-row {
+    grid-template-columns: 1.5fr 1fr;
+    > :nth-child(2),
+    > :nth-child(3),
+    > :nth-child(5) {
+      display: none;
+    }
+  }
+}

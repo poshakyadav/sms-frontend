@@ -9,10 +9,11 @@ import { ThemeService } from '../../../core/services/theme.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ParentService } from '../../../core/services/parent.service';
 import { ThemeSettingsService } from '../../../core/services/theme-settings.service';
+import { AccessExpiryBanner } from '../../../features/school/billing/components/access-expiry-banner/access-expiry-banner';
 
 @Component({
   selector: 'app-school-layout',
-  imports: [RouterOutlet, SchoolHeader, SchoolSidebar],
+  imports: [RouterOutlet, SchoolHeader, SchoolSidebar, AccessExpiryBanner],
   templateUrl: './school-layout.html',
   styleUrl: './school-layout.scss',
 })

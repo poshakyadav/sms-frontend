@@ -1,0 +1,71 @@
+<!-- bulk-confirm.html -->
+<div class="bulk-confirm">
+  <div *ngIf="isInitiating()" class="bc-loading">
+    <i class="ti ti-loader-2 bc-spin" aria-hidden="true"></i>
+    Resolving recipients and reserving credits...
+  </div>
+
+  <div *ngIf="initiateError() && !isInitiating()" class="bc-error">
+    <i class="ti ti-alert-circle" aria-hidden="true"></i>
+    <span>{{ initiateError() }}</span>
+    <a *ngIf="isInsufficientCredits" routerLink="/school/billing/bundles" class="bc-link">
+      Buy more credits
+    </a>
+    <button *ngIf="!isInsufficientCredits" class="bc-retry" (click)="initiate()" type="button">
+      Retry
+    </button>
+  </div>
+
+  <div *ngIf="result() && !isInitiating()" class="bc-body">
+    <h3 class="bc-title">Ready to send</h3>
+
+    <div class="bc-summary">
+      <div class="bc-row">
+        <span>Template</span>
+        <strong>{{ template.description }}</strong>
+      </div>
+      <div class="bc-row">
+        <span>Recipients</span>
+        <strong>{{ result()!.totalRecipients | number }}</strong>
+      </div>
+      <div class="bc-row">
+        <span>Credit cost</span>
+        <strong>{{ result()!.estimatedCreditCost | number }}</strong>
+      </div>
+      <div class="bc-row">
+        <span>Credits remaining after send</span>
+        <strong>{{ result()!.creditsRemaining | number }}</strong>
+      </div>
+    </div>
+
+    <div class="bc-error" *ngIf="startError()">
+      <i class="ti ti-alert-circle" aria-hidden="true"></i>
+      {{ startError() }}
+    </div>
+
+    <div class="bc-actions">
+      <button
+        class="bc-btn bc-btn--secondary"
+        type="button"
+        (click)="back.emit()"
+        [disabled]="isStarting()"
+      >
+        <i class="ti ti-arrow-left" aria-hidden="true"></i> Back
+      </button>
+      <button
+        class="bc-btn bc-btn--primary"
+        type="button"
+        (click)="start()"
+        [disabled]="isStarting()"
+      >
+        <i
+          class="ti"
+          [class.ti-send]="!isStarting()"
+          [class.ti-loader-2]="isStarting()"
+          aria-hidden="true"
+        ></i>
+        {{ isStarting() ? 'Starting...' : 'Start sending' }}
+      </button>
+    </div>
+  </div>
+</div>

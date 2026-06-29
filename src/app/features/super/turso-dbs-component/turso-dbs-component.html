@@ -1,196 +1,243 @@
-<div class="page">
-  <header class="page__header">
+<!-- features/super/turso-dbs/turso-dbs-component.html -->
+
+<div class="tdb-root">
+  <!-- ── Page header ────────────────────────────────────────────────────── -->
+  <header class="tdb-header">
+    <div class="tdb-header__icon">
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <ellipse cx="12" cy="5" rx="9" ry="3" />
+        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+      </svg>
+    </div>
     <div>
-      <h1 class="page__title">Turso Databases</h1>
-      <p class="page__subtitle">Provision and monitor your distributed school database fleet</p>
+      <h1 class="tdb-header__title">Turso Databases</h1>
+      <p class="tdb-header__sub">Provision and monitor your distributed school database fleet</p>
     </div>
   </header>
 
-  <!-- Stats row -->
-  <div class="stats-row">
-    <div class="stat-chip stat-chip--total">
+  <!-- ── Stats row ──────────────────────────────────────────────────────── -->
+  <div class="tdb-stats">
+    <div class="stat-pill">
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <ellipse cx="12" cy="5" rx="9" ry="3" />
+        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+      </svg>
+      <span class="stat-pill__val">{{ dbs().length }}</span>
+      <span class="stat-pill__label">Total</span>
+    </div>
+
+    <div class="stat-pill stat-pill--green">
+      <span class="stat-pill__dot"></span>
+      <span class="stat-pill__val">{{ availableCount() }}</span>
+      <span class="stat-pill__label">Available</span>
+    </div>
+
+    <div class="stat-pill stat-pill--blue">
+      <span class="stat-pill__dot"></span>
+      <span class="stat-pill__val">{{ assignedCount() }}</span>
+      <span class="stat-pill__label">Assigned</span>
+    </div>
+  </div>
+
+  <!-- ── Register form card ─────────────────────────────────────────────── -->
+  <section class="tdb-form-card">
+    <h3 class="tdb-form-card__title">
       <svg
         width="15"
         height="15"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
-        stroke-width="2"
+        stroke-width="2.5"
       >
-        <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
-      </svg>
-      <span>{{ dbs().length }} total</span>
-    </div>
-    <div class="stat-chip stat-chip--available">
-      <span class="stat-chip__dot"></span>
-      {{ availableCount() }} available
-    </div>
-    <div class="stat-chip stat-chip--assigned">
-      <span class="stat-chip__dot"></span>
-      {{ assignedCount() }} assigned
-    </div>
-  </div>
-
-  <!-- Register form -->
-  <section class="form-card mat-elevation-z1">
-    <h3 class="form-card__title">
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-      >
-        <circle cx="12" cy="12" r="10"></circle>
-        <line x1="12" y1="8" x2="12" y2="16"></line>
-        <line x1="8" y1="12" x2="16" y2="12"></line>
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="16" />
+        <line x1="8" y1="12" x2="16" y2="12" />
       </svg>
       Register new database
     </h3>
-    <form [formGroup]="form" (ngSubmit)="addDb()" class="db-form">
-      <div class="form-fields">
-        <mat-form-field appearance="outline">
-          <mat-label>Database URL</mat-label>
-          <input matInput formControlName="url" placeholder="libsql://your-db.turso.io" />
-          <mat-icon matPrefix>link</mat-icon>
-          <mat-error *ngIf="form.get('url')?.hasError('required')">Required</mat-error>
-          <mat-error *ngIf="form.get('url')?.hasError('pattern')"
-            >Must start with libsql://</mat-error
-          >
-        </mat-form-field>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Auth token</mat-label>
-          <input
-            matInput
-            type="password"
-            formControlName="authToken"
-            placeholder="Enter token"
-            autocomplete="off"
-          />
-          <mat-icon matPrefix>key</mat-icon>
-          <mat-error>Required</mat-error>
-        </mat-form-field>
+    <div class="tdb-form-grid">
+      <!-- URL -->
+      <mat-form-field appearance="outline" class="tdb-field tdb-field--url">
+        <mat-label>Database URL</mat-label>
+        <input
+          matInput
+          [formControl]="$any(form.get('url'))"
+          placeholder="libsql://your-db.turso.io"
+          autocomplete="off"
+        />
+        <mat-icon matPrefix>link</mat-icon>
+        @if (form.get('url')?.touched && form.get('url')?.hasError('required')) {
+        <mat-error>URL is required</mat-error>
+        } @if (form.get('url')?.touched && form.get('url')?.hasError('pattern')) {
+        <mat-error>Must start with libsql://</mat-error>
+        }
+      </mat-form-field>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Created by (email)</mat-label>
-          <input
-            matInput
-            type="email"
-            formControlName="createdByEmail"
-            placeholder="devops@company.com"
-          />
-          <mat-icon matPrefix>email</mat-icon>
-          <mat-error>Valid email required</mat-error>
-        </mat-form-field>
-      </div>
+      <!-- Auth token -->
+      <mat-form-field appearance="outline" class="tdb-field">
+        <mat-label>Auth token</mat-label>
+        <input
+          matInput
+          type="password"
+          [formControl]="$any(form.get('authToken'))"
+          placeholder="Enter token"
+          autocomplete="off"
+        />
+        <mat-icon matPrefix>key</mat-icon>
+        @if (form.get('authToken')?.touched && form.get('authToken')?.invalid) {
+        <mat-error>Auth token is required</mat-error>
+        }
+      </mat-form-field>
 
+      <!-- Created by email -->
+      <mat-form-field appearance="outline" class="tdb-field">
+        <mat-label>Created by (email)</mat-label>
+        <input
+          matInput
+          type="email"
+          [formControl]="$any(form.get('createdByEmail'))"
+          placeholder="devops@company.com"
+        />
+        <mat-icon matPrefix>email</mat-icon>
+        @if (form.get('createdByEmail')?.touched && form.get('createdByEmail')?.invalid) {
+        <mat-error>Valid email is required</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Submit -->
       <button
         mat-flat-button
         color="primary"
-        type="submit"
+        class="tdb-add-btn"
         [disabled]="form.invalid || saving()"
-        class="add-btn"
+        (click)="addDb()"
       >
         <mat-icon>{{ saving() ? 'hourglass_empty' : 'add' }}</mat-icon>
-        {{ saving() ? 'Registering...' : 'Register database' }}
+        {{ saving() ? 'Registering…' : 'Register' }}
       </button>
-    </form>
+    </div>
   </section>
 
-  <!-- Databases table -->
-  <div class="table-card mat-elevation-z1">
-    <mat-progress-bar
-      *ngIf="loading()"
-      mode="indeterminate"
-      color="primary"
-      class="loading-bar"
-    ></mat-progress-bar>
+  <!-- ── Databases table ────────────────────────────────────────────────── -->
+  <div class="tdb-table-wrap">
+    <!-- Loading bar pinned to top of card -->
+    @if (loading()) {
+    <mat-progress-bar mode="indeterminate" color="primary" class="tdb-progress"></mat-progress-bar>
+    }
 
-    <mat-table [dataSource]="dbs()">
-      <ng-container matColumnDef="id">
-        <mat-header-cell *matHeaderCellDef>ID</mat-header-cell>
-        <mat-cell *matCellDef="let db">
-          <span class="mono-id">#{{ db.id }}</span>
-        </mat-cell>
-      </ng-container>
+    <div class="tdb-table-scroll">
+      <mat-table [dataSource]="dbs()" class="tdb-table">
+        <!-- ID -->
+        <ng-container matColumnDef="id">
+          <mat-header-cell *matHeaderCellDef>ID</mat-header-cell>
+          <mat-cell *matCellDef="let db">
+            <span class="tdb-mono">#{{ db.id }}</span>
+          </mat-cell>
+        </ng-container>
 
-      <ng-container matColumnDef="url">
-        <mat-header-cell *matHeaderCellDef>Connection URL</mat-header-cell>
-        <mat-cell *matCellDef="let db">
-          <div class="url-cell">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#6b7280"
-              stroke-width="2"
+        <!-- URL -->
+        <ng-container matColumnDef="url">
+          <mat-header-cell *matHeaderCellDef>Connection URL</mat-header-cell>
+          <mat-cell *matCellDef="let db">
+            <div class="tdb-url-cell">
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                class="tdb-url-icon"
+              >
+                <ellipse cx="12" cy="5" rx="9" ry="3" />
+                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+              </svg>
+              <code class="tdb-url-code" [matTooltip]="db.url" matTooltipShowDelay="400">
+                {{ db.url }}
+              </code>
+            </div>
+          </mat-cell>
+        </ng-container>
+
+        <!-- Created by -->
+        <ng-container matColumnDef="createdByEmail">
+          <mat-header-cell *matHeaderCellDef>Created by</mat-header-cell>
+          <mat-cell *matCellDef="let db">
+            <span class="tdb-email">{{ db.createdByEmail }}</span>
+          </mat-cell>
+        </ng-container>
+
+        <!-- Last migration -->
+        <ng-container matColumnDef="lastMigrationAt">
+          <mat-header-cell *matHeaderCellDef>Last migration</mat-header-cell>
+          <mat-cell *matCellDef="let db">
+            @if (db.lastMigrationAt) {
+            <span class="tdb-date">
+              {{ db.lastMigrationAt | date : 'MMM d, y · HH:mm' }}
+            </span>
+            } @else {
+            <span class="tdb-never">Never</span>
+            }
+          </mat-cell>
+        </ng-container>
+
+        <!-- Status -->
+        <ng-container matColumnDef="isAssigned">
+          <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+          <mat-cell *matCellDef="let db">
+            <span
+              class="tdb-badge"
+              [class.tdb-badge--assigned]="db.isAssigned"
+              [class.tdb-badge--free]="!db.isAssigned"
             >
-              <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
-            </svg>
-            <code>{{ db.url }}</code>
-          </div>
-        </mat-cell>
-      </ng-container>
+              <span class="tdb-badge__dot"></span>
+              {{ db.isAssigned ? 'Assigned' : 'Available' }}
+            </span>
+          </mat-cell>
+        </ng-container>
 
-      <ng-container matColumnDef="createdByEmail">
-        <mat-header-cell *matHeaderCellDef>Created by</mat-header-cell>
-        <mat-cell *matCellDef="let db" class="email-cell">{{ db.createdByEmail }}</mat-cell>
-      </ng-container>
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns" class="tdb-row"></mat-row>
 
-      <ng-container matColumnDef="lastMigrationAt">
-        <mat-header-cell *matHeaderCellDef>Last migration</mat-header-cell>
-        <mat-cell *matCellDef="let db">
-          @if (db.lastMigrationAt) {
-          <span class="date-cell">{{ db.lastMigrationAt | date : 'MMM d, y HH:mm' }}</span>
-          } @else {
-          <span class="never-cell">Never</span>
-          }
-        </mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="isAssigned">
-        <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
-        <mat-cell *matCellDef="let db">
-          <div
-            class="status-badge"
-            [class.status-badge--assigned]="db.isAssigned"
-            [class.status-badge--free]="!db.isAssigned"
+        <!-- Empty state -->
+        <div *matNoDataRow class="tdb-empty">
+          <svg
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
           >
-            <span class="status-badge__dot"></span>
-            {{ db.isAssigned ? 'Assigned' : 'Available' }}
-          </div>
-        </mat-cell>
-      </ng-container>
-
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns" class="table-row"></mat-row>
-
-      <tr class="mat-row" *matNoDataRow>
-        <td class="mat-cell empty-state" [attr.colspan]="displayedColumns.length">
-          <div class="empty-state__content">
-            <svg
-              width="40"
-              height="40"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#d1d5db"
-              stroke-width="1.5"
-            >
-              <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
-            </svg>
-            <p>{{ loading() ? 'Loading databases...' : 'No databases registered yet' }}</p>
-          </div>
-        </td>
-      </tr>
-    </mat-table>
+            <ellipse cx="12" cy="5" rx="9" ry="3" />
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+          </svg>
+          <p>{{ loading() ? 'Loading databases…' : 'No databases registered yet' }}</p>
+        </div>
+      </mat-table>
+    </div>
+    <!-- /tdb-table-scroll -->
   </div>
+  <!-- /tdb-table-wrap -->
 </div>
+<!-- /tdb-root -->

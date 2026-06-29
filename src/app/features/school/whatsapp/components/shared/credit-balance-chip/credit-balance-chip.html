@@ -1,0 +1,13 @@
+<!-- credit-balance-chip.html -->
+<div class="chip" [class]="'chip--' + tier" [class.chip--compact]="compact">
+  <i class="ti {{ icon }}" aria-hidden="true"></i>
+  <span class="chip__label">{{ label }}</span>
+  <a
+    *ngIf="showBuyLink && (tier === 'low' || tier === 'critical' || tier === 'empty')"
+    routerLink="/school/billing/bundles"
+    class="chip__link"
+    [attr.aria-label]="'Buy more WhatsApp credits'"
+  >
+    Buy more
+  </a>
+</div>

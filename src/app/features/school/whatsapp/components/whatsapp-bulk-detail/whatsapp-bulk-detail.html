@@ -1,0 +1,34 @@
+<!-- whatsapp-bulk-detail.html -->
+<div class="wa-bulk-detail">
+  <div class="wa-bulk-detail__header">
+    <a routerLink="/school/whatsapp/bulk" class="wa-bulk-detail__back">
+      <i class="ti ti-arrow-left" aria-hidden="true"></i> All bulk sends
+    </a>
+    <button class="wa-bulk-detail__refresh" type="button" (click)="refresh()">
+      <i class="ti ti-refresh" aria-hidden="true"></i> Refresh
+    </button>
+  </div>
+
+  <div *ngIf="isLoading()" class="wa-bulk-detail__loading">
+    <i class="ti ti-loader-2 wa-bulk-detail__spin" aria-hidden="true"></i> Loading...
+  </div>
+
+  <div *ngIf="error() && !isLoading()" class="wa-bulk-detail__error">
+    <i class="ti ti-alert-circle" aria-hidden="true"></i> {{ error() }}
+  </div>
+
+  <app-bulk-stats *ngIf="bulkSend() && !isLoading()" [bulkSend]="bulkSend()!" />
+
+  <section class="wa-bulk-detail__messages" *ngIf="bulkSend() && !isLoading()">
+    <h2 class="wa-bulk-detail__section-title">Messages in this bulk send</h2>
+
+    <div *ngIf="isLoadingMessages()" class="wa-bulk-detail__loading">Loading messages...</div>
+
+    <div class="wa-bulk-detail__table" *ngIf="!isLoadingMessages()">
+      <app-message-row *ngFor="let msg of relatedMessages()" [message]="msg" />
+      <p *ngIf="relatedMessages().length === 0" class="wa-bulk-detail__empty">
+        No messages found for this bulk send yet.
+      </p>
+    </div>
+  </section>
+</div>

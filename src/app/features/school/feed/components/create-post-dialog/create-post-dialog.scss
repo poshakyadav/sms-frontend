@@ -1,0 +1,62 @@
+/* features/school/feed/components/create-post-dialog/create-post-dialog.scss */
+@use '../_feed-dialog-shared' as *;
+
+.file-upload-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 1.5rem;
+  border: 2px dashed var(--border-color, #d1d5db);
+  border-radius: var(--radius-md, 8px);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--primary, #4f46e5);
+  }
+
+  span:first-of-type {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--text-secondary, #4b5563);
+  }
+}
+
+.file-upload-hint {
+  font-size: 0.75rem;
+  color: var(--text-tertiary, #9ca3af);
+}
+
+.image-preview {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+
+  img {
+    width: 100%;
+    max-height: 280px;
+    object-fit: contain;
+    border-radius: var(--radius-md, 8px);
+    background: var(--surface-secondary, #f9fafb);
+  }
+}
+
+.remove-image-button {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--border-color, #d1d5db);
+  border-radius: var(--radius-md, 8px);
+  background: var(--surface, #ffffff);
+  color: var(--danger, #dc2626);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--danger-light, #fee2e2);
+  }
+}

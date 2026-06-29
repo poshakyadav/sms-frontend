@@ -627,6 +627,13 @@
   }
 }
 
+.account-photo-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+  grid-column: 1 / -1;
+}
+
 // ── Step footer ───────────────────────────────────────────────────────────────
 
 .step-footer {

@@ -169,6 +169,15 @@
       <!-- ══ STEP: ACCOUNT ══ -->
       @if (currentStepId() === 'account') {
       <form class="step-body step-form" [formGroup]="accountForm" novalidate>
+        <div class="account-photo-row">
+          <app-avatar-picker
+            [currentAvatarUrl]="null"
+            [fallbackInitial]="(accountForm.get('name')?.value || '?').charAt(0)"
+            [disabled]="submitting()"
+            (fileSelected)="onAvatarSelected($event)"
+            (removed)="onAvatarRemoved()"
+          ></app-avatar-picker>
+        </div>
         <div class="form-row-2">
           <!-- Full Name -->
           <mat-form-field appearance="outline" class="col-full">

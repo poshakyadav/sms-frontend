@@ -1,6 +1,13 @@
 // features/super/invitations/invitations.ts
 
-import { Component, OnInit, signal, computed } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  signal,
+  computed,
+  inject,
+  afterNextRender,
+} from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -8,7 +15,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { ApiService } from '../../../../core/services/api.service';
 import { ToastService } from '../../../../core/services/toast.service';
 
@@ -32,34 +39,59 @@ interface Invitation {
 @Component({
   selector: 'app-invitations',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, DatePipe],
   templateUrl: './invitations.html',
   styleUrl: './invitations.scss',
 })
-export class Invitations implements OnInit {
-  invitations = signal<Invitation[]>([]);
-  loading = signal(true);
-  error = signal<string | null>(null);
+export class Invitations {
+  // ── DI via inject() ──────────────────────────────────────────────────────
+  private readonly fb = inject(FormBuilder);
+  private readonly api = inject(ApiService);
+  private readonly toast = inject(ToastService);
 
-  // Modal state
-  showCreateModal = signal(false);
-  creating = signal(false);
-  createForm: FormGroup;
+  // ── State ────────────────────────────────────────────────────────────────
+  readonly invitations = signal<Invitation[]>([]);
+  readonly loading = signal(true);
+  readonly error = signal<string | null>(null);
 
-  // Action states
-  cancellingId = signal<number | null>(null);
-  resendingId = signal<number | null>(null);
+  // Modal
+  readonly showCreateModal = signal(false);
+  readonly creating = signal(false);
+
+  // Row-level async states
+  readonly cancellingId = signal<number | null>(null);
+  readonly resendingId = signal<number | null>(null);
 
   // Filter
-  filterStatus = signal<string>('ALL');
+  readonly filterStatus = signal<string>('ALL');
 
-  filteredInvitations = computed(() => {
-    const all = this.invitations();
+  // Derived
+  readonly filteredInvitations = computed(() => {
     const status = this.filterStatus();
-    if (status === 'ALL') return all;
-    return all.filter((i) => i.status === status);
+    return status === 'ALL'
+      ? this.invitations()
+      : this.invitations().filter((i) => i.status === status);
   });
 
+  readonly pendingCount = computed(
+    () => this.invitations().filter((i) => i.status === 'PENDING').length
+  );
+
+  readonly activeCount = computed(
+    () => this.invitations().filter((i) => i.status === 'PAYMENT_APPROVED').length
+  );
+
+  // Form
+  readonly createForm: FormGroup = this.fb.group({
+    schoolName: ['', [Validators.required, Validators.minLength(2)]],
+    schoolEmail: ['', [Validators.required, Validators.email]],
+    schoolPhone: [''],
+    city: [''],
+    notes: [''],
+    expiryDays: [30, [Validators.required, Validators.min(1), Validators.max(90)]],
+  });
+
+  // Status metadata
   readonly STATUS_LABELS: Record<string, { label: string; cls: string }> = {
     PENDING: { label: 'Pending', cls: 'badge--amber' },
     REGISTERED: { label: 'Registered', cls: 'badge--blue' },
@@ -69,45 +101,52 @@ export class Invitations implements OnInit {
     CANCELLED: { label: 'Cancelled', cls: 'badge--red' },
   };
 
-  constructor(private fb: FormBuilder, private api: ApiService, private toast: ToastService) {
-    this.createForm = this.fb.group({
-      schoolName: ['', [Validators.required, Validators.minLength(2)]],
-      schoolEmail: ['', [Validators.required, Validators.email]],
-      schoolPhone: [''],
-      city: [''],
-      notes: [''],
-      expiryDays: [30, [Validators.required, Validators.min(1), Validators.max(90)]],
-    });
+  readonly FILTER_TABS = [
+    { key: 'ALL', label: 'All' },
+    { key: 'PENDING', label: 'Pending' },
+    { key: 'REGISTERED', label: 'Registered' },
+    { key: 'PAYMENT_SUBMITTED', label: 'Payment Submitted' },
+    { key: 'PAYMENT_APPROVED', label: 'Active' },
+    { key: 'EXPIRED', label: 'Expired' },
+    { key: 'CANCELLED', label: 'Cancelled' },
+  ];
+
+  constructor() {
+    // Defer the initial HTTP call until after first render
+    afterNextRender(() => this.loadInvitations());
   }
 
-  ngOnInit() {
-    this.loadInvitations();
-  }
-
-  loadInvitations() {
+  // ── Data ─────────────────────────────────────────────────────────────────
+  loadInvitations(): void {
     this.loading.set(true);
-    this.api.get<{ success: boolean; invitations: Invitation[] }>('invitations').subscribe({
-      next: (res) => {
-        this.invitations.set(res.invitations);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.error.set('Failed to load invitations');
-        this.loading.set(false);
-      },
-    });
+    this.error.set(null);
+
+    this.api
+      .get<{ success: boolean; invitations: Invitation[] }>('invitations')
+      .subscribe({
+        next: (res) => {
+          this.invitations.set(res.invitations);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.error.set('Failed to load invitations');
+          this.loading.set(false);
+        },
+      });
   }
 
-  openCreate() {
+  // ── Modal ─────────────────────────────────────────────────────────────────
+  openCreate(): void {
     this.createForm.reset({ expiryDays: 30 });
     this.showCreateModal.set(true);
   }
 
-  closeCreate() {
+  closeCreate(): void {
     this.showCreateModal.set(false);
   }
 
-  createInvitation() {
+  // ── Actions ───────────────────────────────────────────────────────────────
+  createInvitation(): void {
     if (this.createForm.invalid) {
       this.createForm.markAllAsTouched();
       return;
@@ -115,65 +154,68 @@ export class Invitations implements OnInit {
 
     this.creating.set(true);
     const raw = this.createForm.value;
-    const payload: any = {
-      schoolName: raw.schoolName.trim(),
-      schoolEmail: raw.schoolEmail.trim().toLowerCase(),
+
+    const payload: Record<string, unknown> = {
+      schoolName: (raw.schoolName as string).trim(),
+      schoolEmail: (raw.schoolEmail as string).trim().toLowerCase(),
       expiryDays: raw.expiryDays,
     };
-    if (raw.schoolPhone?.trim()) payload.schoolPhone = raw.schoolPhone.trim();
-    if (raw.city?.trim()) payload.city = raw.city.trim();
-    if (raw.notes?.trim()) payload.notes = raw.notes.trim();
+    if ((raw.schoolPhone as string)?.trim()) payload['schoolPhone'] = (raw.schoolPhone as string).trim();
+    if ((raw.city as string)?.trim()) payload['city'] = (raw.city as string).trim();
+    if ((raw.notes as string)?.trim()) payload['notes'] = (raw.notes as string).trim();
 
-    this.api.post<any>('invitations', payload).subscribe({
-      next: (res) => {
+    this.api.post<{ success: boolean }>('invitations', payload).subscribe({
+      next: () => {
         this.creating.set(false);
         this.showCreateModal.set(false);
-        this.toast.success(`Invitation sent to ${payload.schoolEmail}!`);
+        this.toast.success(`Invitation sent to ${payload['schoolEmail']}!`);
         this.loadInvitations();
       },
-      error: (err) => {
+      error: (err: { error?: { error?: string } }) => {
         this.creating.set(false);
-        this.toast.error(err?.error?.error || 'Failed to create invitation');
+        this.toast.error(err?.error?.error ?? 'Failed to create invitation');
       },
     });
   }
 
-  cancelInvitation(id: number, schoolName: string) {
+  cancelInvitation(id: number, schoolName: string): void {
     if (!confirm(`Cancel invitation for ${schoolName}?`)) return;
+
     this.cancellingId.set(id);
-    this.api.post<any>(`invitations/${id}/cancel`, {}).subscribe({
+    this.api.post<{ success: boolean }>(`invitations/${id}/cancel`, {}).subscribe({
       next: () => {
         this.cancellingId.set(null);
         this.toast.success('Invitation cancelled');
         this.loadInvitations();
       },
-      error: (err) => {
+      error: (err: { error?: { error?: string } }) => {
         this.cancellingId.set(null);
-        this.toast.error(err?.error?.error || 'Failed to cancel');
+        this.toast.error(err?.error?.error ?? 'Failed to cancel');
       },
     });
   }
 
-  resendInvitation(id: number) {
+  resendInvitation(id: number): void {
     this.resendingId.set(id);
-    this.api.post<any>(`invitations/${id}/resend`, {}).subscribe({
+    this.api.post<{ success: boolean }>(`invitations/${id}/resend`, {}).subscribe({
       next: () => {
         this.resendingId.set(null);
         this.toast.success('Invitation email resent!');
       },
-      error: (err) => {
+      error: (err: { error?: { error?: string } }) => {
         this.resendingId.set(null);
-        this.toast.error(err?.error?.error || 'Failed to resend');
+        this.toast.error(err?.error?.error ?? 'Failed to resend');
       },
     });
   }
 
-  setFilter(status: string) {
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  setFilter(status: string): void {
     this.filterStatus.set(status);
   }
 
-  getStatusInfo(status: string) {
-    return this.STATUS_LABELS[status] || { label: status, cls: 'badge--gray' };
+  getStatusInfo(status: string): { label: string; cls: string } {
+    return this.STATUS_LABELS[status] ?? { label: status, cls: 'badge--gray' };
   }
 
   isExpired(expiresAt: string): boolean {
@@ -186,13 +228,5 @@ export class Invitations implements OnInit {
 
   canResend(status: string): boolean {
     return !['CANCELLED', 'PAYMENT_APPROVED'].includes(status);
-  }
-
-  get pendingCount(): number {
-    return this.invitations().filter((i) => i.status === 'PENDING').length;
-  }
-
-  get activeCount(): number {
-    return this.invitations().filter((i) => i.status === 'PAYMENT_APPROVED').length;
   }
 }

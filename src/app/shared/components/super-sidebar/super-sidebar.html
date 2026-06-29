@@ -1,11 +1,4 @@
-<!-- ════════════════════════════════════════════════════════════════
-     SUPER SIDEBAR — PBAC-filtered, dark command aesthetic
-     FIXES:
-       1. Mobile: full labels shown when drawer is open
-       2. Collapse btn: absolute-positioned on sidebar right edge,
-          always fully visible whether collapsed or expanded
-       3. Logout: confirmation modal (responsive)
-════════════════════════════════════════════════════════════════ -->
+<!--  super-sidebar.html  -->
 
 <!-- Mobile backdrop -->
 <div
@@ -128,18 +121,8 @@
 
   <!-- ── Footer ────────────────────────────────────────────────────────── -->
   <div class="sidebar-footer">
-    <div class="sys-stats" *ngIf="!isCollapsed() || mobileOpen()">
-      <div class="stat-row">
-        <span class="stat-label">System</span>
-        <span class="stat-value online">● Online</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-label">Session</span>
-        <span class="stat-value">Active</span>
-      </div>
-    </div>
 
-    <div class="footer-divider"></div>
+    <!-- <div class="footer-divider"></div> -->
 
     <div class="user-row" [class.collapsed]="isCollapsed() && !mobileOpen()">
       <div class="user-avatar">{{ userInitials() }}</div>

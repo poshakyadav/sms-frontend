@@ -72,6 +72,19 @@
         }
 
         <div class="uf-grid-2">
+          @if (isEdit()) {
+          <div class="uf-photo-row">
+            <app-avatar-picker
+              [currentAvatarUrl]="currentAvatarUrl()"
+              [fallbackInitial]="currentUserName().charAt(0)"
+              [userId]="userId()"
+              [disabled]="submitting()"
+              (uploaded)="onAvatarUploaded($event)"
+              (removed)="onAvatarRemoved()"
+            ></app-avatar-picker>
+          </div>
+          }
+
           <!-- Full Name -->
           <div
             class="uf-field-wrap"

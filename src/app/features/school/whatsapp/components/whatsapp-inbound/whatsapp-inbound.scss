@@ -1,0 +1,131 @@
+// whatsapp-inbound.scss
+.wa-inbound {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wa-inbound__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text, #111);
+  margin: 0;
+  .ti {
+    color: var(--primary, #4f46e5);
+  }
+}
+
+.wa-inbound__loading,
+.wa-inbound__error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  padding: 16px 0;
+  color: var(--text-secondary, #888);
+}
+.wa-inbound__error {
+  color: #b71c1c;
+}
+.wa-inbound__spin {
+  animation: wi-spin 0.8s linear infinite;
+}
+@keyframes wi-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.wa-inbound__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wa-inbound__item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #e0e0e0);
+  border-radius: 10px;
+}
+
+.wa-inbound__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface-2, #f0f0f0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-secondary, #888);
+}
+
+.wa-inbound__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.wa-inbound__top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 2px;
+}
+.wa-inbound__phone {
+  font-size: 12px;
+  color: var(--text-secondary, #888);
+  font-family: monospace;
+}
+.wa-inbound__time {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-secondary, #888);
+}
+
+.wa-inbound__text {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text, #333);
+  white-space: pre-wrap;
+}
+.wa-inbound__media {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary, #888);
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.wa-inbound__empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-secondary, #888);
+}
+
+.wa-inbound__pagination {
+  display: flex;
+  justify-content: space-between;
+  button {
+    padding: 8px 14px;
+    border: 1px solid var(--border, #e0e0e0);
+    background: var(--surface, #fff);
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}

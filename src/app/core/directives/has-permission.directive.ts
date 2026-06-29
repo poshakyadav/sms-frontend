@@ -1,13 +1,12 @@
 import {
   Directive,
+  effect,
   inject,
   Input,
-  OnInit,
-  TemplateRef,
-  ViewContainerRef,
-  effect,
   Pipe,
   PipeTransform,
+  TemplateRef,
+  ViewContainerRef,
 } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 
@@ -18,7 +17,7 @@ import { AuthService } from '../services/auth.service';
  * *hasPermission="['users.edit', 'users.delete']"
  */
 @Directive({ selector: '[hasPermission]', standalone: true })
-export class HasPermissionDirective implements OnInit {
+export class HasPermissionDirective {
   private auth = inject(AuthService);
   private templateRef = inject(TemplateRef<any>);
   private viewContainer = inject(ViewContainerRef);
@@ -31,8 +30,13 @@ export class HasPermissionDirective implements OnInit {
     this.updateView();
   }
 
-  ngOnInit(): void {
+  constructor() {
+    // effect() requires an injection context — constructor is the correct place.
+    // The effect re-runs whenever auth.permissions() signal changes (e.g. after
+    // a token refresh that updates the permissions list), keeping the view in sync.
     effect(() => {
+      // Reading the signal registers this effect as a dependent.
+      // The return value is intentionally discarded; we only need the side-effect.
       void this.auth.permissions();
       this.updateView();
     });
@@ -50,14 +54,14 @@ export class HasPermissionDirective implements OnInit {
   }
 }
 
-// ── Super PBAC directive  ← new ───────────────────────────────────────────────
+// ── Super PBAC directive ──────────────────────────────────────────────────────
 
 /**
  * *hasSuperPermission="'users.create'"
  * *hasSuperPermission="['schools.manage', 'schools.invite']"
  */
 @Directive({ selector: '[hasSuperPermission]', standalone: true })
-export class HasSuperPermissionDirective implements OnInit {
+export class HasSuperPermissionDirective {
   private auth = inject(AuthService);
   private templateRef = inject(TemplateRef<any>);
   private viewContainer = inject(ViewContainerRef);
@@ -70,7 +74,7 @@ export class HasSuperPermissionDirective implements OnInit {
     this.updateView();
   }
 
-  ngOnInit(): void {
+  constructor() {
     effect(() => {
       void this.auth.superPermissions();
       this.updateView();
@@ -99,7 +103,7 @@ export class HasPermissionPipe implements PipeTransform {
   }
 }
 
-// ── Super pipe  ← new ─────────────────────────────────────────────────────────
+// ── Super pipe ────────────────────────────────────────────────────────────────
 
 /**
  * [disabled]="!('users.create' | hasSuperPermission)"

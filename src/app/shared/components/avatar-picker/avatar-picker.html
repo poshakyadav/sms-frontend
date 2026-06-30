@@ -1,21 +1,29 @@
 <!-- src/app/shared/components/avatar-picker/avatar-picker.html -->
 
 <div class="avatar-picker" [class.avatar-picker--disabled]="disabled">
-  <div class="avatar-picker__circle">
-    @if (displayUrl) {
-    <img [src]="displayUrl" alt="Profile photo" class="avatar-picker__img" />
-    } @else {
-    <span class="avatar-picker__fallback">{{ fallbackInitial }}</span>
-    } @if (uploading()) {
-    <div class="avatar-picker__overlay">
-      <mat-spinner diameter="28"></mat-spinner>
+  <div class="avatar-picker__circle-wrap">
+    <div class="avatar-picker__circle">
+      @if (displayUrl) {
+      <img
+        [src]="displayUrl"
+        alt="Profile photo"
+        class="avatar-picker__img"
+        (click)="openLightbox($event)"
+      />
+      } @else {
+      <span class="avatar-picker__fallback">{{ fallbackInitial }}</span>
+      } @if (uploading()) {
+      <div class="avatar-picker__overlay">
+        <mat-spinner diameter="28"></mat-spinner>
+      </div>
+      }
     </div>
-    }
 
     <label
       class="avatar-picker__edit-badge"
       [matTooltip]="hasPhoto ? 'Change photo' : 'Add photo'"
       [class.avatar-picker__edit-badge--disabled]="disabled || uploading()"
+      (click)="$event.stopPropagation()"
     >
       <mat-icon>{{ hasPhoto ? 'edit' : 'add_a_photo' }}</mat-icon>
       <input
@@ -41,8 +49,99 @@
     </button>
     } @if (compressedSizeLabel()) {
     <span class="avatar-picker__size-hint">{{ compressedSizeLabel() }} · optimized</span>
-    } @if (!hasPhoto && !uploading()) {
-    <span class="avatar-picker__hint">Optional — JPG or PNG</span>
     }
+    <span class="avatar-picker__ratio-hint">
+      <mat-icon>aspect_ratio</mat-icon>
+      Square (1:1) · min {{ OUTPUT_SIZE }}×{{ OUTPUT_SIZE }}px works best
+    </span>
   </div>
 </div>
+
+<!-- ═══════════════════ CROPPER MODAL ═══════════════════ -->
+@if (cropperOpen()) {
+<div class="avatar-cropper-overlay" (click)="closeCropper()">
+  <div class="avatar-cropper-dialog" (click)="$event.stopPropagation()">
+    <div class="avatar-cropper-header">
+      <h3>Adjust Photo</h3>
+      <button type="button" class="avatar-cropper-close" (click)="closeCropper()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <p class="avatar-cropper-subtitle">
+      Drag to reposition · scroll, pinch or use the slider to zoom — only what's inside the frame
+      gets uploaded.
+    </p>
+
+    <div class="avatar-cropper-canvas-wrap">
+      @if (!cropperViewReady()) {
+      <div class="avatar-cropper-loading">
+        <mat-spinner diameter="32"></mat-spinner>
+        <span>Loading image…</span>
+      </div>
+      }
+      <image-cropper
+        [imageChangedEvent]="imageChangedEvent"
+        [maintainAspectRatio]="true"
+        [aspectRatio]="1"
+        [roundCropper]="true"
+        [resizeToWidth]="OUTPUT_SIZE"
+        [resizeToHeight]="OUTPUT_SIZE"
+        [format]="'png'"
+        [transform]="transform"
+        [backgroundColor]="'#0f172a'"
+        (imageCropped)="imageCropped($event)"
+        (cropperReady)="onCropperReady()"
+        (loadImageFailed)="loadImageFailed()"
+        (transformChange)="onTransformChange($event)"
+        [style.visibility]="cropperViewReady() ? 'visible' : 'hidden'"
+      ></image-cropper>
+    </div>
+
+    <div class="avatar-cropper-zoom-row">
+      <mat-icon>zoom_out</mat-icon>
+      <input
+        type="range"
+        min="1"
+        max="3"
+        step="0.05"
+        [value]="zoom()"
+        (input)="onZoomChange($any($event.target).valueAsNumber)"
+        class="avatar-cropper-zoom-slider"
+        [disabled]="!cropperViewReady()"
+      />
+      <mat-icon>zoom_in</mat-icon>
+    </div>
+
+    <div class="avatar-cropper-footer">
+      <button type="button" class="avatar-cropper-cancel-btn" (click)="closeCropper()">
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="avatar-cropper-save-btn"
+        [disabled]="!cropperViewReady()"
+        (click)="confirmCrop()"
+      >
+        <mat-icon>check</mat-icon>
+        Use This Photo
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- ═══════════════════ LIGHTBOX (FULL PREVIEW) ═══════════════════ -->
+@if (lightboxOpen()) {
+<div class="avatar-lightbox-overlay" (click)="closeLightbox()">
+  <button type="button" class="avatar-lightbox-close" (click)="closeLightbox()">
+    <mat-icon>close</mat-icon>
+  </button>
+  <img
+    [src]="displayUrl"
+    alt="Profile photo preview"
+    class="avatar-lightbox-img"
+    (click)="$event.stopPropagation()"
+  />
+</div>
+}

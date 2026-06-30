@@ -129,4 +129,50 @@ export class ImageCompressionService {
       );
     });
   }
+
+  /**
+  * Compresses an already-cropped image Blob (output of the avatar cropper)
+  * to a target byte budget, encoding as WebP. Unlike compressSquareAvatar,
+  * this does NOT re-crop — the blob is assumed to already be the exact
+  * square the user confirmed in the cropper UI.
+  */
+  async compressImageBlob(
+    blob: Blob,
+    options: { maxBytes?: number } = {}
+  ): Promise<CompressedImageResult> {
+    const maxBytes = options.maxBytes ?? 50 * 1024;
+
+    const file = new File([blob], 'crop.png', { type: blob.type || 'image/png' });
+    const img = await this.loadImage(file);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(img, 0, 0);
+
+    let quality = 0.9;
+    let outBlob = await this.canvasToWebpBlob(canvas, quality);
+
+    let low = 0.4;
+    let high = quality;
+    let attempts = 0;
+    while (outBlob.size > maxBytes && attempts < 6) {
+      quality = (low + high) / 2;
+      outBlob = await this.canvasToWebpBlob(canvas, quality);
+      if (outBlob.size > maxBytes) high = quality;
+      else low = quality;
+      attempts++;
+    }
+
+    const resultFile = new File([outBlob], 'avatar.webp', { type: 'image/webp' });
+
+    return {
+      blob: outBlob,
+      file: resultFile,
+      width: canvas.width,
+      height: canvas.height,
+      sizeBytes: outBlob.size,
+    };
+  }
 }

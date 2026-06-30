@@ -8,6 +8,15 @@
   display: inline-block;
 }
 
+.avatar-picker__circle-wrap {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  flex-shrink: 0;
+}
+
+
+
 .avatar-picker {
   display: flex;
   flex-direction: column;
@@ -22,8 +31,8 @@
 
 .avatar-picker__circle {
   position: relative;
-  width: 88px;
-  height: 88px;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   background: var(--color-hover);
   border: 2px solid var(--color-border);
@@ -31,7 +40,6 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  flex-shrink: 0;
 }
 
 .avatar-picker__img {
@@ -143,4 +151,287 @@
   font-size: 0.68rem;
   color: var(--color-text-muted);
   white-space: nowrap;
+}
+
+
+// ── tweak: make the avatar clickable-for-preview obvious ────────────────
+.avatar-picker__img {
+  cursor: zoom-in;
+}
+
+.avatar-picker__ratio-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  line-height: 1.3;
+
+  mat-icon {
+    font-size: 12px;
+    height: 12px;
+    width: 12px;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// CROPPER MODAL
+// ══════════════════════════════════════════════════════════════════════════
+
+.avatar-cropper-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.avatar-cropper-dialog {
+  width: 100%;
+  max-width: 420px;
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  max-height: 92vh;
+  overflow: hidden;
+}
+
+.avatar-cropper-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 8px;
+
+  h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+}
+
+.avatar-cropper-close {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-hover);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-error) 12%, transparent);
+    color: var(--color-error);
+  }
+}
+
+.avatar-cropper-subtitle {
+  margin: 0 18px 12px;
+  font-size: 0.74rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.avatar-cropper-canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: min(70vw, 340px);
+  background: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
+  image-cropper {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.avatar-cropper-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #fff;
+  font-size: 0.78rem;
+  z-index: 1;
+
+  ::ng-deep .mat-mdc-progress-spinner circle {
+    stroke: #fff;
+  }
+}
+
+.avatar-cropper-zoom-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px 4px;
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+  }
+}
+
+.avatar-cropper-zoom-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-border);
+  outline: none;
+  cursor: pointer;
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    cursor: pointer;
+    border: 2px solid var(--color-bg-card);
+    box-shadow: 0 0 0 1px var(--color-primary);
+  }
+
+  &::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    cursor: pointer;
+    border: 2px solid var(--color-bg-card);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.avatar-cropper-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 18px 18px;
+}
+
+.avatar-cropper-cancel-btn,
+.avatar-cropper-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+  }
+}
+
+.avatar-cropper-cancel-btn {
+  background: var(--color-bg-surface);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+
+  &:hover {
+    background: var(--color-hover);
+  }
+}
+
+.avatar-cropper-save-btn {
+  background: var(--color-primary);
+  color: #fff;
+
+  &:hover {
+    filter: brightness(1.05);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// LIGHTBOX (full image preview)
+// ══════════════════════════════════════════════════════════════════════════
+
+.avatar-lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2100;
+  padding: 24px;
+  box-sizing: border-box;
+  cursor: zoom-out;
+}
+
+.avatar-lightbox-img {
+  max-width: min(90vw, 480px);
+  max-height: 80vh;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  cursor: default;
+  object-fit: contain;
+}
+
+.avatar-lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.22);
+  }
 }

@@ -326,6 +326,12 @@ export const NAV_GROUPS: NavGroup[] = [
           },
         ],
       },
+      {
+        label: 'ID Cards',
+        icon: 'badge',
+        route: '/school/id-cards',
+        permissions: ['id-cards.view'],
+      },
     ],
   },
 

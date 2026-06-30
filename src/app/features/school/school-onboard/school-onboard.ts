@@ -562,7 +562,7 @@ export class SchoolOnboard implements OnInit, OnDestroy {
   }
 
   goToLogin(): void {
-    this.router.navigate(['/school/login']);
+    this.router.navigate(['/login']);
   }
 
   getStepNumber(): number {

@@ -1,0 +1,158 @@
+<!-- id-card-generate-dialog.html -->
+
+<div class="dialog-overlay" (click)="close()">
+  <div class="dialog-panel" (click)="$event.stopPropagation()">
+    <header class="dialog-panel__header">
+      <h2>Generate ID Cards</h2>
+      <button class="dialog-panel__close" (click)="close()">&times;</button>
+    </header>
+
+    <div class="dialog-panel__body">
+      <!-- Holder type -->
+      <div class="field-row">
+        <label>Holder Type</label>
+        <select [ngModel]="holderType()" (ngModelChange)="onHolderTypeChange($event)">
+          <option value="STUDENT">Student</option>
+          <option value="STAFF">Staff</option>
+        </select>
+      </div>
+
+      <!-- Class-section (Student only) -->
+      @if (holderType() === 'STUDENT') {
+      <div class="field-row">
+        <label>Class - Section</label>
+        <select [ngModel]="classSectionId()" (ngModelChange)="onClassSectionChange($event)">
+          <option [ngValue]="null" disabled>Select a class-section</option>
+          @for (cs of classSections(); track cs.id) {
+          <option [ngValue]="cs.id">{{ cs.className }} - {{ cs.sectionName }}</option>
+          }
+        </select>
+      </div>
+      }
+
+      <!-- Template -->
+      <div class="field-row">
+        <label>Template</label>
+        <select [(ngModel)]="selectedTemplateId">
+          <option [ngValue]="null" disabled>Select a template</option>
+          @for (t of templates(); track t.id) {
+          <option [ngValue]="t.id">{{ t.name }}{{ t.isDefault ? ' (default)' : '' }}</option>
+          }
+        </select>
+        @if (templates().length === 0) {
+        <p class="field-hint field-hint--warning">
+          No active templates for {{ holderType() === 'STUDENT' ? 'Student' : 'Staff' }} cards yet.
+          Create one from <strong>ID Cards → Manage Templates</strong> first.
+        </p>
+        }
+      </div>
+
+      <!-- Valid until -->
+      <div class="field-row">
+        <label>Valid Until</label>
+        <input type="date" [(ngModel)]="validUntil" />
+      </div>
+
+      <!-- Holder picker -->
+      <div class="holder-picker">
+        <div class="holder-picker__toolbar">
+          <span>{{ selectedHolderIds().size }} selected</span>
+          <button class="link-btn" (click)="selectAllWithoutCard()">
+            Select all without a card
+          </button>
+          <button class="link-btn" (click)="clearSelection()">Clear</button>
+        </div>
+
+        @if (loadingHolders()) {
+        <p class="holder-picker__loading">Loading holders…</p>
+        } @else if (holderType() === 'STUDENT' && classSectionId() === null) {
+        <p class="holder-picker__empty">Pick a class-section to see students.</p>
+        } @else {
+        <ul class="holder-picker__list">
+          @for (h of eligibleHolders(); track h.userId) {
+          <li
+            class="holder-row"
+            [class.holder-row--selected]="isHolderSelected(h.userId)"
+            [class.holder-row--blocked]="h.hasActiveCard"
+          >
+            <label>
+              <input
+                type="checkbox"
+                [checked]="isHolderSelected(h.userId)"
+                [disabled]="h.hasActiveCard"
+                (change)="toggleHolder(h.userId)"
+              />
+              <span class="holder-row__name">{{ h.name }}</span>
+              @if (h.rollNumber) {
+              <span class="holder-row__meta">Roll {{ h.rollNumber }}</span>
+              } @if (h.designation) {
+              <span class="holder-row__meta">{{ h.designation }}</span>
+              }
+            </label>
+
+            @if (h.hasActiveCard) { @if (confirmDeleteUserId() === h.userId) {
+            <div class="holder-row__confirm">
+              <span>Delete the existing card? This can't be undone.</span>
+              <div class="holder-row__confirm-actions">
+                <button
+                  type="button"
+                  class="link-btn"
+                  [disabled]="deletingUserId() === h.userId"
+                  (click)="cancelDeleteExisting()"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  class="link-btn link-btn--danger"
+                  [disabled]="deletingUserId() === h.userId"
+                  (click)="confirmDeleteExisting(h)"
+                >
+                  {{ deletingUserId() === h.userId ? 'Deleting…' : 'Delete' }}
+                </button>
+              </div>
+            </div>
+            } @else {
+            <div class="holder-row__warning-row">
+              <span class="holder-row__warning">Already has an active card</span>
+              <button
+                type="button"
+                class="link-btn link-btn--danger"
+                (click)="requestDeleteExisting(h.userId)"
+              >
+                Delete existing card
+              </button>
+            </div>
+            } }
+          </li>
+          } @empty {
+          <li class="holder-picker__empty">No eligible holders found.</li>
+          }
+        </ul>
+        }
+      </div>
+
+      <!--
+        REMOVED: the post-submit "Result summary" block (succeeded/failed
+        counts + "Delete existing & retry" per failure). That flow required
+        this dialog to stay open after calling generateCardsBulk() itself.
+        Now submit() just emits the payload and the parent immediately
+        closes this dialog, showing its own full-screen progress overlay
+        instead — so there's nothing left here to report on.
+      -->
+    </div>
+
+    <footer class="dialog-panel__footer">
+      <button class="btn btn--secondary" (click)="close()">Close</button>
+      <button
+        class="btn btn--primary"
+        [disabled]="selectedHolderIds().size === 0"
+        (click)="submit()"
+      >
+        {{
+          selectedHolderIds().size > 0 ? 'Generate (' + selectedHolderIds().size + ')' : 'Generate'
+        }}
+      </button>
+    </footer>
+  </div>
+</div>

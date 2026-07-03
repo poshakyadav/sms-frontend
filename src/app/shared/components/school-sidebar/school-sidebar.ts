@@ -169,6 +169,15 @@ export const NAV_GROUPS: NavGroup[] = [
             matchStrategy: 'prefix',
           },
           {
+            label: 'Bulk Photo Upload',
+            route: '/school/users/bulk-photo-upload',
+            icon: 'add_a_photo',
+            permissions: ['users.create', 'users.edit'],
+            // prefix isn't strictly needed since nothing shares this path as a
+            // prefix, but kept consistent with sibling entries in this group.
+            matchStrategy: 'prefix',
+          },
+          {
             label: 'Student History',
             route: '/school/students/history',
             icon: 'history',
@@ -502,12 +511,42 @@ export const NAV_GROUPS: NavGroup[] = [
             matchStrategy: 'prefix',
           },
         ],
+
       },
       {
         label: 'Contact Support',
         icon: 'support_agent',
         route: '/school/contact-us',
         permissions: ['contact.submit'],
+      },
+      {
+        label: 'Feed',
+        icon: 'dynamic_feed',
+        permissions: [
+          'dashboard.view',
+          'dashboard.student.view',
+          'dashboard.parent.view',
+          'feed.post.create',
+          'feed.post.manage',
+        ],
+        children: [
+          {
+            label: 'Feed',
+            route: '/school/feed',
+            icon: 'dynamic_feed',
+            permissions: ['dashboard.view', 'dashboard.student.view', 'dashboard.parent.view'],
+            // 'exact' — '/school/feed/manage' shares this as a prefix, so without
+            // 'exact' the overview item would stay highlighted on the manage page too.
+            matchStrategy: 'exact',
+          },
+          {
+            label: 'Manage Feed',
+            route: '/school/feed/manage',
+            icon: 'admin_panel_settings',
+            permissions: ['feed.post.create', 'feed.post.manage'],
+            matchStrategy: 'prefix',
+          },
+        ],
       },
     ],
   },

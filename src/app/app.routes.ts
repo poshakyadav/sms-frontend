@@ -272,11 +272,25 @@ export const routes: Routes = [
           // ── ID Cards ──────────────────────────────────────────────────────
           {
             path: 'id-cards',
-            canActivate: [permissionGuard('id-cards.view')],
-            loadComponent: () =>
-              import('./features/school/id-cards/id-card-management/id-card-management').then(
-                (m) => m.IdCardManagementComponent
-              ),
+            children: [
+              { path: '', pathMatch: 'full', redirectTo: 'manage' },
+              {
+                path: 'manage',
+                canActivate: [permissionGuard('id-cards.view')],
+                loadComponent: () =>
+                  import('./features/school/id-cards/id-card-management/id-card-management').then(
+                    (m) => m.IdCardManagementComponent
+                  ),
+              },
+              {
+                path: 'templates',
+                canActivate: [permissionGuard('id-cards.templates.manage')],
+                loadComponent: () =>
+                  import('./features/school/id-cards/id-card-template-manage/id-card-template-manage').then(
+                    (m) => m.IdCardTemplateManageComponent
+                  ),
+              },
+            ],
           },
 
           // ── Feed ──────────────────────────────────────────────────────────

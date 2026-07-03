@@ -1,0 +1,282 @@
+<!-- src/app/features/school/id-cards/id-card-template-manage/id-card-template-manage.html -->
+<div class="tmpl" [class.tmpl--editing]="showForm()">
+  <!-- ═══════════════════════════════════════════════════════════════════
+         LIST PANE
+    ═══════════════════════════════════════════════════════════════════ -->
+  <section class="tmpl__list-pane">
+    <header class="tmpl__list-header">
+      <div>
+        <a routerLink="/school/id-cards/manage" class="tmpl__back">
+          <mat-icon>arrow_back</mat-icon>
+          ID Cards</a
+        >
+        <h1>Card Templates</h1>
+      </div>
+      <button class="btn btn--primary" (click)="openCreate()">+ New</button>
+    </header>
+
+    <div class="tmpl__tabs">
+      <button
+        class="tmpl__tab"
+        [class.tmpl__tab--active]="holderTypeFilter() === 'STUDENT'"
+        (click)="holderTypeFilter.set('STUDENT')"
+      >
+        Student
+      </button>
+      <button
+        class="tmpl__tab"
+        [class.tmpl__tab--active]="holderTypeFilter() === 'STAFF'"
+        (click)="holderTypeFilter.set('STAFF')"
+      >
+        Staff
+      </button>
+    </div>
+
+    @if (loading()) {
+    <div class="tmpl__skeletons">
+      @for (i of [1,2,3]; track i) {
+      <div class="tmpl__skeleton"></div>
+      }
+    </div>
+    } @else {
+    <ul class="tmpl__list">
+      @for (t of templates(); track t.id) {
+      <li class="tmpl-card" [class.tmpl-card--active]="editingId() === t.id" (click)="openEdit(t)">
+        <span class="tmpl-card__swatch" [style.background]="t.layoutConfig.accentColor">
+          <span class="tmpl-card__swatch-text" [style.color]="t.layoutConfig.accentTextColor">
+            {{ t.holderType === 'STUDENT' ? 'ST' : 'SF' }}
+          </span>
+        </span>
+        <div class="tmpl-card__body">
+          <div class="tmpl-card__name">
+            {{ t.name }}
+            @if (t.isDefault) { <span class="badge">Default</span> }
+          </div>
+          <div class="tmpl-card__meta">
+            {{ t.layoutConfig.visibleFields.length }} field(s) shown
+          </div>
+        </div>
+        <button
+          class="tmpl-card__delete"
+          title="Deactivate template"
+          (click)="$event.stopPropagation(); remove(t)"
+        >
+          &times;
+        </button>
+      </li>
+      } @empty {
+      <li class="tmpl__empty">
+        <p>No templates yet for {{ holderTypeFilter() === 'STUDENT' ? 'students' : 'staff' }}.</p>
+        <button class="btn btn--secondary" (click)="openCreate()">
+          Create your first template
+        </button>
+      </li>
+      }
+    </ul>
+    }
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+         EDITOR + LIVE PREVIEW PANE
+    ═══════════════════════════════════════════════════════════════════ -->
+  <section class="tmpl__editor-pane">
+    @if (!showForm()) {
+    <div class="tmpl__placeholder">
+      <div class="tmpl__placeholder-icon">🪪</div>
+      <p>Select a template to edit, or create a new one to see a live preview here.</p>
+    </div>
+    } @else {
+    <div class="tmpl__editor">
+      <header class="tmpl__editor-header">
+        <button class="tmpl__mobile-back" (click)="cancel()">← Back to list</button>
+        <h2>{{ editingId() ? 'Edit Template' : 'New Template' }}</h2>
+      </header>
+
+      <div class="tmpl__editor-grid">
+        <!-- ── FORM ── -->
+        <div class="tmpl__form">
+          <label class="field">
+            <span class="field__label">Template Name</span>
+            <input
+              class="field__input"
+              [ngModel]="form().name"
+              (ngModelChange)="updateField('name', $event)"
+              placeholder="e.g. Standard Student Card"
+            />
+          </label>
+
+          <label class="field">
+            <span class="field__label">Holder Type</span>
+            <select
+              class="field__input"
+              [ngModel]="form().holderType"
+              (ngModelChange)="onHolderTypeChange($event)"
+            >
+              <option value="STUDENT">Student</option>
+              <option value="STAFF">Staff</option>
+            </select>
+          </label>
+
+          <div class="field">
+            <span class="field__label">Accent Color</span>
+            <div class="color-row">
+              <input
+                type="color"
+                class="color-row__swatch"
+                [ngModel]="form().layoutConfig.accentColor"
+                (ngModelChange)="updateLayout({ accentColor: $event })"
+              />
+              <input
+                class="field__input color-row__hex"
+                [ngModel]="form().layoutConfig.accentColor"
+                (ngModelChange)="updateLayout({ accentColor: $event })"
+              />
+            </div>
+            <div class="preset-row">
+              @for (c of accentPresets; track c) {
+              <button
+                type="button"
+                class="preset-swatch"
+                [class.preset-swatch--active]="form().layoutConfig.accentColor === c"
+                [style.background]="c"
+                (click)="updateLayout({ accentColor: c })"
+              ></button>
+              }
+            </div>
+          </div>
+
+          <div class="field">
+            <span class="field__label">Card Orientation</span>
+            <div class="orientation-row">
+              <button
+                type="button"
+                class="orientation-btn"
+                [class.orientation-btn--active]="
+                  (form().layoutConfig.orientation ?? 'horizontal') === 'horizontal'
+                "
+                (click)="updateLayout({ orientation: 'horizontal' })"
+              >
+                ▭ Horizontal
+              </button>
+              <button
+                type="button"
+                class="orientation-btn"
+                [class.orientation-btn--active]="form().layoutConfig.orientation === 'vertical'"
+                (click)="updateLayout({ orientation: 'vertical' })"
+              >
+                ▯ Vertical
+              </button>
+            </div>
+          </div>
+
+          <div class="field-pair">
+            <label class="field">
+              <span class="field__label">Header Text Color</span>
+              <input
+                type="color"
+                class="field__input field__input--color"
+                [ngModel]="form().layoutConfig.accentTextColor"
+                (ngModelChange)="updateLayout({ accentTextColor: $event })"
+              />
+            </label>
+            <label class="field">
+              <span class="field__label">Card Background</span>
+              <input
+                type="color"
+                class="field__input field__input--color"
+                [ngModel]="form().layoutConfig.backgroundColor"
+                (ngModelChange)="updateLayout({ backgroundColor: $event })"
+              />
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <label class="toggle">
+              <input
+                type="checkbox"
+                [ngModel]="form().layoutConfig.showLogo"
+                (ngModelChange)="updateLayout({ showLogo: $event })"
+              />
+              <span>Show school logo</span>
+            </label>
+            <label class="toggle">
+              <input
+                type="checkbox"
+                [ngModel]="form().layoutConfig.showTagline"
+                (ngModelChange)="updateLayout({ showTagline: $event })"
+              />
+              <span>Show tagline</span>
+            </label>
+          </div>
+
+          <div class="field">
+            <span class="field__label">Visible Fields</span>
+            <div class="chip-row">
+              @for (f of availableFields(); track f.key) {
+              <button
+                type="button"
+                class="chip"
+                [class.chip--active]="isFieldChecked(f.key)"
+                (click)="toggleField(f.key)"
+              >
+                {{ f.label }}
+              </button>
+              }
+            </div>
+          </div>
+
+          <label class="field">
+            <span class="field__label">Footer Note</span>
+            <input
+              class="field__input"
+              [ngModel]="form().layoutConfig.footerNote"
+              (ngModelChange)="updateLayout({ footerNote: $event })"
+              placeholder="e.g. This card is property of the school"
+            />
+          </label>
+
+          <label class="field">
+            <span class="field__label">QR Size Ratio ({{ form().layoutConfig.qrSizeRatio }})</span>
+            <input
+              type="range"
+              class="field__range"
+              min="0.1"
+              max="0.4"
+              step="0.05"
+              [ngModel]="form().layoutConfig.qrSizeRatio"
+              (ngModelChange)="updateLayout({ qrSizeRatio: $event })"
+            />
+          </label>
+
+          <label class="toggle toggle--default">
+            <input
+              type="checkbox"
+              [ngModel]="form().isDefault"
+              (ngModelChange)="updateField('isDefault', $event)"
+            />
+            <span
+              >Set as default template for
+              {{ form().holderType === 'STUDENT' ? 'students' : 'staff' }}</span
+            >
+          </label>
+        </div>
+
+        <!-- ── LIVE PREVIEW ── -->
+        <div class="tmpl__preview">
+          <span class="tmpl__preview-label">Live Preview · sample data</span>
+          <div class="tmpl__preview-stage">
+            <app-id-card-preview [card]="previewCard()" />
+          </div>
+        </div>
+      </div>
+
+      <footer class="tmpl__editor-footer">
+        <button class="btn btn--secondary" (click)="cancel()" [disabled]="saving()">Cancel</button>
+        <button class="btn btn--primary" (click)="save()" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : editingId() ? 'Save Changes' : 'Create Template' }}
+        </button>
+      </footer>
+    </div>
+    }
+  </section>
+</div>

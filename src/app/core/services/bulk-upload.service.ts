@@ -93,16 +93,16 @@ interface ColDef {
   required: boolean;
   isHelper: boolean; // true = display-only, not uploaded
   group:
-    | 'helper'
-    | 'core'
-    | 'contact'
-    | 'personal'
-    | 'parental'
-    | 'address'
-    | 'school'
-    | 'udise_academic'
-    | 'udise_demo'
-    | 'udise_id';
+  | 'helper'
+  | 'core'
+  | 'contact'
+  | 'personal'
+  | 'parental'
+  | 'address'
+  | 'school'
+  | 'udise_academic'
+  | 'udise_demo'
+  | 'udise_id';
   hint: string;
   example: string;
   example2: string;
@@ -491,7 +491,7 @@ const COLORS = {
 export class BulkUploadService {
   private baseUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // ── Capacity check ──────────────────────────────────────────────────────────
   getCapacityInfo(
@@ -543,11 +543,11 @@ export class BulkUploadService {
   // ── Build "Students" sheet ──────────────────────────────────────────────────
   //
   // ROW LAYOUT (v4):
-//   Row 1  → Header row  (Name *, Email *, …)    ← parser detects via isHeaderRow()
-//   Row 2  → Hint row    (italic field notes)     ← parser skips (hintRowIndex)
-//   Row 3  → Sample row 1 (Rahul Sharma)          ← parser skips (SAMPLE_ROW_COUNT = 2)
-//   Row 4  → Sample row 2 (Priya Verma)           ← parser skips (SAMPLE_ROW_COUNT = 2)
-//   Row 5+ → Blank data rows for user input       ← parser reads from dataStartIndex
+  //   Row 1  → Header row  (Name *, Email *, …)    ← parser detects via isHeaderRow()
+  //   Row 2  → Hint row    (italic field notes)     ← parser skips (hintRowIndex)
+  //   Row 3  → Sample row 1 (Rahul Sharma)          ← parser skips (SAMPLE_ROW_COUNT = 2)
+  //   Row 4  → Sample row 2 (Priya Verma)           ← parser skips (SAMPLE_ROW_COUNT = 2)
+  //   Row 5+ → Blank data rows for user input       ← parser reads from dataStartIndex
   //
   // The S.No. column (col A) uses the formula =IF(B5="","",ROW()-4) so it
   // auto-fills as the user types names in column B and stays blank for empty
@@ -675,6 +675,10 @@ export class BulkUploadService {
             fgColor: { argb: sample.fill },
           };
           cell.alignment = { vertical: 'middle', wrapText: false };
+
+          if (col.key === 'dob' || col.key === 'admDate') {
+            cell.numFmt = '@';
+          }
         }
 
         cell.border = {
@@ -735,6 +739,15 @@ export class BulkUploadService {
     // ── Column widths ──────────────────────────────────────────────────────────
     COLUMNS.forEach((col, idx) => {
       ws.getColumn(idx + 1).width = col.width;
+
+      // FIX: applies Text format to the ENTIRE column (including rows 5–104,
+      // where users actually type data) — not just the sample rows. Without
+      // this, DOB/Admission Date typed by a real user still gets silently
+      // converted to an Excel serial number by "General" format, same bug
+      // as before, just no longer visible in the sample rows.
+      if (col.key === 'dob' || col.key === 'admDate') {
+        ws.getColumn(idx + 1).numFmt = '@';
+      }
     });
 
     // ── Auto-filter on header row (row 1), starting from col 2 to skip S.No. ──
@@ -862,8 +875,8 @@ export class BulkUploadService {
             argb: col.isHelper
               ? 'FF64748B'
               : i === 1 && col.required
-              ? 'FF991B1B'
-              : COLORS.GUIDE_TEXT,
+                ? 'FF991B1B'
+                : COLORS.GUIDE_TEXT,
           },
         };
         cell.fill = {
@@ -903,7 +916,7 @@ export class BulkUploadService {
     addColRow(COLUMNS[0], false); // sno
     addNote(
       '⚠  The S.No. column is for your reference only. It auto-fills as you enter student names.' +
-        ' Do NOT manually type numbers here. This column is completely ignored during upload.',
+      ' Do NOT manually type numbers here. This column is completely ignored during upload.',
       'FFF0F9FF'
     );
     addBlank();

@@ -1,66 +1,60 @@
-<!-- src/app/features/school/id-cards/id-card-preview/id-card-preview.component.html -->
+<!-- id-card-preview.html -->
 
 <div
   #cardRoot
   class="id-card"
-  [class.id-card--student]="card.holderType === 'STUDENT'"
-  [class.id-card--staff]="card.holderType === 'STAFF'"
-  [style.--accent-color]="card.template.layoutConfig.accentColor"
-  [style.--accent-text-color]="card.template.layoutConfig.accentTextColor"
-  [style.--bg-color]="card.template.layoutConfig.backgroundColor"
+  [class.id-card--student]="card().holderType === 'STUDENT'"
+  [class.id-card--staff]="card().holderType === 'STAFF'"
+  [class.id-card--vertical]="orientation() === 'vertical'"
+  [style.--accent-color]="card().template.layoutConfig.accentColor"
+  [style.--accent-text-color]="card().template.layoutConfig.accentTextColor"
+  [style.--bg-color]="card().template.layoutConfig.backgroundColor"
 >
-  <!-- ── Status watermark — only rendered for non-active cards, so a revoked/
-       expired card is visually unmistakable even before anyone scans the QR ── -->
-  <div class="id-card__status-stamp" *ngIf="card.status !== 'ACTIVE'">
-    {{ card.status }}
+  <div class="id-card__status-stamp" *ngIf="card().status !== 'ACTIVE'">
+    {{ card().status }}
   </div>
 
-  <!-- ── Header band: school identity ── -->
   <div class="id-card__header">
     <img
-      *ngIf="card.template.layoutConfig.showLogo && card.school.logoUrl"
+      *ngIf="card().template.layoutConfig.showLogo && logoDataUrl()"
       class="id-card__logo"
-      [src]="card.school.logoUrl"
+      [src]="logoDataUrl()"
       alt=""
-      crossorigin="anonymous"
     />
     <div class="id-card__school-identity">
-      <div class="id-card__school-name">{{ card.school.name }}</div>
+      <div class="id-card__school-name">{{ card().school.name }}</div>
       <div
         class="id-card__school-tagline"
-        *ngIf="card.template.layoutConfig.showTagline && card.school.tagline"
+        *ngIf="card().template.layoutConfig.showTagline && card().school.tagline"
       >
-        {{ card.school.tagline }}
+        {{ card().school.tagline }}
       </div>
     </div>
     <div class="id-card__card-type">
-      {{ card.holderType === 'STUDENT' ? 'STUDENT ID' : 'STAFF ID' }}
+      {{ cardTypeLabel() }}
     </div>
   </div>
 
-  <!-- ── Body: photo + holder details + QR ── -->
   <div class="id-card__body">
     <div class="id-card__photo-col">
       <div class="id-card__photo-frame">
-        <img
-          *ngIf="card.photoUrl"
-          [src]="card.photoUrl"
-          alt=""
-          class="id-card__photo"
-          crossorigin="anonymous"
-        />
-        <div class="id-card__photo-placeholder" *ngIf="!card.photoUrl">
-          {{ card.holderName.charAt(0) }}
+        <img *ngIf="photoDataUrl()" [src]="photoDataUrl()" alt="" class="id-card__photo" />
+        <div class="id-card__photo-placeholder" *ngIf="!photoDataUrl()">
+          {{ card().holderName.charAt(0) }}
         </div>
       </div>
     </div>
 
     <div class="id-card__details-col">
-      <div class="id-card__holder-name">{{ card.holderName }}</div>
-      <div class="id-card__role-line">{{ roleLine }}</div>
+      <div class="id-card__holder-name">{{ card().holderName }}</div>
+      <!-- <div class="id-card__role-line" *ngIf="card().holderType === 'STAFF'">{{ roleLine() }}</div> -->
 
-      <div class="id-card__field-grid">
-        <div class="id-card__field" *ngFor="let f of displayFields">
+      <div
+        class="id-card__field-grid"
+        [class.id-card__field-grid--compact]="fieldDensity() === 'compact'"
+        [class.id-card__field-grid--tight]="fieldDensity() === 'tight'"
+      >
+        <div class="id-card__field" *ngFor="let f of displayFields()">
           <span class="id-card__field-label">{{ f.label }}</span>
           <span class="id-card__field-value">{{ f.value }}</span>
         </div>
@@ -68,16 +62,15 @@
     </div>
 
     <div class="id-card__qr-col">
-      <img *ngIf="qrDataUrl" [src]="qrDataUrl" alt="Verification QR code" class="id-card__qr" />
-      <div class="id-card__card-number">{{ card.cardNumber }}</div>
+      <img *ngIf="qrDataUrl()" [src]="qrDataUrl()" alt="Verification QR code" class="id-card__qr" />
+      <div class="id-card__card-number">{{ card().cardNumber }}</div>
     </div>
   </div>
 
-  <!-- ── Footer: validity + small print ── -->
   <div class="id-card__footer">
-    <span class="id-card__validity">Valid until {{ formattedValidUntil }}</span>
-    <span class="id-card__footer-note" *ngIf="card.template.layoutConfig.footerNote">
-      {{ card.template.layoutConfig.footerNote }}
+    <span class="id-card__validity">Valid until {{ formattedValidUntil() }}</span>
+    <span class="id-card__footer-note" *ngIf="card().template.layoutConfig.footerNote">
+      {{ card().template.layoutConfig.footerNote }}
     </span>
   </div>
 </div>

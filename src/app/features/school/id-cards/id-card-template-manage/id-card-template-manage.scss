@@ -1,0 +1,610 @@
+// src/app/features/school/id-cards/id-card-template-manage/id-card-template-manage.scss
+
+:host {
+  display: block;
+  height: 100%;
+}
+
+.btn {
+  padding: 9px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.05s ease;
+
+  &--primary {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    &:hover {
+      background: var(--color-primary-dark);
+    }
+  }
+  &--secondary {
+    background: var(--color-hover);
+    color: var(--color-text-primary);
+    &:hover {
+      background: var(--color-active);
+    }
+  }
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+}
+
+.badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 12%, white);
+  color: var(--color-primary);
+  margin-left: 6px;
+}
+
+// ── Page layout ──────────────────────────────────────────────────────────────
+
+.tmpl {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 20px;
+  padding: 20px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+// ── List pane ────────────────────────────────────────────────────────────────
+
+.tmpl__list-pane {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.tmpl__list-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 14px;
+
+  h1 {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 8px 0 0;           // was 2px — gives the heading breathing room under the back link
+    color: var(--color-text-primary);
+    line-height: 1.25;
+  }
+}
+
+.tmpl__back {
+    display: inline-flex;         // NEW — aligns icon + text on one baseline
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    font-weight: 600;
+    line-height: 1;
+  
+    mat-icon {
+      font-size: 16px;            
+      width: 16px;
+      height: 16px;
+      line-height: 16px;
+    }
+  
+    &:hover {
+      color: var(--color-primary);
+    }
+}
+
+.tmpl__tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--color-bg-main);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 14px;
+}
+
+.tmpl__tab {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 7px 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &--active {
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+.tmpl__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tmpl-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  position: relative;
+
+  &:hover {
+    background: var(--color-hover);
+  }
+
+  &--active {
+    background: var(--color-active);
+    border-color: var(--color-primary-light);
+  }
+}
+
+.tmpl-card__swatch {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tmpl-card__swatch-text {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+.tmpl-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.tmpl-card__name {
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-text-primary);
+}
+
+.tmpl-card__meta {
+  font-size: 11.5px;
+  color: var(--color-text-muted);
+  margin-top: 1px;
+}
+
+.tmpl-card__delete {
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    color: var(--color-error);
+    background: color-mix(in srgb, var(--color-error) 12%, white);
+  }
+}
+
+.tmpl-card:hover .tmpl-card__delete,
+.tmpl-card--active .tmpl-card__delete {
+  opacity: 1;
+}
+
+.tmpl__empty {
+  text-align: center;
+  padding: 32px 12px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+
+  p {
+    margin: 0 0 12px;
+  }
+}
+
+.tmpl__skeletons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tmpl__skeleton {
+  height: 58px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--color-divider) 25%,
+    var(--color-bg-main) 37%,
+    var(--color-divider) 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+// ── Editor pane ──────────────────────────────────────────────────────────────
+
+.tmpl__editor-pane {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  box-shadow: var(--shadow-sm);
+}
+
+.tmpl__placeholder {
+  margin: auto;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 13.5px;
+  max-width: 280px;
+  padding: 40px 20px;
+}
+
+.tmpl__placeholder-icon {
+  font-size: 34px;
+  margin-bottom: 10px;
+}
+
+.tmpl__editor {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.tmpl__editor-header {
+  padding: 18px 22px 0;
+
+  h2 {
+    font-size: 17px;
+    font-weight: 700;
+    margin: 6px 0 0;
+    color: var(--color-text-primary);
+  }
+}
+
+.tmpl__mobile-back {
+  display: none;
+  border: none;
+  background: none;
+  color: var(--color-text-secondary);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 0 6px;
+}
+
+.tmpl__editor-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  padding: 18px 22px;
+  flex: 1;
+}
+
+// ── Form fields ──────────────────────────────────────────────────────────────
+
+.tmpl__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.field__input {
+  padding: 9px 11px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  font-size: 13.5px;
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
+  }
+
+  &--color {
+    padding: 3px;
+    height: 38px;
+    cursor: pointer;
+  }
+}
+
+.field__range {
+  width: 100%;
+  accent-color: var(--color-primary);
+}
+
+.field-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.color-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  &__swatch {
+    width: 40px;
+    height: 38px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 2px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  &__hex {
+    flex: 1;
+    font-family: 'SFMono-Regular', Menlo, monospace;
+    text-transform: uppercase;
+  }
+}
+
+.preset-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.preset-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.1s ease, border-color 0.1s ease;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+
+  &--active {
+    border-color: var(--color-text-primary);
+    box-shadow: 0 0 0 2px var(--color-bg-surface), 0 0 0 3px var(--color-text-primary);
+  }
+}
+
+.toggle-row {
+  display: flex;
+  gap: 20px;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  cursor: pointer;
+
+  input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-primary);
+    cursor: pointer;
+  }
+
+  &--default {
+    padding: 10px 12px;
+    background: var(--color-bg-main);
+    border-radius: var(--radius-sm);
+  }
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-surface);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: var(--color-primary-light);
+  }
+
+  &--active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+}
+
+// ── Preview column ───────────────────────────────────────────────────────────
+
+.tmpl__preview {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.tmpl__preview-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--color-text-muted);
+}
+
+.tmpl__preview-stage {
+  background: repeating-conic-gradient(var(--color-divider) 0% 25%, var(--color-bg-surface) 0% 50%)
+    50% / 16px 16px;
+  border-radius: var(--radius-md);
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// ── Footer ───────────────────────────────────────────────────────────────────
+
+.tmpl__editor-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 22px;
+  border-top: 1px solid var(--color-border);
+  position: sticky;
+  bottom: 0;
+  background: var(--color-bg-card);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RESPONSIVE
+// ═══════════════════════════════════════════════════════════════════════════
+
+@media (max-width: 960px) {
+  .tmpl {
+    grid-template-columns: 1fr;
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .tmpl__list-pane {
+    max-height: 40vh;
+  }
+
+  .tmpl__editor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tmpl__preview {
+    position: static;
+    order: -1;
+  }
+
+  .tmpl__preview-stage {
+    padding: 16px;
+  }
+
+  .tmpl--editing .tmpl__list-pane {
+    display: none;
+  }
+
+  .tmpl__mobile-back {
+    display: inline-block;
+  }
+}
+
+@media (max-width: 560px) {
+  .field-pair {
+    grid-template-columns: 1fr;
+  }
+
+  .tmpl__editor-grid {
+    padding: 14px 16px;
+  }
+
+  .tmpl__preview-stage {
+    transform: scale(0.92);
+    transform-origin: top center;
+  }
+}
+
+.orientation-row {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .orientation-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-surface);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  
+    &:hover {
+      border-color: var(--color-primary-light);
+    }
+  
+    &--active {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: var(--color-on-primary);
+    }
+  }

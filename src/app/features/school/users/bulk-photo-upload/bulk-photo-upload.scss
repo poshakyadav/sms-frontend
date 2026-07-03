@@ -1,0 +1,501 @@
+// features/school/users/bulk-photo-upload/bulk-photo-upload.scss
+// Uses the same CSS variable tokens as avatar-picker.scss / user-form.scss.
+
+.bpu-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 88px; // room for the sticky save bar
+}
+
+// ── Header ───────────────────────────────────────────────────────────────
+.bpu-page-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.bpu-back-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  &:hover {
+    background: var(--color-hover);
+  }
+}
+
+.bpu-header-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.bpu-page-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.bpu-title-icon {
+  color: var(--color-primary);
+}
+
+.bpu-page-subtitle {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+}
+
+.bpu-pending-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  white-space: nowrap;
+
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+  }
+}
+
+// ── Selector card ────────────────────────────────────────────────────────
+.bpu-selector-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.bpu-cs-select {
+  flex: 1;
+  min-width: 240px;
+}
+
+.bpu-cs-count {
+  margin-left: 6px;
+  color: var(--color-text-muted);
+  font-size: 0.8em;
+}
+
+.bpu-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 220px;
+  padding: 0 12px;
+  height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-surface);
+
+  mat-icon:first-child {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+    color: var(--color-text-muted);
+  }
+}
+
+.bpu-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.86rem;
+  color: var(--color-text-primary);
+  font-family: inherit;
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+}
+
+.bpu-search-clear {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+  }
+}
+
+// ── Empty / loading states ───────────────────────────────────────────────
+.bpu-empty-state,
+.bpu-loading-state,
+.bpu-no-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 48px 20px;
+  text-align: center;
+  color: var(--color-text-secondary);
+
+  mat-icon {
+    font-size: 22px;
+    height: 22px;
+    width: 22px;
+  }
+}
+
+.bpu-empty-state__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--color-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  mat-icon {
+    font-size: 26px;
+    height: 26px;
+    width: 26px;
+    color: var(--color-text-muted);
+  }
+}
+
+.bpu-empty-state__title {
+  margin: 0;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.bpu-empty-state__desc {
+  margin: 0;
+  font-size: 0.82rem;
+  max-width: 320px;
+}
+
+.bpu-no-results {
+  padding: 32px 20px;
+}
+
+// ── Summary bar ──────────────────────────────────────────────────────────
+.bpu-summary-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+  padding: 4px 2px;
+}
+
+.bpu-summary-filtered {
+  color: var(--color-text-muted);
+}
+
+.bpu-summary-sep {
+  width: 1px;
+  height: 14px;
+  background: var(--color-border);
+}
+
+.bpu-summary-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+
+  mat-icon {
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
+  }
+
+  &--has {
+    color: #16a34a;
+  }
+
+  &--missing {
+    color: var(--color-text-muted);
+  }
+}
+
+// ── Student list / rows ──────────────────────────────────────────────────
+.bpu-student-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bpu-student-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &--pending {
+    border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-border));
+    background: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg-card));
+  }
+
+  &--success {
+    border-color: color-mix(in srgb, #16a34a 35%, var(--color-border));
+  }
+
+  &--error {
+    border-color: color-mix(in srgb, var(--color-error) 40%, var(--color-border));
+    background: color-mix(in srgb, var(--color-error) 4%, var(--color-bg-card));
+  }
+}
+
+.bpu-student-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bpu-student-name-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bpu-student-name {
+  font-weight: 700;
+  font-size: 0.94rem;
+  color: var(--color-text-primary);
+}
+
+.bpu-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+
+  mat-icon {
+    font-size: 12px;
+    height: 12px;
+    width: 12px;
+  }
+
+  &--pending {
+    background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+    color: var(--color-primary);
+  }
+
+  &--success {
+    background: color-mix(in srgb, #16a34a 15%, transparent);
+    color: #16a34a;
+  }
+
+  &--error {
+    background: color-mix(in srgb, var(--color-error) 15%, transparent);
+    color: var(--color-error);
+  }
+}
+
+.bpu-student-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.bpu-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.76rem;
+  color: var(--color-text-secondary);
+
+  mat-icon {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+    color: var(--color-text-muted);
+  }
+
+  &--muted {
+    color: var(--color-text-muted);
+    font-style: italic;
+  }
+}
+
+.bpu-student-guardian,
+.bpu-student-contact {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  color: var(--color-text-secondary);
+
+  mat-icon {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+  }
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.bpu-guardian-name {
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.bpu-guardian-sep {
+  margin: 0 4px;
+  color: var(--color-text-muted);
+}
+
+.bpu-student-contact {
+  span {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.bpu-row-error-text {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--color-error);
+}
+
+.bpu-student-photo {
+  flex-shrink: 0;
+}
+
+// ── Sticky save bar ───────────────────────────────────────────────────────
+.bpu-save-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 20px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  background: var(--color-bg-card);
+  border-top: 1px solid var(--color-border);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.bpu-save-bar__info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.84rem;
+  color: var(--color-text-secondary);
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+    color: var(--color-primary);
+  }
+}
+
+.bpu-save-bar__muted {
+  color: var(--color-text-muted);
+}
+
+.bpu-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: filter 0.15s ease;
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.05);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// ── Responsive: stack each row on narrow screens ─────────────────────────
+@media (max-width: 640px) {
+  .bpu-student-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .bpu-student-photo {
+    display: flex;
+    justify-content: center;
+    padding-top: 4px;
+    border-top: 1px dashed var(--color-border);
+  }
+
+  .bpu-save-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .bpu-save-btn {
+    justify-content: center;
+  }
+}

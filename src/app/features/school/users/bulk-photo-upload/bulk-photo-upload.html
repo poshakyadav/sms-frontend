@@ -1,0 +1,225 @@
+<!-- features/school/users/bulk-photo-upload/bulk-photo-upload.html -->
+
+<div class="bpu-page">
+  <!-- ── Page Header ──────────────────────────────────────────────────── -->
+  <div class="bpu-page-header">
+    <button type="button" class="bpu-back-btn" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div class="bpu-header-info">
+      <h1 class="bpu-page-title">
+        <mat-icon class="bpu-title-icon">add_a_photo</mat-icon>
+        Bulk Photo Upload
+      </h1>
+      <p class="bpu-page-subtitle">
+        Select a class-section, then upload or update student profile photos in one go
+      </p>
+    </div>
+    @if (pendingCount() > 0) {
+    <div class="bpu-pending-badge">
+      <mat-icon>cloud_upload</mat-icon>
+      {{ pendingCount() }} ready
+    </div>
+    }
+  </div>
+
+  <!-- ── Class-section selector + search ──────────────────────────────── -->
+  <div class="bpu-selector-card">
+    <mat-form-field appearance="outline" class="bpu-cs-select">
+      <mat-label>Class - Section</mat-label>
+      <mat-icon matPrefix>school</mat-icon>
+      @if (loadingClassSections()) {
+      <mat-spinner matSuffix diameter="18"></mat-spinner>
+      }
+      <mat-select
+        [value]="selectedClassSectionId()"
+        (selectionChange)="onClassSectionChange($event.value)"
+      >
+        @for (cs of activeClassSections(); track cs.id) {
+        <mat-option [value]="cs.id">
+          {{ cs.className }} - {{ cs.sectionName }}
+          @if (cs.currentStudents != null) {
+          <span class="bpu-cs-count">({{ cs.currentStudents }} students)</span>
+          }
+        </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    @if (selectedClassSectionId() && totalCount() > 0) {
+    <div class="bpu-search-wrap">
+      <mat-icon>search</mat-icon>
+      <input
+        type="text"
+        placeholder="Search by name, roll no, or admission no…"
+        [value]="searchQuery()"
+        (input)="searchQuery.set($any($event.target).value)"
+        class="bpu-search-input"
+      />
+      @if (searchQuery()) {
+      <button type="button" class="bpu-search-clear" (click)="searchQuery.set('')">
+        <mat-icon>close</mat-icon>
+      </button>
+      }
+    </div>
+    }
+  </div>
+
+  <!-- ── Initial empty state ──────────────────────────────────────────── -->
+  @if (!selectedClassSectionId()) {
+  <div class="bpu-empty-state">
+    <div class="bpu-empty-state__icon"><mat-icon>groups</mat-icon></div>
+    <p class="bpu-empty-state__title">Select a class-section to get started</p>
+    <p class="bpu-empty-state__desc">
+      Student photos will appear here once you choose a class-section above.
+    </p>
+  </div>
+  }
+
+  <!-- ── Loading students ─────────────────────────────────────────────── -->
+  @if (selectedClassSectionId() && loadingStudents()) {
+  <div class="bpu-loading-state">
+    <mat-spinner diameter="36"></mat-spinner>
+    <span>Loading students…</span>
+  </div>
+  }
+
+  <!-- ── No students ──────────────────────────────────────────────────── -->
+  @if (selectedClassSectionId() && !loadingStudents() && totalCount() === 0) {
+  <div class="bpu-empty-state">
+    <div class="bpu-empty-state__icon"><mat-icon>person_off</mat-icon></div>
+    <p class="bpu-empty-state__title">No active students in this class-section</p>
+  </div>
+  }
+
+  <!-- ── Student roster ───────────────────────────────────────────────── -->
+  @if (selectedClassSectionId() && !loadingStudents() && totalCount() > 0) {
+  <div class="bpu-summary-bar">
+    <span
+      ><strong>{{ totalCount() }}</strong> student{{ totalCount() !== 1 ? 's' : '' }}</span
+    >
+    @if (filteredStudents().length !== totalCount()) {
+    <span class="bpu-summary-filtered">· {{ filteredStudents().length }} matching search</span>
+    }
+    <span class="bpu-summary-sep"></span>
+    <span class="bpu-summary-chip bpu-summary-chip--has">
+      <mat-icon>check_circle</mat-icon>{{ studentsWithPhotoCount() }} with photo
+    </span>
+    <span class="bpu-summary-chip bpu-summary-chip--missing">
+      <mat-icon>help_outline</mat-icon>{{ studentsWithoutPhotoCount() }} without photo
+    </span>
+  </div>
+
+  <div class="bpu-student-list">
+    @for (student of filteredStudents(); track student.userId) {
+    <div
+      class="bpu-student-row"
+      [class.bpu-student-row--pending]="hasPendingChange(student.userId)"
+      [class.bpu-student-row--success]="rowStatusFor(student.userId) === 'success'"
+      [class.bpu-student-row--error]="rowStatusFor(student.userId) === 'error'"
+    >
+      <!-- LEFT: student details -->
+      <div class="bpu-student-info">
+        <div class="bpu-student-name-row">
+          <span class="bpu-student-name">{{ student.name }}</span>
+          @if (hasPendingChange(student.userId)) {
+          <span class="bpu-chip bpu-chip--pending"> <mat-icon>schedule</mat-icon>Pending </span>
+          } @else if (rowStatusFor(student.userId) === 'success') {
+          <span class="bpu-chip bpu-chip--success">
+            <mat-icon>check_circle</mat-icon>Uploaded
+          </span>
+          } @else if (rowStatusFor(student.userId) === 'error') {
+          <span class="bpu-chip bpu-chip--error"> <mat-icon>error</mat-icon>Failed </span>
+          }
+        </div>
+        <div class="bpu-student-meta">
+            @if (student.rollNumber) {
+            <span class="bpu-meta-item"><mat-icon>tag</mat-icon>Roll {{ student.rollNumber }}</span>
+            } @if (student.admissionNumber) {
+            <span class="bpu-meta-item"><mat-icon>badge</mat-icon>{{ student.admissionNumber }}</span>
+            } @if (student.gender) {
+            <span class="bpu-meta-item"><mat-icon>wc</mat-icon>{{ student.gender | titlecase }}</span>
+            }
+          </div>
+  
+          @if (student.fatherName || student.motherName) {
+          <div class="bpu-student-guardian">
+            <mat-icon>family_restroom</mat-icon>
+            <span>
+              @if (student.fatherName) {
+              <span class="bpu-guardian-name">{{ student.fatherName }}</span>
+              } @if (student.fatherName && student.motherName) {
+              <span class="bpu-guardian-sep">·</span>
+              } @if (student.motherName) {
+              <span class="bpu-guardian-name">{{ student.motherName }}</span>
+              }
+            </span>
+          </div>
+          }
+  
+          @if (student.phone) {
+          <div class="bpu-student-contact">
+            <mat-icon>call</mat-icon>
+            <span>{{ student.phone }}</span>
+          </div>
+          }
+  
+          @if (!student.rollNumber && !student.admissionNumber && !student.fatherName &&
+          !student.motherName && !student.phone) {
+          <span class="bpu-meta-item bpu-meta-item--muted">No additional details on file</span>
+          }
+        @if (rowStatusFor(student.userId) === 'error') {
+        <p class="bpu-row-error-text">{{ rowErrorFor(student.userId) }}</p>
+        }
+      </div>
+
+      <!-- RIGHT: photo picker -->
+      <div class="bpu-student-photo">
+        <app-avatar-picker
+          [currentAvatarUrl]="student.avatarUrl"
+          [fallbackInitial]="student.name.charAt(0)"
+          [pendingChangeOnly]="true"
+          [disabled]="uploading()"
+          (fileSelected)="onFileStaged(student, $event)"
+          (removed)="onFileCancelled(student)"
+        ></app-avatar-picker>
+      </div>
+    </div>
+    } @if (filteredStudents().length === 0) {
+    <div class="bpu-no-results">
+      <mat-icon>search_off</mat-icon>
+      <p>No students match "{{ searchQuery() }}"</p>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- ── Sticky save bar ───────────────────────────────────────────────── -->
+  @if (selectedClassSectionId() && totalCount() > 0) {
+  <div class="bpu-save-bar">
+    <div class="bpu-save-bar__info">
+      @if (uploading()) {
+      <mat-spinner diameter="18"></mat-spinner>
+      <span>{{ uploadProgressLabel() }}</span>
+      } @else if (pendingCount() > 0) {
+      <mat-icon>info_outline</mat-icon>
+      <span>{{ pendingCount() }} photo{{ pendingCount() !== 1 ? 's' : '' }} ready to upload</span>
+      } @else {
+      <span class="bpu-save-bar__muted">No changes to save</span>
+      }
+    </div>
+    <button
+      type="button"
+      class="bpu-save-btn"
+      [disabled]="pendingCount() === 0 || uploading()"
+      (click)="saveAll()"
+    >
+      @if (uploading()) {
+      <mat-spinner diameter="16"></mat-spinner>
+      } @else {
+      <mat-icon>cloud_upload</mat-icon>
+      } Save &amp; Upload{{ pendingCount() > 0 ? ' (' + pendingCount() + ')' : '' }}
+    </button>
+  </div>
+  }
+</div>

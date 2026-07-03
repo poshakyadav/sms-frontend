@@ -9,21 +9,20 @@
 
 import {
   Component,
-  Input,
-  OnChanges,
-  OnInit,
-  ViewChild,
+  computed,
+  inject,
+  input,
+  viewChild,
+  signal,
+  effect,
   ElementRef,
-  SimpleChanges,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IdCardData } from '../../../../core/services/id-card.service';
+import { IdCardData, IdCardHolderType } from '../../../../core/services/id-card.service';
 import { QrCodeService } from '../../../../core/services/qr-code.service';
+import { ImageDataUrlService } from '../../../../core/services/image-data-url.service';
 
 // ── Field label mapping ──────────────────────────────────────────────────────
-// Maps the layoutConfig.visibleFields keys (raw snapshot field names) to
-// human-readable labels shown on the card. Centralized here so template
-// configs only ever need to store the field KEY, not display strings.
 const FIELD_LABELS: Record<string, string> = {
   className: 'Class',
   sectionName: 'Section',
@@ -36,6 +35,12 @@ const FIELD_LABELS: Record<string, string> = {
   dateOfBirth: 'DOB',
 };
 
+// ── Holder-type badge label ──────────────────────────────────────────────────
+const HOLDER_TYPE_LABELS: Record<IdCardHolderType, string> = {
+  STUDENT: 'STUDENT ID',
+  STAFF: 'STAFF ID',
+};
+
 @Component({
   selector: 'app-id-card-preview',
   standalone: true,
@@ -43,64 +48,168 @@ const FIELD_LABELS: Record<string, string> = {
   templateUrl: './id-card-preview.html',
   styleUrl: './id-card-preview.scss',
 })
-export class IdCardPreviewComponent implements OnInit, OnChanges {
-  @Input({ required: true }) card!: IdCardData;
+export class IdCardPreviewComponent {
+  card = input.required<IdCardData>();
 
-  @ViewChild('cardRoot') cardRootRef!: ElementRef<HTMLElement>;
+  private cardRootRef = viewChild.required<ElementRef<HTMLElement>>('cardRoot');
+  private qrCodeService = inject(QrCodeService);
 
-  qrDataUrl: string | null = null;
+  private imageDataUrlService = inject(ImageDataUrlService);
+
   fieldLabels = FIELD_LABELS;
 
-  constructor(private qrCodeService: QrCodeService) {}
+  // ── QR code ──────────────────────────────────────────────────────────────
+  qrDataUrl = signal<string | null | undefined>(undefined);
+  private qrReadyResolve!: () => void;
+  private qrReadyPromise = new Promise<void>((resolve) => { this.qrReadyResolve = resolve; });
 
-  ngOnInit(): void {
-    this.generateQr();
+  // ── Photo — resolved to a data: URI. This is the actual fix for the
+  // black-box-on-print bug. See ImageDataUrlService. ────────────────────────
+  photoDataUrl = signal<string | null>(null);
+  photoLoadFailed = signal(false);
+  private photoReadyResolve!: () => void;
+  private photoReadyPromise = new Promise<void>((resolve) => { this.photoReadyResolve = resolve; });
+
+  // ── School logo — same treatment, same failure mode as the photo ─────────
+  logoDataUrl = signal<string | null>(null);
+  private logoReadyResolve!: () => void;
+  private logoReadyPromise = new Promise<void>((resolve) => { this.logoReadyResolve = resolve; });
+
+
+  constructor() {
+    effect(() => {
+      const url = this.card().verificationUrl;
+      if (!url) {
+        this.qrDataUrl.set(null);
+        this.qrReadyResolve();
+        return;
+      }
+      this.qrCodeService
+        .toDataUrl(url, 256)
+        .then((dataUrl) => this.qrDataUrl.set(dataUrl))
+        .catch((err) => {
+          console.error('[ID-CARD] QR generation failed for', this.card().cardNumber, err);
+          this.qrDataUrl.set(null);
+        })
+        .finally(() => this.qrReadyResolve());
+    });
+
+    effect(() => {
+      const url = this.card().photoUrl;
+      if (!url) {
+        this.photoDataUrl.set(null);
+        this.photoLoadFailed.set(false);
+        this.photoReadyResolve();
+        return;
+      }
+      this.imageDataUrlService
+        .resolve(url)
+        .then((dataUrl) => {
+          this.photoDataUrl.set(dataUrl);
+          this.photoLoadFailed.set(dataUrl === null);
+        })
+        .finally(() => this.photoReadyResolve());
+    });
+
+    effect(() => {
+      const url = this.card().school.logoUrl;
+      if (!url) {
+        this.logoDataUrl.set(null);
+        this.logoReadyResolve();
+        return;
+      }
+      this.imageDataUrlService
+        .resolve(url)
+        .then((dataUrl) => this.logoDataUrl.set(dataUrl))
+        .finally(() => this.logoReadyResolve());
+    });
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['card'] && !changes['card'].firstChange) {
-      this.generateQr();
-    }
+  /** Print/export flow waits on this — resolves once QR, photo, and logo
+   *  have all settled, so nothing gets captured mid-flight or blank. */
+  whenReady(): Promise<void> {
+    return Promise.all([
+      this.qrReadyPromise,
+      this.photoReadyPromise,
+      this.logoReadyPromise,
+    ]).then(() => { });
   }
 
-  private async generateQr(): Promise<void> {
-    if (!this.card?.verificationUrl) return;
-    this.qrDataUrl = await this.qrCodeService.toDataUrl(this.card.verificationUrl, 256);
-  }
-
-  /** Returns the human display value for a given snapshot field key. */
   getFieldValue(key: string): string | undefined {
-    return (this.card.details as Record<string, string | undefined>)[key];
+    return (this.card().details as Record<string, string | undefined>)[key];
   }
 
-  /** Visible fields filtered to only those that actually have a value for
-   *  this holder (e.g. a staff card template might list "department" but
-   *  this particular staff member has none recorded — skip it cleanly
-   *  rather than showing an empty row). */
-  get displayFields(): Array<{ key: string; label: string; value: string }> {
-    return this.card.template.layoutConfig.visibleFields
-      .map((key) => ({ key, label: this.fieldLabels[key] ?? key, value: this.getFieldValue(key) }))
+  orientation = computed<'horizontal' | 'vertical'>(
+    () => this.card().template.layoutConfig.orientation ?? 'horizontal'
+  );
+
+  cardTypeLabel = computed(
+    () => HOLDER_TYPE_LABELS[this.card().holderType] ?? 'ID CARD'
+  );
+
+  displayFields = computed(() => {
+    const card = this.card();
+    return card.template.layoutConfig.visibleFields
+      .map((key) => {
+        const raw = (card.details as Record<string, string | undefined>)[key];
+        return {
+          key,
+          label: this.fieldLabels[key] ?? key,
+          value: raw ? this.formatFieldValue(key, raw) : raw,
+        };
+      })
       .filter((f): f is { key: string; label: string; value: string } => !!f.value);
+  });
+
+  private formatFieldValue(key: string, raw: string): string {
+    if (key !== 'dateOfBirth') return raw;
+
+    const trimmed = raw.trim();
+    let date: Date;
+
+    if (/^\d+(\.\d+)?$/.test(trimmed)) {
+      date = new Date(Date.UTC(1899, 11, 30) + Number(trimmed) * 86400000);
+    } else {
+      date = new Date(trimmed);
+    }
+
+    if (isNaN(date.getTime())) return raw;
+
+    return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
-  get formattedValidUntil(): string {
-    const d = new Date(this.card.validUntil);
+  fieldDensity = computed<'normal' | 'compact' | 'tight'>(() => {
+    const count = this.displayFields().length;
+    const rows = Math.ceil(count / 2);
+
+    if (this.orientation() === 'vertical') {
+      if (rows <= 1) return 'normal';
+      if (rows <= 2) return 'compact';
+      return 'tight';
+    }
+
+    if (rows <= 2) return 'normal';
+    if (rows <= 3) return 'compact';
+    return 'tight';
+  });
+
+  formattedValidUntil = computed(() => {
+    const d = new Date(this.card().validUntil);
     return d.toLocaleDateString('en-IN', { year: 'numeric', month: 'short' });
-  }
+  });
 
-  get roleLine(): string {
-    if (this.card.holderType === 'STUDENT') {
-      const { className, sectionName, rollNumber } = this.card.details;
+  roleLine = computed(() => {
+    const card = this.card();
+    if (card.holderType === 'STUDENT') {
+      const { className, sectionName, rollNumber } = card.details;
       const classSection =
         className && sectionName ? `${className} - ${sectionName}` : className || '';
       return rollNumber ? `${classSection} | Roll No. ${rollNumber}` : classSection;
     }
-    return this.card.details.designation || 'Staff';
-  }
+    return card.details.designation || 'Staff';
+  });
 
-  /** Exposes the captured root element to parent components/services that
-   *  need to pass it to IdCardPdfService (single export or batch capture). */
   getCardElement(): HTMLElement {
-    return this.cardRootRef.nativeElement;
+    return this.cardRootRef().nativeElement;
   }
 }

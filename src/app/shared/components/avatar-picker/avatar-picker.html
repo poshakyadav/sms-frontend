@@ -37,7 +37,7 @@
   </div>
 
   <div class="avatar-picker__meta">
-    @if (hasPhoto && !uploading()) {
+    <!-- @if (hasPhoto && !uploading()) {
     <button
       type="button"
       class="avatar-picker__remove-btn"
@@ -47,7 +47,20 @@
       <mat-icon>delete_outline</mat-icon>
       Remove
     </button>
-    } @if (compressedSizeLabel()) {
+    }  -->
+    
+    @if (hasPhoto && !uploading() && (!pendingChangeOnly || previewUrl())) {
+      <button
+        type="button"
+        class="avatar-picker__remove-btn"
+        [disabled]="disabled"
+        (click)="removePhoto()"
+      >
+        <mat-icon>{{ previewUrl() ? 'undo' : 'delete_outline' }}</mat-icon>
+        {{ previewUrl() ? 'Undo Change' : 'Remove' }}
+      </button>
+      }
+    @if (compressedSizeLabel()) {
     <span class="avatar-picker__size-hint">{{ compressedSizeLabel() }} · optimized</span>
     }
     <span class="avatar-picker__ratio-hint">

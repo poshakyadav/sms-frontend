@@ -1,145 +1,721 @@
 // src/app/features/school/id-cards/id-card-management/id-card-management.component.scss
+//
+// Built entirely on the design tokens from the global styles.scss (:root
+// custom properties). Badge tint backgrounds use color-mix() to derive a
+// light tint from a token at runtime (Chrome 111+/Safari 16.4+/Firefox 113+)
+// rather than hardcoding a second palette — no new colors are introduced.
+//
+// NOTE: row-action buttons use `.card-action-btn` (NOT `.icon-btn`).
+// `_buttons.scss` (global) already defines a *different* `.icon-btn` —
+// a fixed 40x40 square icon-only button. Reusing that name here caused
+// width/height/justify-content to leak in from the global rule (Angular's
+// view-encapsulation specificity only wins per-property, and this
+// component never declared those three), squeezing icon+label together
+// and making them visually overlap. Renaming avoids the collision
+// entirely instead of fighting it with more overrides.
+
+// ── Reusable icon sizing ──────────────────────────────────────────────────────
+.icon {
+  width: 16px;
+  height: 16px;
+  display: block;
+  flex-shrink: 0;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LAYOUT SHELL
+// ─────────────────────────────────────────────────────────────────────────────
 
 .id-card-mgmt {
   padding: 24px;
+  max-width: 1280px;
+  margin: 0 auto;
+
+  @media (max-width: 640px) {
+    padding: 16px;
+  }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HEADER
+// ─────────────────────────────────────────────────────────────────────────────
 
 .id-card-mgmt__header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 16px;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.id-card-mgmt__heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 
   h1 {
     font-size: 20px;
     font-weight: 700;
     margin: 0;
+    color: var(--color-text-primary);
+    letter-spacing: -0.01em;
+  }
+}
+
+.id-card-mgmt__heading-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-primary) 12%, white);
+  color: var(--color-primary);
+  flex-shrink: 0;
+
+  .icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.id-card-mgmt__subtitle {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.id-card-mgmt__selected-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px 2px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 12%, white);
+  color: var(--color-primary-dark);
+  font-weight: 600;
+}
+
+.id-card-mgmt__clear-selection {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: underline;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-primary-dark);
   }
 }
 
 .id-card-mgmt__actions {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
-.id-card-mgmt__filters {
+// ─────────────────────────────────────────────────────────────────────────────
+// BUTTONS (top toolbar — Print Selected / Generate Cards / Manage Templates)
+// ─────────────────────────────────────────────────────────────────────────────
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  line-height: 1;
+  transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease,
+    transform 150ms ease;
+
+  &--primary {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    box-shadow: var(--shadow-sm);
+
+    &:hover:not(:disabled) {
+      background: var(--color-primary-dark);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+  }
+
+  &--secondary {
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+    border-color: var(--color-border);
+
+    &:hover:not(:disabled) {
+      background: var(--color-hover);
+      border-color: var(--color-primary);
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: var(--color-text-secondary);
+    border-color: var(--color-border);
+
+    &:hover {
+      background: var(--color-hover);
+      color: var(--color-text-primary);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 30%, transparent);
+  }
+}
+
+@media (max-width: 560px) {
+  .id-card-mgmt__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .id-card-mgmt__actions {
+    width: 100%;
+  }
+  .id-card-mgmt__actions .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TOOLBAR / FILTERS
+// ─────────────────────────────────────────────────────────────────────────────
+
+.id-card-mgmt__toolbar {
   display: flex;
-  gap: 10px;
-  margin-bottom: 16px;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.id-card-mgmt__filter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 160px;
+  min-width: 160px;
+
+  label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+}
+
+.id-card-mgmt__select-wrap {
+  position: relative;
 
   select {
-    padding: 6px 10px;
-    border-radius: 8px;
-    border: 1px solid #d8dae0;
+    width: 100%;
+    appearance: none;
+    padding: 8px 32px 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    // Chevron color matches --color-text-secondary (#64748b). CSS vars can't
+    // be interpolated inside a data: URI, so the hex is inlined here — keep
+    // it in sync if that token's value ever changes.
+    background: var(--color-bg-main)
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")
+      no-repeat right 8px center;
     font-size: 13px;
+    color: var(--color-text-primary);
+    cursor: pointer;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+
+    &:hover {
+      border-color: var(--color-primary);
+    }
+
+    &:focus-visible {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 20%, transparent);
+    }
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TABLE
+// ─────────────────────────────────────────────────────────────────────────────
+
+.id-card-mgmt__table-wrap {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: auto;
 }
 
 .id-card-mgmt__table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
-  border-radius: 10px;
-  overflow: hidden;
 
   th,
   td {
-    padding: 10px 12px;
+    padding: 12px 14px;
     text-align: left;
     font-size: 13px;
-    border-bottom: 1px solid #eef0f4;
+    border-bottom: 1px solid var(--color-divider);
+    white-space: nowrap;
   }
 
   th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
     font-weight: 600;
-    color: #6b7280;
-    font-size: 11.5px;
+    color: var(--color-text-secondary);
+    font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
-    background: #fafbfc;
+    letter-spacing: 0.4px;
+    background: var(--color-bg-surface);
+  }
+
+  tbody tr {
+    transition: background-color 120ms ease;
+
+    &:hover {
+      background: var(--color-hover);
+    }
+
+    &:last-child td {
+      border-bottom: none;
+    }
   }
 }
 
-.id-card-mgmt__thumb {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  object-fit: cover;
+.id-card-mgmt__row--selected {
+  background: var(--color-active);
+
+  &:hover {
+    background: var(--color-active);
+  }
 }
 
-.id-card-mgmt__row-actions {
+.id-card-mgmt__col-check {
+  width: 40px;
+
+  input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-primary);
+    cursor: pointer;
+  }
+}
+
+// The Actions <td> stays a plain table-cell (no display:flex here) so the
+// browser's auto table-layout can measure its real content width — the
+// flex layout for the buttons themselves lives one level down, on
+// .id-card-mgmt__row-actions (the wrapper <div> inside the <td>).
+.id-card-mgmt__col-actions {
+  text-align: left;
+  width: 1%; // shrink-to-content, not min-width
+  white-space: nowrap;
+  padding-right: 20px;
+  vertical-align: middle;
+}
+
+// ── Identity cell (avatar + name + card number) ──────────────────────────────
+.id-card-mgmt__identity {
   display: flex;
+  align-items: center;
   gap: 10px;
 }
 
-.link-btn {
-  background: none;
-  border: none;
-  color: #4f46e5;
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 0;
+.id-card-mgmt__thumb {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
 
-  &:disabled {
-    color: #b3b6c2;
-    cursor: not-allowed;
+  &--fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    color: var(--color-on-primary);
+    font-size: 13px;
+    font-weight: 700;
   }
 }
 
+.id-card-mgmt__identity-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.id-card-mgmt__identity-name {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.id-card-mgmt__identity-meta {
+  font-size: 11.5px;
+  color: var(--color-text-muted);
+}
+
+// ── Type badge ─────────────────────────────────────────────────────────────
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+
+  .icon {
+    width: 12px;
+    height: 12px;
+  }
+
+  &--student {
+    background: color-mix(in srgb, var(--color-info) 12%, white);
+    color: var(--color-info);
+  }
+  &--staff {
+    background: color-mix(in srgb, var(--color-secondary) 12%, white);
+    color: var(--color-secondary);
+  }
+}
+
+// ── Status badge ───────────────────────────────────────────────────────────
 .status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 11px;
   font-weight: 700;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 999px;
   text-transform: uppercase;
   letter-spacing: 0.3px;
 
+  &__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
   &--active {
-    background: #e7f6ec;
-    color: #16a34a;
+    background: color-mix(in srgb, var(--color-success) 14%, white);
+    color: var(--color-success);
   }
   &--revoked {
-    background: #fde8e8;
-    color: #dc2626;
+    background: color-mix(in srgb, var(--color-error) 12%, white);
+    color: var(--color-error);
   }
   &--expired {
-    background: #fef3e0;
-    color: #b45309;
+    background: color-mix(in srgb, var(--color-warning) 14%, white);
+    color: var(--color-warning);
   }
   &--reissued {
-    background: #eef0f4;
-    color: #6b7280;
+    background: var(--color-hover);
+    color: var(--color-text-secondary);
   }
 }
 
-.id-card-mgmt__empty,
-.id-card-mgmt__loading {
+// ─────────────────────────────────────────────────────────────────────────────
+// ROW ACTIONS (Print / Revoke / Reissue)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Wrapper <div> inside the Actions <td> — this is where the flex layout
+// lives, NOT on the <td> itself.
+.id-card-mgmt__row-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px; // slightly roomier than 4px so icon/text never crowd
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+
+  .card-action-btn:not(:last-child) {
+    position: relative;
+    &::after {
+      content: '';
+      position: absolute;
+      right: -3px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1px;
+      height: 14px;
+      background: var(--color-divider);
+    }
+  }
+}
+
+// Icon + label pill button. Deliberately NOT named `.icon-btn` — see the
+// header comment at the top of this file for why.
+.card-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; // explicit — don't inherit a centered layout
+  gap: 6px;
+  width: auto; // explicit — refuses to collapse to a fixed square
+  height: auto;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: none; // no border — was causing the uneven boxy look
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1; // keeps icon + text vertically consistent across rows
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: inherit;
+  transition: background-color 150ms ease, color 150ms ease;
+
+  .icon {
+    flex-shrink: 0;
+  }
+
+  span {
+    display: none;
+
+    @media (min-width: 1100px) {
+      display: inline;
+    }
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--color-hover);
+    color: var(--color-text-primary);
+  }
+
+  &--danger:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--color-error) 10%, white);
+    color: var(--color-error);
+  }
+
+  &--primary:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--color-primary) 10%, white);
+    color: var(--color-primary);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 25%, transparent);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EMPTY & LOADING STATES
+// ─────────────────────────────────────────────────────────────────────────────
+
+.id-card-mgmt__empty-row td {
+  border-bottom: none;
+  white-space: normal;
+}
+
+.id-card-mgmt__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  color: #9aa1b1;
-  padding: 40px 0;
+  padding: 56px 20px;
+  color: var(--color-text-muted);
+}
+
+.id-card-mgmt__empty-icon {
+  width: 44px;
+  height: 44px;
+  margin-bottom: 14px;
+  color: var(--color-text-muted);
+}
+
+.id-card-mgmt__empty-title {
+  margin: 0 0 4px;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.id-card-mgmt__empty-text {
+  margin: 0 0 18px;
+  font-size: 13px;
+  max-width: 320px;
+}
+
+.id-card-mgmt__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 56px 0;
+  color: var(--color-text-muted);
   font-size: 13.5px;
 }
 
-.btn {
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
+.id-card-mgmt__spinner {
+  width: 20px;
+  height: 20px;
+  color: var(--color-primary);
+  animation: id-card-mgmt-spin 0.8s linear infinite;
+}
 
-  &--primary {
-    background: #4f46e5;
-    color: #fff;
+@keyframes id-card-mgmt-spin {
+  to {
+    transform: rotate(360deg);
   }
-  &--secondary {
-    background: #eef0f4;
-    color: #1f2430;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .id-card-mgmt__spinner {
+    animation: none;
   }
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  .btn,
+  .card-action-btn,
+  tbody tr {
+    transition: none;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RESPONSIVE — collapse table to stacked cards below 720px
+// ─────────────────────────────────────────────────────────────────────────────
+
+@media (max-width: 720px) {
+  .id-card-mgmt__table-wrap {
+    overflow: visible;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .id-card-mgmt__table {
+    display: block;
+
+    thead {
+      display: none;
+    }
+
+    tbody {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    tr {
+      position: relative;
+      display: block;
+      padding: 14px 44px 14px 14px;
+      background: var(--color-bg-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+    }
+
+    td {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 5px 0;
+      border-bottom: none;
+      white-space: normal;
+
+      &::before {
+        content: attr(data-label);
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--color-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        flex-shrink: 0;
+      }
+    }
+  }
+
+  .id-card-mgmt__col-check {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    padding: 0 !important;
+
+    &::before {
+      content: none;
+    }
+  }
+
+  td[data-label='Holder'] {
+    padding-bottom: 10px !important;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--color-divider) !important;
+
+    &::before {
+      content: none;
+    }
+  }
+
+  td[data-label='Actions'] {
+    justify-content: flex-start; // single child div now, not the buttons directly
+    &::before {
+      content: none;
+    }
+  }
+
+  .id-card-mgmt__row-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    margin-top: 6px;
+    width: 100%;
+  }
+
+  .card-action-btn span {
+    display: inline;
+  }
+
+  .id-card-mgmt__empty-row td {
+    display: block;
+    padding: 0;
+
+    &::before {
+      content: none;
+    }
   }
 }
 
@@ -157,4 +733,266 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DELETE CONFIRMATION MODAL
+// ─────────────────────────────────────────────────────────────────────────────
+
+.btn--danger {
+  background: var(--color-error);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+
+  &:hover:not(:disabled) {
+    filter: brightness(0.92);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 16px;
+}
+
+.confirm-panel {
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-md);
+  width: 420px;
+  max-width: 100%;
+  padding: 24px;
+  box-shadow: var(--shadow-lg, 0 20px 40px rgba(0, 0, 0, 0.2));
+  text-align: center;
+}
+
+.confirm-panel__icon {
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-error) 12%, white);
+  color: var(--color-error);
+
+  .icon {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+.confirm-panel h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.confirm-panel__body {
+  margin: 0 0 10px;
+  font-size: 13.5px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.confirm-panel__warning {
+  margin: 0 0 18px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-error) 8%, white);
+  color: var(--color-error);
+  font-size: 12.5px;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.confirm-panel__actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// "Delete Selected" toolbar button — outlined danger variant, distinct from
+// the solid .btn--danger used inside confirmation modals so the toolbar
+// doesn't read as visually "louder" than Print/Generate before confirmation.
+// ─────────────────────────────────────────────────────────────────────────────
+
+.btn--danger-outline {
+  background: var(--color-bg-surface);
+  color: var(--color-error);
+  border-color: color-mix(in srgb, var(--color-error) 35%, transparent);
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--color-error) 8%, white);
+    border-color: var(--color-error);
+  }
+}
+
+// ── Selected-cards summary list inside the bulk-delete confirmation panel ──
+.confirm-panel__list {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0;
+  max-height: 160px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  text-align: left;
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 7px 10px;
+    font-size: 12.5px;
+    color: var(--color-text-primary);
+    border-bottom: 1px solid var(--color-divider);
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+}
+
+.confirm-panel__list-status {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--color-text-muted);
+
+  &--active {
+    color: var(--color-error);
+  }
+}
+
+.generation-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 210;
+  padding: 16px;
+}
+
+.generation-panel {
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-md);
+  width: 340px;
+  max-width: 100%;
+  padding: 24px;
+  box-shadow: var(--shadow-lg, 0 20px 40px rgba(0, 0, 0, 0.2));
+  text-align: center;
+
+  h3 {
+    margin: 0 0 16px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+}
+
+.generation-progress-bar {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--color-hover);
+  overflow: hidden;
+
+  &__fill {
+    height: 100%;
+    background: var(--color-primary);
+    border-radius: 999px;
+    transition: width 200ms ease;
+  }
+}
+
+.generation-panel__percent {
+  margin: 10px 0 4px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.generation-panel__stats {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+}
+
+.generation-panel__failed {
+  color: var(--color-error);
+  font-weight: 600;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PRINT PROGRESS OVERLAY — mirrors .generation-overlay/.generation-panel
+// ─────────────────────────────────────────────────────────────────────────────
+
+.print-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 210;
+  padding: 16px;
+}
+
+.print-panel {
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-md);
+  width: 340px;
+  max-width: 100%;
+  padding: 24px;
+  box-shadow: var(--shadow-lg, 0 20px 40px rgba(0, 0, 0, 0.2));
+  text-align: center;
+
+  h3 {
+    margin: 0 0 16px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+}
+
+.print-progress-bar {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--color-hover);
+  overflow: hidden;
+
+  &__fill {
+    height: 100%;
+    background: var(--color-primary);
+    border-radius: 999px;
+    transition: width 200ms ease;
+  }
+}
+
+.print-panel__percent {
+  margin: 10px 0 4px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.print-panel__stats {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
 }

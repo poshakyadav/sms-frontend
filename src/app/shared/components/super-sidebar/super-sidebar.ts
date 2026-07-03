@@ -70,6 +70,12 @@ export const SUPER_NAV_GROUPS: SuperNavGroup[] = [
         permissions: ['roles.manage'],
       },
       {
+        label: 'Access Plans',
+        icon: 'sell',
+        route: '/super/access-plans',
+        permissions: ['access-plans.view', 'access-plans.manage'],
+      },
+      {
         label: 'Permission Sync',
         icon: 'sync_lock',
         route: '/super/permission-sync',

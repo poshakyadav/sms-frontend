@@ -42,6 +42,15 @@ export class AvatarPicker {
   @Input() fallbackInitial = '?';
 
   /**
+   * When true (used in deferred/bulk-upload contexts), the "Remove"
+   * affordance only appears once the user has staged a NEW photo locally
+   * (i.e. there's something to undo). Deleting an already-saved photo
+   * isn't something deferred mode supports — that's the dedicated
+   * remove flow on the single-user edit page (userId + immediate mode).
+   */
+  @Input() pendingChangeOnly = false;
+
+  /**
    * When provided, the component manages upload/remove itself. When omitted,
    * the component only crops + compresses + emits — the parent uploads later.
    */

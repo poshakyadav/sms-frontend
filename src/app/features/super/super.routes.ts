@@ -90,6 +90,16 @@ export const SUPER_ROUTES: Routes = [
         canActivate: [superPermissionGuard('payments.config')],
       },
 
+      // ── Access Plans (pricing configuration) ──────────────────────────────
+      {
+        path: 'access-plans',
+        loadComponent: () =>
+          import('./access-plans-management/access-plans-management').then(
+            (m) => m.AccessPlansManagement
+          ),
+        canActivate: [superPermissionGuard(['access-plans.view', 'access-plans.manage'])],
+      },
+
       // ── School registration requests ──────────────────────────────────────
       {
         path: 'school-requests',

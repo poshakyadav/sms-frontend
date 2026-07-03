@@ -1,292 +1,260 @@
-// src/app/features/school/billing/services/access-payment.service.ts
+// src/app/core/services/access-payment.service.ts
 //
-// Manages the complete access plan payment lifecycle:
-//   1. Initiate Razorpay Order (manual) or Subscription (autopay)
-//   2. Open Razorpay Checkout
-//   3. Verify payment signature with backend
-//   4. Refresh billing state on success
+// Owns the Razorpay Checkout.js lifecycle for one-time and Autopay
+// access-plan payments. Loads checkout.js once, opens the modal, and
+// reconciles the result with the backend verify endpoints.
 //
-// Both payment rails (manual + autopay) are handled here.
-// The caller picks the rail via `paymentMode` parameter.
+// NOTE: `Window.Razorpay` is declared ONCE, globally, in
+// `core/types/razorpay.types.ts`. Do not redeclare it here or in any other
+// file — TypeScript requires every `declare global` augmentation of the
+// same interface in a program to have an IDENTICAL type, and a second,
+// looser declaration (e.g. `Razorpay: any`) breaks the build (TS2717)
+// wherever both files end up compiled together.
 
 import { Injectable, inject, signal } from '@angular/core';
-import { Observable, from, switchMap, tap, catchError, throwError } from 'rxjs';
-
-import { BillingService } from './billing.service';
-import { loadRazorpayScript } from '../utils/razorpay-loader';
+import { firstValueFrom, Observable, catchError, tap, throwError } from 'rxjs';
 import { ApiService } from './api.service';
-import { AuthService } from './auth.service';
+import { BillingService } from './billing.service';
 import { ToastService } from './toast.service';
-import { RazorpayPaymentResponse } from '../types/razorpay.types';
+import { AuthService } from './auth.service';
+import { RazorpayOptions, RazorpayPaymentResponse } from '../types/razorpay.types';
 
-export type PaymentMode = 'manual' | 'autopay';
+export type ProcessingStep = 'initiating' | 'checkout' | 'verifying' | null;
 
-export interface InitiateOrderResult {
-  razorpayOrderId: string;
-  amountPaise: number;
-  currency: string;
-  keyId: string;
-  platformPaymentId: number;
-}
-
-export interface InitiateAutopayResult {
-  razorpaySubscriptionId: string;
-  keyId: string;
-  amountPaise: number;
-  currency: string;
-}
+const RAZORPAY_CHECKOUT_SRC = 'https://checkout.razorpay.com/v1/checkout.js';
 
 @Injectable({ providedIn: 'root' })
 export class AccessPaymentService {
   private api = inject(ApiService);
-  private auth = inject(AuthService);
-  private toast = inject(ToastService);
   private billing = inject(BillingService);
+  private toast = inject(ToastService);
+  private auth = inject(AuthService);
 
-  // ── Payment state ─────────────────────────────────────────────────────────
   isProcessing = signal(false);
-  processingStep = signal<'idle' | 'initiating' | 'checkout' | 'verifying' | 'success' | 'error'>('idle');
+  processingStep = signal<ProcessingStep>(null);
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // MANUAL ORDER RAIL
-  // ─────────────────────────────────────────────────────────────────────────
+  private scriptLoadPromise: Promise<void> | null = null;
 
-  /**
-   * Full manual payment flow: initiate → checkout → verify → refresh.
-   * Returns a promise that resolves when the full flow completes.
-   */
+  // ── Load checkout.js exactly once; concurrent callers share the promise ──
+  private loadCheckoutScript(): Promise<void> {
+    if (typeof window === 'undefined') {
+      return Promise.reject(new Error('Payments are only available in the browser.'));
+    }
+    if (window.Razorpay) return Promise.resolve();
+    if (this.scriptLoadPromise) return this.scriptLoadPromise;
+
+    this.scriptLoadPromise = new Promise((resolve, reject) => {
+      const existing = document.querySelector(`script[src="${RAZORPAY_CHECKOUT_SRC}"]`);
+      if (existing) {
+        existing.addEventListener('load', () => resolve());
+        existing.addEventListener('error', () =>
+          reject(new Error('Failed to load Razorpay Checkout.'))
+        );
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = RAZORPAY_CHECKOUT_SRC;
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => {
+        this.scriptLoadPromise = null; // allow retry next time
+        reject(new Error('Failed to load Razorpay Checkout. Check your connection and try again.'));
+      };
+      document.body.appendChild(script);
+    });
+
+    return this.scriptLoadPromise;
+  }
+
+  private prefill() {
+    const branding = this.auth.getStoredSchoolBranding();
+    const schoolUser = this.auth.schoolUser();
+    return {
+      name: branding?.name || 'Eduxo',
+      logoUrl: branding?.logoUrl || undefined,
+      userName: schoolUser?.name || '',
+      userEmail: schoolUser?.email || '',
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // MANUAL (ONE-TIME) PAYMENT
+  // ═══════════════════════════════════════════════════════════
   async initiateManualPayment(planType: 'MONTHLY' | 'YEARLY'): Promise<void> {
     this.isProcessing.set(true);
     this.processingStep.set('initiating');
 
     try {
-      // 1. Load Razorpay script (no-op if already loaded)
-      await loadRazorpayScript();
-
-      // 2. Create Razorpay Order via backend
-      const initiateRes = await this.api
-        .post<{ success: boolean } & InitiateOrderResult>('school/payments/access/initiate', {
-          planType,
-        })
-        .toPromise();
-
-      if (!initiateRes?.success) {
-        throw new Error('Failed to create payment order. Please try again.');
+      let order: any;
+      try {
+        order = await firstValueFrom(
+          this.api.post<any>('school/payments/access/initiate', { planType })
+        );
+      } catch (err: any) {
+        throw new Error(err?.error?.error || 'Could not start the payment. Please try again.');
       }
 
-      // 3. Open Checkout (returns via Promise wrapping the callback)
-      await this.openOrderCheckout(initiateRes, planType);
-    } catch (err: any) {
-      this.processingStep.set('error');
-      this.isProcessing.set(false);
-      throw err;
-    }
-  }
-
-  private openOrderCheckout(order: InitiateOrderResult, planType: 'MONTHLY' | 'YEARLY'): Promise<void> {
-    return new Promise((resolve, reject) => {
+      await this.loadCheckoutScript();
       this.processingStep.set('checkout');
 
-      const branding = this.auth.getStoredSchoolBranding();
-      const user = this.auth.schoolUser();
-      const planLabel = planType === 'MONTHLY' ? 'Monthly Access (30 days)' : 'Yearly Access (365 days)';
+      const info = this.prefill();
 
-      const options: any = {
-        key: order.keyId,
-        amount: order.amountPaise,
-        currency: order.currency || 'INR',
-        name: branding?.name || 'School Management System',
-        description: planLabel,
-        image: branding?.logoUrl || undefined,
-        order_id: order.razorpayOrderId,
-        prefill: {
-          name: user?.name || branding?.name || '',
-          email: user?.email || branding?.email || '',
-          contact: branding?.phone ? `+91${branding.phone.replace(/\D/g, '').slice(-10)}` : '',
-        },
-        theme: { color: '#4f46e5' },
-        modal: {
-          ondismiss: () => {
-            this.processingStep.set('idle');
-            this.isProcessing.set(false);
-            this.toast.error('Payment cancelled. Your order has been saved — you can pay later from Billing.');
-            reject(new Error('Payment dismissed'));
+      await new Promise<void>((resolve, reject) => {
+        const options: RazorpayOptions = {
+          key: order.keyId,
+          order_id: order.razorpayOrderId,
+          amount: order.amountPaise,
+          currency: order.currency,
+          name: info.name,
+          description: `${planType === 'MONTHLY' ? 'Monthly' : 'Yearly'} school portal access`,
+          image: info.logoUrl,
+          prefill: { name: info.userName, email: info.userEmail },
+          notes: { planType },
+          theme: { color: '#4f46e5' },
+          handler: (response: RazorpayPaymentResponse) => {
+            this.processingStep.set('verifying');
+            this.api
+              .post<any>('school/payments/access/verify', {
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+              })
+              .subscribe({
+                next: (res) => {
+                  if (res?.success) {
+                    this.toast.success(
+                      `Payment successful. Access extended to ${new Date(res.expiresAt).toLocaleDateString()}.`
+                    );
+                    this.billing.loadAccessStatus().subscribe();
+                    resolve();
+                  } else {
+                    reject(new Error(res?.error || 'Payment verification failed.'));
+                  }
+                },
+                error: (err) =>
+                  reject(
+                    new Error(
+                      err?.error?.error ||
+                      'Payment verification failed. Contact support if the amount was deducted.'
+                    )
+                  ),
+              });
           },
-          animation: true,
-        },
-        handler: async (response: RazorpayPaymentResponse) => {
-          try {
-            await this.verifyOrderPayment(response);
-            resolve();
-          } catch (err) {
-            reject(err);
-          }
-        },
-      };
+          modal: { ondismiss: () => reject(new Error('Payment dismissed by user.')) },
+        };
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    });
-  }
+        const rzp = new window.Razorpay(options);
 
-  private async verifyOrderPayment(response: RazorpayPaymentResponse): Promise<void> {
-    this.processingStep.set('verifying');
+        rzp.on('payment.failed', (resp: any) => {
+          // Modal usually stays open for retry — surface the error but let
+          // the user try again rather than killing the whole flow.
+          this.toast.error(resp?.error?.description || 'Payment attempt failed. You can try again.');
+        });
 
-    const verifyRes = await this.api
-      .post<{ success: boolean; expiresAt: string; daysRemaining: number }>(
-        'school/payments/access/verify',
-        {
-          razorpayOrderId: response.razorpay_order_id,
-          razorpayPaymentId: response.razorpay_payment_id,
-          razorpaySignature: response.razorpay_signature,
-        }
-      )
-      .toPromise();
-
-    if (!verifyRes?.success) {
-      throw new Error('Payment verification failed. Contact support with your payment ID.');
+        rzp.open();
+      });
+    } finally {
+      this.isProcessing.set(false);
+      this.processingStep.set(null);
     }
-
-    this.processingStep.set('success');
-    this.isProcessing.set(false);
-
-    // Refresh access status in billing service
-    this.billing.loadAccessStatus().subscribe();
-    this.toast.success(`✅ Access activated! Valid until ${this.formatDate(verifyRes.expiresAt)}`);
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // AUTOPAY RAIL (UPI Mandate / Razorpay Subscriptions)
-  // ─────────────────────────────────────────────────────────────────────────
-
+  // ═══════════════════════════════════════════════════════════
+  // AUTOPAY (UPI AUTOPAY) SUBSCRIPTION
+  // Checkout uses `subscription_id`, not `order_id`/`amount` — Razorpay
+  // pulls the charge amount from the subscription's Plan.
+  // ═══════════════════════════════════════════════════════════
   async initiateAutopayPayment(planType: 'MONTHLY' | 'YEARLY'): Promise<void> {
     this.isProcessing.set(true);
     this.processingStep.set('initiating');
 
     try {
-      await loadRazorpayScript();
-
-      const initiateRes = await this.api
-        .post<{ success: boolean } & InitiateAutopayResult>(
-          'school/payments/access/autopay/initiate',
-          { planType }
-        )
-        .toPromise();
-
-      if (!initiateRes?.success) {
-        throw new Error('Failed to set up auto-renewal. Please try again.');
+      let sub: any;
+      try {
+        sub = await firstValueFrom(
+          this.api.post<any>('school/payments/access/autopay/initiate', { planType })
+        );
+      } catch (err: any) {
+        throw new Error(err?.error?.error || 'Could not create the auto-renewal subscription.');
       }
 
-      await this.openSubscriptionCheckout(initiateRes, planType);
-    } catch (err: any) {
-      this.processingStep.set('error');
-      this.isProcessing.set(false);
-      throw err;
-    }
-  }
-
-  private openSubscriptionCheckout(
-    sub: InitiateAutopayResult,
-    planType: 'MONTHLY' | 'YEARLY'
-  ): Promise<void> {
-    return new Promise((resolve, reject) => {
+      await this.loadCheckoutScript();
       this.processingStep.set('checkout');
 
-      const branding = this.auth.getStoredSchoolBranding();
-      const user = this.auth.schoolUser();
-      const planLabel =
-        planType === 'MONTHLY' ? 'Monthly Auto-Renewal (₹599/month)' : 'Yearly Auto-Renewal (₹8,985/year)';
+      const info = this.prefill();
 
-      const options: any = {
-        key: sub.keyId,
-        subscription_id: sub.razorpaySubscriptionId,
-        name: branding?.name || 'School Management System',
-        description: planLabel,
-        image: branding?.logoUrl || undefined,
-        prefill: {
-          name: user?.name || branding?.name || '',
-          email: user?.email || branding?.email || '',
-          contact: branding?.phone ? `+91${branding.phone.replace(/\D/g, '').slice(-10)}` : '',
-        },
-        theme: { color: '#4f46e5' },
-        modal: {
-          ondismiss: () => {
-            this.processingStep.set('idle');
-            this.isProcessing.set(false);
-            this.toast.error('Auto-renewal setup cancelled.');
-            reject(new Error('Autopay dismissed'));
+      await new Promise<void>((resolve, reject) => {
+        const options: RazorpayOptions = {
+          key: sub.keyId,
+          subscription_id: sub.razorpaySubscriptionId,
+          name: info.name,
+          description: `${planType === 'MONTHLY' ? 'Monthly' : 'Yearly'} auto-renewal — UPI Autopay`,
+          image: info.logoUrl,
+          prefill: { name: info.userName, email: info.userEmail },
+          notes: { planType },
+          theme: { color: '#4f46e5' },
+          handler: (response: RazorpayPaymentResponse) => {
+            this.processingStep.set('verifying');
+            this.api
+              .post<any>('school/payments/access/autopay/verify', {
+                razorpaySubscriptionId: response.razorpay_subscription_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+              })
+              .subscribe({
+                next: (res) => {
+                  if (res?.success) {
+                    this.toast.success(res.message || 'Auto-renewal enabled successfully.');
+                    this.billing.loadAccessStatus().subscribe();
+                    resolve();
+                  } else {
+                    reject(new Error(res?.error || 'Auto-renewal setup could not be confirmed.'));
+                  }
+                },
+                error: (err) =>
+                  reject(
+                    new Error(err?.error?.error || 'Auto-renewal verification failed. Contact support.')
+                  ),
+              });
           },
-          animation: true,
-        },
-        handler: async (response: RazorpayPaymentResponse) => {
-          try {
-            await this.verifyAutopayAuth(response);
-            resolve();
-          } catch (err) {
-            reject(err);
-          }
-        },
-      };
+          modal: { ondismiss: () => reject(new Error('Payment dismissed by user.')) },
+        };
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    });
-  }
+        const rzp = new window.Razorpay(options);
 
-  private async verifyAutopayAuth(response: RazorpayPaymentResponse): Promise<void> {
-    this.processingStep.set('verifying');
+        rzp.on('payment.failed', (resp: any) => {
+          this.toast.error(resp?.error?.description || 'Mandate authorisation failed. You can try again.');
+        });
 
-    const verifyRes = await this.api
-      .post<{ success: boolean; message: string }>('school/payments/access/autopay/verify', {
-        razorpaySubscriptionId: response.razorpay_subscription_id,
-        razorpayPaymentId: response.razorpay_payment_id,
-        razorpaySignature: response.razorpay_signature,
-      })
-      .toPromise();
-
-    if (!verifyRes?.success) {
-      throw new Error('Auto-renewal verification failed. Contact support.');
+        rzp.open();
+      });
+    } finally {
+      this.isProcessing.set(false);
+      this.processingStep.set(null);
     }
-
-    this.processingStep.set('success');
-    this.isProcessing.set(false);
-
-    this.billing.loadAccessStatus().subscribe();
-    this.toast.success('✅ Auto-renewal enabled! Your access will renew automatically each cycle.');
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════
   // CANCEL AUTOPAY
-  // ─────────────────────────────────────────────────────────────────────────
-
-  cancelAutopay(cancelAtCycleEnd = true): Observable<any> {
+  // Returns an Observable (not async/await) — billing-overview.ts calls
+  // `.subscribe()` on this directly.
+  // ═══════════════════════════════════════════════════════════
+  cancelAutopay(cancelAtCycleEnd: boolean = true): Observable<any> {
     return this.api
-      .post<{ success: boolean; message: string }>('school/payments/access/autopay/cancel', {
-        cancelAtCycleEnd,
-      })
+      .post<any>('school/payments/access/autopay/cancel', { cancelAtCycleEnd })
       .pipe(
         tap((res) => {
-          if (res.success) {
+          if (res?.success) {
+            this.toast.success(res.message || 'Auto-renewal cancelled.');
             this.billing.loadAccessStatus().subscribe();
-            this.toast.success(res.message);
+          } else {
+            this.toast.error(res?.error || 'Failed to cancel auto-renewal.');
           }
+        }),
+        catchError((err) => {
+          this.toast.error(err?.error?.error || 'Failed to cancel auto-renewal. Please try again.');
+          return throwError(() => err);
         })
       );
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // HELPERS
-  // ─────────────────────────────────────────────────────────────────────────
-
-  private formatDate(isoString: string): string {
-    try {
-      return new Date(isoString).toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      });
-    } catch {
-      return isoString;
-    }
   }
 }

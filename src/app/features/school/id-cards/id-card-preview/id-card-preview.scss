@@ -5,15 +5,6 @@
 // IdCardPdfService captures this node with html2canvas at scale:4, yielding
 // an effective ~400 DPI raster — comfortably print-quality, including the
 // QR module density.
-//
-// Design intent: the card's only "signature" element is the accent header
-// band, driven entirely by --accent-color (the school's own theme color
-// from school_theme_configs, passed in via [style.--accent-color] binding).
-// Everything else stays quiet and disciplined — legibility at true physical
-// size matters more than visual flourish on a document this small and this
-// functional. Two system fonts (no custom font loading risk at capture time):
-// a tightly-spaced sans for the holder name (the one thing that should read
-// instantly), and a neutral sans for everything else.
 
 :host {
   display: inline-block;
@@ -31,10 +22,12 @@
   display: flex;
   flex-direction: column;
   color: #1f2430;
-
-  // Subtle card-stock edge — reads as "physical object" even on-screen,
-  // without adding any visual noise that would compete with the content.
   border: 1px solid rgba(0, 0, 0, 0.06);
+
+  &.id-card--vertical {
+    width: 212.5px;
+    height: 337.5px;
+  }
 }
 
 // ── Status stamp (revoked/expired) ──────────────────────────────────────────
@@ -84,17 +77,20 @@
   font-size: 12.5px;
   font-weight: 700;
   letter-spacing: 0.2px;
-  line-height: 1.15;
+  line-height: 1.3;
   white-space: nowrap;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
   text-overflow: ellipsis;
+  padding: 1px 0;
 }
 
 .id-card__school-tagline {
   font-size: 7.5px;
   opacity: 0.85;
   white-space: nowrap;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
   text-overflow: ellipsis;
 }
 
@@ -116,6 +112,18 @@
   gap: 8px;
   padding: 9px 10px 4px;
   min-height: 0;
+  overflow: hidden;
+
+  // FIX: gap trimmed 6px → 4px in vertical mode. photo/details/QR now sit
+  // on the SAME axis (stacked), unlike horizontal where they sit side by
+  // side — every px reclaimed here goes straight back into details-col's
+  // height budget, which is what the field grid needs.
+  .id-card--vertical & {
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 10px 4px;
+  }
 }
 
 .id-card__photo-col {
@@ -123,12 +131,20 @@
 }
 
 .id-card__photo-frame {
-  width: 62px;
-  height: 76px;
+  width: 55px;
+  height: 55px;
   border-radius: 6px;
   overflow: hidden;
   background: #eef0f4;
   border: 1px solid rgba(0, 0, 0, 0.08);
+
+  // FIX: slightly smaller than the original 84x100 — still clearly bigger
+  // than horizontal's 62x76 (photo is still the visual anchor of a
+  // vertical card), but frees ~12px of height back to the field grid.
+  .id-card--vertical & {
+    width: 55px;
+    height: 55px;
+  }
 }
 
 .id-card__photo {
@@ -152,58 +168,165 @@
 .id-card__details-col {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
+  justify-content: flex-start;
+  overflow: hidden;
+
+  .id-card--vertical & {
+    align-items: center;
+    text-align: center;
+    width: 100%;
+  }
 }
 
 .id-card__holder-name {
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.1px;
-  line-height: 1.2;
+  line-height: 1.3;
   white-space: nowrap;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
   text-overflow: ellipsis;
+  padding: 1px 0;
+  flex-shrink: 0;
 }
 
 .id-card__role-line {
-  font-size: 9px;
+  font-size: 8.5px;
   font-weight: 600;
   color: var(--accent-color, #4f46e5);
   white-space: nowrap;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
   text-overflow: ellipsis;
+  line-height: 1.3;
+  flex-shrink: 0;
 }
 
+// ── Field grid — three density tiers based on effective ROW count (see
+//    IdCardPreviewComponent.fieldDensity — now orientation-aware). Each
+//    tier trades legibility for guaranteed fit inside the available height,
+//    which differs sharply between horizontal (full body height available)
+//    and vertical (details-col competes with photo+QR on the same axis). ───
+
+// id-card-preview.component.scss
+
 .id-card__field-grid {
-  margin-top: 4px;
+  flex: 1 1 0;
+  min-height: 0;
+  align-content: start;
+  margin-top: 2px;
   display: grid;
   grid-template-columns: 1fr 1fr;
+  grid-auto-rows: minmax(0, 1fr);
   gap: 3px 8px;
+  overflow: hidden;
+
+  // Vertical: keep the same 2-column layout as horizontal (6 fields now
+  // wrap into 2 cols x 3 rows instead of one 6-tall column, which was
+  // overflowing past the QR code). The row-sizing strategy differs from
+  // horizontal though: horizontal's grid height is a stable value handed
+  // down from the body, so dividing it into equal `1fr` rows is safe.
+  // Vertical's field-grid height comes from `flex: 1 1 0` growth inside a
+  // flex-column stack (photo → name → fields → QR), which is an AMBIGUOUS
+  // height during layout — asking grid to split an ambiguous height into
+  // equal fr rows is what collapsed every row to 0px earlier. Using
+  // min-content rows instead sizes each row off its own text, so rows
+  // can't collapse; if the total genuinely doesn't fit, overflow:hidden
+  // clips the last row instead of nuking every field.
+  .id-card--vertical & {
+    grid-auto-rows: min-content;
+    row-gap: 3px;
+    column-gap: 30px; // was riding on the shared 8px — widened so the two
+    // columns read as clearly separate, not crowded
+    padding-bottom: 8px;
+  }
+
+  // Normal: ≤2 rows → comfortable spacing
+  .id-card__field-label {
+    font-size: 6.5px;
+  }
+  .id-card__field-value {
+    font-size: 9px;
+    line-height: 1.3;
+  }
+
+  &--compact {
+    margin-top: 2px;
+    gap: 1.5px 6px;
+    .id-card--vertical & {
+      column-gap: 20px;
+    } // NEW — compact can now
+    // actually get hit for vertical (e.g. 4 fields = 2 rows), so it
+    // needs its own vertical column-gap tuning too, not just tight
+    .id-card__field-label {
+      font-size: 5.5px;
+      letter-spacing: 0.2px;
+    }
+    .id-card__field-value {
+      font-size: 7.5px;
+      line-height: 1.15;
+    }
+  }
+
+  &--tight {
+    margin-top: 1px;
+    gap: 1px 5px;
+    .id-card--vertical & {
+      column-gap: 14px;
+      row-gap: 2px; // NEW — tight tier now genuinely applies for 3-row
+      // vertical cards, so trim row-gap slightly further to bank a
+      // couple more px of headroom
+    }
+    .id-card__field-label {
+      font-size: 5px;
+      letter-spacing: 0.1px;
+    }
+    .id-card__field-value {
+      font-size: 6.5px;
+      line-height: 1.1;
+    }
+  }
 }
 
 .id-card__field {
   display: flex;
   flex-direction: column;
   min-width: 0;
+
+  // Vertical: left-align each field's own label/value the same way
+  // horizontal does — with 2 columns now, centering per-cell fights the
+  // grid's column alignment and makes labels/values wobble left/right
+  // relative to each other. The overall grid block still sits centered
+  // in details-col via width:100% there.
+  .id-card--vertical & {
+    align-items: flex-start;
+    text-align: left;
+  }
 }
 
 .id-card__field-label {
-  font-size: 6.5px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.4px;
   color: #8a90a0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .id-card__field-value {
-  font-size: 9px;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+// ----
 
 .id-card__qr-col {
   flex-shrink: 0;
@@ -212,12 +335,27 @@
   align-items: center;
   justify-content: flex-start;
   gap: 3px;
+
+  .id-card--vertical & {
+    margin-top: auto;
+    gap: 0px; // FIX: trimmed 3px → 2px in vertical mode — small reclaim,
+    // consistent with the same "every px counts" logic as above
+  }
 }
 
 .id-card__qr {
   width: 52px;
   height: 52px;
-  image-rendering: pixelated; // keep QR module edges crisp at capture time
+  image-rendering: pixelated;
+
+  // FIX: smaller in vertical mode (44x44 vs 52x52) — still comfortably
+  // scannable (well above typical minimum QR-scan size at this print DPI),
+  // and frees ~8px of height back toward the field grid, which is the
+  // actual bottleneck in vertical layout.
+  .id-card--vertical & {
+    width: 44px;
+    height: 44px;
+  }
 }
 
 .id-card__card-number {
@@ -250,7 +388,8 @@
   font-size: 6px;
   color: #9aa1b1;
   white-space: nowrap;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
   text-overflow: ellipsis;
   text-align: right;
 }

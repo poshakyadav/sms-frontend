@@ -100,6 +100,14 @@ export const SUPER_ROUTES: Routes = [
         canActivate: [superPermissionGuard(['access-plans.view', 'access-plans.manage'])],
       },
 
+      // ── Message Bundles (WhatsApp/Email/SMS credit packs) ─────────────────
+      {
+        path: 'message-bundles',
+        loadComponent: () =>
+          import('./message-bundles/message-bundles').then((m) => m.MessageBundlesManagement),
+        canActivate: [superPermissionGuard(['message-bundles.view', 'message-bundles.manage'])],
+      },
+
       // ── School registration requests ──────────────────────────────────────
       {
         path: 'school-requests',

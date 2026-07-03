@@ -76,6 +76,12 @@ export const SUPER_NAV_GROUPS: SuperNavGroup[] = [
         permissions: ['access-plans.view', 'access-plans.manage'],
       },
       {
+        label: 'Message Bundles',
+        icon: 'forum',
+        route: '/super/message-bundles',
+        permissions: ['message-bundles.view', 'message-bundles.manage'],
+      },
+      {
         label: 'Permission Sync',
         icon: 'sync_lock',
         route: '/super/permission-sync',

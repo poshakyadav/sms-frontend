@@ -32,7 +32,7 @@ export class AboutUs {
     { value: '10+', label: 'Core Modules', suffix: '' },
     { value: '99.9', label: 'Uptime Target', suffix: '%' },
     { value: 'DPDP', label: 'Act 2023 Aligned', suffix: '' },
-    { value: '₹0', label: 'to Get Started', suffix: '' },
+    { value: '₹5,000', label: 'One-Time Setup Fee', suffix: '' },
   ];
 
   values: TeamValue[] = [
@@ -70,7 +70,7 @@ export class AboutUs {
       icon: '💡',
       title: 'Honest Pricing',
       description:
-        'A free plan that works, with an optional Premium upgrade to go ad-free. No hidden charges, no per-user traps, no surprise renewals.',
+        'One transparent one-time setup fee, then a simple Monthly or Yearly subscription. No ads, no data selling, no per-user traps, no surprise renewals.',
     },
   ];
 }

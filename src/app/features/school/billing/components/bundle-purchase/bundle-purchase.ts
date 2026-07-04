@@ -14,11 +14,12 @@ import { AuthService } from '../../../../../core/services/auth.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { BillingService, MessageBundle } from '../../../../../core/services/billing.service';
 import { BundlePaymentService } from '../../../../../core/services/bundle-payment.service';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-bundle-purchase',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="bundles-page">
@@ -61,7 +62,7 @@ import { BundlePaymentService } from '../../../../../core/services/bundle-paymen
           }}</span>
           <span class="balance-banner__label">credits remaining</span>
         </div>
-        <a routerLink="../history" class="balance-banner__link">View purchase history →</a>
+        <a routerLink="../history" class="balance-banner__link">View purchase history <mat-icon >arrow_forward</mat-icon> </a>
       </div>
 
       @if (!canPurchase()) {
@@ -237,6 +238,18 @@ import { BundlePaymentService } from '../../../../../core/services/bundle-paymen
         color: #047857;
         text-decoration: none;
         white-space: nowrap;
+
+         /* Add these lines */
+        display: inline-flex;
+        align-items: center;
+        gap: 4px; /* Adjust this value to add space between text and arrow */
+
+         /* Add this nested block to resize the icon */
+        mat-icon {
+          font-size: 1.1rem; /* Scales the icon graphic down */
+          width: 1.1rem;     /* Matches the bounding box width */
+          height: 1.1rem;    /* Matches the bounding box height */
+        }
       }
       .balance-banner__link:hover {
         text-decoration: underline;

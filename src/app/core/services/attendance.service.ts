@@ -1,18 +1,108 @@
-// Frontend service for managing attendance-related API calls and data transformations
+// attendance.service.ts
 import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { forkJoin, map, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { AcademicsService } from './academics.service';
+
+// ─────────────────────────────────────────────────────────────────────────
+// ATTENDANCE STATUS — mirrors backend src/db/schemas/school/school-attendances.ts
+// Category groupings match PRESENT_EQUIVALENT / ABSENT_EQUIVALENT / NEUTRAL_STATUSES
+// on the backend so the frontend's visual language stays in sync with the
+// percentage-calculation logic.
+// ─────────────────────────────────────────────────────────────────────────
+
+export const AttendanceStatus = {
+  PRESENT: 'PRESENT',
+  LATE: 'LATE',
+  HALF_DAY: 'HALF_DAY',
+  ABSENT: 'ABSENT',
+  SICK: 'SICK',
+  SUSPENDED: 'SUSPENDED',
+  EXCUSED: 'EXCUSED',
+  HOLIDAY: 'HOLIDAY',
+  ON_DUTY: 'ON_DUTY',
+} as const;
+
+export type AttendanceStatusValue = (typeof AttendanceStatus)[keyof typeof AttendanceStatus];
+
+export const ALL_ATTENDANCE_STATUSES: AttendanceStatusValue[] = [
+  AttendanceStatus.PRESENT,
+  AttendanceStatus.LATE,
+  AttendanceStatus.HALF_DAY,
+  AttendanceStatus.ABSENT,
+  AttendanceStatus.SICK,
+  AttendanceStatus.SUSPENDED,
+  AttendanceStatus.EXCUSED,
+  AttendanceStatus.HOLIDAY,
+  AttendanceStatus.ON_DUTY,
+];
+
+export const HalfDaySession = {
+  MORNING: 'MORNING',
+  AFTERNOON: 'AFTERNOON',
+} as const;
+export type HalfDaySessionValue = (typeof HalfDaySession)[keyof typeof HalfDaySession];
+
+export type AttendanceCategory = 'present' | 'absent' | 'neutral';
+
+export interface AttendanceStatusConfig {
+  value: AttendanceStatusValue;
+  label: string;
+  icon: string;
+  category: AttendanceCategory;
+  notesPlaceholder?: string;
+}
+
+// Single source of truth the component/template pulls labels, icons, and
+// colour-category from — keeps the UI declarative instead of switch-statements.
+export const ATTENDANCE_STATUS_CONFIG: Record<AttendanceStatusValue, AttendanceStatusConfig> = {
+  PRESENT: { value: 'PRESENT', label: 'Present', icon: 'check_circle', category: 'present' },
+  LATE: { value: 'LATE', label: 'Late', icon: 'schedule', category: 'present' },
+  HALF_DAY: { value: 'HALF_DAY', label: 'Half Day', icon: 'brightness_medium', category: 'present' },
+  ABSENT: { value: 'ABSENT', label: 'Absent', icon: 'cancel', category: 'absent' },
+  SICK: {
+    value: 'SICK',
+    label: 'Sick',
+    icon: 'sick',
+    category: 'absent',
+    notesPlaceholder: 'Medical certificate / doctor note…',
+  },
+  SUSPENDED: {
+    value: 'SUSPENDED',
+    label: 'Suspended',
+    icon: 'block',
+    category: 'absent',
+    notesPlaceholder: 'Suspension order reference…',
+  },
+  EXCUSED: {
+    value: 'EXCUSED',
+    label: 'Excused',
+    icon: 'event_available',
+    category: 'neutral',
+    notesPlaceholder: 'Approval note / event name…',
+  },
+  HOLIDAY: { value: 'HOLIDAY', label: 'Holiday', icon: 'beach_access', category: 'neutral' },
+  ON_DUTY: {
+    value: 'ON_DUTY',
+    label: 'On Duty',
+    icon: 'military_tech',
+    category: 'neutral',
+    notesPlaceholder: 'Activity name (e.g. District Science Olympiad)…',
+  },
+};
+
+// ── Existing types kept (additive changes only, so getByStudent / getReport
+// consumers elsewhere in the app keep compiling) ───────────────────────────
 
 export interface AttendanceRecord {
   id: number;
   enrollmentId: number;
   studentId: number;
-  date: string; // "2026-02-14"
-  status: 'PRESENT' | 'ABSENT' | 'LATE' | 'HALF_DAY';
-  notes?: string;
-  markedBy: number; // Teacher ID
+  date: string;
+  status: AttendanceStatusValue;
+  halfDaySession?: HalfDaySessionValue | null;
+  notes?: string | null;
+  markedBy: number;
   createdAt: string;
   updatedAt: string;
   studentName?: string;
@@ -20,11 +110,12 @@ export interface AttendanceRecord {
 }
 
 export interface AttendanceBatchInput {
-  date: string; // YYYY-MM-DD
+  date: string;
   classSectionId: number;
   attendances: Array<{
     studentId: number;
-    status: 'PRESENT' | 'ABSENT' | 'LATE' | 'HALF_DAY';
+    status: AttendanceStatusValue;
+    halfDaySession?: HalfDaySessionValue; // must be omitted unless status = HALF_DAY (backend enforces via superRefine)
     notes?: string;
   }>;
 }
@@ -32,32 +123,68 @@ export interface AttendanceBatchInput {
 export interface AttendanceReportItem {
   studentId: number;
   studentName: string;
-  rollNumber: string | null; 
-  totalDays: number;
+  rollNumber: string | null;
+  totalDaysInMonth: number;
+  totalMarkedDays: number;
+  workingDays: number;
   present: number;
-  absent: number;
   late: number;
   halfDay: number;
+  absent: number;
+  sick: number;
+  suspended: number;
+  excused: number;
+  holiday: number;
+  onDuty: number;
+  effectivePresent: number;
   attendancePercentage: number;
 }
 
-export interface EnrolledStudentForAttendance {
-  id: number; // Student ID
-  enrollmentId: number;
-  name: string;
-  rollNumber: string;
-  status?: 'PRESENT' | 'ABSENT' | 'LATE' | 'HALF_DAY';
-  notes?: string;
+// ── NEW: matches getAttendanceByClassSection's response exactly ───────────
+
+export interface ClassAttendanceRecordDetail {
+  id: number;
+  status: AttendanceStatusValue;
+  halfDaySession: HalfDaySessionValue | null;
+  notes: string | null;
+  markedBy: number;
+  markedByName: string;
+  updatedAt: string;
 }
 
-@Injectable({
-  providedIn: 'root',
-})
-export class AttendanceService {
-  constructor(private api: ApiService, private academics: AcademicsService) {}
+export interface ClassAttendanceStudentRow {
+  enrollmentId: number;
+  studentId: number;
+  studentName: string;
+  rollNumber: string | null;
+  avatarUrl: string | null;
+  attendanceRecord: ClassAttendanceRecordDetail | null; // null = not yet marked for this date
+}
 
-  markAttendanceBatch(data: AttendanceBatchInput): Observable<{ message: string }> {
-    return this.api.post<{ message: string }>('school/attendance', data);
+export interface ClassAttendanceSessionMeta {
+  date: string;
+  classSectionId: number;
+  isFullyMarked: boolean;
+  isPartiallyMarked: boolean;
+  markedCount: number;
+  totalCount: number;
+  lastMarkedBy: { userId: number; name: string } | null;
+  lastUpdatedAt: string | null;
+}
+
+export interface ClassAttendanceResponse {
+  session: ClassAttendanceSessionMeta;
+  students: ClassAttendanceStudentRow[];
+}
+
+@Injectable({ providedIn: 'root' })
+export class AttendanceService {
+  constructor(private api: ApiService) { }
+
+  markAttendanceBatch(
+    data: AttendanceBatchInput
+  ): Observable<{ message: string; new: number; updated: number }> {
+    return this.api.post('school/attendance', data);
   }
 
   getByStudent(
@@ -65,24 +192,24 @@ export class AttendanceService {
     fromDate: string,
     toDate: string
   ): Observable<{ attendance: AttendanceRecord[] }> {
-    let params = new HttpParams()
+    const params = new HttpParams()
       .set('studentId', studentId.toString())
       .set('fromDate', fromDate)
       .set('toDate', toDate);
-
-    // FIXED: Pass params correctly to your ApiService.get()
-    return this.api.get<{ attendance: AttendanceRecord[] }>('school/attendance/student', params);
+    return this.api.get('school/attendance/student', params);
   }
 
-  getByClassSection(
-    classSectionId: number,
-    date: string
-  ): Observable<{ attendance: AttendanceRecord[] }> {
-    let params = new HttpParams()
+  /**
+   * Class sheet for a date — ONE round trip.
+   * Replaces the old getEnrolledStudentsForMarking() forkJoin, since the
+   * backend now returns every active enrollment (with attendanceRecord: null
+   * for unmarked students) plus session-level metadata in a single query.
+   */
+  getByClassSection(classSectionId: number, date: string): Observable<ClassAttendanceResponse> {
+    const params = new HttpParams()
       .set('classSectionId', classSectionId.toString())
       .set('date', date);
-
-    return this.api.get<{ attendance: AttendanceRecord[] }>('school/attendance/class', params);
+    return this.api.get<ClassAttendanceResponse>('school/attendance/class', params);
   }
 
   getReport(paramsInput: {
@@ -98,48 +225,6 @@ export class AttendanceService {
       httpParams = httpParams.set('studentId', paramsInput.studentId.toString());
     if (paramsInput.month) httpParams = httpParams.set('month', paramsInput.month.toString());
     if (paramsInput.year) httpParams = httpParams.set('year', paramsInput.year.toString());
-
-    // FIXED: Pass params correctly
-    return this.api.get<{ report: AttendanceReportItem[] }>('school/attendance/report', httpParams);
-  }
-
-  getEnrolledStudentsForMarking(
-    classSectionId: number,
-    date: string
-  ): Observable<EnrolledStudentForAttendance[]> {
-    return forkJoin({
-      enrollments: this.academics.getEnrollments(),
-      existingAttendance: this.getByClassSection(classSectionId, date),
-    }).pipe(
-      map(({ enrollments, existingAttendance }) => {
-        const classEnrollments = enrollments.enrollments.filter(
-          (e) => e.classSectionId === classSectionId && e.isActive
-        );
-
-        const students = classEnrollments.map((e) => ({
-          id: e.studentId,
-          enrollmentId: e.id,
-          name: e.studentName || 'Unknown',
-          rollNumber: e.rollNumber || '',
-          status: 'PRESENT' as const,
-          notes: '',
-        }));
-
-        const existingMap = new Map<
-          number,
-          { status: 'PRESENT' | 'ABSENT' | 'LATE' | 'HALF_DAY'; notes?: string }
-        >(
-          existingAttendance.attendance.map((a) => [
-            a.studentId,
-            { status: a.status, notes: a.notes },
-          ])
-        );
-
-        return students.map((s) => ({
-          ...s,
-          ...(existingMap.get(s.id) || {}),
-        }));
-      })
-    );
+    return this.api.get('school/attendance/report', httpParams);
   }
 }

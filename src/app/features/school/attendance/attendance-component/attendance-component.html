@@ -7,11 +7,9 @@
       <p class="date-subtitle">{{ dateDisplay() }}</p>
       }
     </div>
-    <div class="header-actions">
-      <button mat-icon-button (click)="loadStudents()" matTooltip="Refresh students">
-        <mat-icon>refresh</mat-icon>
-      </button>
-    </div>
+    <button mat-icon-button (click)="loadStudents()" matTooltip="Refresh students">
+      <mat-icon>refresh</mat-icon>
+    </button>
   </div>
 
   <!-- ── Controls card ──────────────────────────────────────────────── -->
@@ -40,138 +38,212 @@
     </form>
   </div>
 
-  <!-- ── Loading ────────────────────────────────────────────────────── -->
   @if (loading()) {
   <div class="state-container">
     <mat-spinner diameter="44"></mat-spinner>
     <p>Loading students…</p>
   </div>
-  }
-
-  <!-- ── No students ────────────────────────────────────────────────── -->
-  @else if (!form.value.classSectionId) {
+  } @else if (!form.value.classSectionId) {
   <div class="state-container">
     <mat-icon class="state-icon">school</mat-icon>
     <h2>Select a Class-Section</h2>
     <p>Choose a class-section and date to begin marking attendance.</p>
   </div>
-  } @else if (students().length === 0) {
+  } @else if (rows().length === 0) {
   <div class="state-container">
     <mat-icon class="state-icon">group_off</mat-icon>
     <h2>No Students Found</h2>
     <p>No active enrollments found for the selected class-section.</p>
   </div>
-  }
+  } @else {
 
-  <!-- ── Main content ────────────────────────────────────────────────── -->
-  @else {
+  <!-- Session status banner -->
+  @if (sessionMeta(); as meta) {
+  <div
+    class="session-banner"
+    [class.is-full]="meta.isFullyMarked"
+    [class.is-partial]="meta.isPartiallyMarked && !meta.isFullyMarked"
+    [class.is-empty]="!meta.isPartiallyMarked && !meta.isFullyMarked"
+  >
+    <mat-icon>
+      {{
+        meta.isFullyMarked ? 'check_circle' : meta.isPartiallyMarked ? 'hourglass_top' : 'edit_note'
+      }}
+    </mat-icon>
+    <div class="banner-text">
+      <strong>
+        @if (meta.isFullyMarked) { Attendance fully marked } @else if (meta.isPartiallyMarked) {
+        Partially marked — {{ meta.markedCount }} of {{ meta.totalCount }}
+        } @else { Not marked yet }
+      </strong>
+      @if (meta.lastMarkedBy) {
+      <span>Last updated by {{ meta.lastMarkedBy.name }} at {{ lastUpdatedDisplay() }}</span>
+      }
+    </div>
+  </div>
+  }
 
   <!-- Summary strip -->
   <div class="summary-grid">
     <div class="stat-card">
       <div class="stat-label">Total</div>
-      <div class="stat-value">{{ students().length }}</div>
+      <div class="stat-value">{{ rows().length }}</div>
     </div>
-    <div class="stat-card success">
-      <div class="stat-label">Present</div>
+    <div class="stat-card present">
+      <div class="stat-label">Present-equivalent</div>
       <div class="stat-value">{{ presentCount() }}</div>
     </div>
-    <div class="stat-card error">
-      <div class="stat-label">Absent</div>
+    <div class="stat-card absent">
+      <div class="stat-label">Absent-equivalent</div>
       <div class="stat-value">{{ absentCount() }}</div>
     </div>
-    <div class="stat-card warn">
-      <div class="stat-label">Late / Half Day</div>
-      <div class="stat-value">{{ lateCount() }}</div>
+    <div class="stat-card neutral">
+      <div class="stat-label">Neutral / Special</div>
+      <div class="stat-value">{{ neutralCount() }}</div>
     </div>
   </div>
 
-  <!-- Bulk actions -->
-  <div class="bulk-actions">
-    <span class="bulk-label">Set All:</span>
-    <button mat-stroked-button (click)="setAll('PRESENT')">
-      <mat-icon>check_circle</mat-icon> Present
-    </button>
-    <button mat-stroked-button color="warn" (click)="setAll('ABSENT')">
-      <mat-icon>cancel</mat-icon> Absent
-    </button>
-    <button mat-stroked-button (click)="setAll('LATE')"><mat-icon>schedule</mat-icon> Late</button>
-    @if (hasChanges()) {
-    <button
-      mat-stroked-button
-      (click)="resetChanges()"
-      matTooltip="Discard unsaved changes"
-      style="margin-left: auto"
-    >
-      <mat-icon>undo</mat-icon> Reset
-    </button>
+  @if (statusBreakdown().length > 0) {
+  <div class="breakdown-chips">
+    @for (b of statusBreakdown(); track b.status) {
+    <span class="chip" [ngClass]="statusClass(b.status)">
+      <mat-icon>{{ b.config.icon }}</mat-icon>
+      {{ b.count }} {{ b.config.label }}
+    </span>
     }
   </div>
+  }
 
-  <!-- Attendance table -->
-  <div class="table-card">
-    <div class="table-scroll">
-      <table mat-table [dataSource]="students()">
-        <!-- Roll No -->
-        <ng-container matColumnDef="rollNumber">
-          <th mat-header-cell *matHeaderCellDef>Roll No</th>
-          <td mat-cell *matCellDef="let s">{{ s.rollNumber || '—' }}</td>
-        </ng-container>
+  <!-- Toolbar: search + bulk actions -->
+  <div class="toolbar">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-icon matPrefix>search</mat-icon>
+      <input
+        matInput
+        placeholder="Search by name or roll no…"
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
+        [ngModelOptions]="{ standalone: true }"
+      />
+    </mat-form-field>
 
-        <!-- Name -->
-        <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef>Student Name</th>
-          <td mat-cell *matCellDef="let s">
-            <strong>{{ s.name }}</strong>
-          </td>
-        </ng-container>
-
-        <!-- Status -->
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef>Status <span class="required-star">*</span></th>
-          <td mat-cell *matCellDef="let s">
-            <mat-form-field appearance="outline" class="status-select">
-              <mat-select [(value)]="s.status" (selectionChange)="updateStatus(s.id, $event.value)">
-                @for (opt of statusOptions; track opt) {
-                <mat-option [value]="opt">
-                  {{ statusLabels[opt] }}
-                </mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-          </td>
-        </ng-container>
-
-        <!-- Notes -->
-        <ng-container matColumnDef="notes">
-          <th mat-header-cell *matHeaderCellDef>Notes</th>
-          <td mat-cell *matCellDef="let s">
-            <mat-form-field appearance="outline" class="notes-field">
-              <input
-                matInput
-                [(ngModel)]="s.notes"
-                (input)="updateNotes(s.id, $event.target.value)"
-                placeholder="Optional…"
-              />
-            </mat-form-field>
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr
-          mat-row
-          *matRowDef="let row; columns: displayedColumns"
-          [class.row-absent]="row.status === 'ABSENT'"
-          [class.row-late]="row.status === 'LATE' || row.status === 'HALF_DAY'"
-        ></tr>
-      </table>
+    <div class="bulk-actions">
+      <span class="bulk-label">
+        Set {{ filteredRows().length === rows().length ? 'All' : 'Filtered' }}:
+      </span>
+      <button mat-stroked-button class="btn-present" (click)="setAll('PRESENT')">
+        <mat-icon>check_circle</mat-icon> Present
+      </button>
+      <button mat-stroked-button class="btn-absent" (click)="setAll('ABSENT')">
+        <mat-icon>cancel</mat-icon> Absent
+      </button>
+      <button mat-stroked-button class="btn-holiday" (click)="setAll('HOLIDAY')">
+        <mat-icon>beach_access</mat-icon> Holiday
+      </button>
+      @if (hasChanges()) {
+      <button
+        mat-stroked-button
+        class="reset-btn"
+        (click)="resetChanges()"
+        matTooltip="Discard unsaved changes"
+      >
+        <mat-icon>undo</mat-icon> Reset
+      </button>
+      }
     </div>
+  </div>
+
+  <!-- Student list -->
+  <div class="student-list">
+    <div class="list-header-row">
+      <span>Student</span>
+      <span>Status</span>
+      <span>Session</span>
+      <span>Notes</span>
+    </div>
+
+    @for (row of filteredRows(); track row.enrollmentId) {
+    <div class="student-row" [ngClass]="statusClass(row.status)">
+      <div class="student-info">
+        <div class="avatar">
+          @if (row.avatarUrl) {
+          <img [src]="row.avatarUrl" [alt]="row.name" />
+          } @else {
+          <span>{{ initials(row.name) }}</span>
+          }
+        </div>
+        <div class="student-meta">
+          <strong>{{ row.name }}</strong>
+          <span class="roll-no">Roll {{ row.rollNumber || '—' }}</span>
+        </div>
+        @if (row.isMarked) {
+        <mat-icon class="marked-dot" [matTooltip]="'Marked by ' + row.markedByName">
+          fiber_manual_record
+        </mat-icon>
+        }
+      </div>
+
+      <div class="status-cell">
+        <mat-form-field
+          appearance="outline"
+          class="status-select"
+          [ngClass]="statusClass(row.status)"
+        >
+          <mat-select
+            [value]="row.status"
+            (selectionChange)="setStatus(row.enrollmentId, $event.value)"
+          >
+            @for (opt of allStatuses; track opt) {
+            <mat-option [value]="opt">
+              <mat-icon class="option-icon">{{ statusConfig[opt].icon }}</mat-icon>
+              {{ statusConfig[opt].label }}
+            </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="session-cell">
+        @if (row.status === 'HALF_DAY') {
+        <mat-button-toggle-group
+          [value]="row.halfDaySession"
+          (change)="setHalfDaySession(row.enrollmentId, $event.value)"
+          aria-label="Half day session"
+        >
+          @for (opt of halfDaySessionOptions; track opt.value) {
+          <mat-button-toggle [value]="opt.value">{{ opt.label }}</mat-button-toggle>
+          }
+        </mat-button-toggle-group>
+        } @else {
+        <span class="no-session">—</span>
+        }
+      </div>
+
+      <div class="notes-cell">
+        <mat-form-field appearance="outline" class="notes-field">
+          <input
+            matInput
+            [ngModel]="row.notes"
+            (ngModelChange)="updateNotes(row.enrollmentId, $event)"
+            [ngModelOptions]="{ standalone: true }"
+            [placeholder]="statusConfig[row.status].notesPlaceholder || 'Optional…'"
+            maxlength="500"
+          />
+        </mat-form-field>
+      </div>
+    </div>
+    } @if (filteredRows().length === 0) {
+    <div class="no-results">
+      <mat-icon>search_off</mat-icon>
+      <p>No students match "{{ searchTerm() }}"</p>
+    </div>
+    }
   </div>
 
   <!-- Submit footer -->
   <div class="submit-footer">
     @if (hasChanges()) {
-    <span class="unsaved-hint"> <mat-icon>info</mat-icon> You have unsaved changes </span>
+    <span class="unsaved-hint"><mat-icon>info</mat-icon> You have unsaved changes</span>
     }
     <button
       mat-raised-button
@@ -182,11 +254,8 @@
       @if (submitting()) {
       <mat-spinner diameter="18" style="display: inline-block; margin-right: 8px"></mat-spinner>
       Saving… } @else {
-      <ng-container>
-        <mat-icon>save</mat-icon>
-        Save Attendance
-      </ng-container>
-      }
+      <mat-icon>save</mat-icon>
+      Save Attendance }
     </button>
   </div>
   }

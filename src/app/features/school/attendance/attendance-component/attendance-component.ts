@@ -2,6 +2,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatDialog } from '@angular/material/dialog';
@@ -10,16 +11,38 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
-import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AcademicsService, ClassSection } from '../../../../core/services/academics.service';
 import {
+  ALL_ATTENDANCE_STATUSES,
+  ATTENDANCE_STATUS_CONFIG,
   AttendanceBatchInput,
   AttendanceService,
-  EnrolledStudentForAttendance,
+  AttendanceStatus,
+  AttendanceStatusValue,
+  ClassAttendanceSessionMeta,
+  HalfDaySession,
+  HalfDaySessionValue,
 } from '../../../../core/services/attendance.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
+
+// Flattens ClassAttendanceStudentRow.attendanceRecord into editable fields.
+// Unmarked students (attendanceRecord === null) default to PRESENT, per the
+// backend's documented frontend contract — lets a teacher submit an
+// "everyone present" sheet in one click.
+interface AttendanceRow {
+  enrollmentId: number;
+  studentId: number;
+  name: string;
+  rollNumber: string;
+  avatarUrl: string | null;
+  status: AttendanceStatusValue;
+  halfDaySession: HalfDaySessionValue | null;
+  notes: string;
+  isMarked: boolean;
+  markedByName?: string;
+}
 
 @Component({
   selector: 'app-attendance-component',
@@ -31,9 +54,9 @@ import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/conf
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MatButtonToggleModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatTableModule,
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
@@ -50,34 +73,48 @@ export class AttendanceComponent {
   private dialog = inject(MatDialog);
   private datePipe = inject(DatePipe);
 
+  readonly statusConfig = ATTENDANCE_STATUS_CONFIG;
+  readonly allStatuses = ALL_ATTENDANCE_STATUSES;
+  readonly halfDaySessionOptions = [
+    { value: HalfDaySession.MORNING, label: 'Morning' },
+    { value: HalfDaySession.AFTERNOON, label: 'Afternoon' },
+  ];
+
   classSections = signal<ClassSection[]>([]);
-  students = signal<EnrolledStudentForAttendance[]>([]);
-  originalStudents = signal<EnrolledStudentForAttendance[]>([]);
+  rows = signal<AttendanceRow[]>([]);
+  originalRows = signal<AttendanceRow[]>([]);
+  sessionMeta = signal<ClassAttendanceSessionMeta | null>(null);
+  searchTerm = signal('');
 
   loading = signal(true);
   submitting = signal(false);
-  error = signal<string | null>(null);
 
   form = inject(FormBuilder).group({
     classSectionId: [null as number | null, Validators.required],
     date: [new Date(), Validators.required],
   });
 
-  displayedColumns = ['rollNumber', 'name', 'status', 'notes'];
+  filteredRows = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    if (!term) return this.rows();
+    return this.rows().filter(
+      (r) => r.name.toLowerCase().includes(term) || r.rollNumber.toLowerCase().includes(term)
+    );
+  });
 
-  statusOptions = ['PRESENT', 'ABSENT', 'LATE', 'HALF_DAY'] as const;
-  statusLabels: Record<string, string> = {
-    PRESENT: 'Present',
-    ABSENT: 'Absent',
-    LATE: 'Late',
-    HALF_DAY: 'Half Day',
-  };
+  isValid = computed(() =>
+    this.rows().every(
+      (r) => !!r.status && (r.status !== AttendanceStatus.HALF_DAY || !!r.halfDaySession)
+    )
+  );
 
-  isValid = computed(() => this.students().every((s) => !!s.status));
   hasChanges = computed(() => {
-    const curr = this.students();
-    const orig = this.originalStudents();
-    return curr.some((s, i) => s.status !== orig[i]?.status || s.notes !== orig[i]?.notes);
+    const curr = this.rows();
+    const orig = this.originalRows();
+    return curr.some((r, i) => {
+      const o = orig[i];
+      return !o || r.status !== o.status || r.halfDaySession !== o.halfDaySession || r.notes !== o.notes;
+    });
   });
 
   dateDisplay = computed(() => {
@@ -85,13 +122,34 @@ export class AttendanceComponent {
     return d ? this.datePipe.transform(d, 'EEEE, MMMM d, yyyy') : '';
   });
 
-  presentCount = computed(() => this.students().filter((s) => s.status === 'PRESENT').length);
-  absentCount = computed(() => this.students().filter((s) => s.status === 'ABSENT').length);
-  lateCount = computed(() => this.students().filter((s) => s.status === 'LATE').length);
-
   selectedSection = computed(() => {
     const id = this.form.value.classSectionId;
     return this.classSections().find((cs) => cs.id === id) ?? null;
+  });
+
+  presentCount = computed(
+    () => this.rows().filter((r) => this.statusConfig[r.status].category === 'present').length
+  );
+  absentCount = computed(
+    () => this.rows().filter((r) => this.statusConfig[r.status].category === 'absent').length
+  );
+  neutralCount = computed(
+    () => this.rows().filter((r) => this.statusConfig[r.status].category === 'neutral').length
+  );
+
+  // Exact-status breakdown, only for statuses in use — feeds the small chip
+  // row under the 3 category cards (e.g. "3 Late · 1 Sick · 1 On Duty").
+  statusBreakdown = computed(() => {
+    const counts = new Map<AttendanceStatusValue, number>();
+    for (const r of this.rows()) counts.set(r.status, (counts.get(r.status) ?? 0) + 1);
+    return this.allStatuses
+      .filter((s) => (counts.get(s) ?? 0) > 0)
+      .map((s) => ({ status: s, count: counts.get(s)!, config: this.statusConfig[s] }));
+  });
+
+  lastUpdatedDisplay = computed(() => {
+    const meta = this.sessionMeta();
+    return meta?.lastUpdatedAt ? this.datePipe.transform(meta.lastUpdatedAt, 'h:mm a') : null;
   });
 
   constructor() {
@@ -115,36 +173,84 @@ export class AttendanceComponent {
     this.loading.set(true);
     const formattedDate = this.datePipe.transform(date, 'yyyy-MM-dd')!;
 
-    this.attendance.getEnrolledStudentsForMarking(classSectionId, formattedDate).subscribe({
-      next: (students) => {
-        this.students.set(students);
-        this.originalStudents.set(structuredClone(students));
+    this.attendance.getByClassSection(classSectionId, formattedDate).subscribe({
+      next: (res) => {
+        const mapped: AttendanceRow[] = res.students.map((s) => ({
+          enrollmentId: s.enrollmentId,
+          studentId: s.studentId,
+          name: s.studentName,
+          rollNumber: s.rollNumber ?? '',
+          avatarUrl: s.avatarUrl,
+          status: s.attendanceRecord?.status ?? AttendanceStatus.PRESENT,
+          halfDaySession: s.attendanceRecord?.halfDaySession ?? null,
+          notes: s.attendanceRecord?.notes ?? '',
+          isMarked: s.attendanceRecord != null,
+          markedByName: s.attendanceRecord?.markedByName,
+        }));
+        this.rows.set(mapped);
+        this.originalRows.set(structuredClone(mapped));
+        this.sessionMeta.set(res.session);
       },
-      error: (err) => this.toast.error(err.message),
+      error: (err) => this.toast.error(err?.error?.error || 'Failed to load students'),
       complete: () => this.loading.set(false),
     });
   }
 
-  updateStatus(id: number, status: (typeof this.statusOptions)[number]) {
-    this.students.update((list) => list.map((s) => (s.id === id ? { ...s, status } : s)));
-  }
-
-  updateNotes(id: number, notes: string) {
-    this.students.update((list) =>
-      list.map((s) => (s.id === id ? { ...s, notes: notes || undefined } : s))
+  setStatus(enrollmentId: number, status: AttendanceStatusValue) {
+    this.rows.update((list) =>
+      list.map((r) =>
+        r.enrollmentId === enrollmentId
+          ? {
+            ...r,
+            status,
+            halfDaySession:
+              status === AttendanceStatus.HALF_DAY
+                ? r.halfDaySession ?? HalfDaySession.MORNING
+                : null,
+          }
+          : r
+      )
     );
   }
 
-  setAll(status: (typeof this.statusOptions)[number]) {
-    const msg = `Set all ${this.students().length} students to ${this.statusLabels[status]}?`;
+  setHalfDaySession(enrollmentId: number, session: HalfDaySessionValue) {
+    this.rows.update((list) =>
+      list.map((r) => (r.enrollmentId === enrollmentId ? { ...r, halfDaySession: session } : r))
+    );
+  }
+
+  updateNotes(enrollmentId: number, notes: string) {
+    this.rows.update((list) =>
+      list.map((r) => (r.enrollmentId === enrollmentId ? { ...r, notes } : r))
+    );
+  }
+
+  // Bulk actions apply to the currently filtered/searched set — a teacher
+  // can search "Sharma" and set just those students to EXCUSED.
+  setAll(status: AttendanceStatusValue) {
+    const label = this.statusConfig[status].label;
+    const targets = this.filteredRows();
+    const msg = `Set ${targets.length} student${targets.length === 1 ? '' : 's'} to ${label}?`;
+
     this.dialog
       .open(ConfirmDialog, { data: msg })
       .afterClosed()
       .subscribe((confirmed) => {
-        if (confirmed) {
-          this.students.update((list) => list.map((s) => ({ ...s, status })));
-          this.toast.success(`All set to ${this.statusLabels[status]}`);
-        }
+        if (!confirmed) return;
+        const targetIds = new Set(targets.map((r) => r.enrollmentId));
+        this.rows.update((list) =>
+          list.map((r) =>
+            targetIds.has(r.enrollmentId)
+              ? {
+                ...r,
+                status,
+                halfDaySession:
+                  status === AttendanceStatus.HALF_DAY ? HalfDaySession.MORNING : null,
+              }
+              : r
+          )
+        );
+        this.toast.success(`Set to ${label}`);
       });
   }
 
@@ -154,7 +260,7 @@ export class AttendanceComponent {
       .afterClosed()
       .subscribe((confirmed) => {
         if (confirmed) {
-          this.students.set(structuredClone(this.originalStudents()));
+          this.rows.set(structuredClone(this.originalRows()));
           this.toast.info('Changes discarded');
         }
       });
@@ -162,7 +268,7 @@ export class AttendanceComponent {
 
   submit() {
     if (!this.form.valid || !this.isValid()) {
-      this.toast.warning('Please select class-section, date, and mark all statuses');
+      this.toast.warning('Please select a class-section, date, and ensure every student has a status');
       return;
     }
 
@@ -172,21 +278,35 @@ export class AttendanceComponent {
     const batch: AttendanceBatchInput = {
       date: formattedDate,
       classSectionId: classSectionId!,
-      attendances: this.students().map((s) => ({
-        studentId: s.id,
-        status: s.status!,
-        notes: s.notes,
+      attendances: this.rows().map((r) => ({
+        studentId: r.studentId,
+        status: r.status,
+        ...(r.status === AttendanceStatus.HALF_DAY ? { halfDaySession: r.halfDaySession! } : {}),
+        ...(r.notes?.trim() ? { notes: r.notes.trim() } : {}),
       })),
     };
 
     this.submitting.set(true);
     this.attendance.markAttendanceBatch(batch).subscribe({
-      next: () => {
-        this.toast.success('Attendance saved successfully');
+      next: (res) => {
+        this.toast.success(res.message || 'Attendance saved successfully');
         this.loadStudents();
       },
-      error: (err) => this.toast.error(err.message || 'Failed to save'),
+      error: (err) => this.toast.error(err?.error?.error || 'Failed to save attendance'),
       complete: () => this.submitting.set(false),
     });
+  }
+
+  initials(name: string): string {
+    return name
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((n) => n[0]?.toUpperCase())
+      .join('');
+  }
+
+  statusClass(status: AttendanceStatusValue): string {
+    return 'status-' + status.toLowerCase().replace(/_/g, '-');
   }
 }

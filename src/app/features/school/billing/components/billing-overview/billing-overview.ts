@@ -17,11 +17,12 @@ import { BillingService } from '../../../../../core/services/billing.service';
 import { AccessPaymentService } from '../../../../../core/services/access-payment.service';
 import { WhatsappService } from '../../../whatsapp/services/whatsapp.service';
 import { CreditBalanceChip } from '../../../whatsapp/components/shared/credit-balance-chip/credit-balance-chip';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-billing-overview',
   standalone: true,
-  imports: [CommonModule, RouterLink, CreditBalanceChip],
+  imports: [CommonModule, RouterLink, CreditBalanceChip, MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="billing-page">
@@ -134,8 +135,8 @@ import { CreditBalanceChip } from '../../../whatsapp/components/shared/credit-ba
               <p class="info-card__sub">{{ balance.creditsUsed | number }} used of {{ balance.totalCreditsEverPurchased | number }} purchased</p>
             }
             <div class="info-card__links">
-              <a routerLink="bundles" class="info-card__cta">Buy more credits →</a>
-              <a routerLink="/school/whatsapp" class="info-card__cta info-card__cta--secondary">Manage WhatsApp →</a>
+              <a routerLink="bundles" class="info-card__cta">Buy more credits <mat-icon >arrow_forward</mat-icon></a>
+              <a routerLink="/school/whatsapp" class="info-card__cta info-card__cta--secondary">Manage WhatsApp <mat-icon >arrow_forward</mat-icon></a>
             </div>
           </div>
 
@@ -161,7 +162,7 @@ import { CreditBalanceChip } from '../../../whatsapp/components/shared/credit-ba
                 <span class="plan-sub">No auto-renewal active</span>
               </div>
             }
-            <a routerLink="plans" class="info-card__cta">Manage Plan →</a>
+            <a routerLink="plans" class="info-card__cta">Manage Plan <mat-icon >arrow_forward</mat-icon> </a>
           </div>
         </div>
 
@@ -323,7 +324,24 @@ import { CreditBalanceChip } from '../../../whatsapp/components/shared/credit-ba
     .info-card__unit { font-size: 0.8rem; font-weight: 400; color: var(--color-text-secondary, #6b7280); margin-left: 4px; }
     .info-card__sub { font-size: 0.8rem; color: var(--color-text-secondary, #6b7280); margin: 0; }
     .info-card__links { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
-    .info-card__cta { font-size: 0.85rem; font-weight: 600; color: #4f46e5; text-decoration: none; }
+    .info-card__cta { 
+      font-size: 0.85rem; 
+      font-weight: 600; 
+      color: #4f46e5; 
+      text-decoration: none; 
+
+       /* Add these lines */
+       display: inline-flex;
+        align-items: center;
+        gap: 4px; /* Adjust this value to add space between text and arrow */
+
+         /* Add this nested block to resize the icon */
+        mat-icon {
+          font-size: 1.1rem; /* Scales the icon graphic down */
+          width: 1.1rem;     /* Matches the bounding box width */
+          height: 1.1rem;    /* Matches the bounding box height */
+        }
+    }
     .info-card__cta:hover { text-decoration: underline; }
     .info-card__cta--secondary { color: var(--color-text-secondary, #6b7280); }
 

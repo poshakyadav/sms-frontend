@@ -1,3 +1,5 @@
+// attendance-report-component.ts
+
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -68,7 +70,7 @@ export class AttendanceReportComponent implements OnInit, OnDestroy {
     'rank',
     'rollNumber',
     'studentName',
-    'totalDays',
+    'totalMarkedDays',
     'present',
     'absent',
     'late',
@@ -238,8 +240,8 @@ export class AttendanceReportComponent implements OnInit, OnDestroy {
       switch (event.active) {
         case 'studentName':
           return compare(a.studentName, b.studentName, isAsc);
-        case 'totalDays':
-          return compare(a.totalDays, b.totalDays, isAsc);
+        case 'totalMarkedDays':
+          return compare(a.totalMarkedDays, b.totalMarkedDays, isAsc);
         case 'present':
           return compare(a.present, b.present, isAsc);
         case 'absent':
@@ -280,7 +282,7 @@ export class AttendanceReportComponent implements OnInit, OnDestroy {
       ...data.map((r, i) => [
         i + 1,
         `"${r.studentName}"`,
-        r.totalDays,
+        r.totalMarkedDays,
         r.present,
         r.absent,
         r.late,
@@ -331,7 +333,7 @@ export class AttendanceReportComponent implements OnInit, OnDestroy {
       body: data.map((r, i) => [
         i + 1,
         r.studentName,
-        r.totalDays,
+        r.totalMarkedDays,
         r.present,
         r.absent,
         r.late,

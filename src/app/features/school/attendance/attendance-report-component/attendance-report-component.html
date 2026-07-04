@@ -1,3 +1,5 @@
+<!-- attendance-report-component.html -->
+
 <div class="report-page">
   <!-- ══════════════════════════════════════════════════════════════════════
        PAGE HEADER
@@ -52,7 +54,7 @@
           } }
         </mat-select>
         @if (form.get('classSectionId')?.invalid && form.get('classSectionId')?.touched) {
-          <mat-error>Please select a class-section</mat-error>
+        <mat-error>Please select a class-section</mat-error>
         }
         <mat-icon matPrefix>class</mat-icon>
       </mat-form-field>
@@ -148,7 +150,8 @@
     </div>
     <h2>Ready to Generate</h2>
     <p>
-      Select a <strong>class-section</strong>, month, and year, then click <strong>Generate Report</strong>.
+      Select a <strong>class-section</strong>, month, and year, then click
+      <strong>Generate Report</strong>.
     </p>
   </div>
   } @else if (report().length === 0) {
@@ -302,10 +305,17 @@
         </ng-container>
 
         <!-- Total Days -->
-        <ng-container matColumnDef="totalDays">
+        <ng-container matColumnDef="totalMarkedDays">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Days</th>
           <td mat-cell *matCellDef="let r">
-            <span class="num-cell">{{ r.totalDays }}</span>
+            <span
+              class="num-cell"
+              [matTooltip]="
+                r.workingDays + ' working days out of ' + r.totalDaysInMonth + ' days in month'
+              "
+            >
+              {{ r.totalMarkedDays }}
+            </span>
           </td>
         </ng-container>
 

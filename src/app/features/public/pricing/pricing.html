@@ -14,14 +14,14 @@
       </div>
 
       <h1 class="hero-title">
-        Every feature.<br />
-        <span class="hero-title-accent">Every school.</span>
+        One setup fee.<br />
+        <span class="hero-title-accent">Simple subscriptions.</span>
       </h1>
 
       <p class="hero-subtitle">
-        Unrestricted access across all plans. No per-seat licensing or hidden feature paywalls. From
-        attendance to fee management, every tool is included. Select the deployment environment that
-        best aligns with your institution's goals.
+        Every Eduxo school gets the complete platform — attendance, fees, exams, and WhatsApp
+        messaging — with no feature paywalls. Pay a one-time setup fee, then choose the subscription
+        that fits your school.
       </p>
 
       <!-- Setup fee callout -->
@@ -30,12 +30,12 @@
           <span class="material-icons">rocket_launch</span>
         </div>
         <div class="setup-fee-body">
-          <span class="setup-fee-label">One-time Implementation Fee</span>
-          <span class="setup-fee-amount">₹4,900</span>
+          <span class="setup-fee-label">One-time Setup Fee</span>
+          <span class="setup-fee-amount">₹{{ setupFeeFormatted }}</span>
         </div>
         <div class="setup-fee-desc">
-          Covers database setup, school environment provisioning &amp; onboarding support. Required
-          for all plans.
+          Covers database provisioning, school environment setup &amp; onboarding support. Charged
+          once via Razorpay when you register your school.
         </div>
       </div>
     </div>
@@ -47,91 +47,94 @@
   <section class="plans-section">
     <div class="container">
       <div class="plans-grid">
-        <!-- ── Standard (Community) ──────────────────────────────────── -->
+        <!-- ── Monthly Access ────────────────────────────────────────── -->
         <div class="plan-card plan-standard">
           <div class="plan-card-inner">
             <div class="plan-header">
               <div class="plan-icon plan-icon-standard">
-                <span class="material-icons">groups</span>
+                <span class="material-icons">calendar_month</span>
               </div>
               <div class="plan-name-group">
-                <h2 class="plan-name">Community</h2>
-                <span class="plan-subtitle">Standard Plan</span>
+                <h2 class="plan-name">Monthly Access</h2>
+                <span class="plan-subtitle">Pay As You Go</span>
               </div>
             </div>
 
             <div class="plan-price-block">
               <div class="plan-price">
                 <span class="price-currency">₹</span>
-                <span class="price-amount">0</span>
+                <span class="price-amount">{{ monthlyPriceFormatted }}</span>
                 <span class="price-period">/ month</span>
               </div>
-              <p class="plan-price-note">After the one-time ₹4,900 implementation fee</p>
+              <p class="plan-price-note">
+                Plus a one-time ₹{{ setupFeeFormatted }} setup fee at registration
+              </p>
             </div>
 
             <p class="plan-description">
-              Full platform access for schools that want zero monthly overhead. Supported by vetted
-              educational partner notices shown to staff, parents, and students.
+              Full platform access billed every 30 days. Pay once per cycle or enable UPI Autopay
+              for automatic renewal — switch to Yearly anytime.
             </p>
 
             <a routerLink="/login" class="plan-cta plan-cta-standard">
-              Get started free
+              Get started
               <span class="material-icons">arrow_forward</span>
             </a>
 
             <div class="plan-notice">
               <span class="material-icons notice-icon">info_outline</span>
               <span>
-                Displays contextual, family-safe educational notices. Student data is never tracked
-                or sold. <a routerLink="/public/privacy" class="notice-link">Privacy policy →</a>
+                Renews every 30 days via Razorpay. Switch to Yearly billing anytime to save
+                {{ yearlySavingsPercent }}%.
+                <a routerLink="/public/privacy" class="notice-link"
+                  >Billing &amp; privacy policy →</a
+                >
               </span>
             </div>
           </div>
         </div>
 
-        <!-- ── Premium ───────────────────────────────────────────────── -->
+        <!-- ── Yearly Access ─────────────────────────────────────────── -->
         <div class="plan-card plan-premium">
-          <div class="plan-badge-popular">Most Popular</div>
+          <div class="plan-badge-popular">Best Value</div>
           <div class="plan-card-inner">
             <div class="plan-header">
               <div class="plan-icon plan-icon-premium">
                 <span class="material-icons">workspace_premium</span>
               </div>
               <div class="plan-name-group">
-                <h2 class="plan-name">Premium</h2>
-                <span class="plan-subtitle">Institution Plan</span>
+                <h2 class="plan-name">Yearly Access</h2>
+                <span class="plan-subtitle">Best Value Plan</span>
               </div>
             </div>
 
             <div class="plan-price-block">
               <div class="plan-price">
                 <span class="price-currency">₹</span>
-                <span class="price-amount">1,150</span>
-                <span class="price-period">/ month</span>
+                <span class="price-amount">{{ yearlyPriceFormatted }}</span>
+                <span class="price-period">/ year</span>
               </div>
-              <p class="plan-price-note">After the one-time ₹4,900 implementation fee</p>
+              <p class="plan-price-note">
+                Equivalent to ₹{{ yearlyMonthlyEquivalentFormatted }}/month • Save
+                {{ yearlySavingsPercent }}% vs monthly billing
+              </p>
             </div>
 
             <p class="plan-description">
-              A completely distraction-free campus environment. No partner notices, custom school
-              branding, priority support — built for institutions that want a premium digital
-              experience.
+              One payment covers a full year of access. Best value for schools that want
+              uninterrupted service with priority support built in.
             </p>
 
             <a routerLink="/login" class="plan-cta plan-cta-premium">
-              Upgrade to Premium
+              Choose Yearly
               <span class="material-icons">arrow_forward</span>
             </a>
 
             <div class="plan-highlight-features">
               <div class="highlight-feature">
-                <span class="material-icons">verified</span>
-                100% Distraction-Free Campus
+                <span class="material-icons">savings</span>
+                Save {{ yearlySavingsPercent }}% vs Monthly Billing
               </div>
-              <!-- <div class="highlight-feature">
-                <span class="material-icons">palette</span>
-                Custom School Branding
-              </div> -->
               <div class="highlight-feature">
                 <span class="material-icons">headset_mic</span>
                 Priority Support SLA
@@ -150,7 +153,9 @@
     <div class="container">
       <div class="section-header">
         <h2 class="section-title">What's included</h2>
-        <p class="section-subtitle">Both plans unlock the full platform. No feature gating.</p>
+        <p class="section-subtitle">
+          Every plan unlocks the full platform. Pricing differs only by billing cycle.
+        </p>
       </div>
 
       <div class="comparison-table-wrap">
@@ -159,12 +164,12 @@
             <tr>
               <th class="col-feature">Feature</th>
               <th class="col-plan">
-                <span class="th-plan-name">Community</span>
-                <span class="th-plan-price">₹0 / mo</span>
+                <span class="th-plan-name">Monthly</span>
+                <span class="th-plan-price">₹{{ monthlyPriceFormatted }} / mo</span>
               </th>
               <th class="col-plan col-plan-premium">
-                <span class="th-plan-name">Premium</span>
-                <span class="th-plan-price">₹1,150 / mo</span>
+                <span class="th-plan-name">Yearly</span>
+                <span class="th-plan-price">₹{{ yearlyPriceFormatted }} / yr</span>
               </th>
             </tr>
           </thead>
@@ -178,21 +183,21 @@
                 {{ feature.label }}
               </td>
               <td class="cell-check">
-                @if (feature.standard === true) {
+                @if (feature.monthly === true) {
                 <span class="check check-yes material-icons">check_circle</span>
-                } @else if (feature.standard === false) {
+                } @else if (feature.monthly === false) {
                 <span class="check check-no material-icons">remove</span>
                 } @else {
-                <span class="check check-text">{{ feature.standard }}</span>
+                <span class="check check-text">{{ feature.monthly }}</span>
                 }
               </td>
               <td class="cell-check cell-premium">
-                @if (feature.premium === true) {
+                @if (feature.yearly === true) {
                 <span class="check check-yes material-icons">check_circle</span>
-                } @else if (feature.premium === false) {
+                } @else if (feature.yearly === false) {
                 <span class="check check-no material-icons">remove</span>
                 } @else {
-                <span class="check check-text check-premium-text">{{ feature.premium }}</span>
+                <span class="check check-text check-premium-text">{{ feature.yearly }}</span>
                 }
               </td>
             </tr>
@@ -211,24 +216,23 @@
       <div class="trust-grid">
         <div class="trust-item">
           <div class="trust-icon">
-            <span class="material-icons">shield</span>
+            <span class="material-icons">verified_user</span>
           </div>
           <div class="trust-body">
-            <span class="trust-title">DPDP Act Compliant</span>
+            <span class="trust-title">Secure Razorpay Payments</span>
             <span class="trust-desc"
-              >Student data is never tracked, profiled, or sold. Static contextual notices
-              only.</span
+              >Every transaction is processed via Razorpay with full SSL encryption.</span
             >
           </div>
         </div>
         <div class="trust-item">
           <div class="trust-icon">
-            <span class="material-icons">lock</span>
+            <span class="material-icons">sync</span>
           </div>
           <div class="trust-body">
-            <span class="trust-title">Family-Safe Content</span>
+            <span class="trust-title">UPI Autopay Support</span>
             <span class="trust-desc"
-              >Every educational notice is manually reviewed before going live on any school.</span
+              >Enable automatic renewal via UPI Autopay, or pay manually each cycle.</span
             >
           </div>
         </div>
@@ -237,9 +241,9 @@
             <span class="material-icons">upgrade</span>
           </div>
           <div class="trust-body">
-            <span class="trust-title">Upgrade Anytime</span>
+            <span class="trust-title">Switch Plans Anytime</span>
             <span class="trust-desc"
-              >Move to Premium instantly from your Admin Dashboard. Pro-rated to the day.</span
+              >Move between Monthly and Yearly billing anytime from your Admin Dashboard.</span
             >
           </div>
         </div>
@@ -250,7 +254,7 @@
           <div class="trust-body">
             <span class="trust-title">No Per-Seat Fees</span>
             <span class="trust-desc"
-              >Unlimited students, parents, teachers, and staff on both plans.</span
+              >Unlimited students, parents, teachers, and staff on every plan.</span
             >
           </div>
         </div>
@@ -303,8 +307,8 @@
         <div class="cta-glow"></div>
         <h2 class="cta-title">Ready to connect your school?</h2>
         <p class="cta-desc">
-          Get started with zero monthly cost or go Premium for a fully distraction-free campus.
-          Either way, every feature is yours from day one.
+          Pay a one-time setup fee, pick the billing cycle that fits your school, and get every
+          Eduxo feature from day one.
         </p>
         <div class="cta-actions">
           <!-- add router url on this link -->

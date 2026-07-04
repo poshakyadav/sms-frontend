@@ -6,8 +6,8 @@ import { MatIconModule } from '@angular/material/icon';
 
 interface PricingFeature {
   label: string;
-  standard: boolean | string;
-  premium: boolean | string;
+  monthly: boolean | string;
+  yearly: boolean | string;
   highlight?: boolean;
 }
 
@@ -21,66 +21,86 @@ interface PricingFeature {
 export class Pricing {
   activeFaq = signal<number | null>(null);
 
-  readonly setupFee = 4900;
-  readonly monthlyFee = 1150;
+  // ── Core pricing constants ────────────────────────────────────────
+  readonly setupFee = 5000;
 
+  readonly monthlyPrice = 599;
+
+  readonly yearlyPrice = 6988;
+  readonly yearlyOriginalPrice = 7188;
+  readonly yearlySavingsPercent = 3;
+
+  get setupFeeFormatted(): string {
+    return this.setupFee.toLocaleString('en-IN');
+  }
+
+  get monthlyPriceFormatted(): string {
+    return this.monthlyPrice.toLocaleString('en-IN');
+  }
+
+  get yearlyPriceFormatted(): string {
+    return this.yearlyPrice.toLocaleString('en-IN');
+  }
+
+  get yearlyOriginalPriceFormatted(): string {
+    return this.yearlyOriginalPrice.toLocaleString('en-IN');
+  }
+
+  get yearlyMonthlyEquivalentFormatted(): string {
+    return (this.yearlyPrice / 12).toFixed(2);
+  }
+
+  // ── Feature comparison ────────────────────────────────────────────
   readonly features: PricingFeature[] = [
-    { label: 'All platform features (no paywalls)', standard: true, premium: true },
-    { label: 'Unlimited student & parent accounts', standard: true, premium: true },
-    { label: 'Attendance tracking & reports', standard: true, premium: true },
-    { label: 'Exam & assignment management', standard: true, premium: true },
-    { label: 'Fee collection & ledger', standard: true, premium: true },
-    { label: 'Multi-role access control', standard: true, premium: true },
-    { label: 'Notifications & announcements', standard: true, premium: true },
+    { label: 'All platform features (no paywalls)', monthly: true, yearly: true },
+    { label: 'Unlimited students, parents & staff', monthly: true, yearly: true },
+    { label: 'Attendance tracking & reports', monthly: true, yearly: true },
+    { label: 'Exam & assignment management', monthly: true, yearly: true },
+    { label: 'Fee collection & ledger (Razorpay)', monthly: true, yearly: true },
+    { label: 'WhatsApp messaging & notifications', monthly: true, yearly: true },
+    { label: 'Multi-role access control', monthly: true, yearly: true },
+    { label: 'Custom school branding', monthly: true, yearly: true },
+    { label: 'Pay Once or UPI Autopay', monthly: true, yearly: true },
+    { label: 'Billing cycle', monthly: 'Every 30 days', yearly: 'Every 365 days' },
     {
-      label: '100% Distraction-Free Campus Environment',
-      standard: false,
-      premium: true,
-      highlight: false,
-    },
-    {
-      label: 'Custom school branding',
-      standard: true,
-      premium: true,
+      label: 'Effective monthly cost',
+      monthly: `₹${this.monthlyPrice}/mo`,
+      yearly: `₹${this.yearlyMonthlyEquivalentFormatted}/mo`,
+      highlight: true,
     },
     {
       label: 'Priority support & SLA',
-      standard: 'Standard',
-      premium: 'Priority SLA',
-    },
-    {
-      label: 'Contextual educational partner notices',
-      standard: true,
-      premium: false,
+      monthly: 'Standard',
+      yearly: 'Priority SLA',
+      highlight: true,
     },
   ];
 
+  // ── FAQs ──────────────────────────────────────────────────────────
   readonly faqs = [
     {
-      q: 'What does the Standard (Community) plan actually cost my school?',
-      a: `The one-time implementation fee of ₹${this.setupFee.toLocaleString(
-        'en-IN'
-      )} is the only charge. After that, the Standard plan is ₹0/month — forever. You get full access to every feature on the platform with zero monthly overhead.`,
+      q: 'What does the one-time setup fee cover?',
+      a: `The ₹${this.setupFeeFormatted} setup fee covers dedicated database provisioning, school environment configuration, and onboarding support. It's charged once via Razorpay when you register your school, separate from your subscription.`,
     },
     {
-      q: 'What are "educational partner notices" on the Standard plan?',
-      a: 'To keep the platform fully accessible without a paywall, the Standard plan displays highly vetted, family-safe, education-focused notices — such as book recommendations, scholarship opportunities, and learning tools. We strictly adhere to student data privacy laws and never show behavioural, targeted, or harmful advertising. Every notice is reviewed before it goes live.',
+      q: 'What\'s the difference between Monthly and Yearly plans?',
+      a: `Both plans unlock the complete Eduxo platform — there's no feature difference. Monthly billing renews every 30 days at ₹${this.monthlyPriceFormatted}. Yearly billing renews every 365 days at ₹${this.yearlyPriceFormatted} (equivalent to ₹${this.yearlyMonthlyEquivalentFormatted}/month), saving you ${this.yearlySavingsPercent}% and including priority support.`,
     },
     {
-      q: 'Can we upgrade from Standard to Premium later?',
-      a: 'Absolutely. You can transition your entire school network to a completely distraction-free, ad-free environment at any time — directly from your Admin Dashboard. The upgrade takes effect immediately, pro-rated to the day.',
+      q: 'What is UPI Autopay, and do I have to use it?',
+      a: 'UPI Autopay lets your subscription renew automatically each cycle without a manual payment. If you\'d rather stay in control, choose "Pay Once" instead and renew manually — both options are available on Monthly and Yearly plans.',
     },
     {
-      q: 'Is the one-time implementation fee non-refundable?',
-      a: 'The implementation fee covers database provisioning, onboarding configuration, and dedicated setup support. Once your school environment is deployed, the cost is non-refundable — but we offer a free 30-day walkthrough to ensure your team is fully comfortable before go-live.',
+      q: 'What happens when our access expires?',
+      a: 'Your Billing dashboard shows a live countdown as your access period nears its end. Renewing — early or after expiry — simply extends your access, and any time already paid for is never lost.',
     },
     {
-      q: 'Are student data and privacy protected on the Standard plan?',
-      a: 'Yes, unconditionally. We comply with the Digital Personal Data Protection (DPDP) Act. We use only static, contextual notices — never behavioural tracking or profiling of minors. Student data is never sold or shared with advertising partners under any circumstances.',
+      q: 'Is the setup fee refundable?',
+      a: 'The setup fee is non-refundable once your school environment has been provisioned, since it covers dedicated setup work. We\'re happy to walk your team through the platform before you commit.',
     },
     {
-      q: 'How many schools or users can we add?',
-      a: 'Both plans support unlimited student, parent, teacher, and staff accounts. There are no per-seat fees.',
+      q: 'How many students, parents, and staff can we add?',
+      a: 'Unlimited, on every plan. There are no per-seat charges — one flat subscription covers your entire school community.',
     },
   ];
 

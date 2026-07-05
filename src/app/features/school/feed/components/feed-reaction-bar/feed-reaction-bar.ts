@@ -22,10 +22,14 @@ export class FeedReactionBar {
 
   isPickerOpen = signal(false);
 
-  totalReactions = computed(() => {
-    const r = this.reactions();
-    return Object.values(r).reduce((sum, count) => sum + count, 0);
-  });
+  /** Guards against null/undefined reactions (e.g. an optimistically-added
+   *  post that hasn't gone through the API round-trip yet). Public because
+   *  the template reads it directly via the keyvalue pipe. */
+  reactionsSafe = computed<Record<string, number>>(() => this.reactions() ?? {});
+
+  totalReactions = computed(() =>
+    Object.values(this.reactionsSafe()).reduce((sum, count) => sum + count, 0)
+  );
 
   togglePicker(): void {
     this.isPickerOpen.set(!this.isPickerOpen());
@@ -38,8 +42,6 @@ export class FeedReactionBar {
   pick(reactionType: FeedReactionType): void {
     this.closePicker();
 
-    // Clicking the same reaction again removes it (matches DELETE /react
-    // semantics in services.ts — toggling off is a deliberate UX choice).
     if (this.myReaction() === reactionType) {
       this.react.emit(null);
     } else {

@@ -4,7 +4,7 @@
   <div class="reaction-summary">
     @if (totalReactions() > 0) {
     <div class="reaction-pills">
-      @for (entry of reactions() | keyvalue; track entry.key) { @if (entry.value > 0) {
+      @for (entry of reactionsSafe() | keyvalue; track entry.key) { @if (entry.value > 0) {
       <span class="reaction-pill"> {{ getEmoji(entry.key) }} {{ entry.value }} </span>
       } }
     </div>

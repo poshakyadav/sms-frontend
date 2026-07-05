@@ -9,13 +9,14 @@ import { FeedService } from '../../services/feed.service';
 import { FeedImageService, FeedImageValidationError } from '../../services/feed-image.service';
 import { CreateFeedPostInput, FeedPost, UpdateFeedPostInput } from '../../models/feed.models';
 import { FeedTargetSelector, FeedTargetValue } from '../feed-target-selector/feed-target-selector';
+import { PostImagePicker } from '../../../../../shared/components/post-image-picker/post-image-picker';
 
 const POST_TEXT_MAX_LENGTH = 1000;
 
 @Component({
   selector: 'app-create-post-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, FeedTargetSelector],
+  imports: [CommonModule, FormsModule, FeedTargetSelector, PostImagePicker],
   templateUrl: './create-post-dialog.html',
   styleUrl: './create-post-dialog.scss',
 })
@@ -86,21 +87,17 @@ export class CreatePostDialog implements OnDestroy {
     }
   }
 
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-
+  onImageSelected(file: File): void {
     this.errorMessage.set(null);
-
+  
     // Replace any previous local preview.
     if (this.objectUrlToRevoke) {
       URL.revokeObjectURL(this.objectUrlToRevoke);
     }
-
+  
     const preview = this.feedImageService.createLocalPreviewUrl(file);
     this.objectUrlToRevoke = preview;
-
+  
     this.selectedFile.set(file);
     this.previewUrl.set(preview);
     this.imageWasRemoved.set(false);

@@ -1068,14 +1068,34 @@
 .csfm-action-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.82rem !important;
+  gap: 6px;
+  height: 38px !important;
+  padding: 0 16px !important;
+  border-radius: var(--radius-md) !important;
+  font-size: 0.70rem !important;
   font-weight: 600 !important;
+  line-height: 1 !important;
 
+  // Same fix as .add-btn / .csfm-inline-action — Material's own icon
+  // margin + MDC label margin stack on top of our flex `gap` above,
+  // pushing icon and text apart. Zero them so `gap` is the only spacing.
+  ::ng-deep .mat-icon,
   mat-icon {
     font-size: 16px;
     height: 16px;
     width: 16px;
+    margin: 0 !important;
+    color: var(--color-primary) !important;
+  }
+
+  ::ng-deep .mdc-button__label {
+    margin: 0 !important;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  &--pay mat-icon {
+    color: var(--color-on-primary) !important;
   }
 }
 
@@ -1422,16 +1442,32 @@
 .csfm-inline-action {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 0.75rem !important;
+  gap: 5px;
+  font-size: 0.72rem !important;
   font-weight: 600 !important;
-  height: 30px !important;
+  letter-spacing: 0.02em;
+  height: 26px !important;
   padding: 0 10px !important;
+  border-radius: var(--radius-sm) !important;
 
+  // Same root cause as .add-btn — Material's own icon margin + MDC label
+  // margin were adding extra space beyond our flex `gap` above.
+  // Color is forced explicitly too — belt-and-suspenders in case the
+  // --mdc-filled-button-icon-color token (set globally in styles.scss)
+  // isn't recognized by this Material minor version.
+  ::ng-deep .mat-icon,
   mat-icon {
     font-size: 14px;
     height: 14px;
     width: 14px;
+    margin: 0 !important;
+    color: var(--color-on-primary) !important;
+  }
+
+  ::ng-deep .mdc-button__label {
+    margin: 0 !important;
+    display: inline-flex;
+    align-items: center;
   }
 }
 
@@ -1583,13 +1619,27 @@
   justify-content: center !important;
   // The button itself must not have any positional offset
   vertical-align: middle;
+  color: var(--color-warning) !important;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-warning) 10%, transparent) !important;
+  }
+
+  // Same size as .csfm-row-pay-btn's icon — was previously unset, so this
+  // button rendered at Material's default 24px, visibly bigger than the
+  // 18px pay icon sitting next to it in the same row.
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
 
   &--has-concession {
-    mat-icon {
-      color: var(--color-success);
-    }
-    &:hover mat-icon {
-      color: color-mix(in srgb, var(--color-success) 80%, #000);
+    color: var(--color-success) !important;
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-success) 10%, transparent) !important;
     }
   }
 }
@@ -1629,16 +1679,33 @@
   margin-bottom: 16px;
   flex-wrap: wrap;
 
+  // Matched to .add-btn (Custom Fees tab: "Bulk Monthly" / "Add Fee") —
+  // same height/padding/radius/font-size, plus the same icon-margin and
+  // MDC label-margin zeroing so `gap` is the only spacing source.
   button {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    font-size: 0.82rem !important;
+    gap: 5px;
+    height: 26px !important;
+    padding: 0 10px !important;
+    border-radius: var(--radius-sm) !important;
+    font-size: 0.72rem !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
 
+    ::ng-deep .mat-icon,
     mat-icon {
-      font-size: 16px;
-      height: 16px;
-      width: 16px;
+      font-size: 14px;
+      height: 14px;
+      width: 14px;
+      margin: 0 !important;
+      color: var(--color-primary) !important;
+    }
+
+    ::ng-deep .mdc-button__label {
+      margin: 0 !important;
+      display: inline-flex;
+      align-items: center;
     }
   }
 }

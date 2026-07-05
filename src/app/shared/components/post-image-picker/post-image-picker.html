@@ -1,0 +1,137 @@
+<!-- src/app/shared/components/post-image-picker/post-image-picker.html -->
+
+<div class="post-image-picker" [class.post-image-picker--disabled]="disabled">
+  <div class="post-image-picker__frame">
+    @if (displayUrl) {
+    <img
+      [src]="displayUrl"
+      alt="Post image"
+      class="post-image-picker__img"
+      (click)="openLightbox($event)"
+    />
+    <div class="post-image-picker__actions">
+      <label class="post-image-picker__action-btn" (click)="$event.stopPropagation()">
+        <mat-icon>edit</mat-icon>
+        Change
+        <input
+          type="file"
+          accept="image/*"
+          class="post-image-picker__input"
+          [disabled]="disabled"
+          (change)="onFileChosen($event)"
+        />
+      </label>
+      <button
+        type="button"
+        class="post-image-picker__action-btn post-image-picker__action-btn--danger"
+        [disabled]="disabled"
+        (click)="removeImage()"
+      >
+        <mat-icon>delete_outline</mat-icon>
+        Remove
+      </button>
+    </div>
+    } @else {
+    <label class="post-image-picker__empty">
+      <mat-icon>add_photo_alternate</mat-icon>
+      <span>Add cover image</span>
+      <span class="post-image-picker__hint">16:9 · optional</span>
+      <input
+        type="file"
+        accept="image/*"
+        class="post-image-picker__input"
+        [disabled]="disabled"
+        (change)="onFileChosen($event)"
+      />
+    </label>
+    }
+  </div>
+</div>
+
+<!-- ═══════════════════ CROPPER MODAL ═══════════════════ -->
+@if (cropperOpen()) {
+<div class="post-image-cropper-overlay" (click)="closeCropper()">
+  <div class="post-image-cropper-dialog" (click)="$event.stopPropagation()">
+    <div class="post-image-cropper-header">
+      <h3>Adjust Image</h3>
+      <button type="button" class="post-image-cropper-close" (click)="closeCropper()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <p class="post-image-cropper-subtitle">
+      Drag to reposition · scroll, pinch or use the slider to zoom — only what's inside the frame
+      gets used.
+    </p>
+
+    <div class="post-image-cropper-canvas-wrap">
+      @if (!cropperViewReady()) {
+      <div class="post-image-cropper-loading">
+        <span>Loading image…</span>
+      </div>
+      }
+      <image-cropper
+        [imageChangedEvent]="imageChangedEvent"
+        [maintainAspectRatio]="true"
+        [aspectRatio]="ASPECT_RATIO"
+        [roundCropper]="false"
+        [resizeToWidth]="OUTPUT_WIDTH"
+        [resizeToHeight]="OUTPUT_HEIGHT"
+        [format]="'webp'"
+        [transform]="transform"
+        [backgroundColor]="'#0f172a'"
+        (imageCropped)="imageCropped($event)"
+        (cropperReady)="onCropperReady()"
+        (loadImageFailed)="loadImageFailed()"
+        (transformChange)="onTransformChange($event)"
+        [style.visibility]="cropperViewReady() ? 'visible' : 'hidden'"
+      ></image-cropper>
+    </div>
+
+    <div class="post-image-cropper-zoom-row">
+      <mat-icon>zoom_out</mat-icon>
+      <input
+        type="range"
+        min="1"
+        max="3"
+        step="0.05"
+        [value]="zoom()"
+        (input)="onZoomChange($any($event.target).valueAsNumber)"
+        class="post-image-cropper-zoom-slider"
+        [disabled]="!cropperViewReady()"
+      />
+      <mat-icon>zoom_in</mat-icon>
+    </div>
+
+    <div class="post-image-cropper-footer">
+      <button type="button" class="post-image-cropper-cancel-btn" (click)="closeCropper()">
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="post-image-cropper-save-btn"
+        [disabled]="!cropperViewReady()"
+        (click)="confirmCrop()"
+      >
+        <mat-icon>check</mat-icon>
+        Use This Photo
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- ═══════════════════ LIGHTBOX ═══════════════════ -->
+@if (lightboxOpen()) {
+<div class="post-image-lightbox-overlay" (click)="closeLightbox()">
+  <button type="button" class="post-image-lightbox-close" (click)="closeLightbox()">
+    <mat-icon>close</mat-icon>
+  </button>
+  <img
+    [src]="displayUrl"
+    alt="Post image preview"
+    class="post-image-lightbox-img"
+    (click)="$event.stopPropagation()"
+  />
+</div>
+}

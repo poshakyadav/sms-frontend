@@ -28,28 +28,13 @@
 
       <div class="form-field">
         <label>Image (optional)</label>
-
-        @if (displayImageUrl()) {
-        <div class="image-preview">
-          <img [src]="displayImageUrl()" alt="Preview" />
-          <button type="button" class="remove-image-button" (click)="removeImage()">
-            Remove image
-          </button>
-        </div>
-        } @else {
-        <label class="file-upload-zone">
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            (change)="onFileSelected($event)"
-            hidden
-          />
-          <span>📷 Click to choose an image</span>
-          <span class="file-upload-hint"
-            >JPEG, PNG, or WebP — will be compressed automatically</span
-          >
-        </label>
-        } @if (isUploadingImage()) {
+        <app-post-image-picker
+          [currentImageUrl]="existingImageUrl()"
+          [disabled]="isSubmitting()"
+          (fileSelected)="onImageSelected($event)"
+          (removed)="removeImage()"
+        />
+        @if (isUploadingImage()) {
         <div class="field-hint">Compressing and uploading image…</div>
         }
       </div>

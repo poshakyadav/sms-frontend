@@ -99,13 +99,29 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.78rem;
-  font-weight: 600;
+  height: 26px !important;
+  padding: 0 10px !important;
+  border-radius: var(--radius-sm) !important;
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
 
+  // Material adds its own margin around the icon inside mat-button —
+  // zero it out so only our flex `gap` above controls the spacing,
+  // matching .show-cancelled-btn (a plain <button>, unaffected by this).
+  ::ng-deep .mat-icon,
   mat-icon {
-    font-size: 16px;
-    height: 16px;
-    width: 16px;
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+    margin: 0 !important;
+  }
+
+  // MDC buttons wrap the text in a label span with its own left margin
+  ::ng-deep .mdc-button__label {
+    margin: 0 !important;
+    display: inline-flex;
+    align-items: center;
   }
 
   &--bulk {

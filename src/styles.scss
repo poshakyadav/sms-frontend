@@ -43,6 +43,39 @@ html {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// BRIDGE: bind Material's M3 system tokens to our own design tokens.
+//
+// mat.theme() above generates --mat-sys-primary / --mat-sys-on-primary from
+// the hardcoded azure palette. Every Material component (buttons, tabs,
+// checkboxes, etc.) reads color="primary" from THOSE tokens, not from our
+// --color-primary. Redefining them here — after the mixin, so we win the
+// cascade — makes every Material "primary" component follow whatever
+// ThemeService sets for --color-primary at runtime, including per-school
+// branding. This is a one-time fix; no component SCSS needs to touch color
+// again for "primary"-colored Material buttons.
+// ─────────────────────────────────────────────────────────────────────────────
+:root {
+  --mat-sys-primary: var(--color-primary);
+  --mat-sys-on-primary: var(--color-on-primary);
+
+  // Safety net: some MDC component tokens are emitted as literal resolved
+  // values by the theme mixin rather than var() references, depending on
+  // the Angular Material minor version. These cover the exact buttons in
+  // play (flat = filled, stroked = outlined) so the fix holds either way.
+  --mdc-filled-button-container-color: var(--color-primary);
+  --mdc-filled-button-label-text-color: var(--color-on-primary);
+  --mdc-outlined-button-outline-color: var(--color-primary);
+  --mdc-outlined-button-label-text-color: var(--color-primary);
+
+  // Icon color is a SEPARATE token from label-text-color on filled/outlined
+  // buttons — missing this is why "Record Payment"'s icon renders nearly
+  // invisible (still using the old azure-palette icon color, which is close
+  // enough to our --color-primary container color to disappear against it).
+  --mdc-filled-button-icon-color: var(--color-on-primary);
+  --mdc-outlined-button-icon-color: var(--color-primary);
+}
+
 :root {
   /* ==================== BRAND COLORS ==================== */
   --color-primary: #3b82f6;

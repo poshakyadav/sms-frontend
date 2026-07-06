@@ -1,0 +1,448 @@
+// payment-result-dialog.scss
+
+.prd-shell {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 480px;
+  // Cap height to viewport, scroll only the body
+  max-height: 90vh;
+  max-height: 90dvh; // better on mobile browsers with dynamic toolbars
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  overflow: hidden; // clip corners; .prd-body handles scrolling
+}
+
+.prd-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--color-divider);
+  flex: 0 0 auto; // never let header get squeezed/scrolled away
+
+  &--success {
+    background: color-mix(in srgb, var(--color-success) 5%, var(--color-bg-card));
+  }
+  &--error {
+    background: color-mix(in srgb, var(--color-error) 5%, var(--color-bg-card));
+  }
+
+  &__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    mat-icon {
+      font-size: 24px;
+      height: 24px;
+      width: 24px;
+    }
+  }
+  &__text {
+    flex: 1;
+    min-width: 0; // allow text to wrap/ellipsis instead of forcing header wider
+  }
+}
+
+.prd-header--success .prd-header__icon {
+  background: color-mix(in srgb, var(--color-success) 15%, transparent);
+  mat-icon {
+    color: var(--color-success);
+  }
+}
+.prd-header--error .prd-header__icon {
+  background: color-mix(in srgb, var(--color-error) 15%, transparent);
+  mat-icon {
+    color: var(--color-error);
+  }
+}
+
+.prd-title {
+  margin: 0 0 3px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.prd-subtitle {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+.prd-close {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.prd-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  // This is the scrollable region
+  flex: 1 1 auto;
+  min-height: 0; // required so a flex child can actually shrink+scroll
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+
+  // ── FIX: every direct child must NOT shrink below its content size.
+  // Any child with its own `overflow: hidden` (like .prd-breakdown) has
+  // its browser-computed automatic min-height reset to 0, which lets
+  // flexbox crush it down to near-nothing instead of letting *this*
+  // container's overflow-y: auto do the scrolling. flex-shrink: 0 makes
+  // every section keep its natural height, so overflow correctly bubbles
+  // up to .prd-body's scrollbar instead of clipping content silently.
+  > * {
+    flex-shrink: 0;
+  }
+}
+
+/* Total strip */
+.prd-total-strip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: color-mix(in srgb, var(--color-success) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-success) 20%, transparent);
+  border-radius: var(--radius-md);
+  flex-wrap: wrap; // let contents wrap on narrow widths
+
+  &__icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--color-success) 15%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    mat-icon {
+      font-size: 20px;
+      height: 20px;
+      width: 20px;
+      color: var(--color-success);
+    }
+  }
+  &__text {
+    flex: 1;
+    min-width: 140px; // keep label+amount from crushing too narrow before wrapping
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  &__label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+  }
+  &__amount {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--color-success);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.prd-method-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-main);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+  mat-icon {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+  }
+}
+
+/* Breakdown */
+.prd-breakdown {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden; // clip rounded corners for header background
+  display: flex;
+  flex-direction: column;
+  // ── NEW: cap the box itself so a long payment list scrolls INSIDE this
+  // section (with its header staying put) instead of stretching the whole
+  // dialog taller than the viewport.
+  max-height: 260px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: var(--color-hover);
+    border-bottom: 1px solid var(--color-divider);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+    flex: 0 0 auto; // header stays pinned; only __rows scrolls
+    mat-icon {
+      font-size: 14px;
+      height: 14px;
+      width: 14px;
+      color: var(--color-primary);
+    }
+  }
+
+  // ── NEW: the actual scrollable list of rows
+  &__rows {
+    overflow-y: auto;
+    min-height: 0;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-top: 1px solid var(--color-divider);
+    font-size: 0.83rem;
+    &:first-of-type {
+      border-top: none;
+    }
+  }
+
+  &__fee-chip {
+    font-weight: 600;
+    color: var(--color-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  &__amount {
+    font-weight: 700;
+    color: var(--color-success);
+    font-variant-numeric: tabular-nums;
+  }
+  &__receipt {
+    font-size: 0.7rem;
+    font-family: 'Courier New', monospace;
+    background: var(--color-hover);
+    color: var(--color-text-muted);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--color-border);
+    white-space: nowrap;
+  }
+}
+
+/* Receipts */
+.prd-receipts {
+  &__label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+    margin-bottom: 8px;
+    mat-icon {
+      font-size: 14px;
+      height: 14px;
+      width: 14px;
+      color: var(--color-primary);
+    }
+  }
+  &__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
+
+.prd-receipt-chip {
+  display: inline-block;
+  font-family: 'Courier New', monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+  padding: 3px 10px;
+  border-radius: 4px;
+}
+
+/* Notice banners */
+.prd-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  line-height: 1.5;
+
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  p {
+    margin: 0;
+  }
+
+  &--success {
+    background: color-mix(in srgb, var(--color-success) 7%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-success) 18%, transparent);
+    color: color-mix(in srgb, var(--color-success) 60%, var(--color-text-primary));
+    mat-icon {
+      color: var(--color-success);
+    }
+  }
+  &--warning {
+    background: color-mix(in srgb, var(--color-warning) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-warning) 18%, transparent);
+    color: color-mix(in srgb, var(--color-warning) 60%, var(--color-text-primary));
+    mat-icon {
+      color: var(--color-warning);
+    }
+  }
+}
+
+/* Error state */
+.prd-error-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+.prd-error-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-error) 12%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  mat-icon {
+    font-size: 28px;
+    height: 28px;
+    width: 28px;
+    color: var(--color-error);
+  }
+}
+.prd-error-message {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  max-width: 340px;
+}
+
+/* Footer */
+.prd-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 24px 20px;
+  border-top: 1px solid var(--color-divider);
+  flex: 0 0 auto; // footer always stays visible, never scrolled away
+  flex-wrap: wrap; // buttons wrap instead of overflowing on narrow widths
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    mat-icon {
+      font-size: 17px;
+      height: 17px;
+      width: 17px;
+    }
+  }
+}
+
+/* ── Small screens ─────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .prd-shell {
+    max-width: 100%;
+    max-height: 100dvh;
+    max-height: 100vh;
+    border-radius: 0; // full-bleed sheet on small screens
+  }
+
+  .prd-header,
+  .prd-body {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .prd-header {
+    padding-top: 16px;
+    padding-bottom: 14px;
+    gap: 10px;
+  }
+
+  .prd-body {
+    padding-top: 16px;
+    padding-bottom: 16px;
+    gap: 14px;
+  }
+
+  .prd-breakdown {
+    max-height: 200px; // a bit tighter on short phone viewports
+  }
+
+  .prd-total-strip__text {
+    min-width: 120px;
+  }
+
+  .prd-method-badge {
+    margin-left: auto;
+  }
+
+  // 3-across grid is too tight on narrow phones — put the receipt chip
+  // on its own line under the fee name + amount
+  .prd-breakdown__row {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'fee amount'
+      'receipt receipt';
+    row-gap: 4px;
+  }
+  .prd-breakdown__fee-chip {
+    grid-area: fee;
+  }
+  .prd-breakdown__amount {
+    grid-area: amount;
+  }
+  .prd-breakdown__receipt {
+    grid-area: receipt;
+    justify-self: start;
+  }
+
+  // Stack footer buttons full-width instead of cramming 3 across
+  .prd-footer {
+    padding: 12px 16px 16px;
+    gap: 8px;
+    button {
+      flex: 1 1 100%;
+      justify-content: center;
+    }
+  }
+}

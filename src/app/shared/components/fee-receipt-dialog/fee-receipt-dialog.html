@@ -1,0 +1,35 @@
+<!-- fee-receipt-dialog.html -->
+<div class="frd-shell">
+  <div class="frd-header">
+    <h2 class="frd-title"><mat-icon>receipt_long</mat-icon> Fee Receipt</h2>
+    <button mat-icon-button (click)="close()"><mat-icon>close</mat-icon></button>
+  </div>
+
+  <div class="frd-body">
+    @if (loading()) {
+    <div class="frd-state"><mat-spinner diameter="32" /><span>Loading receipt…</span></div>
+    } @if (error()) {
+    <div class="frd-state frd-state--error">
+      <mat-icon>error_outline</mat-icon><span>{{ error() }}</span>
+    </div>
+    } @if (receipt(); as r) {
+    <div #receiptNode>
+      <app-fee-receipt-view [data]="r" />
+    </div>
+    }
+  </div>
+
+  @if (receipt() && !loading()) {
+  <div class="frd-footer">
+    <button mat-stroked-button (click)="close()">Close</button>
+    <button mat-stroked-button (click)="onDownload()" [disabled]="working() !== null">
+      @if (working() === 'download') { <mat-spinner diameter="16" /> } @else {
+      <mat-icon>download</mat-icon> } Download PDF
+    </button>
+    <button mat-flat-button color="primary" (click)="onPrint()" [disabled]="working() !== null">
+      @if (working() === 'print') { <mat-spinner diameter="16" /> } @else {
+      <mat-icon>print</mat-icon> } Print
+    </button>
+  </div>
+  }
+</div>

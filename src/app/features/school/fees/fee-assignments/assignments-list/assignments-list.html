@@ -178,7 +178,16 @@
           <td class="text-center">
             @if (!a.isCancelled) {
             <div class="action-btns">
-              @if (canPay && a.balance > 0) {
+              @if (a.amountPaid > 0) {
+              <button
+                mat-icon-button
+                class="action-btn action-btn--history"
+                matTooltip="Payment History"
+                (click)="openPaymentHistory(a)"
+              >
+                <mat-icon>history</mat-icon>
+              </button>
+              } @if (canPay && a.balance > 0) {
               <button
                 mat-icon-button
                 class="action-btn action-btn--pay"

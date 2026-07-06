@@ -1,0 +1,146 @@
+<!-- src/app/shared/components/school-logo-picker/school-logo-picker.html -->
+
+<div class="logo-picker" [class.logo-picker--disabled]="disabled">
+  <div class="logo-picker__box-wrap">
+    <div class="logo-picker__box">
+      @if (displayUrl) {
+      <img
+        [src]="displayUrl"
+        alt="School logo"
+        class="logo-picker__img"
+        (click)="openLightbox($event)"
+        (error)="onDisplayImageError()"
+      />
+      } @else {
+      <mat-icon class="logo-picker__placeholder-icon">add_photo_alternate</mat-icon>
+      } @if (uploading()) {
+      <div class="logo-picker__overlay">
+        <mat-spinner diameter="26"></mat-spinner>
+      </div>
+      }
+    </div>
+
+    <label
+      class="logo-picker__edit-badge"
+      [matTooltip]="hasLogo ? 'Change logo' : 'Add logo'"
+      [class.logo-picker__edit-badge--disabled]="disabled || uploading()"
+      (click)="$event.stopPropagation()"
+    >
+      <mat-icon>{{ hasLogo ? 'edit' : 'add_a_photo' }}</mat-icon>
+      <input
+        type="file"
+        accept="image/*"
+        class="logo-picker__input"
+        [disabled]="disabled || uploading()"
+        (change)="onFileChosen($event)"
+      />
+    </label>
+  </div>
+
+  <div class="logo-picker__meta">
+    @if (hasLogo && !uploading()) {
+    <button
+      type="button"
+      class="logo-picker__remove-btn"
+      [disabled]="disabled"
+      (click)="removeLogo()"
+    >
+      <mat-icon>delete_outline</mat-icon>
+      Remove
+    </button>
+    } @if (compressedSizeLabel()) {
+    <span class="logo-picker__size-hint">{{ compressedSizeLabel() }} · optimized</span>
+    }
+    <span class="logo-picker__ratio-hint">
+      <mat-icon>aspect_ratio</mat-icon>
+      Square (1:1) works best
+    </span>
+  </div>
+</div>
+
+<!-- ═══════════════════ CROPPER MODAL ═══════════════════ -->
+@if (cropperOpen()) {
+<div class="logo-cropper-overlay" (click)="closeCropper()">
+  <div class="logo-cropper-dialog" (click)="$event.stopPropagation()">
+    <div class="logo-cropper-header">
+      <h3>Adjust Logo</h3>
+      <button type="button" class="logo-cropper-close" (click)="closeCropper()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <p class="logo-cropper-subtitle">
+      Drag to reposition · scroll, pinch or use the slider to zoom — only what's inside the frame
+      gets uploaded.
+    </p>
+
+    <div class="logo-cropper-canvas-wrap">
+      @if (!cropperViewReady()) {
+      <div class="logo-cropper-loading">
+        <mat-spinner diameter="32"></mat-spinner>
+        <span>Loading image…</span>
+      </div>
+      }
+      <image-cropper
+        [imageChangedEvent]="imageChangedEvent"
+        [maintainAspectRatio]="true"
+        [aspectRatio]="1"
+        [roundCropper]="false"
+        [resizeToWidth]="OUTPUT_SIZE"
+        [resizeToHeight]="OUTPUT_SIZE"
+        [format]="'png'"
+        [transform]="transform"
+        [backgroundColor]="'#0f172a'"
+        (imageCropped)="imageCropped($event)"
+        (cropperReady)="onCropperReady()"
+        (loadImageFailed)="loadImageFailed()"
+        (transformChange)="onTransformChange($event)"
+        [style.visibility]="cropperViewReady() ? 'visible' : 'hidden'"
+      ></image-cropper>
+    </div>
+
+    <div class="logo-cropper-zoom-row">
+      <mat-icon>zoom_out</mat-icon>
+      <input
+        type="range"
+        min="1"
+        max="3"
+        step="0.05"
+        [value]="zoom()"
+        (input)="onZoomChange($any($event.target).valueAsNumber)"
+        class="logo-cropper-zoom-slider"
+        [disabled]="!cropperViewReady()"
+      />
+      <mat-icon>zoom_in</mat-icon>
+    </div>
+
+    <div class="logo-cropper-footer">
+      <button type="button" class="logo-cropper-cancel-btn" (click)="closeCropper()">Cancel</button>
+      <button
+        type="button"
+        class="logo-cropper-save-btn"
+        [disabled]="!cropperViewReady()"
+        (click)="confirmCrop()"
+      >
+        <mat-icon>check</mat-icon>
+        Use This Logo
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- ═══════════════════ LIGHTBOX (FULL PREVIEW) ═══════════════════ -->
+@if (lightboxOpen()) {
+<div class="logo-lightbox-overlay" (click)="closeLightbox()">
+  <button type="button" class="logo-lightbox-close" (click)="closeLightbox()">
+    <mat-icon>close</mat-icon>
+  </button>
+  <img
+    [src]="displayUrl"
+    alt="School logo preview"
+    class="logo-lightbox-img"
+    (click)="$event.stopPropagation()"
+  />
+</div>
+}

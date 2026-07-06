@@ -33,6 +33,7 @@ import { PaymentHistory } from '../payments/payment-history/payment-history';
 import { ConcessionsList } from '../fee-concessions/concessions-list/concessions-list';
 import { AuthService } from '../../../../core/services/auth.service';
 import { FeeStatusBadge } from '../../../../shared/components/fee-status-badge/fee-status-badge';
+import { FeeItemPaymentHistoryDialogComponent } from '../fee-item-payment-history-dialog/fee-item-payment-history-dialog';
 
 // ── Month group shape for standard fees ───────────────────────────────────────
 export interface StandardFeeMonthGroup {
@@ -234,7 +235,7 @@ export class ClassSectionFeeManager implements OnInit {
     private auth: AuthService,
     private dialog: MatDialog,
     private snack: MatSnackBar
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadDropdowns();
@@ -341,6 +342,8 @@ export class ClassSectionFeeManager implements OnInit {
       studentName: student.name,
       className: cs?.className,
       sectionName: cs?.sectionName,
+      rollNumber: student.rollNumber, // NEW
+      academicYearName: this.academicYears().find((y) => y.id === this.selectedAcademicYearId())?.name, // ← NEW
     };
 
     // Structure-wise mode: only this fee
@@ -641,5 +644,24 @@ export class ClassSectionFeeManager implements OnInit {
     }
 
     return groups;
+  }
+
+  // inside the class
+  openPaymentHistory(fee: DueFeeItem): void {
+    const student = this.selectedStudent();
+    if (!student) return;
+    this.dialog.open(FeeItemPaymentHistoryDialogComponent, {
+      width: '520px',
+      maxWidth: '95vw',
+      panelClass: 'side-sheet-dialog',
+      data: {
+        enrollmentId: student.enrollmentId,
+        source: 'STRUCTURE',
+        feeId: fee.id,
+        feeType: fee.feeType,
+        feeMonth: fee.feeMonth,
+        studentName: student.name,
+      },
+    });
   }
 }

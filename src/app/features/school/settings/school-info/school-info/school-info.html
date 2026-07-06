@@ -296,6 +296,7 @@
           </div>
 
           <!-- ── BRANDING ──────────────────────────────────────────────── -->
+          <!-- ── BRANDING ──────────────────────────────────────────────── -->
           <div class="form-card" [class.hidden]="activeSection() !== 'branding'">
             <div class="card-header">
               <div class="card-icon card-icon--purple">
@@ -344,29 +345,22 @@
                 }}</span>
               </div>
 
-              <!-- Logo URL -->
-              <div class="field-group" [class.has-error]="isInvalid('logoUrl')">
-                <label class="field-label" for="logoUrl">
+              <!-- Logo Upload -->
+              <div class="field-group">
+                <label class="field-label">
                   <mat-icon>image</mat-icon>
-                  Logo URL
+                  School Logo
                 </label>
-                <div class="input-wrapper">
-                  <input
-                    id="logoUrl"
-                    class="form-input"
-                    type="url"
-                    formControlName="logoUrl"
-                    placeholder="https://cdn.yourschool.edu.in/logo.png"
-                    autocomplete="off"
-                    (input)="onLogoUrlChange()"
-                  />
-                </div>
+
+                <app-school-logo-picker
+                  [currentLogoUrl]="schoolInfo()?.logoUrl || null"
+                  (uploaded)="onLogoUploaded($event)"
+                  (removed)="onLogoRemoved()"
+                ></app-school-logo-picker>
+
                 <span class="field-hint">
-                  Direct link to your school logo image (PNG or SVG recommended)
+                  Square image recommended · Drag & zoom to crop before uploading
                 </span>
-                <span class="field-error" *ngIf="getError('logoUrl')">{{
-                  getError('logoUrl')
-                }}</span>
               </div>
             </div>
           </div>

@@ -227,6 +227,7 @@ export interface PaymentHistoryRow {
   source: FeeSource;
   isVoid: boolean;
   notes: string | null;
+  batchId?: string | null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -1,1 +1,131 @@
-<p>payment-result-dialog works!</p>
+<!-- payment-result-dialog.html -->
+
+<div class="prd-shell">
+  <!-- Header -->
+  <div
+    class="prd-header"
+    [class.prd-header--success]="data.success"
+    [class.prd-header--error]="!data.success"
+  >
+    <div class="prd-header__icon">
+      <mat-icon>{{ data.success ? 'check_circle' : 'error_outline' }}</mat-icon>
+    </div>
+    <div class="prd-header__text">
+      <h2 class="prd-title">{{ data.success ? 'Payment Recorded' : 'Payment Failed' }}</h2>
+      <p class="prd-subtitle">
+        @if (data.success) {
+        {{ data.studentName }}
+        @if (data.className) { — {{ data.className
+        }}{{ data.sectionName ? '-' + data.sectionName : '' }} } } @else { Something went wrong.
+        Please try again. }
+      </p>
+    </div>
+    <button mat-icon-button class="prd-close" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Body -->
+  <div class="prd-body">
+    <!-- ── SUCCESS state ─────────────────────────────────────────── -->
+    @if (data.success) {
+
+    <!-- Grand total strip -->
+    <div class="prd-total-strip">
+      <div class="prd-total-strip__icon"><mat-icon>payments</mat-icon></div>
+      <div class="prd-total-strip__text">
+        <span class="prd-total-strip__label">Total Amount Paid</span>
+        <span class="prd-total-strip__amount">{{ data.totalPaid! | paise }}</span>
+      </div>
+      @if (data.paymentMethod) {
+      <div class="prd-method-badge">
+        <mat-icon>{{ methodIcon(data.paymentMethod) }}</mat-icon>
+        {{ methodLabel(data.paymentMethod) }}
+      </div>
+      }
+    </div>
+
+    <!-- Per-payment breakdown -->
+    @if (data.payments && data.payments.length > 0) {
+    <div class="prd-breakdown">
+      <div class="prd-breakdown__header">
+        <mat-icon>receipt_long</mat-icon>
+        <span>Payment breakdown</span>
+      </div>
+      <div class="prd-breakdown__rows">
+        @for (p of data.payments; track p.receiptNumber) {
+        <div class="prd-breakdown__row">
+          <span class="prd-breakdown__fee-chip">{{ p.feeType }}</span>
+          <span class="prd-breakdown__amount">{{ p.amountPaid | paise : 'compact' }}</span>
+          <span class="prd-breakdown__receipt">{{ p.receiptNumber }}</span>
+        </div>
+        }
+      </div>
+    </div>
+    }
+
+    <!-- Receipt numbers -->
+    @if (data.receiptNumbers && data.receiptNumbers.length > 0) {
+    <div class="prd-receipts">
+      <div class="prd-receipts__label">
+        <mat-icon>confirmation_number</mat-icon>
+        {{ data.receiptNumbers.length === 1 ? 'Receipt Number' : 'Receipt Numbers' }}
+      </div>
+      <div class="prd-receipts__list">
+        @for (r of data.receiptNumbers; track r) {
+        <span class="prd-receipt-chip">{{ r }}</span>
+        }
+      </div>
+    </div>
+    }
+
+    <!-- Success notice -->
+    <div class="prd-notice prd-notice--success">
+      <mat-icon>email</mat-icon>
+      <p>A receipt has been sent to the student's registered email address.</p>
+    </div>
+
+    }
+
+    <!-- ── ERROR state ────────────────────────────────────────────── -->
+    @if (!data.success) {
+    <div class="prd-error-body">
+      <div class="prd-error-icon"><mat-icon>warning_amber</mat-icon></div>
+      <p class="prd-error-message">
+        {{ data.errorMessage || 'An unexpected error occurred while recording the payment.' }}
+      </p>
+      <div class="prd-notice prd-notice--warning">
+        <mat-icon>info_outline</mat-icon>
+        <p>
+          No payment has been charged. Please check the details and try again, or contact support if
+          the issue persists.
+        </p>
+      </div>
+    </div>
+    }
+  </div>
+
+  <!-- Footer -->
+  <div class="prd-footer">
+    @if (data.success) {
+    <button mat-stroked-button (click)="viewReceipt()">
+      <mat-icon>visibility</mat-icon>
+      View Receipt
+    </button>
+    <button mat-stroked-button (click)="printReceipt()">
+      <mat-icon>print</mat-icon>
+      Print Receipt
+    </button>
+    <button mat-flat-button color="primary" (click)="close()">
+      <mat-icon>done</mat-icon>
+      Done
+    </button>
+    } @else {
+    <button mat-stroked-button (click)="close()">Close</button>
+    <button mat-flat-button color="primary" (click)="retry()">
+      <mat-icon>refresh</mat-icon>
+      Try Again
+    </button>
+    }
+  </div>
+</div>

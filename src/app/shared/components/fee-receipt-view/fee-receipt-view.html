@@ -1,0 +1,146 @@
+<!-- fee-receipt-view.html -->
+<div class="receipt" [class.receipt--void]="isFullyVoid">
+  @if (isFullyVoid) {
+  <div class="receipt__void-stamp">VOIDED</div>
+  }
+
+  <div class="receipt__school-header">
+    @if (data.school.logoUrl) {
+    <img class="receipt__logo" [src]="data.school.logoUrl" [alt]="data.school.name" />
+    } @else {
+    <div class="receipt__logo receipt__logo--placeholder">
+      {{ (data.school.shortName || data.school.name || '?').charAt(0) }}
+    </div>
+    }
+    <div class="receipt__school-info">
+      <h1 class="receipt__school-name">{{ data.school.name }}</h1>
+      @if (data.school.addressLineOne) {
+      <p class="receipt__school-address">
+        {{ data.school.addressLineOne }}@if (data.school.addressLineTwo) {,
+        {{ data.school.addressLineTwo }}}
+      </p>
+      }
+      <p class="receipt__school-contact">
+        @if (data.school.phone) { <span><mat-icon>call</mat-icon>{{ data.school.phone }}</span> }
+        @if (data.school.email) { <span><mat-icon>mail</mat-icon>{{ data.school.email }}</span> }
+      </p>
+    </div>
+  </div>
+
+  <div class="receipt__divider"></div>
+
+  <div class="receipt__title-row">
+    <h2 class="receipt__title">Fee Payment Receipt</h2>
+    @if (isFullyVoid) { <span class="receipt__badge receipt__badge--void">Voided</span> }
+  </div>
+
+  <div class="receipt__meta-grid">
+    <div class="receipt__meta-item">
+      <span class="receipt__meta-label">Receipt No.</span>
+      <span class="receipt__meta-value">
+        {{ data.primaryReceiptNumber }}
+        @if (hasMultipleReceiptNumbers) {
+        <span class="receipt__meta-hint">(covers {{ data.items.length }} items)</span>
+        }
+      </span>
+    </div>
+    <div class="receipt__meta-item">
+      <span class="receipt__meta-label">Date</span>
+      <span class="receipt__meta-value">{{ formatDate(data.paymentDate) }}</span>
+    </div>
+    <div class="receipt__meta-item">
+      <span class="receipt__meta-label">Payment Method</span>
+      <span class="receipt__meta-value">{{ methodLabel(data.paymentMethod) }}</span>
+    </div>
+  </div>
+
+  <div class="receipt__student-block">
+    <span class="receipt__section-label">Received From</span>
+    <div class="receipt__student-grid">
+      <div>
+        <span class="receipt__student-label">Student Name</span>
+        <span class="receipt__student-value">{{ data.student.name }}</span>
+      </div>
+      @if (data.student.rollNumber) {
+      <div>
+        <span class="receipt__student-label">Roll No.</span>
+        <span class="receipt__student-value">{{ data.student.rollNumber }}</span>
+      </div>
+      }
+      <div>
+        <span class="receipt__student-label">Class - Section</span>
+        <span class="receipt__student-value"
+          >{{ data.student.className }} - {{ data.student.sectionName }}</span
+        >
+      </div>
+      <div>
+        <span class="receipt__student-label">Academic Year</span>
+        <span class="receipt__student-value">{{ data.student.academicYearName }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="receipt__items">
+    <table class="receipt__table">
+      <thead>
+        <tr>
+          <th class="text-left">Fee Type</th>
+          <th class="text-center">Month</th>
+          <th class="text-right">Original</th>
+          @if (hasConcession) {
+          <th class="text-right">Concession</th>
+          }
+          <th class="text-right">Paid</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of data.items; track trackByItem($index, item)) {
+        <tr [class.receipt__row--void]="item.isVoid">
+          <td class="text-left">
+            {{ item.feeType }}
+            @if (item.isVoid) { <span class="receipt__void-chip">Voided</span> }
+          </td>
+          <td class="text-center cell-muted">{{ formatMonth(item.feeMonth) }}</td>
+          <td class="text-right">{{ item.originalAmount | paise : 'compact' }}</td>
+          @if (hasConcession) {
+          <td class="text-right">
+            @if (item.concessionAmount > 0) { -{{ item.concessionAmount | paise : 'compact' }} }
+            @else { — }
+          </td>
+          }
+          <td class="text-right amount-cell">{{ item.amountPaid | paise : 'compact' }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="receipt__total-row">
+    <div class="receipt__total-words">{{ amountInWords(data.totalPaid) }}</div>
+    <div class="receipt__total-amount">
+      <span class="receipt__total-label">Total Paid</span>
+      <span class="receipt__total-value">{{ data.totalPaid | paise }}</span>
+    </div>
+  </div>
+
+  @if (data.notes) {
+  <div class="receipt__notes">
+    <span class="receipt__section-label">Notes</span>
+    <p>{{ data.notes }}</p>
+  </div>
+  }
+
+  <div class="receipt__footer">
+    <div class="receipt__footer-note">
+      <mat-icon>verified</mat-icon>
+      <p>
+        This is a computer-generated receipt and does not require a physical signature. @if
+        (data.recordedByName) { Recorded by {{ data.recordedByName }}. }
+      </p>
+    </div>
+    <div class="receipt__signature">
+      <div class="receipt__signature-line"></div>
+      <span>Authorized Signatory</span>
+    </div>
+  </div>
+</div>

@@ -22,6 +22,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterModule } from '@angular/router';
 import { ApiService } from '../../../../../core/services/api.service';
 import { ToastService } from '../../../../../core/services/toast.service';
+import { AuthService } from '../../../../../core/services/auth.service';
+import { SchoolLogoPicker } from '../../../../../shared/components/school-logo-picker/school-logo-picker';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -66,6 +68,7 @@ function shortNameValidator(control: AbstractControl): ValidationErrors | null {
     MatTooltipModule,
     MatProgressSpinnerModule,
     RouterModule,
+    SchoolLogoPicker,
   ],
   templateUrl: './school-info.html',
   styleUrl: './school-info.scss',
@@ -74,6 +77,7 @@ export class SchoolInfoComponent implements OnInit {
   private api = inject(ApiService);
   private fb = inject(FormBuilder);
   private toast = inject(ToastService);
+  private authService = inject(AuthService);
 
   // ── State signals ────────────────────────────────────────────────────────
   loading = signal(true);
@@ -94,7 +98,7 @@ export class SchoolInfoComponent implements OnInit {
   });
 
   logoPreviewUrl = computed(() => {
-    const val = this.form?.get('logoUrl')?.value ?? '';
+    const val = this.schoolInfo()?.logoUrl;
     return val && !this.logoPreviewError() ? val : null;
   });
 
@@ -112,7 +116,6 @@ export class SchoolInfoComponent implements OnInit {
       name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(200)]],
       shortName: ['', [shortNameValidator]],
       tagline: ['', [Validators.maxLength(300)]],
-      logoUrl: ['', []],
 
       // Contact
       phone: ['', [Validators.maxLength(20)]],
@@ -150,7 +153,6 @@ export class SchoolInfoComponent implements OnInit {
       name: info.name ?? '',
       shortName: info.shortName ?? '',
       tagline: info.tagline ?? '',
-      logoUrl: info.logoUrl ?? '',
       phone: info.phone ?? '',
       alternatePhone: info.alternatePhone ?? '',
       email: info.email ?? '',
@@ -167,13 +169,38 @@ export class SchoolInfoComponent implements OnInit {
     this.activeSection.set(section);
   }
 
-  onLogoUrlChange(): void {
-    this.logoPreviewError.set(false);
-  }
-
   onLogoPreviewError(): void {
     this.logoPreviewError.set(true);
   }
+
+  // ── Logo picker events ───────────────────────────────────────────────────
+  // The <app-school-logo-picker> owns file selection, cropping, compression,
+  // and the upload/remove HTTP calls. This component only needs to react to
+  // the outcome so the rest of the page (live preview, header branding) stays
+  // in sync.
+
+  onLogoUploaded(logoUrl: string): void {
+    const info = this.schoolInfo();
+    if (info) this.schoolInfo.set({ ...info, logoUrl });
+    this.logoPreviewError.set(false);
+
+    this.authService.saveSchoolBrandingToStorage(
+      { logoUrl },
+      info?.uniqueCode ?? null
+    );
+  }
+
+  onLogoRemoved(): void {
+    const info = this.schoolInfo();
+    if (info) this.schoolInfo.set({ ...info, logoUrl: '' });
+
+    this.authService.saveSchoolBrandingToStorage(
+      { logoUrl: null },
+      info?.uniqueCode ?? null
+    );
+  }
+
+  // ── Save (basic/contact/branding text fields) ───────────────────────────
 
   onSubmit(): void {
     if (this.form.invalid || this.saving()) return;
@@ -200,9 +227,7 @@ export class SchoolInfoComponent implements OnInit {
         this.saving.set(false);
         if (res.success) {
           this.toast.success('School information updated successfully!');
-          // Refresh local data
           this.loadSchoolInfo();
-          // Update localStorage schoolInfo for header
           this.updateLocalSchoolInfo(payload);
         }
       },

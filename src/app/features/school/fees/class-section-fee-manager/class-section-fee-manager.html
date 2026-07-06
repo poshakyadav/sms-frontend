@@ -630,7 +630,7 @@
 
                   <!-- Month header row -->
                   <tr class="csfm-month-header-row">
-                    <td [attr.colspan]="(canManage() || canPay()) ? 10 : 9">
+                    <td [attr.colspan]="canManage() || canPay() ? 10 : 9">
                       <div class="csfm-month-header">
                         <mat-icon>calendar_month</mat-icon>
                         <span>{{ group.label }}</span>
@@ -683,38 +683,46 @@
                       <app-fee-status-badge [status]="getFeeItemStatus(fee)" />
                     </td>
                     @if (canManage() || canPay()) {
-                      <td class="text-center csfm-col-action">
-                        <div class="csfm-row-actions">
-                          @if (canPay() && fee.remaining > 0) {
-                          <button
-                            mat-icon-button
-                            class="csfm-row-pay-btn"
-                            (click)="openRecordPayment(fee)"
-                            matTooltip="Record payment for this fee"
-                          >
-                            <mat-icon>payments</mat-icon>
-                          </button>
-                          }
-                          @if (canManage()) {
-                          <button
-                            mat-icon-button
-                            class="csfm-row-concession-btn"
-                            [class.csfm-row-concession-btn--has-concession]="fee.concessionAmount > 0"
-                            (click)="openGrantConcession('STRUCTURE', fee)"
-                            [matTooltip]="
-                              fee.concessionAmount > 0
-                                ? 'View / manage existing concession'
-                                : 'Grant concession on this fee'
-                            "
-                          >
-                            <mat-icon>{{
-                              fee.concessionAmount > 0 ? 'edit_note' : 'local_offer'
-                            }}</mat-icon>
-                          </button>
-                          }
-                        </div>
-                      </td>
-                      }
+                    <td class="text-center csfm-col-action">
+                      <div class="csfm-row-actions">
+                        @if (fee.paid > 0) {
+                        <button
+                          mat-icon-button
+                          class="csfm-row-history-btn"
+                          (click)="openPaymentHistory(fee)"
+                          matTooltip="View payment history for this fee"
+                        >
+                          <mat-icon>history</mat-icon>
+                        </button>
+                        } @if (canPay() && fee.remaining > 0) {
+                        <button
+                          mat-icon-button
+                          class="csfm-row-pay-btn"
+                          (click)="openRecordPayment(fee)"
+                          matTooltip="Record payment for this fee"
+                        >
+                          <mat-icon>payments</mat-icon>
+                        </button>
+                        } @if (canManage()) {
+                        <button
+                          mat-icon-button
+                          class="csfm-row-concession-btn"
+                          [class.csfm-row-concession-btn--has-concession]="fee.concessionAmount > 0"
+                          (click)="openGrantConcession('STRUCTURE', fee)"
+                          [matTooltip]="
+                            fee.concessionAmount > 0
+                              ? 'View / manage existing concession'
+                              : 'Grant concession on this fee'
+                          "
+                        >
+                          <mat-icon>{{
+                            fee.concessionAmount > 0 ? 'edit_note' : 'local_offer'
+                          }}</mat-icon>
+                        </button>
+                        }
+                      </div>
+                    </td>
+                    }
                   </tr>
                   }
                   <!-- end @for fee -->
@@ -722,7 +730,7 @@
                   <!-- Spacer between month groups -->
                   @if (!lastGroup) {
                   <tr class="csfm-month-spacer-row" aria-hidden="true">
-                    <td [attr.colspan]="(canManage() || canPay()) ? 10 : 9"></td>
+                    <td [attr.colspan]="canManage() || canPay() ? 10 : 9"></td>
                   </tr>
                   } }
                   <!-- end @for group -->

@@ -27,6 +27,7 @@ import { AssignmentFormComponent } from '../assignment-form/assignment-form';
 import { PaisePipe } from '../../../../../shared/pipes/paise-pipe';
 import { RecordPaymentComponent } from '../../payments/record-payment/record-payment';
 import { BulkAssignmentFormComponent } from '../bulk-assignment-form/bulk-assignment-form';
+import { FeeItemPaymentHistoryDialogComponent } from '../../fee-item-payment-history-dialog/fee-item-payment-history-dialog';
 
 // ── Month group shape (mirrors student-fees grouping) ─────────────────────────
 export interface AssignmentMonthGroup {
@@ -78,7 +79,7 @@ export class AssignmentsList implements OnChanges {
   cancellingId = signal<number | null>(null);
   cancelReason = signal('');
 
-  constructor(private fees: FeesService, private dialog: MatDialog, private snack: MatSnackBar) {}
+  constructor(private fees: FeesService, private dialog: MatDialog, private snack: MatSnackBar) { }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['enrollmentId'] && this.enrollmentId) {
@@ -353,5 +354,21 @@ export class AssignmentsList implements OnChanges {
     }
 
     return groups;
+  }
+
+  openPaymentHistory(a: StudentFeeAssignment): void {
+    this.dialog.open(FeeItemPaymentHistoryDialogComponent, {
+      width: '520px',
+      maxWidth: '95vw',
+      panelClass: 'side-sheet-dialog',
+      data: {
+        enrollmentId: this.enrollmentId,
+        source: 'ASSIGNMENT',
+        feeId: a.id,
+        feeType: a.feeType,
+        feeMonth: a.feeMonth,
+        studentName: this.studentName,
+      },
+    });
   }
 }

@@ -1,0 +1,356 @@
+// fee-receipt-view.scss
+// NOTE: this always renders on a plain white background, deliberately
+// independent of the app's dark theme — it's meant to look like an official
+// printed document regardless of which theme the viewer has active, and it's
+// the exact DOM node snapdom captures for the PDF.
+:host {
+  display: block;
+}
+
+.receipt {
+  --receipt-ink: #1a1a1a;
+  --receipt-muted: #6b7280;
+  --receipt-border: #e2e2e2;
+  --receipt-accent: #2563eb;
+  --receipt-bg: #ffffff;
+
+  background: var(--receipt-bg);
+  color: var(--receipt-ink);
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px;
+  border-radius: 12px;
+  border: 1px solid var(--receipt-border);
+  font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+  position: relative;
+  overflow: hidden;
+
+  &--void {
+    opacity: 0.92;
+  }
+}
+
+.receipt__void-stamp {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-18deg);
+  font-size: 4rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  color: rgba(220, 38, 38, 0.16);
+  border: 6px solid rgba(220, 38, 38, 0.16);
+  border-radius: 12px;
+  padding: 6px 28px;
+  pointer-events: none;
+  z-index: 1;
+  white-space: nowrap;
+}
+
+.receipt__school-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.receipt__logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  &--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--receipt-accent);
+    color: #fff;
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+}
+
+.receipt__school-name {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+.receipt__school-address,
+.receipt__school-contact {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--receipt-muted);
+}
+.receipt__school-contact {
+  display: flex;
+  gap: 14px;
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  mat-icon {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+  }
+}
+
+.receipt__divider {
+  height: 1px;
+  background: var(--receipt-border);
+  margin: 18px 0;
+}
+
+.receipt__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.receipt__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--receipt-accent);
+}
+.receipt__badge--void {
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.receipt__meta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.receipt__meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.receipt__meta-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--receipt-muted);
+}
+.receipt__meta-value {
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+.receipt__meta-hint {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--receipt-muted);
+}
+
+.receipt__section-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--receipt-muted);
+  margin-bottom: 8px;
+}
+
+.receipt__student-block {
+  background: #f8fafc;
+  border: 1px solid var(--receipt-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+}
+.receipt__student-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 20px;
+  > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+}
+.receipt__student-label {
+  font-size: 0.68rem;
+  color: var(--receipt-muted);
+}
+.receipt__student-value {
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.receipt__table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+  th {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--receipt-muted);
+    border-bottom: 2px solid var(--receipt-border);
+    padding: 8px 6px;
+  }
+  td {
+    padding: 9px 6px;
+    border-bottom: 1px solid var(--receipt-border);
+    font-size: 0.85rem;
+  }
+}
+.receipt__row--void td {
+  color: var(--receipt-muted);
+  text-decoration: line-through;
+}
+.receipt__void-chip {
+  margin-left: 6px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #b91c1c;
+  background: #fee2e2;
+  padding: 1px 6px;
+  border-radius: 999px;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.text-left {
+  text-align: left;
+}
+.text-center {
+  text-align: center;
+}
+.text-right {
+  text-align: right;
+}
+.cell-muted {
+  color: var(--receipt-muted);
+}
+.amount-cell {
+  font-weight: 700;
+}
+
+.receipt__total-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 2px solid var(--receipt-ink);
+  margin-bottom: 18px;
+}
+.receipt__total-words {
+  font-size: 0.76rem;
+  font-style: italic;
+  color: var(--receipt-muted);
+  max-width: 60%;
+}
+.receipt__total-amount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.receipt__total-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: var(--receipt-muted);
+}
+.receipt__total-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--receipt-accent);
+}
+
+.receipt__notes {
+  margin-bottom: 18px;
+  p {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--receipt-ink);
+  }
+}
+
+.receipt__footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--receipt-border);
+}
+.receipt__footer-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 60%;
+  mat-icon {
+    font-size: 16px;
+    height: 16px;
+    width: 16px;
+    color: var(--receipt-accent);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  p {
+    margin: 0;
+    font-size: 0.72rem;
+    color: var(--receipt-muted);
+    line-height: 1.5;
+  }
+}
+.receipt__signature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 160px;
+}
+.receipt__signature-line {
+  width: 100%;
+  border-bottom: 1px solid var(--receipt-ink);
+  height: 32px;
+}
+.receipt__signature span {
+  font-size: 0.7rem;
+  color: var(--receipt-muted);
+}
+
+@media (max-width: 560px) {
+  .receipt {
+    padding: 20px;
+  }
+  .receipt__meta-grid,
+  .receipt__student-grid {
+    grid-template-columns: 1fr;
+  }
+  .receipt__table {
+    th:nth-child(2),
+    td:nth-child(2) {
+      display: none;
+    }
+  }
+  .receipt__footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .receipt__footer-note {
+    max-width: 100%;
+  }
+  .receipt__total-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .receipt__total-words {
+    max-width: 100%;
+  }
+}

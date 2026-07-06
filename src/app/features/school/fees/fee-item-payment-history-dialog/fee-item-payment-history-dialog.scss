@@ -1,0 +1,148 @@
+.fiph-shell {
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  min-width: 420px;
+}
+.fiph-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-divider);
+}
+.fiph-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 2px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.fiph-subtitle {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+.fiph-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px 20px;
+}
+.fiph-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 50px 0;
+  color: var(--color-text-secondary);
+  &--error {
+    color: var(--color-error);
+  }
+}
+.fiph-summary {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 12px;
+  &__total {
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+}
+.fiph-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fiph-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 10px);
+  background: var(--color-bg-card);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  &:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+  &--void {
+    opacity: 0.65;
+  }
+}
+
+.fiph-card__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  mat-icon {
+    color: var(--color-primary);
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+}
+
+.fiph-card__info {
+  flex: 1;
+  min-width: 0;
+}
+.fiph-card__top-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fiph-card__amount {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.fiph-card__void-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #b91c1c;
+  background: #fee2e2;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+.fiph-card__combined-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  background: var(--color-hover);
+  padding: 1px 7px;
+  border-radius: 999px;
+  mat-icon {
+    font-size: 12px;
+    height: 12px;
+    width: 12px;
+  }
+}
+.fiph-card__meta {
+  display: flex;
+  gap: 10px;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+.fiph-card__receipt {
+  font-family: 'Courier New', monospace;
+}
+.fiph-card__chevron {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}

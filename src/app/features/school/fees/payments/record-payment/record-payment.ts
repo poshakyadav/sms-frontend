@@ -45,6 +45,9 @@ export interface RecordPaymentData {
   className?: string;
   sectionName?: string;
 
+  rollNumber?: string | null;
+  academicYearName?: string;
+
   // ── Structure-wise mode ───────────────────────────────────────────────────
   // Exactly ONE of these is set when the dialog is opened from a fee row button.
   // When set, the dialog opens in 'structure-wise' mode and the mode tabs are hidden.
@@ -270,9 +273,12 @@ export class RecordPaymentComponent implements OnInit {
 
           // Build breakdown for result dialog
           const breakdown = (res.payments ?? []).map((p: any) => ({
+            id: p.id,
             feeType: p.feeType ?? 'Fee',
+            feeMonth: p.feeMonth ?? null,
             amountPaid: p.amountPaid,
             receiptNumber: p.receiptNumber,
+            source: p.feeStructureId ? ('STRUCTURE' as const) : ('ASSIGNMENT' as const),
           }));
 
           const resultData: PaymentResultData = {
@@ -284,6 +290,8 @@ export class RecordPaymentComponent implements OnInit {
             studentName: this.data.studentName,
             className: this.data.className,
             sectionName: this.data.sectionName,
+            rollNumber: this.data.rollNumber,
+            academicYearName: this.data.academicYearName,
             payments: breakdown,
           };
 
@@ -361,14 +369,12 @@ export class RecordPaymentComponent implements OnInit {
     if (m === 'all')
       return `${rows.length} outstanding fee${rows.length !== 1 ? 's' : ''} — paying full balance`;
     if (m === 'partial')
-      return `${rows.length} outstanding fee${
-        rows.length !== 1 ? 's' : ''
-      } — enter partial amounts`;
+      return `${rows.length} outstanding fee${rows.length !== 1 ? 's' : ''
+        } — enter partial amounts`;
     if (m === 'structure-wise') {
       if (rows.length === 0) return 'Selected fee is already paid';
-      return `Paying 1 fee — ${rows[0].source === 'STRUCTURE' ? 'Standard' : 'Custom'}: ${
-        rows[0].item.feeType
-      }`;
+      return `Paying 1 fee — ${rows[0].source === 'STRUCTURE' ? 'Standard' : 'Custom'}: ${rows[0].item.feeType
+        }`;
     }
     return '';
   }

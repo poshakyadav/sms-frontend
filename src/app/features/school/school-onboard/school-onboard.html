@@ -91,7 +91,7 @@
 
       <form class="ob-form" #step1Form="ngForm">
         <div class="ob-field-row">
-          <mat-form-field appearance="outline" class="ob-field-full">
+          <mat-form-field appearance="outline" class="ob-field-full" subscriptSizing="dynamic">
             <mat-label>School Name *</mat-label>
             <input
               matInput
@@ -105,7 +105,7 @@
         </div>
 
         <div class="ob-field-row">
-          <mat-form-field appearance="outline" class="ob-field-full">
+          <mat-form-field appearance="outline" class="ob-field-full" subscriptSizing="dynamic">
             <mat-label>Address Line 1 *</mat-label>
             <input
               matInput
@@ -118,7 +118,7 @@
         </div>
 
         <div class="ob-field-row">
-          <mat-form-field appearance="outline" class="ob-field-full">
+          <mat-form-field appearance="outline" class="ob-field-full" subscriptSizing="dynamic">
             <mat-label>Address Line 2</mat-label>
             <input
               matInput
@@ -129,51 +129,43 @@
           </mat-form-field>
         </div>
 
+        <!-- FIX: this now binds to step1.phone (the SCHOOL's number), not
+             step2.ownerPhone. Previously it wrote into the owner's phone
+             field while isStep1Valid() checked step1.phone — which nothing
+             ever set — so the Continue button could never enable.
+             step1.phone is also what prefillStep1FromInvitation() and the
+             signup payload (`phone: this.step1.phone`) already expect. -->
         <div class="ob-field-row ob-two-col">
-          <mat-form-field appearance="outline">
-            <mat-label>Email Address</mat-label>
-            <input
-              matInput
-              type="email"
-              [(ngModel)]="step2.ownerEmail"
-              name="ownerEmail"
-              placeholder="owner@school.com (optional)"
-            />
-            <mat-hint>Optional — used for payment & activation updates.</mat-hint>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Phone Number *</mat-label>
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>School Phone Number *</mat-label>
             <input
               matInput
               type="tel"
-              [(ngModel)]="step2.ownerPhone"
-              name="ownerPhone"
-              placeholder="10-digit mobile"
+              [(ngModel)]="step1.phone"
+              name="schoolPhone"
+              placeholder="10-digit phone"
               required
+              maxlength="15"
+            />
+          </mat-form-field>
+          <!-- NEW: step1.alternatePhone already existed in the model and is
+               sent in the signup payload, but had no input anywhere, so it
+               was always submitted empty. -->
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>Alternate Phone</mat-label>
+            <input
+              matInput
+              type="tel"
+              [(ngModel)]="step1.alternatePhone"
+              name="schoolAlternatePhone"
+              placeholder="Optional"
               maxlength="15"
             />
           </mat-form-field>
         </div>
 
-        <div class="ob-field-row">
-          <mat-form-field appearance="outline" class="ob-field-full">
-            <mat-label>Username</mat-label>
-            <input
-              matInput
-              [(ngModel)]="step2.ownerUsername"
-              name="ownerUsername"
-              placeholder="Leave blank to auto-generate from your name"
-              maxlength="30"
-            />
-            <mat-hint
-              >Lowercase letters and numbers only, must start with a letter. You'll use this to log
-              in — especially handy if you skip the email above.</mat-hint
-            >
-          </mat-form-field>
-        </div>
-
         <div class="ob-field-row ob-two-col">
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
             <mat-label>School Email *</mat-label>
             <input
               matInput
@@ -184,7 +176,7 @@
               required
             />
           </mat-form-field>
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
             <mat-label>Website</mat-label>
             <input
               matInput
@@ -193,6 +185,46 @@
               name="website"
               placeholder="https://yourschool.com"
             />
+          </mat-form-field>
+        </div>
+
+        <!-- NEW: separates "school details" from the optional owner
+             shortcut fields below, so it's visually clear these two rows
+             belong to the account you're about to create in Step 2 —
+             they share ngModel with step2 on purpose, to prefill it. -->
+        <div class="ob-section-divider">
+          <mat-icon>bolt</mat-icon>
+          <span>Set up faster login <em>(optional)</em></span>
+        </div>
+
+        <div class="ob-field-row">
+          <mat-form-field appearance="outline" class="ob-field-full" subscriptSizing="dynamic">
+            <mat-label>Owner Email</mat-label>
+            <input
+              matInput
+              type="email"
+              [(ngModel)]="step2.ownerEmail"
+              name="ownerEmail"
+              placeholder="owner@school.com (optional)"
+            />
+            <mat-hint>Used for payment & activation updates.</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <div class="ob-field-row">
+          <mat-form-field appearance="outline" class="ob-field-full" subscriptSizing="dynamic">
+            <mat-label>Username</mat-label>
+            <input
+              matInput
+              [(ngModel)]="step2.ownerUsername"
+              name="ownerUsername"
+              placeholder="Leave blank to auto-generate from your name"
+              maxlength="30"
+            />
+            <mat-hint
+              >Lowercase letters and numbers only, must start with a letter. You'll use this to
+              log in — especially handy if you skip the email above.</mat-hint
+            >
           </mat-form-field>
         </div>
 
@@ -226,7 +258,7 @@
 
       <form class="ob-form" #step2Form="ngForm">
         <div class="ob-field-row">
-          <mat-form-field appearance="outline" class="ob-field-full">
+          <mat-form-field appearance="outline" class="ob-field-full" subscriptSizing="dynamic">
             <mat-label>Owner / Principal Name *</mat-label>
             <input
               matInput
@@ -240,7 +272,7 @@
         </div>
 
         <div class="ob-field-row ob-two-col">
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
             <mat-label>Email Address *</mat-label>
             <input
               matInput
@@ -252,7 +284,7 @@
             />
             <mat-hint>Pre-filled from your invitation</mat-hint>
           </mat-form-field>
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
             <mat-label>Phone Number *</mat-label>
             <input
               matInput
@@ -267,7 +299,7 @@
         </div>
 
         <div class="ob-field-row ob-two-col">
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
             <mat-label>Password *</mat-label>
             <input
               matInput
@@ -288,7 +320,7 @@
               <mat-icon>{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
             </button>
           </mat-form-field>
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
             <mat-label>Confirm Password *</mat-label>
             <input
               matInput

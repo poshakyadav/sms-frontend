@@ -103,7 +103,10 @@ const EVENT_TYPE_CHIPS: { key: EventTypeFilter; label: string; icon: string }[] 
                 @if (summary()!.student.phone) {
                 <span class="contact-item">📞 {{ summary()!.student.phone }}</span>
                 }
+                @if (summary()!.student.email) {
                 <span class="contact-item">✉ {{ summary()!.student.email }}</span>
+                }
+                <span class="contact-item">🔑 {{ summary()!.student.username }}</span>
                 @if (summary()!.student.fatherName) {
                 <span class="contact-item">👨 {{ summary()!.student.fatherName }}</span>
                 }
@@ -1170,7 +1173,7 @@ export class StudentsHistoryDetail implements OnInit {
 
   eventTypeChips = EVENT_TYPE_CHIPS;
 
-  constructor() {}
+  constructor() { }
 
   ngOnInit() {
     this.studentId = Number(this.route.snapshot.paramMap.get('id'));

@@ -1,0 +1,21 @@
+<!-- shared/components/permission-info/permission-info.html -->
+<div class="perm-info">
+  <div class="perm-info__title-row">
+    <span class="perm-info__name">{{ permission.name }}</span>
+    @if (riskMeta) {
+    <span class="perm-info__risk-badge" [class]="riskMeta.cssClass">{{ riskMeta.label }}</span>
+    }
+  </div>
+
+  @if (permission.description) {
+  <p class="perm-info__desc">{{ permission.description }}</p>
+  } @if (permission.usedIn && permission.usedIn.length > 0) {
+  <div class="perm-info__used-in">
+    @for (place of permission.usedIn; track place) {
+    <span class="perm-info__used-in-chip">{{ place }}</span>
+    }
+  </div>
+  } @if (showSlug) {
+  <code class="perm-info__slug">{{ permission.slug }}</code>
+  }
+</div>

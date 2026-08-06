@@ -1,67 +1,67 @@
+// student-attendance-component.ts
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { ApiService } from '../../../../core/services/api.service';
-import { AuthService } from '../../../../core/services/auth.service';
-import { HttpParams } from '@angular/common/http';
+import { finalize, forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import {
+  ATTENDANCE_STATUS_CONFIG,
+  AttendanceService,
+  AttendanceStatusValue,
+  AttendanceSummary,
+  ReconstructedAttendanceRecord,
+  getReconstructedStatusDisplay,
+} from '../../../../core/services/attendance.service';
+import {
+  AttendanceCalendarDay,
+  buildAttendanceCalendarDays,
+} from '../../../../core/utils/attendance-calendar.util';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type AttendanceStatus = 'PRESENT' | 'ABSENT' | 'LATE' | 'HALF_DAY';
-
-interface AttendanceRecord {
-  id: number;
-  date: string;
-  status: AttendanceStatus;
-  notes?: string;
-  createdAt: string;
+// Holiday is deliberately excluded here — getAttendanceSummaryForStudent always
+// returns holiday: 0 (holidays are excluded from workingDays entirely now, so
+// they carry no per-student count worth showing as a stat card). Holidays are
+// still fully visible via the calendar grid and the exceptions log below.
+interface SummaryStat {
+  key: 'present' | 'late' | 'halfDay' | 'absent' | 'sick' | 'suspended' | 'excused' | 'onDuty';
+  status: AttendanceStatusValue;
 }
 
-interface AttendanceSummary {
-  month: number;
-  year: number;
-  totalDaysInMonth: number;
-  markedDays: number;
-  present: number;
-  absent: number;
-  late: number;
-  halfDay: number;
-  attendancePercentage: number;
-}
+const SUMMARY_STAT_KEYS: SummaryStat[] = [
+  { key: 'present', status: 'PRESENT' },
+  { key: 'late', status: 'LATE' },
+  { key: 'halfDay', status: 'HALF_DAY' },
+  { key: 'absent', status: 'ABSENT' },
+  { key: 'sick', status: 'SICK' },
+  { key: 'excused', status: 'EXCUSED' },
+  { key: 'onDuty', status: 'ON_DUTY' },
+  { key: 'suspended', status: 'SUSPENDED' },
+];
 
-interface CalendarDay {
-  date: Date;
-  dateStr: string;
-  status: AttendanceStatus | null;
-  notes?: string;
-  isCurrentMonth: boolean;
-  isToday: boolean;
-  isFuture: boolean;
-}
-
-// ─── Component ────────────────────────────────────────────────────────────────
 @Component({
   selector: 'app-student-attendance-component',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule],
   templateUrl: './student-attendance-component.html',
   styleUrl: './student-attendance-component.scss',
 })
 export class StudentAttendanceComponent implements OnInit {
-  private api = inject(ApiService);
-  private auth = inject(AuthService);
+  private attendanceService = inject(AttendanceService);
 
-  // ── Signals ──────────────────────────────────────────────────────────────
+  // ── State ────────────────────────────────────────────────────────────────
   loading = signal(false);
   error = signal<string | null>(null);
-  attendanceRecords = signal<AttendanceRecord[]>([]);
+  attendanceRecords = signal<ReconstructedAttendanceRecord[]>([]);
   summary = signal<AttendanceSummary | null>(null);
+  hoveredDate = signal<string | null>(null);
+  /** Default ON — implicit PRESENT days would otherwise dominate the log. */
+  showOnlyExceptions = signal(true);
 
   selectedYear = signal(new Date().getFullYear());
   selectedMonth = signal(new Date().getMonth() + 1); // 1-indexed
 
-  // ── Computed ─────────────────────────────────────────────────────────────
   readonly dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  readonly statusConfig = ATTENDANCE_STATUS_CONFIG;
+  readonly getReconstructedStatusDisplay = getReconstructedStatusDisplay;
 
+  // ── Navigation ───────────────────────────────────────────────────────────
   monthLabel = computed(() => {
     const d = new Date(this.selectedYear(), this.selectedMonth() - 1, 1);
     return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -75,105 +75,67 @@ export class StudentAttendanceComponent implements OnInit {
     );
   });
 
-  calendarDays = computed((): CalendarDay[] => {
-    const year = this.selectedYear();
-    const month = this.selectedMonth();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+  // ── Calendar ─────────────────────────────────────────────────────────────
+  calendarDays = computed((): AttendanceCalendarDay[] =>
+    buildAttendanceCalendarDays(this.selectedYear(), this.selectedMonth(), this.attendanceRecords())
+  );
 
-    const firstDay = new Date(year, month - 1, 1);
-    const lastDay = new Date(year, month, 0);
-
-    const recordMap = new Map<string, AttendanceRecord>();
-    this.attendanceRecords().forEach((r) => recordMap.set(r.date, r));
-
-    const days: CalendarDay[] = [];
-
-    // Pad start
-    for (let i = 0; i < firstDay.getDay(); i++) {
-      const d = new Date(year, month - 1, -firstDay.getDay() + i + 1);
-      days.push({
-        date: d,
-        dateStr: this.toDateStr(d),
-        status: null,
-        isCurrentMonth: false,
-        isToday: false,
-        isFuture: false,
-      });
-    }
-
-    // Current month
-    for (let d = 1; d <= lastDay.getDate(); d++) {
-      const date = new Date(year, month - 1, d);
-      const dateStr = this.toDateStr(date);
-      const rec = recordMap.get(dateStr);
-      const isToday = date.getTime() === today.getTime();
-      const isFuture = date > today;
-      days.push({
-        date,
-        dateStr,
-        status: rec?.status ?? null,
-        notes: rec?.notes,
-        isCurrentMonth: true,
-        isToday,
-        isFuture,
-      });
-    }
-
-    // Pad end to complete grid rows
-    const remaining = 7 - (days.length % 7);
-    if (remaining < 7) {
-      for (let i = 1; i <= remaining; i++) {
-        const d = new Date(year, month, i);
-        days.push({
-          date: d,
-          dateStr: this.toDateStr(d),
-          status: null,
-          isCurrentMonth: false,
-          isToday: false,
-          isFuture: false,
-        });
-      }
-    }
-
-    return days;
-  });
-
+  // ── Gauge ────────────────────────────────────────────────────────────────
   ringDashArray = computed(() => {
     const pct = this.summary()?.attendancePercentage ?? 0;
-    const circumference = 2 * Math.PI * 50;
+    const circumference = 2 * Math.PI * 52;
     const filled = (pct / 100) * circumference;
-    return `${filled} ${circumference - filled}`;
+    return `${filled.toFixed(2)} ${(circumference - filled).toFixed(2)}`;
   });
 
   ringColor = computed(() => {
     const pct = this.summary()?.attendancePercentage ?? 0;
-    if (pct >= 75) return '#059669';
-    if (pct >= 60) return '#d97706';
-    return '#dc2626';
+    if (pct >= 75) return 'var(--color-success)';
+    if (pct >= 60) return 'var(--color-warning)';
+    return 'var(--color-error)';
   });
 
-  pctLabel = computed(() => {
+  standingLabel = computed(() => {
     const pct = this.summary()?.attendancePercentage ?? 0;
-    if (pct >= 75) return '✓ Good Standing';
-    if (pct >= 60) return '⚠ Needs Improvement';
-    return '✗ Critical';
+    if (pct >= 75) return 'Good Standing';
+    if (pct >= 60) return 'Needs Improvement';
+    return 'Critical';
   });
 
-  pctBadgeClass = computed(() => {
+  standingClass = computed(() => {
     const pct = this.summary()?.attendancePercentage ?? 0;
-    if (pct >= 75) return 'sa-pct-badge sa-pct-good';
-    if (pct >= 60) return 'sa-pct-badge sa-pct-ok';
-    return 'sa-pct-badge sa-pct-bad';
+    if (pct >= 75) return 'standing--good';
+    if (pct >= 60) return 'standing--warn';
+    return 'standing--bad';
   });
 
-  // ── Lifecycle ─────────────────────────────────────────────────────────────
-  ngOnInit() {
+  // ── Stats grid ───────────────────────────────────────────────────────────
+  summaryStats = computed(() => {
+    const s = this.summary();
+    if (!s) return [];
+    return SUMMARY_STAT_KEYS.map((stat) => ({
+      status: stat.status,
+      value: s[stat.key],
+      config: this.statusConfig[stat.status],
+    }));
+  });
+
+  // ── Log list ─────────────────────────────────────────────────────────────
+  visibleRecords = computed(() => {
+    const sorted = [...this.attendanceRecords()].sort((a, b) => b.date.localeCompare(a.date));
+    // PRESENT is always implicit (backend never stores it) — filtering it out
+    // is exactly "exceptions only": late/absent/sick/suspended/excused/on-duty/
+    // holiday/unmarked all still show.
+    return this.showOnlyExceptions() ? sorted.filter((r) => r.status !== 'PRESENT') : sorted;
+  });
+
+  // ── Lifecycle ────────────────────────────────────────────────────────────
+  ngOnInit(): void {
     this.loadData();
   }
 
-  // ── Navigation ────────────────────────────────────────────────────────────
-  prevMonth() {
+  // ── Navigation actions ───────────────────────────────────────────────────
+  prevMonth(): void {
     if (this.selectedMonth() === 1) {
       this.selectedMonth.set(12);
       this.selectedYear.set(this.selectedYear() - 1);
@@ -183,7 +145,7 @@ export class StudentAttendanceComponent implements OnInit {
     this.loadData();
   }
 
-  nextMonth() {
+  nextMonth(): void {
     if (this.isCurrentOrFuture()) return;
     if (this.selectedMonth() === 12) {
       this.selectedMonth.set(1);
@@ -194,8 +156,12 @@ export class StudentAttendanceComponent implements OnInit {
     this.loadData();
   }
 
-  // ── Data loading ──────────────────────────────────────────────────────────
-  loadData() {
+  toggleExceptionsOnly(): void {
+    this.showOnlyExceptions.update((v) => !v);
+  }
+
+  // ── Data loading ─────────────────────────────────────────────────────────
+  loadData(): void {
     this.loading.set(true);
     this.error.set(null);
 
@@ -203,81 +169,36 @@ export class StudentAttendanceComponent implements OnInit {
     const month = this.selectedMonth();
     const fromDate = `${year}-${month.toString().padStart(2, '0')}-01`;
     const lastDay = new Date(year, month, 0).getDate();
-    const toDate = `${year}-${month.toString().padStart(2, '0')}-${lastDay
-      .toString()
-      .padStart(2, '0')}`;
+    const toDate = `${year}-${month.toString().padStart(2, '0')}-${lastDay.toString().padStart(2, '0')}`;
 
-    // Parallel: fetch records + summary
-    let recordsDone = false;
-    let summaryDone = false;
-    let hasError = false;
-
-    const checkDone = () => {
-      if (recordsDone && summaryDone) this.loading.set(false);
-    };
-
-    // Records
-    const recParams = new HttpParams().set('fromDate', fromDate).set('toDate', toDate);
-    this.api.get<{ attendance: AttendanceRecord[] }>('school/attendance/me', recParams).subscribe({
-      next: (res) => {
-        this.attendanceRecords.set(res.attendance ?? []);
-        recordsDone = true;
-        checkDone();
-      },
-      error: (err) => {
-        if (!hasError) {
-          hasError = true;
+    forkJoin({
+      records: this.attendanceService.getBySelf(fromDate, toDate).pipe(
+        catchError((err) => {
           this.error.set(err?.error?.error || 'Failed to load attendance records');
-          this.loading.set(false);
-        }
-        recordsDone = true;
-        checkDone();
-      },
-    });
-
-    // Summary
-    const sumParams = new HttpParams().set('month', month.toString()).set('year', year.toString());
-    this.api
-      .get<{ summary: AttendanceSummary }>('school/attendance/me/summary', sumParams)
-      .subscribe({
-        next: (res) => {
-          this.summary.set(res.summary ?? null);
-          summaryDone = true;
-          checkDone();
-        },
-        error: () => {
-          summaryDone = true;
-          checkDone();
-        },
+          return of({ attendance: [] as ReconstructedAttendanceRecord[] });
+        })
+      ),
+      // Summary failure is non-critical — the calendar/log still render fine
+      // without it, so it degrades quietly instead of blocking the page.
+      summary: this.attendanceService.getSelfSummary(month, year).pipe(
+        catchError(() => of({ summary: null as AttendanceSummary | null }))
+      ),
+    })
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe(({ records, summary }) => {
+        this.attendanceRecords.set(records.attendance ?? []);
+        this.summary.set(summary.summary ?? null);
       });
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
-  private toDateStr(date: Date): string {
-    const y = date.getFullYear();
-    const m = (date.getMonth() + 1).toString().padStart(2, '0');
-    const d = date.getDate().toString().padStart(2, '0');
-    return `${y}-${m}-${d}`;
+  // ── Display helpers ──────────────────────────────────────────────────────
+  statusClass(status: string): string {
+    return 'status-' + status.toLowerCase();
   }
 
-  statusLabel(status: AttendanceStatus | null): string {
-    const map: Record<AttendanceStatus, string> = {
-      PRESENT: 'Present',
-      ABSENT: 'Absent',
-      LATE: 'Late',
-      HALF_DAY: 'Half Day',
-    };
-    return status ? map[status] : '—';
-  }
-
-  statusIcon(status: AttendanceStatus | null): string {
-    const map: Record<AttendanceStatus, string> = {
-      PRESENT: '✓',
-      ABSENT: '✗',
-      LATE: '⏱',
-      HALF_DAY: '◑',
-    };
-    return status ? map[status] : '';
+  halfDaySessionLabel(rec: ReconstructedAttendanceRecord): string {
+    if (!rec.halfDaySession) return '';
+    return rec.halfDaySession === 'MORNING' ? 'Morning' : 'Afternoon';
   }
 
   formatDay(dateStr: string): string {
@@ -294,5 +215,13 @@ export class StudentAttendanceComponent implements OnInit {
       month: 'long',
       day: 'numeric',
     });
+  }
+
+  trackByDate(_: number, day: AttendanceCalendarDay): string {
+    return day.dateStr;
+  }
+
+  trackByRecord(_: number, rec: ReconstructedAttendanceRecord): string {
+    return rec.id !== null ? `id-${rec.id}` : rec.date;
   }
 }

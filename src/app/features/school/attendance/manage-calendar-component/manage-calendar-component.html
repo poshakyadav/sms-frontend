@@ -1,0 +1,134 @@
+<div class="manage-calendar">
+  <!-- ── Declare form ───────────────────────────────────────────────── -->
+  <div class="declare-card">
+    <h2><mat-icon>edit_calendar</mat-icon> Declare Calendar</h2>
+    <p class="hint">
+      Tip: declare the whole academic year as <strong>Working Day</strong> (school-wide) once at the
+      start of the year, then only declare holidays as they come up — everything else resolves
+      automatically.
+    </p>
+
+    <form [formGroup]="declareForm" class="declare-form">
+      <mat-radio-group formControlName="dayType" class="day-type-group">
+        <mat-radio-button value="HOLIDAY"
+          ><mat-icon>beach_access</mat-icon> Holiday</mat-radio-button
+        >
+        <mat-radio-button value="WORKING_DAY"
+          ><mat-icon>work</mat-icon> Working Day</mat-radio-button
+        >
+      </mat-radio-group>
+
+      <div class="date-row">
+        <mat-form-field appearance="outline">
+          <mat-label>From</mat-label>
+          <input matInput [matDatepicker]="from" formControlName="fromDate" />
+          <mat-datepicker-toggle matSuffix [for]="from"></mat-datepicker-toggle>
+          <mat-datepicker #from></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>To</mat-label>
+          <input matInput [matDatepicker]="to" formControlName="toDate" />
+          <mat-datepicker-toggle matSuffix [for]="to"></mat-datepicker-toggle>
+          <mat-datepicker #to></mat-datepicker>
+        </mat-form-field>
+
+        @if (dayCount() > 0) { <span class="day-count-badge">{{ dayCount() }} day(s)</span> }
+      </div>
+
+      <mat-radio-group formControlName="scope" class="scope-group">
+        <mat-radio-button value="SCHOOL">Entire school</mat-radio-button>
+        <mat-radio-button value="SECTION">Specific class-section</mat-radio-button>
+      </mat-radio-group>
+
+      @if (declareForm.value.scope === 'SECTION') {
+      <mat-form-field appearance="outline">
+        <mat-label>Class — Section</mat-label>
+        <mat-select formControlName="classSectionId">
+          @for (cs of classSections(); track cs.id) {
+          <mat-option [value]="cs.id">{{ cs.className }} – {{ cs.sectionName }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      }
+
+      <mat-form-field appearance="outline">
+        <mat-label>Reason</mat-label>
+        <input
+          matInput
+          formControlName="reason"
+          maxlength="200"
+          placeholder="e.g. Summer Vacation, Diwali Break, Remedial Camp…"
+        />
+        <mat-hint align="end">{{ declareForm.value.reason?.length || 0 }}/200</mat-hint>
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" [disabled]="submitting()" (click)="submitDeclare()">
+        @if (submitting()) { <mat-spinner diameter="18"></mat-spinner> } @else {
+        <mat-icon >save</mat-icon> Declare }
+      </button>
+    </form>
+  </div>
+
+  <!-- ── Entries table ──────────────────────────────────────────────── -->
+  <div class="entries-card">
+    <div class="entries-header">
+      <h2><mat-icon>list_alt</mat-icon> Calendar Entries</h2>
+      <form [formGroup]="filterForm" class="filter-form">
+        <mat-form-field appearance="outline">
+          <mat-label>From</mat-label>
+          <input matInput [matDatepicker]="ef" formControlName="fromDate" />
+          <mat-datepicker-toggle matSuffix [for]="ef"></mat-datepicker-toggle>
+          <mat-datepicker #ef></mat-datepicker>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>To</mat-label>
+          <input matInput [matDatepicker]="et" formControlName="toDate" />
+          <mat-datepicker-toggle matSuffix [for]="et"></mat-datepicker-toggle>
+          <mat-datepicker #et></mat-datepicker>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Class — Section</mat-label>
+          <mat-select formControlName="classSectionId">
+            <mat-option [value]="null">All</mat-option>
+            @for (cs of classSections(); track cs.id) {
+            <mat-option [value]="cs.id">{{ cs.className }} – {{ cs.sectionName }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </form>
+    </div>
+
+    @if (loadingEntries()) {
+    <div class="state-container"><mat-spinner diameter="36"></mat-spinner></div>
+    } @else if (entries().length === 0) {
+    <div class="state-container">
+      <mat-icon class="state-icon">event_note</mat-icon>
+      <p>No calendar entries in this range.</p>
+    </div>
+    } @else {
+    <div class="entries-list">
+      @for (entry of entries(); track entry.id) {
+      <div class="entry-row" [class.is-holiday]="entry.dayType === 'HOLIDAY'">
+        <div class="entry-date">
+          <strong>{{ entry.date }}</strong>
+          <span class="entry-scope">{{ entry.scopeLabel }}</span>
+        </div>
+        <span
+          class="entry-badge"
+          [ngClass]="entry.dayType === 'HOLIDAY' ? 'badge-holiday' : 'badge-working'"
+        >
+          <mat-icon>{{ entry.dayType === 'HOLIDAY' ? 'beach_access' : 'work' }}</mat-icon>
+          {{ entry.dayType === 'HOLIDAY' ? 'Holiday' : 'Working Day' }}
+        </span>
+        <span class="entry-reason">{{ entry.reason }}</span>
+        <span class="entry-by">by {{ entry.createdByName }}</span>
+        <button mat-icon-button matTooltip="Remove this entry" (click)="deleteEntry(entry)">
+          <mat-icon>delete_outline</mat-icon>
+        </button>
+      </div>
+      }
+    </div>
+    }
+  </div>
+</div>

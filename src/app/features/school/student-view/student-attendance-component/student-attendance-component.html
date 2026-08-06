@@ -1,4 +1,4 @@
-<div class="sa-container">
+<div class="sa-root">
   <!-- ── Header ─────────────────────────────────────────────────── -->
   <div class="sa-header">
     <div class="sa-header-left">
@@ -16,9 +16,13 @@
       </div>
     </div>
 
-    <!-- Month/Year navigator -->
     <div class="sa-nav">
-      <button class="sa-nav-btn" (click)="prevMonth()" [disabled]="loading()">
+      <button
+        class="sa-nav-btn"
+        (click)="prevMonth()"
+        [disabled]="loading()"
+        aria-label="Previous month"
+      >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="15 18 9 12 15 6" />
         </svg>
@@ -28,6 +32,7 @@
         class="sa-nav-btn"
         (click)="nextMonth()"
         [disabled]="loading() || isCurrentOrFuture()"
+        aria-label="Next month"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="9 18 15 12 9 6" />
@@ -36,10 +41,10 @@
     </div>
   </div>
 
-  <!-- ── Loading skeleton ───────────────────────────────────────── -->
+  <!-- ── Loading ────────────────────────────────────────────────── -->
   @if (loading()) {
   <div class="sa-skeleton-grid">
-    @for (i of [1,2,3,4]; track i) {
+    @for (i of [1,2,3]; track i) {
     <div class="sa-skeleton-card"></div>
     }
   </div>
@@ -60,96 +65,76 @@
   }
 
   <!-- ── Main content ───────────────────────────────────────────── -->
-  @if (!loading() && !error()) {
-
-  <!-- Summary cards -->
-  @if (summary()) {
+  @if (!loading() && !error()) { @if (summary(); as s) {
   <div class="sa-summary-section">
-    <!-- Percentage ring card -->
-    <div class="sa-pct-card">
-      <div class="sa-ring-wrap">
-        <svg class="sa-ring" viewBox="0 0 120 120">
-          <circle class="sa-ring-track" cx="60" cy="60" r="50" />
+    <!-- Gauge card -->
+    <div class="sa-gauge-card">
+      <div class="sa-gauge-wrap">
+        <svg class="sa-gauge" viewBox="0 0 120 120" aria-label="Attendance gauge">
+          <circle cx="60" cy="60" r="52" class="sa-gauge-track" />
           <circle
-            class="sa-ring-fill"
             cx="60"
             cy="60"
-            r="50"
-            [style.stroke-dasharray]="ringDashArray()"
+            r="52"
+            class="sa-gauge-fill"
             [style.stroke]="ringColor()"
+            [style.stroke-dasharray]="ringDashArray()"
+            transform="rotate(-90 60 60)"
           />
+          <text x="60" y="55" class="sa-gauge-pct" text-anchor="middle">
+            {{ s.attendancePercentage }}%
+          </text>
+          <text x="60" y="72" class="sa-gauge-sub" text-anchor="middle">attendance</text>
         </svg>
-        <div class="sa-ring-label">
-          <span class="sa-ring-pct">{{ summary()!.attendancePercentage }}%</span>
-          <span class="sa-ring-sub">Attendance</span>
-        </div>
+        <span class="sa-standing-badge" [ngClass]="standingClass()">{{ standingLabel() }}</span>
       </div>
-      <div class="sa-pct-info">
-        <p class="sa-pct-month">{{ monthLabel() }}</p>
-        <p class="sa-pct-detail">
-          <span class="sa-pct-marked">{{ summary()!.markedDays }}</span>
-          <span class="sa-pct-sep">of</span>
-          <span class="sa-pct-total">{{ summary()!.totalDaysInMonth }}</span>
-          <span class="sa-pct-sep">days marked</span>
-        </p>
-        <div class="sa-pct-badge" [class]="pctBadgeClass()">
-          {{ pctLabel() }}
+
+      <div class="sa-days-info">
+        <div class="sa-days-row">
+          <span class="sa-days-key">Working Days</span>
+          <span class="sa-days-val">{{ s.workingDays }}</span>
+        </div>
+        <div class="sa-days-row">
+          <span class="sa-days-key">Marked</span>
+          <span class="sa-days-val">{{ s.markedDays }}</span>
+        </div>
+        <div class="sa-days-row">
+          <span class="sa-days-key">Not Marked</span>
+          <span class="sa-days-val" [class.sa-days-warn]="s.unmarkedDays > 0">{{
+            s.unmarkedDays
+          }}</span>
+        </div>
+        <div class="sa-days-row">
+          <span class="sa-days-key">Effective Present</span>
+          <span class="sa-days-val">{{ s.effectivePresent }}</span>
         </div>
       </div>
     </div>
 
     <!-- Stat cards -->
     <div class="sa-stats-grid">
-      <div class="sa-stat-card sa-stat-present">
-        <div class="sa-stat-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        </div>
-        <div class="sa-stat-body">
-          <span class="sa-stat-value">{{ summary()!.present }}</span>
-          <span class="sa-stat-label">Present</span>
-        </div>
+      @for (stat of summaryStats(); track stat.status) {
+      <div class="sa-stat-card" [ngClass]="statusClass(stat.status)">
+        <span class="sa-stat-icon material-symbols-outlined">{{ stat.config.icon }}</span>
+        <span class="sa-stat-value">{{ stat.value }}</span>
+        <span class="sa-stat-label">{{ stat.config.label }}</span>
       </div>
-
-      <div class="sa-stat-card sa-stat-absent">
-        <div class="sa-stat-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </div>
-        <div class="sa-stat-body">
-          <span class="sa-stat-value">{{ summary()!.absent }}</span>
-          <span class="sa-stat-label">Absent</span>
-        </div>
-      </div>
-
-      <div class="sa-stat-card sa-stat-late">
-        <div class="sa-stat-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10" />
-            <polyline points="12 6 12 12 16 14" />
-          </svg>
-        </div>
-        <div class="sa-stat-body">
-          <span class="sa-stat-value">{{ summary()!.late }}</span>
-          <span class="sa-stat-label">Late</span>
-        </div>
-      </div>
-
-      <div class="sa-stat-card sa-stat-halfday">
-        <div class="sa-stat-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-          </svg>
-        </div>
-        <div class="sa-stat-body">
-          <span class="sa-stat-value">{{ summary()!.halfDay }}</span>
-          <span class="sa-stat-label">Half Day</span>
-        </div>
-      </div>
+      }
     </div>
+  </div>
+
+  @if (s.unmarkedDays > 0) {
+  <div class="sa-info-banner">
+    <span class="material-symbols-outlined">info</span>
+    <span>
+      {{ s.unmarkedDays }} working day{{ s.unmarkedDays === 1 ? '' : 's' }} this month
+      {{ s.unmarkedDays === 1 ? "hasn't" : "haven't" }} been marked yet by your teacher.
+    </span>
+  </div>
+  } } @else {
+  <div class="sa-no-summary">
+    <span class="material-symbols-outlined">inbox</span>
+    <p>No attendance data for this month.</p>
   </div>
   }
 
@@ -158,78 +143,114 @@
     <div class="sa-cal-header">
       <h2 class="sa-cal-title">Monthly View</h2>
       <div class="sa-legend">
-        <span class="sa-legend-item"><span class="sa-dot sa-dot-present"></span>Present</span>
-        <span class="sa-legend-item"><span class="sa-dot sa-dot-absent"></span>Absent</span>
-        <span class="sa-legend-item"><span class="sa-dot sa-dot-late"></span>Late</span>
-        <span class="sa-legend-item"><span class="sa-dot sa-dot-halfday"></span>Half Day</span>
+        @for (entry of statusConfig | keyvalue; track entry.key) {
+        <span class="sa-legend-item">
+          <span class="sa-legend-dot" [ngClass]="statusClass(entry.key)"></span
+          >{{ entry.value.label }}
+        </span>
+        }
+        <span class="sa-legend-item">
+          <span class="sa-legend-dot status-unmarked"></span>Not Marked
+        </span>
       </div>
     </div>
 
     <div class="sa-cal-grid">
-      <!-- Day headers -->
       @for (d of dayNames; track d) {
       <div class="sa-cal-dayname">{{ d }}</div>
-      }
-
-      <!-- Calendar cells -->
-      @for (day of calendarDays(); track day.dateStr) {
+      } @for (day of calendarDays(); track trackByDate($index, day)) {
       <div
         class="sa-cal-cell"
         [class.sa-cal-other]="!day.isCurrentMonth"
         [class.sa-cal-today]="day.isToday"
         [class.sa-cal-future]="day.isFuture"
-        [class.sa-cal-present]="day.status === 'PRESENT'"
-        [class.sa-cal-absent]="day.status === 'ABSENT'"
-        [class.sa-cal-late]="day.status === 'LATE'"
-        [class.sa-cal-halfday]="day.status === 'HALF_DAY'"
-        [title]="day.notes || statusLabel(day.status)"
+        [ngClass]="day.record ? statusClass(day.record.status) : ''"
+        [tabindex]="day.isCurrentMonth ? 0 : -1"
+        (mouseenter)="hoveredDate.set(day.dateStr)"
+        (mouseleave)="hoveredDate.set(null)"
+        (focus)="hoveredDate.set(day.dateStr)"
+        (blur)="hoveredDate.set(null)"
+        [attr.aria-label]="
+          day.record
+            ? formatWeekday(day.dateStr) +
+              ': ' +
+              getReconstructedStatusDisplay(day.record.status).label
+            : null
+        "
       >
         <span class="sa-cal-date">{{ day.date.getDate() }}</span>
-        @if (day.status) {
-        <span class="sa-cal-indicator" [class]="'sa-ci-' + day.status.toLowerCase()">
-          {{ statusIcon(day.status) }}
+        @if (day.record && day.isCurrentMonth) {
+        <span class="sa-cal-icon material-symbols-outlined">
+          {{ getReconstructedStatusDisplay(day.record.status).icon }}
         </span>
+        } @if (day.isCurrentMonth && day.record && hoveredDate() === day.dateStr) {
+        <div class="sa-cal-tooltip" role="tooltip">
+          <strong>{{ formatWeekday(day.dateStr) }}</strong>
+          <span>{{ getReconstructedStatusDisplay(day.record.status).label }}</span>
+          @if (halfDaySessionLabel(day.record)) {
+          <span class="sa-tooltip-sub">{{ halfDaySessionLabel(day.record) }} session</span>
+          } @if (day.record.notes) {
+          <span class="sa-tooltip-note">{{ day.record.notes }}</span>
+          }
+        </div>
         }
       </div>
       }
     </div>
   </div>
 
-  <!-- ── Daily records list ──────────────────────────────────── -->
-  @if (attendanceRecords().length > 0) {
+  <!-- ── Log ────────────────────────────────────────────────── -->
   <div class="sa-list-card">
-    <h2 class="sa-list-title">Attendance Log</h2>
+    <div class="sa-list-header">
+      <h2 class="sa-list-title">Attendance Log</h2>
+      <button class="sa-toggle-btn" (click)="toggleExceptionsOnly()">
+        {{ showOnlyExceptions() ? 'Show all days' : 'Show exceptions only' }}
+      </button>
+    </div>
+
+    @if (visibleRecords().length > 0) {
     <div class="sa-list">
-      @for (rec of attendanceRecords(); track rec.id) {
-      <div class="sa-list-item" [class]="'sa-li-' + rec.status.toLowerCase()">
+      @for (rec of visibleRecords(); track trackByRecord($index, rec)) {
+      <div class="sa-list-item" [ngClass]="statusClass(rec.status)">
         <div class="sa-li-date-col">
           <span class="sa-li-day">{{ formatDay(rec.date) }}</span>
           <span class="sa-li-month">{{ formatMonthShort(rec.date) }}</span>
         </div>
         <div class="sa-li-info">
           <span class="sa-li-weekday">{{ formatWeekday(rec.date) }}</span>
-          @if (rec.notes) {
-          <span class="sa-li-notes">{{ rec.notes }}</span>
+          @if (halfDaySessionLabel(rec) || rec.notes) {
+          <span class="sa-li-notes">
+            {{ halfDaySessionLabel(rec) }}{{ halfDaySessionLabel(rec) && rec.notes ? ' · ' : ''
+            }}{{ rec.notes }}
+          </span>
           }
         </div>
-        <div class="sa-li-badge-col">
-          <span class="sa-li-badge" [class]="'sa-badge-' + rec.status.toLowerCase()">
-            {{ statusLabel(rec.status) }}
-          </span>
-        </div>
+        <span class="sa-li-badge" [ngClass]="statusClass(rec.status)">
+          <span class="material-symbols-outlined">{{
+            getReconstructedStatusDisplay(rec.status).icon
+          }}</span>
+          {{ getReconstructedStatusDisplay(rec.status).label }}
+        </span>
       </div>
       }
     </div>
+    } @else {
+    <div class="sa-empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <rect x="3" y="4" width="18" height="18" rx="2" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+      </svg>
+      <p>
+        {{
+          showOnlyExceptions()
+            ? 'No exceptions this month — full attendance.'
+            : 'No records for this month.'
+        }}
+      </p>
+    </div>
+    }
   </div>
-  } @else {
-  <div class="sa-empty">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-      <rect x="3" y="4" width="18" height="18" rx="2" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-      <line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="16" y1="2" x2="16" y2="6" />
-    </svg>
-    <p>No attendance records for this month</p>
-  </div>
-  } }
+  }
 </div>

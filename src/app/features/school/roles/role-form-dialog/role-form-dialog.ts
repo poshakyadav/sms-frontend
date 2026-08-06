@@ -40,6 +40,7 @@ import {
   RoleCategory,
 } from '../../../../core/services/roles.service';
 import { ToastService } from '../../../../core/services/toast.service';
+import { PermissionInfo } from '../../../../shared/components/permission-info/permission-info';
 
 interface DialogData {
   mode: 'create' | 'edit';
@@ -100,6 +101,7 @@ const CATEGORY_OPTIONS: CategoryOption[] = [
     MatProgressSpinnerModule,
     MatDialogModule,
     MatTooltipModule,
+    PermissionInfo,
   ],
   templateUrl: './role-form-dialog.html',
   styleUrl: './role-form-dialog.scss',
@@ -138,7 +140,11 @@ export class RoleFormDialog implements OnInit {
       .map((g) => ({
         ...g,
         permissions: g.permissions.filter(
-          (p) => p.slug.toLowerCase().includes(q) || p.name.toLowerCase().includes(q)
+          (p) =>
+            p.slug.toLowerCase().includes(q) ||
+            p.name.toLowerCase().includes(q) ||
+            (p.description ?? '').toLowerCase().includes(q) ||
+            (p.usedIn ?? []).some((u) => u.toLowerCase().includes(q))
         ),
         expanded: true,
       }))
@@ -260,7 +266,7 @@ export class RoleFormDialog implements OnInit {
         const cat = this.selectedCategory();
         if (cat) this.updateFilteredTemplates(cat);
       },
-      error: () => {},
+      error: () => { },
     });
   }
 

@@ -475,3 +475,108 @@
     .mat-button-toggle-checked { background: var(--color-primary); color: var(--color-on-primary); }
   }
 */
+
+
+// =======
+
+// ── Calendar guard state ──────────────────────────────────────────────────
+.guard-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 56px 24px;
+  background: color-mix(in srgb, var(--color-warning) 8%, var(--color-bg-card));
+  border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
+  border-radius: var(--radius-md);
+
+  &.is-holiday {
+    background: color-mix(in srgb, var(--color-secondary) 8%, var(--color-bg-card));
+    border-color: color-mix(in srgb, var(--color-secondary) 30%, transparent);
+    .guard-icon { color: var(--color-secondary); }
+  }
+
+  .guard-icon {
+    font-size: 44px;
+    width: 44px;
+    height: 44px;
+    color: var(--color-warning);
+  }
+
+  h2 {
+    margin: 0;
+    color: var(--color-text-primary);
+    font-size: 1.15rem;
+  }
+
+  p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    max-width: 480px;
+  }
+
+  button[mat-raised-button] {
+    margin-top: 8px;
+  }
+
+  .guard-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    margin-top: 6px;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+}
+
+// ── Calendar status chip ────────────────────────────────────────────────
+.calendar-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 6px 10px 6px 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-success) 10%, var(--color-bg-surface));
+  border: 1px solid color-mix(in srgb, var(--color-success) 25%, transparent);
+  color: var(--color-success);
+  font-size: 0.82rem;
+  font-weight: 600;
+
+  mat-icon:first-child {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .calendar-edit-btn {
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    margin-left: 2px;
+
+    mat-icon {
+      font-size: 15px;
+      width: 15px;
+      height: 15px;
+      color: var(--color-success);
+    }
+  }
+}
+
+.chip.status-unmarked,
+.btn-holiday {
+  background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
+  color: var(--color-secondary);
+}
+
+.student-row.status-unmarked {
+  border-left-color: var(--color-warning);
+}

@@ -357,9 +357,9 @@
 
 .rdd-perm-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start; // was center
   gap: 10px;
-  padding: 7px 14px;
+  padding: 9px 14px; // was 7px
   border-bottom: 1px solid var(--color-divider);
   transition: background 0.12s ease;
 
@@ -377,6 +377,7 @@
     height: 15px;
     color: var(--color-success);
     flex-shrink: 0;
+    margin-top: 2px;
   }
 }
 

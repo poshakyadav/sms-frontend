@@ -124,11 +124,9 @@
               <mat-label>Email Address</mat-label>
               <mat-icon matPrefix>email</mat-icon>
               <input matInput type="email" formControlName="email" placeholder="user@school.edu" />
-              @if (form.get('email')?.hasError('required') && form.get('email')?.touched) {
-              <mat-error>Email is required</mat-error>
-              } @if (form.get('email')?.hasError('email') && form.get('email')?.touched) {
-              <mat-error>Enter a valid email address</mat-error>
-              }
+              @if (form.get('email')?.hasError('email') && form.get('email')?.touched) {
+                <mat-error>Enter a valid email address</mat-error>
+                }
             </mat-form-field>
             @if (isEdit()) {
             <button
@@ -142,6 +140,82 @@
             </button>
             }
           </div>
+
+          <!-- Username -->
+          <div
+            class="uf-field-wrap"
+            [class.uf-field-wrap--locked]="isEdit() && !isFieldEditable('username')"
+            [class.uf-field-wrap--active]="isEdit() && isFieldEditable('username')"
+          >
+            <mat-form-field appearance="outline" class="uf-field">
+              <mat-label>Username</mat-label>
+              <mat-icon matPrefix>alternate_email</mat-icon>
+              <input
+                matInput
+                type="text"
+                formControlName="username"
+                placeholder="e.g. ravis2026"
+                (input)="onUsernameInput($event)"
+                autocomplete="off"
+                maxlength="30"
+              />
+              <div matSuffix class="uf-check-suffix">
+                @if (usernameCheckStatus() === 'checking') {
+                <mat-spinner diameter="16" class="uf-check-spinner"></mat-spinner>
+                } @else if (usernameCheckStatus() === 'available') {
+                <mat-icon class="uf-check-icon uf-check-icon--ok" matTooltip="Username is available"
+                  >check_circle</mat-icon
+                >
+                } @else if (usernameCheckStatus() === 'taken') {
+                <mat-icon class="uf-check-icon uf-check-icon--err" matTooltip="Username already taken"
+                  >cancel</mat-icon
+                >
+                } @else if (usernameCheckStatus() === 'invalid') {
+                <mat-icon class="uf-check-icon uf-check-icon--err" matTooltip="Invalid username format"
+                  >error_outline</mat-icon
+                >
+                } @else if (usernameCheckStatus() === 'error') {
+                <mat-icon
+                  class="uf-check-icon uf-check-icon--warn"
+                  matTooltip="Verification failed — you may proceed"
+                  >warning</mat-icon
+                >
+                }
+              </div>
+              <mat-hint
+                >Lowercase letters &amp; numbers only, starts with a letter, 3-30 chars. Used to sign
+                in.</mat-hint
+              >
+              @if (form.get('username')?.hasError('pattern') && form.get('username')?.touched) {
+              <mat-error>Invalid username format</mat-error>
+              }
+            </mat-form-field>
+            @if (isEdit()) {
+            <button
+              type="button"
+              class="uf-edit-btn"
+              [class.uf-edit-btn--active]="isFieldEditable('username')"
+              (click)="toggleFieldEdit('username', $event)"
+              [matTooltip]="isFieldEditable('username') ? 'Lock field' : 'Edit field'"
+            >
+              <mat-icon>{{ isFieldEditable('username') ? 'lock' : 'edit' }}</mat-icon>
+            </button>
+            }
+          </div>
+          @if (usernameCheckMessage() && isFieldEditable('username')) {
+          <div
+            class="uf-check-msg"
+            [class.msg--ok]="usernameCheckStatus() === 'available'"
+            [class.msg--err]="usernameCheckStatus() === 'taken' || usernameCheckStatus() === 'invalid'"
+            [class.msg--warn]="usernameCheckStatus() === 'error'"
+          >
+            @if (usernameCheckStatus() === 'available') { <mat-icon>check_circle</mat-icon> } @else if
+            (usernameCheckStatus() === 'taken' || usernameCheckStatus() === 'invalid') {
+            <mat-icon>cancel</mat-icon>
+            } @else { <mat-icon>warning</mat-icon> }
+            <span>{{ usernameCheckMessage() }}</span>
+          </div>
+          }
 
           <!-- Password (create) -->
           @if (!isEdit()) {
@@ -2039,8 +2113,7 @@
 
                 <!-- ── Col 2: name + slug ── -->
                 <div class="perm-item__info">
-                  <span class="perm-item__name">{{ perm.name }}</span>
-                  <code class="perm-item__slug">{{ perm.slug }}</code>
+                  <app-permission-info [permission]="perm"></app-permission-info>
                 </div>
 
                 <!-- ── Col 3: state chip ── -->

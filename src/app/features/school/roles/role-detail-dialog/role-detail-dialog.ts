@@ -11,6 +11,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { Role, RoleCategory } from '../../../../core/services/roles.service';
+import { PermissionInfo } from '../../../../shared/components/permission-info/permission-info';
 
 interface DialogData {
   role: Role;
@@ -51,6 +52,7 @@ const CATEGORY_META: Record<RoleCategory, CategoryMeta> = {
     MatDialogModule,
     MatChipsModule,
     MatTooltipModule,
+    PermissionInfo,
   ],
   templateUrl: './role-detail-dialog.html',
   styleUrl: './role-detail-dialog.scss',

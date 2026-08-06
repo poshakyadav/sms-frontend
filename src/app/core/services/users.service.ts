@@ -4,7 +4,7 @@ import { Injectable } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { ApiService } from './api.service';
-import { RoleCategory } from './roles.service';
+import { PermissionRiskLevel, RoleCategory } from './roles.service';
 
 // ── Permission Category Types ──────────────────────────────────────────────────
 export type UserCategory = 'staff' | 'student' | 'parent';
@@ -23,6 +23,11 @@ export interface UserPermission {
   name: string;
   module: string;
   category?: RoleCategory;
+
+  // NEW
+  description?: string;
+  riskLevel?: PermissionRiskLevel;
+  usedIn?: string[];
 }
 
 export interface UserProfile {
@@ -97,7 +102,8 @@ export const FACILITY_LABELS: Record<FacilityReceived, string> = {
 export interface SchoolUser {
   id: number;
   name: string;
-  email: string;
+  username: string;        // every user has one
+  email: string | null;    // now optional backend-side
   primaryRole: string;
   phone?: string;
   alternatePhone?: string;
@@ -199,7 +205,8 @@ export interface DeletionCheckResult {
 export interface CreateUserPayload {
   // Core
   name: string;
-  email: string;
+  email?: string;
+  username?: string;   // auto-generated server-side if omitted
   password: string;
   primaryRoleId: number;
   roleIds: number[];
@@ -281,7 +288,7 @@ export interface CreateUserPayload {
 // ── UPDATE payload (subset of create, no password/roleIds/primaryRoleId) ────────
 
 export interface UpdateUserPayload
-  extends Partial<Omit<CreateUserPayload, 'password' | 'roleIds' | 'primaryRoleId'>> {
+  extends Partial<Omit<CreateUserPayload, 'password' | 'roleIds' | 'primaryRoleId' |  'username'>> {
   newPassword?: string;
   isActive?: boolean;
 }
@@ -377,6 +384,54 @@ export class UsersService {
 
   toggleUserActive(id: number, isActive: boolean): Observable<{ message: string }> {
     return this.updateUser(id, { isActive });
+  }
+
+  // ── Username availability + change ────────────────────────────────────────
+
+  /** Live check while typing — mirrors checkEmailAvailable's shape. */
+  checkUsernameAvailable(username: string): Observable<{ available: boolean; message: string }> {
+    const params = new HttpParams().set('username', username);
+    return this.api
+      .get<{ success: boolean; available: boolean; message: string }>(
+        `${this.base}/check-username`,
+        params
+      )
+      .pipe(
+        map((res) => ({ available: res.available, message: res.message })),
+        catchError((err) => throwError(() => err))
+      );
+  }
+
+  /** Same shape for email, exposed here so components don't hand-roll HttpParams. */
+  checkEmailAvailable(email: string): Observable<{ available: boolean; message: string }> {
+    const params = new HttpParams().set('email', email);
+    return this.api
+      .get<{ success: boolean; available: boolean; message: string }>(
+        `${this.base}/check-email`,
+        params
+      )
+      .pipe(
+        map((res) => ({ available: res.available, message: res.message })),
+        catchError((err) => throwError(() => err))
+      );
+  }
+
+  /**
+   * Changes a user's username via the dedicated endpoint — deliberately
+   * separate from updateUser() since the backend excludes username from
+   * the general PATCH-style update to keep availability-conflict handling
+   * isolated and explicit.
+   */
+  changeUsername(userId: number, username: string): Observable<{ message: string; username: string }> {
+    return this.api
+      .put<{ success: boolean; message: string; username: string }>(
+        `${this.base}/${userId}/username`,
+        { username }
+      )
+      .pipe(
+        map((res) => ({ message: res.message, username: res.username })),
+        catchError((err) => throwError(() => err))
+      );
   }
 
   // ── Roles ────────────────────────────────────────────────────────────────────

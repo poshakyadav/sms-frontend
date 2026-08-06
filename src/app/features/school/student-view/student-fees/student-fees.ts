@@ -14,6 +14,8 @@ import {
 
 import { FeeStatusBadge } from '../../../../shared/components/fee-status-badge/fee-status-badge';
 import { PaisePipe } from '../../../../shared/pipes/paise-pipe';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { FeeReceiptDialogComponent } from '../../../../shared/components/fee-receipt-dialog/fee-receipt-dialog';
 
 // ── Month group shape ─────────────────────────────────────────────────────────
 // Each group holds all fee items that share the same feeMonth value.
@@ -36,6 +38,7 @@ export interface FeeMonthGroup {
     MatButtonModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
+    MatDialogModule, 
     PaisePipe,
     FeeStatusBadge,
   ],
@@ -105,7 +108,7 @@ export class StudentFees implements OnInit {
     return Math.min(360, (o.collectionRate / 100) * 360);
   });
 
-  constructor(private fees: FeesService) {}
+  constructor(private fees: FeesService, private dialog: MatDialog) {}
 
   ngOnInit(): void {
     this.load();
@@ -129,6 +132,22 @@ export class StudentFees implements OnInit {
       },
     });
   }
+
+  // ── Receipt dialog ─────────────────────────────────────────────────────────
+
+/**
+ * Opens the shared fee receipt dialog for a single payment row.
+ * FeeReceiptDialogComponent fetches the full batch-expanded receipt via
+ * GET /fees/receipt/:paymentId — ownership is enforced server-side against
+ * fees.student.view, so a student can only ever open their own receipts.
+ */
+openReceipt(payment: StudentPaymentItem): void {
+  this.dialog.open(FeeReceiptDialogComponent, {
+    width: '780px',
+    maxWidth: '95vw',
+    data: { paymentId: payment.id },
+  });
+}
 
   selectYear(index: number): void {
     this.activeYearIndex.set(index);

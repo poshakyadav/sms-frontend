@@ -305,7 +305,8 @@
         </ng-container>
 
         <!-- Total Days -->
-        <ng-container matColumnDef="totalMarkedDays">
+        <!-- Total Days column -->
+        <ng-container matColumnDef="markedDays">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Days</th>
           <td mat-cell *matCellDef="let r">
             <span
@@ -314,7 +315,7 @@
                 r.workingDays + ' working days out of ' + r.totalDaysInMonth + ' days in month'
               "
             >
-              {{ r.totalMarkedDays }}
+              {{ r.markedDays }}
             </span>
           </td>
         </ng-container>

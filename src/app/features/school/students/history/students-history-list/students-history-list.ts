@@ -80,7 +80,7 @@ type SortBy = 'name' | 'admissionDate' | 'createdAt';
               <input
                 class="search-input"
                 type="text"
-                placeholder="Search by name, email, admission no., father's name…"
+                placeholder="Search by name, email, username, admission no., father's name…"
                 [(ngModel)]="searchQuery"
                 (ngModelChange)="onSearchChange($event)"
               />
@@ -187,7 +187,7 @@ type SortBy = 'name' | 'admissionDate' | 'createdAt';
                     <div class="student-cell-info">
                       <span class="cell-name">{{ student.name }}</span>
                       <span class="cell-sub">
-                        {{ student.email }}
+                        {{ student.email || student.username }}
                         @if (student.admissionNumber) { ·
                         <span class="roll-chip">{{ student.admissionNumber }}</span>
                         }

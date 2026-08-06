@@ -33,6 +33,16 @@ export const ATTENDANCE_ROUTES: Routes = [
     canActivate: [permissionGuard('attendance.report')],
   },
 
+  // ── Manage Calendar / Missing Attendance / Settings ──────────────────
+  {
+    path: 'calendar',
+    loadComponent: () =>
+      import('./attendance-calendar-component/attendance-calendar-component').then(
+        (m) => m.AttendanceCalendarComponent
+      ),
+    canActivate: [permissionGuard('attendance.report')],
+  },
+
   // ── Student: View own attendance ──────────────────────────────────────────
   // The component calls GET /school/attendance/me — userId comes from JWT.
   {

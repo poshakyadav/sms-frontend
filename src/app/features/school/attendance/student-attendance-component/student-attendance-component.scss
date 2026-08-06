@@ -10,3 +10,68 @@
 .pct-bad {
   color: var(--color-error) !important;
 }
+
+// ── Status chip (table) ────────────────────────────────────────────────────
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+
+  mat-icon {
+    font-size: 15px;
+    width: 15px;
+    height: 15px;
+  }
+}
+
+.status-chip.PRESENT,
+.status-chip.LATE,
+.status-chip.HALF_DAY {
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+  color: var(--color-success);
+}
+.status-chip.ABSENT,
+.status-chip.SICK,
+.status-chip.SUSPENDED {
+  background: color-mix(in srgb, var(--color-error) 12%, transparent);
+  color: var(--color-error);
+}
+.status-chip.EXCUSED,
+.status-chip.ON_DUTY {
+  background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
+  color: var(--color-secondary);
+}
+.status-chip.HOLIDAY {
+  background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
+  color: var(--color-secondary);
+}
+.status-chip.UNMARKED {
+  background: color-mix(in srgb, var(--color-text-muted) 15%, transparent);
+  color: var(--color-text-muted);
+}
+
+// ── Range info banner ───────────────────────────────────────────────────────
+.range-info-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  margin: -8px 0 4px;
+  background: color-mix(in srgb, var(--color-info) 8%, var(--color-bg-surface));
+  border: 1px solid color-mix(in srgb, var(--color-info) 25%, transparent);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: var(--color-info);
+    flex-shrink: 0;
+  }
+}

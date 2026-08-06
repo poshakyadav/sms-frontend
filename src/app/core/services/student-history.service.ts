@@ -10,7 +10,8 @@ import { ApiService } from './api.service';
 export interface StudentSearchResult {
   id: number;
   name: string;
-  email: string;
+  email: string | null;     // CHANGED
+  username: string; 
   phone: string | null;
   admissionNumber: string | null;
   avatarUrl: string | null;
@@ -107,7 +108,8 @@ export interface StudentHistorySummary {
   student: {
     id: number;
     name: string;
-    email: string;
+    email: string | null;       // CHANGED
+    username: string;  
     phone: string | null;
     alternatePhone: string | null;
     avatarUrl: string | null;
@@ -157,7 +159,8 @@ export interface StudentHistorySummary {
   linkedParents: Array<{
     parentId: number;
     parentName: string;
-    parentEmail: string;
+    parentEmail: string | null;   // CHANGED
+    parentUsername: string;
     parentPhone: string | null;
     relationship: string;
     isPrimary: boolean;
@@ -178,7 +181,8 @@ export interface StudentHistoryResponse {
   student: {
     id: number;
     name: string;
-    email: string;
+    email: string | null;     // CHANGED
+    username: string;   
     primaryRole: string;
     avatarUrl: string | null;
     admissionNumber: string | null;
@@ -221,7 +225,8 @@ export interface AllStudentsHistoryResponse {
 export interface AllStudentRow {
   id: number;
   name: string;
-  email: string;
+  email: string | null;     // CHANGED
+  username: string; 
   phone: string | null;
   alternatePhone: string | null;
   avatarUrl: string | null;
@@ -274,6 +279,7 @@ export interface AllStudentsHistoryParams {
   q?: string;
   name?: string;
   email?: string;
+  username?: string;
   phone?: string;
   admissionNumber?: string;
   fatherName?: string;
@@ -328,6 +334,7 @@ export class StudentHistoryService {
     if (params.q) httpParams = httpParams.set('q', params.q);
     if (params.name) httpParams = httpParams.set('name', params.name);
     if (params.email) httpParams = httpParams.set('email', params.email);
+    if (params.username) httpParams = httpParams.set('username', params.username); // NEW
     if (params.phone) httpParams = httpParams.set('phone', params.phone);
     if (params.admissionNumber)
       httpParams = httpParams.set('admissionNumber', params.admissionNumber);

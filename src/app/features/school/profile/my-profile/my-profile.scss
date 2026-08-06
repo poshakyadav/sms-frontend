@@ -1,110 +1,120 @@
-@use '../../../../shared/styles/students-shared' as *;
+// my-profile.scss
+// Modern, responsive "My Profile" page built on the design tokens defined
+// in the global styles.scss (--color-*, --shadow-*, --radius-*).
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// MY PROFILE — Complete styles
-// Fixes: hero layout, avatar, meta wrapping, role badges, tab rendering,
-//        read-only fields, extras grid, theming support
-// ═══════════════════════════════════════════════════════════════════════════════
+:host {
+  display: block;
+}
 
-// ── Page container ─────────────────────────────────────────────────────────────
 .page-container {
-  padding: 24px;
-  max-width: 1100px;
+  max-width: 1080px;
   margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 
   @media (max-width: 768px) {
     padding: 16px;
+    gap: 16px;
   }
 }
 
-// ── Page header ────────────────────────────────────────────────────────────────
-.page-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 24px;
-  gap: 16px;
-
-  .header-left {
-    h1 {
-      margin: 0 0 4px;
-      font-size: 1.75rem;
-      font-weight: 700;
-      color: var(--color-text-primary);
-      line-height: 1.2;
-    }
-
-    p {
-      margin: 0;
-      font-size: 0.9rem;
-      color: var(--color-text-secondary);
-    }
-  }
-
-  .header-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-}
-
-// ── Loading / error state ──────────────────────────────────────────────────────
+// ── Loading / Error states ──────────────────────────────────────────────
 .state-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 300px;
-  gap: 16px;
+  gap: 12px;
+  min-height: 320px;
   text-align: center;
   color: var(--color-text-secondary);
 
-  &.error {
-    .state-icon {
-      font-size: 56px;
-      height: 56px;
-      width: 56px;
-      color: var(--color-error);
-    }
+  p {
+    margin: 0;
+    font-size: 0.95rem;
+  }
 
-    h2 {
-      margin: 0;
+  h2 {
+    margin: 0;
+    color: var(--color-text-primary);
+    font-size: 1.25rem;
+  }
+
+  .state-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: var(--color-text-muted);
+  }
+
+  &.error .state-icon {
+    color: var(--color-error);
+  }
+}
+
+// ── Page header ──────────────────────────────────────────────────────────
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  .header-left {
+    h1 {
+      margin: 0 0 4px;
+      font-size: 1.6rem;
+      font-weight: 700;
       color: var(--color-text-primary);
-      font-size: 1.2rem;
+      letter-spacing: -0.01em;
     }
 
     p {
       margin: 0;
+      color: var(--color-text-secondary);
       font-size: 0.9rem;
+    }
+  }
+
+  .header-actions button {
+    color: var(--color-text-secondary);
+    transition: color 0.15s ease, background-color 0.15s ease;
+
+    &:hover {
+      color: var(--color-primary);
+      background: var(--color-hover);
     }
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// HERO CARD
-// ═══════════════════════════════════════════════════════════════════════════════
+// ── Hero card ────────────────────────────────────────────────────────────
 .profile-hero {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 28px;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  padding: 32px;
   border-radius: var(--radius-lg);
-  padding: 28px 32px;
-  margin-bottom: 24px;
-  box-shadow: var(--shadow-sm);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: var(--color-on-primary);
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
 
-  @media (max-width: 640px) {
+  @media (max-width: 768px) {
     flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 24px;
+  }
+
+  @media (max-width: 480px) {
     align-items: center;
     text-align: center;
-    padding: 20px 16px;
-    gap: 16px;
   }
 }
 
-// ── Avatar section ─────────────────────────────────────────────────────────────
 .avatar-section {
   display: flex;
   flex-direction: column;
@@ -113,151 +123,169 @@
   flex-shrink: 0;
 }
 
-// Actual avatar image
-.avatar-circle {
-  width: 88px;
-  height: 88px;
+.avatar-circle,
+.avatar-placeholder {
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid var(--color-primary);
-  display: block;
+  border: 3px solid rgba(255, 255, 255, 0.55);
+  box-shadow: var(--shadow-md);
 }
 
-// Fallback placeholder when no avatarUrl
+.avatar-circle {
+  object-fit: cover;
+}
+
 .avatar-placeholder {
-  width: 88px;
-  height: 88px;
-  border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--color-primary) 15%, transparent),
-    color-mix(in srgb, var(--color-secondary) 15%, transparent)
-  );
-  border: 3px solid var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
+  background: rgba(255, 255, 255, 0.16);
 
   mat-icon {
-    font-size: 36px;
-    height: 36px;
-    width: 36px;
-    color: var(--color-primary);
-    display: flex;
-    align-items: center;
+    font-size: 40px;
+    width: 40px;
+    height: 40px;
+    color: var(--color-on-primary);
+  }
+}
+
+.profile-type-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  white-space: nowrap;
+}
+
+.hero-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+
+.hero-name {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  word-break: break-word;
+}
+
+.primary-role-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  @media (max-width: 480px) {
     justify-content: center;
   }
 }
 
-// Profile type pill under avatar
-.profile-type-label {
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-primary-dark);
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
-  padding: 3px 12px;
-  border-radius: 9999px;
-  white-space: nowrap;
-  text-align: center;
+.primary-role-identity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
 }
 
-// ── Hero info ──────────────────────────────────────────────────────────────────
-.hero-info {
-  flex: 1;
-  min-width: 0;
+.primary-role-label-hint {
+  font-size: 0.72rem;
+  opacity: 0.75;
+}
 
-  .hero-name {
-    margin: 0 0 6px;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--color-text-primary);
-    line-height: 1.2;
+.hero-username,
+.hero-email {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.92;
+
+  @media (max-width: 480px) {
+    justify-content: center;
   }
 
-  .hero-email {
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &.muted {
+    opacity: 0.65;
+    font-style: italic;
+  }
+}
+
+.hero-roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+
+  @media (max-width: 480px) {
+    justify-content: center;
+  }
+}
+
+.badge.role {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 8px;
+
+  @media (max-width: 480px) {
+    justify-content: center;
+  }
+
+  .meta-item {
     display: flex;
     align-items: center;
     gap: 6px;
-    margin: 0 0 14px;
-    font-size: 0.9rem;
-    color: var(--color-text-secondary);
+    font-size: 0.82rem;
+    opacity: 0.88;
 
     mat-icon {
       font-size: 16px;
-      height: 16px;
       width: 16px;
-      flex-shrink: 0;
+      height: 16px;
     }
   }
 }
 
-// ── Role badges row ────────────────────────────────────────────────────────────
-.hero-roles {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 14px;
-}
-
-// Badge base — used for roles
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 10px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1.4;
-
-  &.role {
-    background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
-    color: var(--color-secondary);
-    border: 1px solid color-mix(in srgb, var(--color-secondary) 25%, transparent);
-  }
-}
-
-// ── Hero meta row (phone, gender, location, member since) ─────────────────────
-.hero-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 16px;
-  align-items: center;
-}
-
-.meta-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.82rem;
-  color: var(--color-text-secondary);
-  white-space: nowrap;
-
-  mat-icon {
-    font-size: 15px;
-    height: 15px;
-    width: 15px;
-    flex-shrink: 0;
-    color: var(--color-text-muted);
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// DETAIL CARD (profile extras)
-// ═══════════════════════════════════════════════════════════════════════════════
+// ── Detail cards ─────────────────────────────────────────────────────────
 .detail-card {
-  background: var(--color-bg-card);
+  background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
-
-  &.profile-extras-card {
-    border-left: 4px solid var(--color-secondary);
-    margin-bottom: 24px;
-  }
 }
 
 .detail-card-header {
@@ -266,374 +294,263 @@
   gap: 10px;
   padding: 16px 20px;
   border-bottom: 1px solid var(--color-divider);
-  background: var(--color-hover);
+  background: var(--color-bg-main);
 
   mat-icon {
-    color: var(--color-secondary);
-    font-size: 20px;
-    height: 20px;
-    width: 20px;
+    color: var(--color-primary);
   }
 
   h3 {
     margin: 0;
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--color-text-primary);
   }
 }
 
 .detail-card-body {
-  padding: 16px 20px;
+  padding: 20px;
+
+  @media (max-width: 480px) {
+    padding: 16px;
+  }
 }
 
-// ── Field list inside detail card ──────────────────────────────────────────────
-.field-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+.extras-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 18px;
 }
 
 .field-row {
   display: flex;
-  align-items: baseline;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--color-divider);
-
-  &:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-  }
+  flex-direction: column;
+  gap: 4px;
 
   .field-label {
-    font-size: 0.78rem;
+    font-size: 0.72rem;
     font-weight: 600;
-    color: var(--color-text-muted);
+    letter-spacing: 0.03em;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    min-width: 140px;
-    flex-shrink: 0;
+    color: var(--color-text-muted);
   }
 
   .field-value {
-    font-size: 0.9rem;
+    font-size: 0.92rem;
     color: var(--color-text-primary);
     font-weight: 500;
   }
 }
 
-// ── Extras grid inside profile data card ──────────────────────────────────────
-.extras-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 0;
-
-  .field-row {
-    padding: 10px 12px;
-    border-bottom: 1px solid var(--color-divider);
-    flex-direction: column;
-    gap: 2px;
-
-    &:last-child {
-      border-bottom: none;
-    }
-
-    .field-label {
-      min-width: unset;
-    }
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// TAB GROUP
-// ═══════════════════════════════════════════════════════════════════════════════
+// ── Tabs ─────────────────────────────────────────────────────────────────
 .profile-tabs {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-md);
   overflow: hidden;
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
 
-  // Tab header background
-  ::ng-deep .mat-mdc-tab-header {
-    background: var(--color-hover);
-    border-bottom: 1px solid var(--color-divider);
+  // Bind Angular Material 3 tab tokens to our design system so the active
+  // tab, ripple, and indicator all follow --color-primary (and therefore
+  // any per-school theme applied at runtime).
+  --mat-tab-header-active-label-text-color: var(--color-primary);
+  --mat-tab-header-active-ripple-color: var(--color-primary);
+  --mat-tab-header-inactive-label-text-color: var(--color-text-secondary);
+  --mat-tab-header-active-focus-indicator-color: var(--color-primary);
+  --mat-tab-header-active-hover-indicator-color: var(--color-primary);
+  --mdc-tab-indicator-active-indicator-color: var(--color-primary);
+  --mat-tab-header-divider-color: var(--color-border);
+
+  .tab-icon {
+    margin-right: 6px;
+    vertical-align: middle;
   }
-
-  // Active tab indicator color
-  ::ng-deep
-    .mat-mdc-tab-group.mat-primary
-    .mat-mdc-tab:not(.mat-mdc-tab-disabled).mdc-tab--active
-    .mdc-tab__text-label {
-    color: var(--color-primary);
-  }
-
-  ::ng-deep .mat-mdc-tab-group .mat-mdc-tab .mdc-tab-indicator__content--underline {
-    border-color: var(--color-primary);
-  }
-
-  // Ink bar
-  ::ng-deep .mdc-tab-indicator .mdc-tab-indicator__content--underline {
-    border-color: var(--color-primary) !important;
-  }
-
-  ::ng-deep .mat-mdc-tab:not(.mat-mdc-tab-disabled) .mdc-tab__text-label {
-    color: var(--color-text-secondary);
-  }
-
-  ::ng-deep .mat-mdc-tab:not(.mat-mdc-tab-disabled).mdc-tab--active .mdc-tab__text-label {
-    color: var(--color-primary);
-  }
-}
-
-.tab-icon {
-  font-size: 16px;
-  height: 16px;
-  width: 16px;
-  margin-right: 6px;
-  vertical-align: middle;
 }
 
 .tab-content {
-  padding: 28px 28px 24px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 
-  @media (max-width: 600px) {
-    padding: 20px 16px 16px;
+  @media (max-width: 480px) {
+    padding: 16px;
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// ALERT BANNERS
-// ═══════════════════════════════════════════════════════════════════════════════
+// ── Alert banners ────────────────────────────────────────────────────────
 .alert-banner {
   display: flex;
   align-items: flex-start;
   gap: 12px;
   padding: 14px 16px;
-  border-radius: var(--radius-md);
-  margin-bottom: 24px;
+  border-radius: var(--radius-sm);
+  border-left: 4px solid var(--color-info);
+  background: color-mix(in srgb, var(--color-info) 10%, var(--color-bg-surface));
 
-  > mat-icon {
-    font-size: 20px;
-    height: 20px;
-    width: 20px;
+  mat-icon {
+    color: var(--color-info);
     flex-shrink: 0;
-    margin-top: 1px;
+    margin-top: 2px;
   }
 
   .alert-content {
-    flex: 1;
-    min-width: 0;
-
     strong {
       display: block;
-      font-size: 0.875rem;
-      margin-bottom: 3px;
+      font-size: 0.88rem;
+      color: var(--color-text-primary);
+      margin-bottom: 2px;
     }
 
     p {
       margin: 0;
-      font-size: 0.825rem;
-      line-height: 1.55;
-    }
-  }
-
-  &.info {
-    background: color-mix(in srgb, var(--color-info) 8%, var(--color-bg-card));
-    border: 1px solid color-mix(in srgb, var(--color-info) 25%, transparent);
-
-    > mat-icon {
-      color: var(--color-info);
-    }
-
-    strong {
-      color: color-mix(in srgb, var(--color-info) 80%, var(--color-text-primary));
-    }
-
-    p {
+      font-size: 0.82rem;
       color: var(--color-text-secondary);
+      line-height: 1.5;
     }
   }
 
   &.warning {
-    background: color-mix(in srgb, var(--color-warning) 8%, var(--color-bg-card));
-    border: 1px solid color-mix(in srgb, var(--color-warning) 25%, transparent);
+    border-left-color: var(--color-warning);
+    background: color-mix(in srgb, var(--color-warning) 10%, var(--color-bg-surface));
 
-    > mat-icon {
+    mat-icon {
       color: var(--color-warning);
     }
+  }
 
-    strong {
-      color: color-mix(in srgb, var(--color-warning) 80%, var(--color-text-primary));
-    }
-
-    p {
-      color: var(--color-text-secondary);
-    }
+  &.readonly-notice {
+    border-left-color: var(--color-text-muted);
   }
 }
 
-// Readonly notice specific margin
-.readonly-notice {
-  margin-bottom: 28px;
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// FORM STYLES
-// ═══════════════════════════════════════════════════════════════════════════════
+// ── Forms ────────────────────────────────────────────────────────────────
 .form-section-title {
+  margin: 0 0 4px;
   font-size: 0.78rem;
   font-weight: 700;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
   color: var(--color-text-muted);
-  margin: 0 0 14px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--color-divider);
 }
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 4px 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 20px;
+  margin-top: 16px;
 
-  .full-width {
-    grid-column: 1 / -1;
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.full-width {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.readonly-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 14px;
+  background: var(--color-bg-main);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+
+  .readonly-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
   }
 
-  mat-form-field {
-    width: 100%;
+  .readonly-value {
+    font-size: 0.9rem;
+    color: var(--color-text-primary);
+    line-height: 1.5;
   }
 }
 
 .form-actions {
   display: flex;
-  align-items: center;
   justify-content: flex-end;
   gap: 12px;
-  margin-top: 24px;
-  padding-top: 20px;
+  margin-top: 20px;
+  padding-top: 16px;
   border-top: 1px solid var(--color-divider);
+
+  @media (max-width: 480px) {
+    flex-direction: column-reverse;
+
+    button {
+      width: 100%;
+    }
+  }
 }
 
-// ── Security form ─────────────────────────────────────────────────────────────
 .security-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   max-width: 480px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// READ-ONLY PROFILE FIELDS
-// ═══════════════════════════════════════════════════════════════════════════════
-.readonly-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 12px 16px;
-  background: var(--color-hover);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  min-height: 56px;
-
-  &.full-width {
-    grid-column: 1 / -1;
-  }
-
-  .readonly-label {
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    color: var(--color-text-muted);
-    line-height: 1;
-  }
-
-  .readonly-value {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--color-text-primary);
-    line-height: 1.45;
-    word-break: break-word;
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// CURRENT EMAIL BANNER
-// ═══════════════════════════════════════════════════════════════════════════════
+// ── Current email / username banners ──────────────────────────────────────
 .current-email-banner {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: var(--color-hover);
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-main);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 14px 18px;
-  margin-bottom: 20px;
 
   mat-icon {
     color: var(--color-primary);
-    font-size: 24px;
-    height: 24px;
-    width: 24px;
-    flex-shrink: 0;
   }
 
   .current-email-label {
     margin: 0;
-    font-size: 0.7rem;
-    font-weight: 700;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
     color: var(--color-text-muted);
   }
 
   .current-email-value {
-    margin: 0;
-    font-size: 0.9rem;
+    margin: 2px 0 0;
+    font-size: 0.95rem;
     font-weight: 600;
     color: var(--color-text-primary);
+    word-break: break-all;
   }
 }
 
-.primary-role-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
+// ── Username availability suffix icons ────────────────────────────────────
+.suffix-ok {
+  color: var(--color-success);
 }
 
-.primary-role-identity-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 12px;
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--color-primary) 10%, transparent),
-    color-mix(in srgb, var(--color-secondary) 8%, transparent)
-  );
-  border: 1.5px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
-  border-radius: 9999px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--color-primary-dark);
-  letter-spacing: 0.02em;
-
-  mat-icon {
-    font-size: 14px;
-    height: 14px;
-    width: 14px;
-    color: var(--color-primary);
-  }
+.suffix-error {
+  color: var(--color-error);
 }
 
-.primary-role-label-hint {
-  font-size: 0.68rem;
+.suffix-spin {
   color: var(--color-text-muted);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  animation: profile-spin 1s linear infinite;
+}
+
+@keyframes profile-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }

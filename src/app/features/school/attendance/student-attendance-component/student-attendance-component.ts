@@ -1,3 +1,4 @@
+// student-attendance-component.ts  (staff view — features/school/attendance/student-attendance-component/)
 import { CommonModule, DatePipe } from '@angular/common';
 import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -14,7 +15,11 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
 import { debounceTime, Subject, takeUntil } from 'rxjs';
 import { AcademicsService } from '../../../../core/services/academics.service';
-import { AttendanceRecord, AttendanceService } from '../../../../core/services/attendance.service';
+import {
+  AttendanceService,
+  ReconstructedAttendanceRecord,
+  getReconstructedStatusDisplay,
+} from '../../../../core/services/attendance.service';
 import { ToastService } from '../../../../core/services/toast.service';
 
 @Component({
@@ -47,24 +52,51 @@ export class StudentAttendanceComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private datePipe = inject(DatePipe);
 
+  readonly getReconstructedStatusDisplay = getReconstructedStatusDisplay;
+
   studentId = signal<number>(0);
   studentName = signal<string>('Student');
-  records = signal<AttendanceRecord[]>([]);
+  records = signal<ReconstructedAttendanceRecord[]>([]);
 
   loading = signal(true);
   error = signal<string | null>(null);
 
   displayedColumns = ['date', 'status', 'notes'];
 
-  totalDays = computed(() => this.records().length);
-  presentDays = computed(() => this.records().filter((r) => r.status === 'PRESENT').length);
-  absentDays = computed(() => this.records().filter((r) => r.status === 'ABSENT').length);
+  // Newest first for the table — the backend returns records sorted ascending.
+  sortedRecords = computed(() =>
+    [...this.records()].sort((a, b) => b.date.localeCompare(a.date))
+  );
+
+  // Holidays and genuinely-unmarked days are excluded from every attendance
+  // stat below — a holiday isn't an attendance outcome, and an unmarked day
+  // is "unknown," not "absent." Counting either would silently distort the
+  // percentage exactly the way the old implicit-present bug used to.
+  relevantRecords = computed(() =>
+    this.records().filter((r) => r.status !== 'HOLIDAY' && r.status !== 'UNMARKED')
+  );
+
+  totalDays = computed(() => this.relevantRecords().length);
+  presentDays = computed(() => this.relevantRecords().filter((r) => r.status === 'PRESENT').length);
+  absentDays = computed(() => this.relevantRecords().filter((r) => r.status === 'ABSENT').length);
   lateDays = computed(
-    () => this.records().filter((r) => r.status === 'LATE' || r.status === 'HALF_DAY').length
+    () => this.relevantRecords().filter((r) => r.status === 'LATE' || r.status === 'HALF_DAY').length
   );
-  presentPercentage = computed(() =>
-    this.totalDays() ? Math.round((this.presentDays() / this.totalDays()) * 100) : 0
-  );
+  unmarkedDays = computed(() => this.records().filter((r) => r.status === 'UNMARKED').length);
+  holidayDays = computed(() => this.records().filter((r) => r.status === 'HOLIDAY').length);
+
+  presentPercentage = computed(() => {
+    // Same denominator rule the backend uses: EXCUSED / ON_DUTY days don't
+    // count for or against the student, so they're dropped from both sides.
+    const denom = this.relevantRecords().filter(
+      (r) => r.status !== 'EXCUSED' && r.status !== 'ON_DUTY'
+    );
+    if (denom.length === 0) return 0;
+    const effective =
+      denom.filter((r) => r.status === 'PRESENT' || r.status === 'LATE').length +
+      denom.filter((r) => r.status === 'HALF_DAY').length * 0.5;
+    return Math.round((effective / denom.length) * 100);
+  });
 
   attendanceColor = computed(() => {
     const p = this.presentPercentage();
@@ -119,7 +151,7 @@ export class StudentAttendanceComponent implements OnInit, OnDestroy {
     this.attendance.getByStudent(this.studentId(), from, to).subscribe({
       next: (res) => this.records.set(res.attendance),
       error: (err) => {
-        this.error.set(err.message);
+        this.error.set(err?.error?.error || 'Failed to load attendance');
         this.toast.error('Failed to load attendance');
         this.loading.set(false);
       },
@@ -131,7 +163,7 @@ export class StudentAttendanceComponent implements OnInit, OnDestroy {
     this.router.navigate(['/school/attendance/mark']);
   }
 
-  getStatusClass(status: string): string {
-    return status;
+  statusClass(status: string): string {
+    return status; // matches attendance-shared .status-chip.<STATUS> selectors
   }
 }

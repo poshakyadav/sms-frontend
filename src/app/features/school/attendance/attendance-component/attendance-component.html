@@ -7,7 +7,7 @@
       <p class="date-subtitle">{{ dateDisplay() }}</p>
       }
     </div>
-    <button mat-icon-button (click)="loadStudents()" matTooltip="Refresh students">
+    <button mat-icon-button (click)="checkCalendarAndLoad()" matTooltip="Refresh">
       <mat-icon>refresh</mat-icon>
     </button>
   </div>
@@ -41,13 +41,36 @@
   @if (loading()) {
   <div class="state-container">
     <mat-spinner diameter="44"></mat-spinner>
-    <p>Loading students…</p>
+    <p>{{ checkingCalendar() ? 'Checking attendance calendar…' : 'Loading students…' }}</p>
   </div>
   } @else if (!form.value.classSectionId) {
   <div class="state-container">
     <mat-icon class="state-icon">school</mat-icon>
     <h2>Select a Class-Section</h2>
     <p>Choose a class-section and date to begin marking attendance.</p>
+  </div>
+  }
+
+  <!-- ── CALENDAR GUARD — blocks marking until the date is resolved ──── -->
+  @else if (calendarStatus() && !calendarStatus()!.canMarkAttendance) {
+  <div class="guard-card" [class.is-holiday]="calendarStatus()!.dayType === 'HOLIDAY'">
+    <mat-icon class="guard-icon">
+      {{ calendarStatus()!.dayType === 'HOLIDAY' ? 'beach_access' : 'event_busy' }}
+    </mat-icon>
+    <h2>{{ guardTitle() }}</h2>
+    <p>{{ guardDescription() }}</p>
+
+    @if (canManageCalendar()) {
+    <button mat-raised-button color="primary" (click)="openGuardDialog()">
+      <mat-icon>edit_calendar</mat-icon>
+      {{ guardActionLabel() }}
+    </button>
+    } @else {
+    <p class="guard-hint">
+      <mat-icon>info</mat-icon>
+      Please ask an authorized staff member to mark the attendance calendar for this date.
+    </p>
+    }
   </div>
   } @else if (rows().length === 0) {
   <div class="state-container">
@@ -57,27 +80,38 @@
   </div>
   } @else {
 
+  <!-- Calendar status chip -->
+  @if (calendarStatus(); as cal) {
+  <div class="calendar-chip">
+    <mat-icon>event_available</mat-icon>
+    <span>{{ calendarSourceLabel() }}</span>
+    @if (canManageCalendar()) {
+    <button
+      mat-icon-button
+      class="calendar-edit-btn"
+      matTooltip="Change calendar for this date"
+      (click)="openCalendarDialog()"
+    >
+      <mat-icon>edit</mat-icon>
+    </button>
+    }
+  </div>
+  }
+
   <!-- Session status banner -->
   @if (sessionMeta(); as meta) {
-  <div
-    class="session-banner"
-    [class.is-full]="meta.isFullyMarked"
-    [class.is-partial]="meta.isPartiallyMarked && !meta.isFullyMarked"
-    [class.is-empty]="!meta.isPartiallyMarked && !meta.isFullyMarked"
-  >
-    <mat-icon>
-      {{
-        meta.isFullyMarked ? 'check_circle' : meta.isPartiallyMarked ? 'hourglass_top' : 'edit_note'
-      }}
-    </mat-icon>
+  <div class="session-banner" [class.is-full]="meta.isMarked" [class.is-empty]="!meta.isMarked">
+    <mat-icon>{{ meta.isMarked ? 'check_circle' : 'edit_note' }}</mat-icon>
     <div class="banner-text">
       <strong>
-        @if (meta.isFullyMarked) { Attendance fully marked } @else if (meta.isPartiallyMarked) {
-        Partially marked — {{ meta.markedCount }} of {{ meta.totalCount }}
-        } @else { Not marked yet }
+        @if (meta.isMarked) { Attendance marked — {{ meta.exceptionCount }} exception(s) of
+        {{ meta.totalCount }} } @else { Not marked yet }
       </strong>
-      @if (meta.lastMarkedBy) {
-      <span>Last updated by {{ meta.lastMarkedBy.name }} at {{ lastUpdatedDisplay() }}</span>
+      @if (meta.lastEditedBy || meta.markedBy) {
+      <span
+        >Last updated by {{ (meta.lastEditedBy ?? meta.markedBy)?.name }} at
+        {{ lastUpdatedDisplay() }}</span
+      >
       }
     </div>
   </div>
@@ -128,19 +162,25 @@
     </mat-form-field>
 
     <div class="bulk-actions">
-      <span class="bulk-label">
-        Set {{ filteredRows().length === rows().length ? 'All' : 'Filtered' }}:
-      </span>
+      <span class="bulk-label"
+        >Set {{ filteredRows().length === rows().length ? 'All' : 'Filtered' }}:</span
+      >
       <button mat-stroked-button class="btn-present" (click)="setAll('PRESENT')">
         <mat-icon>check_circle</mat-icon> Present
       </button>
       <button mat-stroked-button class="btn-absent" (click)="setAll('ABSENT')">
         <mat-icon>cancel</mat-icon> Absent
       </button>
-      <button mat-stroked-button class="btn-holiday" (click)="setAll('HOLIDAY')">
-        <mat-icon>beach_access</mat-icon> Holiday
+      @if (canManageCalendar()) {
+      <button
+        mat-stroked-button
+        class="btn-holiday"
+        (click)="openCalendarDialog('HOLIDAY')"
+        matTooltip="Declare this whole day as a holiday on the calendar"
+      >
+        <mat-icon>beach_access</mat-icon> Declare Holiday
       </button>
-      @if (hasChanges()) {
+      } @if (hasChanges()) {
       <button
         mat-stroked-button
         class="reset-btn"
@@ -156,30 +196,24 @@
   <!-- Student list -->
   <div class="student-list">
     <div class="list-header-row">
-      <span>Student</span>
-      <span>Status</span>
-      <span>Session</span>
-      <span>Notes</span>
+      <span>Student</span><span>Status</span><span>Session</span><span>Notes</span>
     </div>
 
     @for (row of filteredRows(); track row.enrollmentId) {
     <div class="student-row" [ngClass]="statusClass(row.status)">
       <div class="student-info">
         <div class="avatar">
-          @if (row.avatarUrl) {
-          <img [src]="row.avatarUrl" [alt]="row.name" />
-          } @else {
-          <span>{{ initials(row.name) }}</span>
-          }
+          @if (row.avatarUrl) { <img [src]="row.avatarUrl" [alt]="row.name" /> } @else {
+          <span>{{ initials(row.name) }}</span> }
         </div>
         <div class="student-meta">
           <strong>{{ row.name }}</strong>
           <span class="roll-no">Roll {{ row.rollNumber || '—' }}</span>
         </div>
         @if (row.isMarked) {
-        <mat-icon class="marked-dot" [matTooltip]="'Marked by ' + row.markedByName">
-          fiber_manual_record
-        </mat-icon>
+        <mat-icon class="marked-dot" [matTooltip]="'Marked by ' + row.markedByName"
+          >fiber_manual_record</mat-icon
+        >
         }
       </div>
 
@@ -214,9 +248,7 @@
           <mat-button-toggle [value]="opt.value">{{ opt.label }}</mat-button-toggle>
           }
         </mat-button-toggle-group>
-        } @else {
-        <span class="no-session">—</span>
-        }
+        } @else { <span class="no-session">—</span> }
       </div>
 
       <div class="notes-cell">
@@ -253,9 +285,7 @@
     >
       @if (submitting()) {
       <mat-spinner diameter="18" style="display: inline-block; margin-right: 8px"></mat-spinner>
-      Saving… } @else {
-      <mat-icon>save</mat-icon>
-      Save Attendance }
+      Saving… } @else { <mat-icon>save</mat-icon> Save Attendance }
     </button>
   </div>
   }

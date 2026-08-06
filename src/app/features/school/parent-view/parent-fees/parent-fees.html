@@ -544,6 +544,14 @@
             <span class="pf-payment-row__date">{{ formatDate(p.paymentDate) }}</span>
             <span class="pf-payment-row__method">{{ p.paymentMethod }}</span>
           </div>
+          <button
+            mat-icon-button
+            class="pf-payment-row__view-btn"
+            matTooltip="View / download receipt"
+            (click)="openReceipt(p)"
+          >
+            <mat-icon>visibility</mat-icon>
+          </button>
         </div>
         }
       </div>

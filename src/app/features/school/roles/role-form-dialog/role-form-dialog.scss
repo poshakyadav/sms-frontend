@@ -693,9 +693,9 @@
 
 .rfd-perm-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start; // was center
   gap: 10px;
-  padding: 8px 14px 8px 38px;
+  padding: 10px 14px 10px 38px; // was 8px
   cursor: pointer;
   transition: background 0.12s ease;
   border-bottom: 1px solid var(--color-divider);
@@ -706,6 +706,11 @@
 
   &:hover {
     background: var(--color-hover);
+  }
+
+  mat-checkbox {
+    margin-top: 2px;
+    flex-shrink: 0;
   }
 }
 

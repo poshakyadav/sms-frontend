@@ -1,8 +1,5 @@
-<!-- parent-attendance-component.html -->
 <div class="pa-root">
-  <!-- ══════════════════════════════════════════════════════════════════
-         CHILD SWITCHER  (only shown when parent has ≥ 2 children)
-    ══════════════════════════════════════════════════════════════════ -->
+  <!-- ── Child switcher ─────────────────────────────────────────── -->
   @if (hasMultipleChildren()) {
   <section class="pa-child-switcher" aria-label="Switch child">
     <p class="pa-section-label">Viewing attendance for</p>
@@ -18,7 +15,7 @@
           @if (child.studentAvatarUrl) {
           <img [src]="child.studentAvatarUrl" [alt]="child.studentName" />
           } @else {
-            {{ getChildInitials(child.studentName) }}
+          {{ getChildInitials(child.studentName) }}
           }
         </span>
         <span class="pa-pill-name">{{ child.studentName.split(' ')[0] }}</span>
@@ -28,23 +25,15 @@
   </section>
   }
 
-  <!-- ══════════════════════════════════════════════════════════════════
-         NO CHILD STATE
-    ══════════════════════════════════════════════════════════════════ -->
+  <!-- ── No child state ─────────────────────────────────────────── -->
   @if (!activeChildId()) {
   <div class="pa-empty-state">
     <div class="pa-empty-icon">👶</div>
     <h3>No child selected</h3>
     <p>Please select a child to view attendance records.</p>
   </div>
-  }
-
-  <!-- ══════════════════════════════════════════════════════════════════
-         MAIN CONTENT  (child selected)
-    ══════════════════════════════════════════════════════════════════ -->
-  @if (activeChildId() !== null) {
-
-  <!-- ── Child Identity Card ────────────────────────────────────────── -->
+  } @if (activeChildId() !== null) {
+  <!-- ── Identity card ────────────────────────────────────────── -->
   <div class="pa-identity-card">
     <div class="pa-identity-avatar">
       @if (activeChild()?.studentAvatarUrl) {
@@ -59,17 +48,13 @@
     </div>
   </div>
 
-  <!-- ── Error Banner ───────────────────────────────────────────────── -->
   @if (error()) {
   <div class="pa-error-banner" role="alert">
     <span class="pa-error-icon">⚠</span>
     <span>{{ error() }}</span>
     <button class="pa-error-retry" (click)="loadData()">Retry</button>
   </div>
-  }
-
-  <!-- ── Trend Notice ───────────────────────────────────────────────── -->
-  @if (trendMessage(); as trend) {
+  } @if (trendMessage(); as trend) {
   <div
     class="pa-trend-banner"
     [class.pa-trend-banner--warn]="trend.type === 'warning'"
@@ -78,15 +63,21 @@
     <span>{{ trend.type === 'warning' ? '⚠' : '🌟' }}</span>
     <span>{{ trend.text }}</span>
   </div>
+  } @if (summary()?.unmarkedDays && summary()!.unmarkedDays > 0) {
+  <div class="pa-trend-banner">
+    <span class="material-symbols-outlined">info</span>
+    <span>
+      {{ summary()!.unmarkedDays }} working day{{ summary()!.unmarkedDays === 1 ? '' : 's' }} this
+      month {{ summary()!.unmarkedDays === 1 ? "hasn't" : "haven't" }} been marked by the teacher
+      yet.
+    </span>
+  </div>
   }
 
-  <!-- ══════════════════════════════════════════════════════════════════
-           TWO-COLUMN LAYOUT: Summary + Calendar
-      ══════════════════════════════════════════════════════════════════ -->
+  <!-- ── Main grid ────────────────────────────────────────────── -->
   <div class="pa-main-grid">
-    <!-- ── LEFT: Summary Panel ─────────────────────────────────────── -->
+    <!-- LEFT: summary -->
     <aside class="pa-summary-panel">
-      <!-- Month navigator -->
       <div class="pa-month-nav">
         <button class="pa-nav-btn" (click)="prevMonth()" aria-label="Previous month">
           <svg
@@ -105,7 +96,6 @@
           class="pa-nav-btn"
           (click)="nextMonth()"
           [disabled]="isCurrentOrFuture()"
-          [class.pa-nav-btn--disabled]="isCurrentOrFuture()"
           aria-label="Next month"
         >
           <svg
@@ -121,7 +111,6 @@
         </button>
       </div>
 
-      <!-- Loading skeleton for summary -->
       @if (loading()) {
       <div class="pa-summary-skeleton">
         <div class="pa-skel-ring"></div>
@@ -132,15 +121,10 @@
           }
         </div>
       </div>
-      } @else {
-
-      <!-- Donut ring gauge -->
-      @if (summary(); as s) {
+      } @else if (summary(); as s) {
       <div class="pa-gauge-wrap">
         <svg class="pa-gauge" viewBox="0 0 120 120" aria-label="Attendance gauge">
-          <!-- Track -->
           <circle cx="60" cy="60" r="52" class="pa-gauge-track" />
-          <!-- Fill -->
           <circle
             cx="60"
             cy="60"
@@ -148,10 +132,8 @@
             class="pa-gauge-fill"
             [style.stroke]="ringColor()"
             [style.stroke-dasharray]="ringDashArray()"
-            stroke-dashoffset="0"
             transform="rotate(-90 60 60)"
           />
-          <!-- Percentage text -->
           <text x="60" y="55" class="pa-gauge-pct" text-anchor="middle">
             {{ s.attendancePercentage }}%
           </text>
@@ -160,35 +142,20 @@
         <div class="pa-standing-badge" [ngClass]="standingClass()">{{ standingLabel() }}</div>
       </div>
 
-      <!-- Stat cards -->
       <div class="pa-stat-grid">
-        <div class="pa-stat-card pa-stat-card--present">
-          <span class="pa-stat-icon">✓</span>
-          <span class="pa-stat-value">{{ s.present }}</span>
-          <span class="pa-stat-label">Present</span>
+        @for (stat of summaryStats(); track stat.status) {
+        <div class="pa-stat-card" [ngClass]="statusClass(stat.status)">
+          <span class="pa-stat-icon material-symbols-outlined">{{ stat.config.icon }}</span>
+          <span class="pa-stat-value">{{ stat.value }}</span>
+          <span class="pa-stat-label">{{ stat.config.label }}</span>
         </div>
-        <div class="pa-stat-card pa-stat-card--absent">
-          <span class="pa-stat-icon">✗</span>
-          <span class="pa-stat-value">{{ s.absent }}</span>
-          <span class="pa-stat-label">Absent</span>
-        </div>
-        <div class="pa-stat-card pa-stat-card--late">
-          <span class="pa-stat-icon">⏱</span>
-          <span class="pa-stat-value">{{ s.late }}</span>
-          <span class="pa-stat-label">Late</span>
-        </div>
-        <div class="pa-stat-card pa-stat-card--half">
-          <span class="pa-stat-icon">◑</span>
-          <span class="pa-stat-value">{{ s.halfDay }}</span>
-          <span class="pa-stat-label">Half Day</span>
-        </div>
+        }
       </div>
 
-      <!-- Days info -->
       <div class="pa-days-info">
         <div class="pa-days-row">
-          <span class="pa-days-key">Days in Month</span>
-          <span class="pa-days-val">{{ s.totalDaysInMonth }}</span>
+          <span class="pa-days-key">Working Days</span>
+          <span class="pa-days-val">{{ s.workingDays }}</span>
         </div>
         <div class="pa-days-row">
           <span class="pa-days-key">Days Marked</span>
@@ -196,48 +163,40 @@
         </div>
         <div class="pa-days-row">
           <span class="pa-days-key">Not Marked</span>
-          <span class="pa-days-val">{{ s.totalDaysInMonth - s.markedDays }}</span>
+          <span class="pa-days-val" [class.pa-days-warn]="s.unmarkedDays > 0">{{
+            s.unmarkedDays
+          }}</span>
         </div>
       </div>
-
-      } @else if (!loading() && !error()) {
+      } @else {
       <div class="pa-no-summary">
         <span>📭</span>
         <p>No attendance data for this month.</p>
       </div>
-      } }
+      }
 
-      <!-- Legend -->
       <div class="pa-legend">
+        @for (entry of statusConfig | keyvalue; track entry.key) {
         <div class="pa-legend-item">
-          <span class="pa-legend-dot pa-legend-dot--present"></span>
-          <span>Present</span>
+          <span class="pa-legend-dot" [ngClass]="statusClass(entry.key)"></span>
+          <span>{{ entry.value.label }}</span>
         </div>
+        }
         <div class="pa-legend-item">
-          <span class="pa-legend-dot pa-legend-dot--absent"></span>
-          <span>Absent</span>
-        </div>
-        <div class="pa-legend-item">
-          <span class="pa-legend-dot pa-legend-dot--late"></span>
-          <span>Late</span>
-        </div>
-        <div class="pa-legend-item">
-          <span class="pa-legend-dot pa-legend-dot--half"></span>
-          <span>Half Day</span>
+          <span class="pa-legend-dot status-unmarked"></span>
+          <span>Not Marked</span>
         </div>
       </div>
     </aside>
 
-    <!-- ── RIGHT: Calendar Panel ──────────────────────────────────── -->
+    <!-- RIGHT: calendar -->
     <section class="pa-calendar-panel" aria-label="Attendance calendar">
-      <!-- Calendar header row (day names) -->
       <div class="pa-cal-header">
         @for (day of dayNames; track day) {
         <div class="pa-cal-header-cell">{{ day }}</div>
         }
       </div>
 
-      <!-- Calendar grid -->
       @if (loading()) {
       <div class="pa-cal-grid">
         @for (i of
@@ -254,36 +213,37 @@
           [class.pa-cal-day--other-month]="!day.isCurrentMonth"
           [class.pa-cal-day--today]="day.isToday"
           [class.pa-cal-day--future]="day.isFuture"
-          [class.pa-cal-day--has-note]="!!day.notes"
-          [ngClass]="day.isCurrentMonth && day.status ? statusCssClass(day.status) : ''"
+          [class.pa-cal-day--has-note]="!!day.record?.notes"
+          [ngClass]="day.record ? statusClass(day.record.status) : ''"
+          [tabindex]="day.isCurrentMonth ? 0 : -1"
           (mouseenter)="hoveredDate.set(day.dateStr)"
           (mouseleave)="hoveredDate.set(null)"
+          (focus)="hoveredDate.set(day.dateStr)"
+          (blur)="hoveredDate.set(null)"
           [attr.aria-label]="
-            day.isCurrentMonth ? formatWeekday(day.dateStr) + ': ' + statusLabel(day.status) : ''
+            day.record
+              ? formatWeekday(day.dateStr) +
+                ': ' +
+                getReconstructedStatusDisplay(day.record.status).label
+              : null
           "
         >
-          <!-- Day number -->
           <span class="pa-cal-day-num">{{ day.date.getDate() }}</span>
 
-          <!-- Status indicator -->
-          @if (day.isCurrentMonth && day.status) {
-          <span class="pa-cal-status-icon" [attr.aria-hidden]="true">{{
-            statusIcon(day.status)
-          }}</span>
-          }
-
-          <!-- Today ring -->
-          @if (day.isToday) {
+          @if (day.isCurrentMonth && day.record) {
+          <span class="pa-cal-status-icon material-symbols-outlined" aria-hidden="true">
+            {{ getReconstructedStatusDisplay(day.record.status).icon }}
+          </span>
+          } @if (day.isToday) {
           <span class="pa-cal-today-ring" aria-hidden="true"></span>
-          }
-
-          <!-- Tooltip on hover -->
-          @if (day.isCurrentMonth && hoveredDate() === day.dateStr) {
+          } @if (day.isCurrentMonth && day.record && hoveredDate() === day.dateStr) {
           <div class="pa-cal-tooltip" role="tooltip">
             <strong>{{ formatWeekday(day.dateStr) }}</strong>
-            <span>{{ statusLabel(day.status) }}</span>
-            @if (day.notes) {
-            <span class="pa-tooltip-note">{{ day.notes }}</span>
+            <span>{{ getReconstructedStatusDisplay(day.record.status).label }}</span>
+            @if (halfDaySessionLabel(day.record)) {
+            <span class="pa-tooltip-note">{{ halfDaySessionLabel(day.record) }} session</span>
+            } @if (day.record.notes) {
+            <span class="pa-tooltip-note">{{ day.record.notes }}</span>
             }
           </div>
           }
@@ -294,30 +254,44 @@
     </section>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════════════
-           RECENT ACTIVITY LIST
-      ══════════════════════════════════════════════════════════════════ -->
-  @if (!loading() && recentRecords().length > 0) {
+  <!-- ── Recent activity ─────────────────────────────────────── -->
+  @if (!loading()) {
   <section class="pa-recent-section" aria-label="Recent attendance activity">
-    <h3 class="pa-recent-title">Recent Activity</h3>
+    <div class="pa-recent-header">
+      <h3 class="pa-recent-title">Recent Activity</h3>
+      <button class="pa-toggle-btn" (click)="toggleExceptionsOnly()">
+        {{ showOnlyExceptions() ? 'Show all days' : 'Show exceptions only' }}
+      </button>
+    </div>
+
+    @if (recentRecords().length > 0) {
     <div class="pa-recent-list">
-      @for (rec of recentRecords(); track trackById($index, rec)) {
+      @for (rec of recentRecords(); track trackByRecord($index, rec)) {
       <div class="pa-recent-item">
         <div class="pa-recent-date">
           <span class="pa-recent-day-num">{{ formatDayNum(rec.date) }}</span>
           <span class="pa-recent-weekday">{{ formatWeekday(rec.date) }}</span>
         </div>
-        <div class="pa-recent-badge" [ngClass]="statusCssClass(rec.status)">
-          <span>{{ statusIcon(rec.status) }}</span>
-          <span>{{ statusLabel(rec.status) }}</span>
+        <div class="pa-recent-badge" [ngClass]="statusClass(rec.status)">
+          <span class="material-symbols-outlined">{{
+            getReconstructedStatusDisplay(rec.status).icon
+          }}</span>
+          <span>{{ getReconstructedStatusDisplay(rec.status).label }}</span>
         </div>
-        @if (rec.notes) {
-        <p class="pa-recent-notes">{{ rec.notes }}</p>
+        @if (halfDaySessionLabel(rec) || rec.notes) {
+        <p class="pa-recent-notes">
+          {{ halfDaySessionLabel(rec) }}{{ halfDaySessionLabel(rec) && rec.notes ? ' · ' : ''
+          }}{{ rec.notes }}
+        </p>
         }
       </div>
       }
     </div>
+    } @else {
+    <p class="pa-recent-empty">
+      {{ showOnlyExceptions() ? 'No exceptions recently — full attendance.' : 'No records yet.' }}
+    </p>
+    }
   </section>
   } }
-  <!-- /activeChildId -->
 </div>

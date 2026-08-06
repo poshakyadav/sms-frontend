@@ -271,15 +271,17 @@
         <thead>
           <tr>
             <th>Class–Section</th>
-            <th class="text-right">Assigned</th>
-            <th class="text-right">Collected</th>
+            <th class="text-right">Standard Assigned</th>
+            <th class="text-right">Standard Collected</th>
+            <th class="text-right">Custom Assigned</th>
+            <th class="text-right">Custom Collected</th>
             <th class="text-right">Outstanding</th>
             <th>Collection %</th>
             <th class="text-center">Action</th>
           </tr>
         </thead>
         <tbody>
-          @for (row of breakdown(); track $index) {
+          @for (row of breakdown(); track row.classSectionId) {
           <tr class="breakdown-row">
             <td>
               <div class="class-label">
@@ -291,11 +293,14 @@
             <td class="text-right amount-cell text-success">
               {{ row.totalCollected | paise : 'compact' }}
             </td>
-            <td
-              class="text-right amount-cell"
-              [class.text-error]="row.totalAssigned - row.totalCollected > 0"
-            >
-              {{ row.totalAssigned - row.totalCollected | paise : 'compact' }}
+            <td class="text-right amount-cell">
+              {{ row.totalCustomAssigned | paise : 'compact' }}
+            </td>
+            <td class="text-right amount-cell text-success">
+              {{ row.totalCustomCollected | paise : 'compact' }}
+            </td>
+            <td class="text-right amount-cell" [class.text-error]="combinedOutstanding(row) > 0">
+              {{ combinedOutstanding(row) | paise : 'compact' }}
             </td>
             <td>
               <div class="breakdown-rate">

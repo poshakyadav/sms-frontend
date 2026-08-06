@@ -608,7 +608,7 @@
   }
 }
 
-.sf-month-header--custom{
+.sf-month-header--custom {
   color: var(--color-warning);
 }
 
@@ -659,9 +659,6 @@
 //   white-space: normal;
 //   overflow: visible;
 // }
-
-
-
 
 // ── Utility classes ───────────────────────────────────────────────────────────
 // .text-right {
@@ -1052,7 +1049,7 @@
 // ── Fee type cell ─────────────────────────────────────────────────────────────
 .sf-fee-type-cell {
   display: flex;
-  flex-direction: column;    // stack badges on top, pill below
+  flex-direction: column; // stack badges on top, pill below
   align-items: flex-start;
   gap: 3px;
 }
@@ -1088,5 +1085,23 @@
     width: 10px;
     flex-shrink: 0;
     color: var(--color-success);
+  }
+}
+
+// =====
+
+// ── Receipt view button (view/download receipt popup) ─────────────────────
+.sf-payment-row__view-btn {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+
+  mat-icon {
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+  }
+
+  &:hover {
+    color: var(--color-primary);
   }
 }

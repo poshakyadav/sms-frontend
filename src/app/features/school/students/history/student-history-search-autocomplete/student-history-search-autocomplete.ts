@@ -106,7 +106,7 @@ import {
               <span>Adm: {{ student.admissionNumber }}</span>
               <span class="result-dot">·</span>
               }
-              <span>{{ student.email }}</span>
+              <span>{{ student.email || student.username }}</span>
             </div>
           </div>
         </button>
@@ -321,7 +321,7 @@ export class StudentHistorySearchAutocomplete implements OnInit, OnDestroy {
 
   private historyService = inject(StudentHistoryService);
 
-  @Input() placeholder = 'Search students by name, email, admission no…';
+  @Input() placeholder = 'Search students by name, email, username, admission no…';
   @Input() status: 'active' | 'departed' | 'all' = 'all';
   @Output() studentSelected = new EventEmitter<StudentSearchResult>();
 

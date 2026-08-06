@@ -276,7 +276,8 @@
             <span class="csfm-student-card__name">{{ student.name }}</span>
 
             <!-- Email for disambiguation -->
-            <span class="csfm-student-card__email">{{ student.email }}</span>
+            <!-- roster card -->
+            <span class="csfm-student-card__email">{{ student.email ?? 'No email on file' }}</span>
 
             <!-- ── Combined balance row ──────────────────────────────────────
                  getCombinedBalance() returns:
@@ -356,7 +357,8 @@
             @if (student.rollNumber) {
             <span class="roll-chip">Roll {{ student.rollNumber }}</span>
             }
-            <span class="csfm-detail-header__email">{{ student.email }}</span>
+            <!-- detail header -->
+            <span class="csfm-detail-header__email">{{ student.email ?? 'No email on file' }}</span>
           </div>
         </div>
 

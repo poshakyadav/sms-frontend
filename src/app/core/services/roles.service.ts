@@ -11,14 +11,20 @@ import { ApiService } from './api.service';
 
 export type RoleCategory = 'staff' | 'student' | 'parent';
 
+// NEW — mirrors the backend's PermissionRiskLevel
+export type PermissionRiskLevel = 'low' | 'medium' | 'high' | 'critical';
+
 export interface Permission {
   id: number;
   slug: string;
   name: string;
   module: string;
   description?: string;
-  // UPDATED: category is now returned by the API
   category?: RoleCategory;
+
+  // populated by the backend's read-time enrichment
+  riskLevel?: PermissionRiskLevel;
+  usedIn?: string[];
 }
 
 export interface Role {

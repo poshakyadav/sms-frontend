@@ -1,0 +1,32 @@
+<div class="attendance-settings">
+  <div class="settings-card">
+    <h2><mat-icon>event_repeat</mat-icon> Weekly Off Days</h2>
+    <p class="hint">
+      These days are automatically treated as a holiday every week, school-wide — no need to declare
+      them individually. An explicit calendar entry for a specific date always overrides this rule
+      (e.g. a section running makeup classes on an off day).
+    </p>
+
+    @if (loading()) {
+    <div class="state-container"><mat-spinner diameter="32"></mat-spinner></div>
+    } @else {
+    <div class="day-toggles">
+      @for (day of dayIndices; track day) {
+      <button
+        type="button"
+        class="day-toggle"
+        [class.active]="isSelected(day)"
+        (click)="toggle(day)"
+      >
+        {{ dayLabels[day] }}
+      </button>
+      }
+    </div>
+
+    <button mat-raised-button color="primary" [disabled]="saving()" (click)="save()">
+      @if (saving()) { <mat-spinner diameter="18"></mat-spinner> } @else {
+      <mat-icon>save</mat-icon> Save }
+    </button>
+    }
+  </div>
+</div>

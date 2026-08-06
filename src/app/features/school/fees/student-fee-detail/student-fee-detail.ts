@@ -163,7 +163,12 @@ export class StudentFeeDetail implements OnInit, OnDestroy {
       next: (all) => {
         const q = query.toLowerCase();
         const filtered = all
-          .filter((s) => s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q))
+          .filter(
+            (s) =>
+              s.name.toLowerCase().includes(q) ||
+              (s.email ?? '').toLowerCase().includes(q) ||
+              s.username.toLowerCase().includes(q)
+          )
           .slice(0, 15);
         this.students.set(filtered);
         this.showDropdown.set(true);

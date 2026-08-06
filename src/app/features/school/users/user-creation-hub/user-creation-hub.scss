@@ -1796,3 +1796,37 @@
     }
   }
 }
+
+
+// =====
+
+.username-suggest-row {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: -8px;
+  grid-column: 1 / -1;
+}
+
+.username-suggest-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 2px;
+  border: none;
+  background: transparent;
+  color: var(--color-primary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+
+  mat-icon {
+    font-size: 15px;
+    height: 15px;
+    width: 15px;
+  }
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

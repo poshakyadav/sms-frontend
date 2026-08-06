@@ -353,10 +353,13 @@ export interface CollectionTrendPoint {
 }
 
 export interface ClassSectionBreakdown {
+  classSectionId: number; // use this for navigation instead of name-matching
   className: string;
   sectionName: string;
   totalAssigned: number;
   totalCollected: number;
+  totalCustomAssigned: number;
+  totalCustomCollected: number;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -366,7 +369,7 @@ export interface ClassSectionBreakdown {
 export interface StudentForPayment {
   id: number;
   name: string;
-  email: string;
+  email: string | null; // was: string
   rollNumber: string | null;
   enrollmentId: number;
   totalOriginal: number;
@@ -429,7 +432,7 @@ export interface StudentFeeOverview {
 
 export interface ParentChildFeeOverview extends StudentFeeOverview {
   studentName: string;
-  studentEmail: string;
+  studentEmail: string | null; // was: string
   studentId: number;
 }
 

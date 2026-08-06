@@ -1,0 +1,101 @@
+<h2 mat-dialog-title class="dialog-title">
+  <mat-icon>edit_calendar</mat-icon>
+  Mark Attendance Calendar
+</h2>
+
+<div mat-dialog-content class="dialog-content">
+  <p class="context-line">
+    <strong>{{ data.classSectionLabel }}</strong> · {{ data.date }}
+  </p>
+
+  @if (data.currentStatus?.isExplicit) {
+  <div class="info-box">
+    <mat-icon>info</mat-icon>
+    <span>
+      Currently declared
+      <strong>{{ data.currentStatus?.dayType === 'HOLIDAY' ? 'Holiday' : 'Working Day' }}</strong>
+      ({{ data.currentStatus?.source === 'SCHOOL_WIDE' ? 'school-wide' : 'this class-section' }})
+      @if (data.currentStatus?.reason) { — {{ data.currentStatus?.reason }} }
+    </span>
+  </div>
+  } @else if (data.currentStatus?.source === 'WEEKLY_OFF') {
+  <div class="info-box">
+    <mat-icon>info</mat-icon>
+    <span>This date falls on the school's configured weekly off.</span>
+  </div>
+  }
+
+  <form [formGroup]="form" class="dialog-form">
+    <div class="field-group">
+      <label class="group-label">Day Type</label>
+      <mat-radio-group formControlName="dayType" class="day-type-group">
+        <mat-radio-button value="WORKING_DAY"
+          ><mat-icon>work</mat-icon> Working Day</mat-radio-button
+        >
+        <mat-radio-button value="HOLIDAY"
+          ><mat-icon>beach_access</mat-icon> Holiday</mat-radio-button
+        >
+      </mat-radio-group>
+    </div>
+
+    <div class="field-group">
+      <label class="group-label">Scope</label>
+      <mat-radio-group formControlName="scope" class="scope-group">
+        <mat-radio-button value="SECTION">This class-section only</mat-radio-button>
+        <mat-radio-button value="SCHOOL">Entire school</mat-radio-button>
+      </mat-radio-group>
+    </div>
+
+    <mat-form-field appearance="outline" class="reason-field">
+      <mat-label>Reason</mat-label>
+      <input
+        matInput
+        formControlName="reason"
+        maxlength="200"
+        placeholder="e.g. Summer vacation, Republic Day, Remedial camp…"
+      />
+      <mat-hint align="end">{{ form.value.reason?.length || 0 }}/200</mat-hint>
+    </mat-form-field>
+
+    @if (isHolidaySelected()) { @if (checkingImpact()) {
+    <div class="checking-row">
+      <mat-spinner diameter="16"></mat-spinner><span>Checking existing attendance…</span>
+    </div>
+    } @else if (impactPreview() && impactPreview()!.count > 0) {
+    <div class="danger-box">
+      <mat-icon>warning</mat-icon>
+      <div>
+        <strong
+          >Attendance already recorded for this date{{
+            form.value.scope === 'SCHOOL' ? ' across the school' : ''
+          }}.</strong
+        >
+        <p>
+          Marking this as a holiday won't delete the recorded data, but it will stop counting toward
+          working-day totals and reports.
+        </p>
+        <label class="ack-checkbox">
+          <input
+            type="checkbox"
+            [checked]="riskAcknowledged()"
+            (change)="onAckChange($any($event.target).checked)"
+          />
+          I understand, proceed anyway
+        </label>
+      </div>
+    </div>
+    } }
+  </form>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()" [disabled]="submitting()">Cancel</button>
+  <button
+    mat-raised-button
+    color="primary"
+    [disabled]="!canSubmit() || submitting()"
+    (click)="submit()"
+  >
+    @if (submitting()) { <mat-spinner diameter="18"></mat-spinner> } @else { Save }
+  </button>
+</div>

@@ -235,18 +235,19 @@
             @if (group.expanded) {
             <div class="rfd-perm-list">
               @for (perm of group.permissions; track perm.id) {
-              <div class="rfd-perm-item" (click)="togglePermission(perm.id)">
-                <mat-checkbox
-                  [checked]="isSelected(perm.id)"
-                  (change)="togglePermission(perm.id)"
-                  (click)="$event.stopPropagation()"
-                  color="primary"
-                ></mat-checkbox>
-                <div class="rfd-perm-info">
-                  <span class="rfd-perm-name">{{ perm.name }}</span>
-                  <span class="rfd-perm-slug">{{ perm.slug }}</span>
+
+                <div class="rfd-perm-item" (click)="togglePermission(perm.id)">
+                  <mat-checkbox
+                    [checked]="isSelected(perm.id)"
+                    (change)="togglePermission(perm.id)"
+                    (click)="$event.stopPropagation()"
+                    color="primary"
+                  ></mat-checkbox>
+                  <div class="rfd-perm-info">
+                    <app-permission-info [permission]="perm"></app-permission-info>
+                  </div>
                 </div>
-              </div>
+
               }
             </div>
             }

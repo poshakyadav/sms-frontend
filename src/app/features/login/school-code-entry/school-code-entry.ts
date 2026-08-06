@@ -29,6 +29,34 @@ interface ValidateSchoolResponse {
   error?: string;
 }
 
+// ── Cached-validation shape ──────────────────────────────────────────────
+// Stored ONLY after a successful backend validation. Its mere presence means
+// "this school code has already been validated" — so school-code-entry can
+// skip the network call entirely and jump straight to credentials.
+export interface StoredValidatedSchool {
+  code: string;
+  name: string;
+  logoUrl: string | null;
+  tagline: string | null;
+
+
+  // theme removed — ThemeService.schoolTheme is the single source of truth
+  // and is already restored at app boot via loadSavedTheme(). Caching a
+  // theme snapshot here would go stale the moment a school changes its
+  // active theme from the settings page, since that flow never touches
+  // this key.
+
+  // theme: {
+  //   themeName: string;
+  //   config: Record<string, string>;
+  //   isCustomTheme: boolean;
+  // } | null;
+}
+
+// Exported so school-login-credentials.ts (changeSchool) can clear the
+// exact same key without duplicating the string.
+export const VALIDATED_SCHOOL_KEY = 'validatedSchoolInfo';
+
 @Component({
   selector: 'app-school-code-entry',
   standalone: true,
@@ -57,7 +85,6 @@ export class SchoolCodeEntry implements OnInit {
   loading = signal(false);
   error = signal('');
 
-  // Features shown in the left panel
   readonly features = [
     'Attendance tracking & reports',
     'Exam & assignment management',
@@ -65,31 +92,84 @@ export class SchoolCodeEntry implements OnInit {
     'Multi-role access control',
   ];
 
+  // ngOnInit(): void {
+  //   if (!isPlatformBrowser(this.platformId)) return;
+
+  //   // ── FIX (issue #2): if we already have a *validated* school cached,
+  //   // skip the backend call entirely and go straight to credentials.
+  //   // We deliberately do NOT clearTheme() first in this branch — we're about
+  //   // to re-apply the same school's theme a line below anyway.
+  //   const cached = this.getStoredValidatedSchool();
+  //   if (cached) {
+  //     if (cached.theme) {
+  //       this.themeService.applySchoolTheme(cached.theme);
+  //     } else {
+  //       this.themeService.clearTheme();
+  //     }
+
+  //     this.router.navigate(['/login/credentials'], {
+  //       queryParams: {
+  //         schoolCode: cached.code,
+  //         schoolName: cached.name,
+  //         logoUrl: cached.logoUrl ?? '',
+  //         tagline: cached.tagline ?? '',
+  //       },
+  //       replaceUrl: true,
+  //     });
+  //     return;
+  //   }
+
+  //   // No validated cache — this is a genuinely fresh/neutral landing on this
+  //   // page (e.g. user clicked "Change school"), so reset to default styles.
+  //   this.themeService.clearTheme();
+
+  //   // Best-effort prefill from the legacy plain code (pre-existing users who
+  //   // only ever had the old 'schoolCode' key). We DON'T auto-submit this —
+  //   // the user still has to hit Continue once so it gets validated and
+  //   // upgraded into the cached object above.
+  //   const legacyCode = localStorage.getItem('schoolCode')?.trim();
+  //   if (legacyCode) {
+  //     this.schoolCode.set(legacyCode.toUpperCase());
+  //   }
+  // }
+
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
- 
-    // ✅ FIX: Always reset to default (app) styles when landing on the code-entry
-    // page. Without this, a user who previously logged into School A would still
-    // see School A's brand colors on this neutral page if they navigated back or
-    // opened a new tab while still having the old theme in localStorage.
-    // clearTheme() removes the stored theme key AND removes all --color-* CSS
-    // variables from :root, so the global styles.scss :root fallbacks take over.
+
+    const cached = this.getStoredValidatedSchool();
+    if (cached) {
+      // No theme handling here — ThemeService already restored the correct,
+      // up-to-date theme from its own `schoolTheme` key during app boot,
+      // before this component even ran. Re-applying a cached snapshot here
+      // would risk overwriting it with a stale value.
+      this.router.navigate(['/login/credentials'], {
+        queryParams: {
+          schoolCode: cached.code,
+          schoolName: cached.name,
+          logoUrl: cached.logoUrl ?? '',
+          tagline: cached.tagline ?? '',
+        },
+        replaceUrl: true,
+      });
+      return;
+    }
+
+    // No validated cache — genuinely fresh landing (e.g. "Change school").
+    // Safe to reset to default here since there's no persisted school theme
+    // context this page should be preserving in this branch.
     this.themeService.clearTheme();
- 
-    // Auto-fill and validate if user has visited before
-    const saved = localStorage.getItem('schoolCode')?.trim();
-    if (saved) {
-      this.schoolCode.set(saved.toUpperCase());
-      this.validateAndProceed(saved);
+
+    const legacyCode = localStorage.getItem('schoolCode')?.trim();
+    if (legacyCode) {
+      this.schoolCode.set(legacyCode.toUpperCase());
     }
   }
 
-  // Live uppercase as user types
   onInput(event: Event): void {
-    const value = (event.target as HTMLInputElement).value.toUpperCase().replace(/[^A-Z0-9-]/g, ''); // Strip invalid chars immediately
+    const value = (event.target as HTMLInputElement).value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
     this.schoolCode.set(value);
-    (event.target as HTMLInputElement).value = value; // Reflect back
-    if (this.error()) this.error.set(''); // Clear stale error on type
+    (event.target as HTMLInputElement).value = value;
+    if (this.error()) this.error.set('');
   }
 
   onSubmit(): void {
@@ -100,7 +180,6 @@ export class SchoolCodeEntry implements OnInit {
   private async validateAndProceed(code: string): Promise<void> {
     const trimmed = code.trim().toUpperCase();
 
-    // Client-side guard
     if (trimmed.length < 3) {
       this.error.set('School code must be at least 3 characters.');
       return;
@@ -119,12 +198,23 @@ export class SchoolCodeEntry implements OnInit {
         .toPromise();
 
       if (res?.valid && res.school) {
-        // Persist school code for next visit
+        // Legacy key kept for back-compat with anything else reading it.
         localStorage.setItem('schoolCode', res.school.code);
 
-        // ── Apply school theme BEFORE navigating ─────────────────────────
-        // ThemeService writes all --color-* CSS vars to :root immediately,
-        // so the credentials page renders with the school's brand instantly.
+        // ── FIX (issue #2): cache the full validated result, not just the code.
+        const toStore: StoredValidatedSchool = {
+          code: res.school.code,
+          name: res.school.name,
+          logoUrl: res.school.logoUrl,
+          tagline: res.school.tagline,
+          // theme: res.school.theme ?? null,
+        };
+        localStorage.setItem(VALIDATED_SCHOOL_KEY, JSON.stringify(toStore));
+
+        // This applySchoolTheme call is fine — it's a genuinely fresh fetch,
+        // not a cached replay, so it can't go stale. It also writes straight
+        // into ThemeService's own `schoolTheme` key, keeping that single
+        // source of truth up to date.
         if (res.school.theme) {
           this.themeService.applySchoolTheme(res.school.theme);
         }
@@ -139,19 +229,57 @@ export class SchoolCodeEntry implements OnInit {
           replaceUrl: true,
         });
       } else {
+        // Backend responded 2xx but valid:false (rare, but handle it)
         const msg = res?.error ?? 'Invalid school code. Please try again.';
         this.error.set(msg);
         this.toast.error(msg);
       }
     } catch (err: any) {
-      const msg =
-        err?.status === 0
-          ? 'Network error — please check your connection.'
-          : 'Unable to validate right now. Please try again.';
-      this.error.set(msg);
-      this.toast.error(msg);
+      // ── FIX (issue #1): surface the backend's actual error message
+      // (e.g. "School code not found...", "This school account is not yet
+      // active.") instead of always falling back to a generic string.
+      if (err?.status === 0) {
+        const msg = 'Network error — please check your connection.';
+        this.error.set(msg);
+        this.toast.error(msg);
+      } else {
+        const backendMsg = this.extractBackendErrorMessage(err);
+        const msg = backendMsg || 'Unable to validate right now. Please try again.';
+        this.error.set(msg);
+        this.toast.error(msg);
+      }
     } finally {
       this.loading.set(false);
     }
+  }
+
+  private getStoredValidatedSchool(): StoredValidatedSchool | null {
+    try {
+      const raw = localStorage.getItem(VALIDATED_SCHOOL_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed?.code || !parsed?.name) return null;
+      return parsed as StoredValidatedSchool;
+    } catch {
+      return null;
+    }
+  }
+
+  // Same pattern used in school-login-credentials.ts's parseErrorBody —
+  // ApiService.handleError re-throws the original HttpErrorResponse intact,
+  // so err.error is the parsed backend JSON body: { valid, error }.
+  private extractBackendErrorMessage(err: any): string | null {
+    const raw = err?.error;
+    if (raw && typeof raw === 'object' && !(raw instanceof ProgressEvent)) {
+      return raw.error ?? null;
+    }
+    if (typeof raw === 'string') {
+      try {
+        return JSON.parse(raw)?.error ?? null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
   }
 }

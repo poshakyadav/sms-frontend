@@ -12,25 +12,25 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { ActivatedRoute } from '@angular/router';
 import { AcademicsService, ClassSection } from '../../../../core/services/academics.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import {
-  ALL_ATTENDANCE_STATUSES,
   ATTENDANCE_STATUS_CONFIG,
   AttendanceBatchInput,
   AttendanceService,
   AttendanceStatus,
   AttendanceStatusValue,
+  CalendarCheckResult,
   ClassAttendanceSessionMeta,
   HalfDaySession,
   HalfDaySessionValue,
+  MARKABLE_ATTENDANCE_STATUSES,
 } from '../../../../core/services/attendance.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
+import { CalendarActionDialog, CalendarActionDialogData } from '../calendar-action-dialog/calendar-action-dialog';
 
-// Flattens ClassAttendanceStudentRow.attendanceRecord into editable fields.
-// Unmarked students (attendanceRecord === null) default to PRESENT, per the
-// backend's documented frontend contract — lets a teacher submit an
-// "everyone present" sheet in one click.
 interface AttendanceRow {
   enrollmentId: number;
   studentId: number;
@@ -48,19 +48,9 @@ interface AttendanceRow {
   selector: 'app-attendance-component',
   standalone: true,
   imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonToggleModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatTooltipModule,
+    CommonModule, FormsModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule,
+    MatSelectModule, MatButtonToggleModule, MatDatepickerModule, MatNativeDateModule,
+    MatButtonModule, MatIconModule, MatProgressSpinnerModule, MatTooltipModule,
   ],
   providers: [DatePipe],
   templateUrl: './attendance-component.html',
@@ -69,12 +59,14 @@ interface AttendanceRow {
 export class AttendanceComponent {
   private attendance = inject(AttendanceService);
   private academics = inject(AcademicsService);
+  private auth = inject(AuthService);
   private toast = inject(ToastService);
   private dialog = inject(MatDialog);
   private datePipe = inject(DatePipe);
+  private route = inject(ActivatedRoute);
 
   readonly statusConfig = ATTENDANCE_STATUS_CONFIG;
-  readonly allStatuses = ALL_ATTENDANCE_STATUSES;
+  readonly allStatuses = MARKABLE_ATTENDANCE_STATUSES; // HOLIDAY excluded — calendar-only now
   readonly halfDaySessionOptions = [
     { value: HalfDaySession.MORNING, label: 'Morning' },
     { value: HalfDaySession.AFTERNOON, label: 'Afternoon' },
@@ -84,15 +76,19 @@ export class AttendanceComponent {
   rows = signal<AttendanceRow[]>([]);
   originalRows = signal<AttendanceRow[]>([]);
   sessionMeta = signal<ClassAttendanceSessionMeta | null>(null);
+  calendarStatus = signal<CalendarCheckResult | null>(null);
   searchTerm = signal('');
 
   loading = signal(true);
+  checkingCalendar = signal(false);
   submitting = signal(false);
 
   form = inject(FormBuilder).group({
     classSectionId: [null as number | null, Validators.required],
     date: [new Date(), Validators.required],
   });
+
+  canManageCalendar = computed(() => this.auth.hasPermission('attendance.calendar.manage'));
 
   filteredRows = computed(() => {
     const term = this.searchTerm().trim().toLowerCase();
@@ -103,9 +99,7 @@ export class AttendanceComponent {
   });
 
   isValid = computed(() =>
-    this.rows().every(
-      (r) => !!r.status && (r.status !== AttendanceStatus.HALF_DAY || !!r.halfDaySession)
-    )
+    this.rows().every((r) => !!r.status && (r.status !== AttendanceStatus.HALF_DAY || !!r.halfDaySession))
   );
 
   hasChanges = computed(() => {
@@ -127,18 +121,10 @@ export class AttendanceComponent {
     return this.classSections().find((cs) => cs.id === id) ?? null;
   });
 
-  presentCount = computed(
-    () => this.rows().filter((r) => this.statusConfig[r.status].category === 'present').length
-  );
-  absentCount = computed(
-    () => this.rows().filter((r) => this.statusConfig[r.status].category === 'absent').length
-  );
-  neutralCount = computed(
-    () => this.rows().filter((r) => this.statusConfig[r.status].category === 'neutral').length
-  );
+  presentCount = computed(() => this.rows().filter((r) => this.statusConfig[r.status].category === 'present').length);
+  absentCount = computed(() => this.rows().filter((r) => this.statusConfig[r.status].category === 'absent').length);
+  neutralCount = computed(() => this.rows().filter((r) => this.statusConfig[r.status].category === 'neutral').length);
 
-  // Exact-status breakdown, only for statuses in use — feeds the small chip
-  // row under the 3 category cards (e.g. "3 Late · 1 Sick · 1 On Duty").
   statusBreakdown = computed(() => {
     const counts = new Map<AttendanceStatusValue, number>();
     for (const r of this.rows()) counts.set(r.status, (counts.get(r.status) ?? 0) + 1);
@@ -149,20 +135,109 @@ export class AttendanceComponent {
 
   lastUpdatedDisplay = computed(() => {
     const meta = this.sessionMeta();
-    return meta?.lastUpdatedAt ? this.datePipe.transform(meta.lastUpdatedAt, 'h:mm a') : null;
+    return meta?.lastEditedAt || meta?.markedAt
+      ? this.datePipe.transform(meta.lastEditedAt ?? meta.markedAt, 'h:mm a')
+      : null;
+  });
+
+  // ── Calendar guard display helpers ────────────────────────────────────
+
+  calendarSourceLabel = computed(() => {
+    const s = this.calendarStatus();
+    if (!s) return '';
+    switch (s.source) {
+      case 'CLASS_SECTION_OVERRIDE': return 'Marked for this section';
+      case 'SCHOOL_WIDE': return 'Marked school-wide';
+      case 'WEEKLY_OFF': return 'Weekly off';
+      default: return 'Not explicitly marked';
+    }
+  });
+
+  guardTitle = computed(() => {
+    const s = this.calendarStatus();
+    if (!s) return '';
+    if (!s.isExplicit && s.source === 'DEFAULT_UNMARKED') return 'Attendance calendar not marked';
+    if (s.dayType === 'HOLIDAY') return 'This date is marked as a holiday';
+    return '';
+  });
+
+  guardDescription = computed(() => {
+    const s = this.calendarStatus();
+    if (!s) return '';
+    if (!s.isExplicit && s.source === 'DEFAULT_UNMARKED') {
+      return `Nobody has confirmed whether ${this.dateDisplay()} is a working day or a holiday yet. Attendance can't be recorded until it's marked on the calendar.`;
+    }
+    if (s.source === 'WEEKLY_OFF') {
+      return `${this.dateDisplay()} falls on the school's weekly off. Attendance isn't expected on this day.`;
+    }
+    if (s.source === 'SCHOOL_WIDE') {
+      return `The whole school is marked as a holiday on this date${s.reason ? ' — ' + s.reason : ''}.`;
+    }
+    if (s.source === 'CLASS_SECTION_OVERRIDE') {
+      return `This class-section is specifically marked as a holiday on this date${s.reason ? ' — ' + s.reason : ''}.`;
+    }
+    return '';
+  });
+
+  guardActionLabel = computed(() => {
+    const s = this.calendarStatus();
+    if (!s) return '';
+    return s.dayType === 'HOLIDAY' ? 'Override to Working Day for this section' : 'Mark Attendance Calendar';
   });
 
   constructor() {
     this.loadClassSections();
+
     this.form.valueChanges.subscribe(() => {
-      if (this.form.valid) this.loadStudents();
+      if (this.form.valid) this.checkCalendarAndLoad();
     });
+
+    // ── Prefill from "Mark Attendance" links in the Missing Attendance report ──
+    const qp = this.route.snapshot.queryParamMap;
+    const qClassSectionId = qp.get('classSectionId');
+    const qDate = qp.get('date');
+    if (qClassSectionId || qDate) {
+      this.form.patchValue({
+        classSectionId: qClassSectionId ? Number(qClassSectionId) : this.form.value.classSectionId,
+        date: qDate ? new Date(qDate + 'T00:00:00') : this.form.value.date,
+      });
+    }
   }
 
   private loadClassSections() {
     this.academics.getClassSections().subscribe({
       next: (res) => this.classSections.set(res.classSections),
       complete: () => this.loading.set(false),
+    });
+  }
+
+  // ── Calendar gate: check first, only load the roster if it's a working day ──
+  checkCalendarAndLoad() {
+    const { classSectionId, date } = this.form.value;
+    if (!classSectionId || !date) return;
+
+    const formattedDate = this.datePipe.transform(date, 'yyyy-MM-dd')!;
+    this.loading.set(true);
+    this.checkingCalendar.set(true);
+
+    this.attendance.checkCalendarStatus(classSectionId, formattedDate).subscribe({
+      next: (status) => {
+        this.calendarStatus.set(status);
+        this.checkingCalendar.set(false);
+        if (status.canMarkAttendance) {
+          this.loadStudents();
+        } else {
+          this.rows.set([]);
+          this.originalRows.set([]);
+          this.sessionMeta.set(null);
+          this.loading.set(false);
+        }
+      },
+      error: (err) => {
+        this.checkingCalendar.set(false);
+        this.loading.set(false);
+        this.toast.error(err?.error?.error || 'Failed to check attendance calendar');
+      },
     });
   }
 
@@ -200,73 +275,53 @@ export class AttendanceComponent {
     this.rows.update((list) =>
       list.map((r) =>
         r.enrollmentId === enrollmentId
-          ? {
-            ...r,
-            status,
-            halfDaySession:
-              status === AttendanceStatus.HALF_DAY
-                ? r.halfDaySession ?? HalfDaySession.MORNING
-                : null,
-          }
+          ? { ...r, status, halfDaySession: status === AttendanceStatus.HALF_DAY ? r.halfDaySession ?? HalfDaySession.MORNING : null }
           : r
       )
     );
   }
 
   setHalfDaySession(enrollmentId: number, session: HalfDaySessionValue) {
-    this.rows.update((list) =>
-      list.map((r) => (r.enrollmentId === enrollmentId ? { ...r, halfDaySession: session } : r))
-    );
+    this.rows.update((list) => list.map((r) => (r.enrollmentId === enrollmentId ? { ...r, halfDaySession: session } : r)));
   }
 
   updateNotes(enrollmentId: number, notes: string) {
-    this.rows.update((list) =>
-      list.map((r) => (r.enrollmentId === enrollmentId ? { ...r, notes } : r))
-    );
+    this.rows.update((list) => list.map((r) => (r.enrollmentId === enrollmentId ? { ...r, notes } : r)));
   }
 
-  // Bulk actions apply to the currently filtered/searched set — a teacher
-  // can search "Sharma" and set just those students to EXCUSED.
   setAll(status: AttendanceStatusValue) {
     const label = this.statusConfig[status].label;
     const targets = this.filteredRows();
     const msg = `Set ${targets.length} student${targets.length === 1 ? '' : 's'} to ${label}?`;
 
-    this.dialog
-      .open(ConfirmDialog, { data: msg })
-      .afterClosed()
-      .subscribe((confirmed) => {
-        if (!confirmed) return;
-        const targetIds = new Set(targets.map((r) => r.enrollmentId));
-        this.rows.update((list) =>
-          list.map((r) =>
-            targetIds.has(r.enrollmentId)
-              ? {
-                ...r,
-                status,
-                halfDaySession:
-                  status === AttendanceStatus.HALF_DAY ? HalfDaySession.MORNING : null,
-              }
-              : r
-          )
-        );
-        this.toast.success(`Set to ${label}`);
-      });
+    this.dialog.open(ConfirmDialog, { data: msg }).afterClosed().subscribe((confirmed) => {
+      if (!confirmed) return;
+      const targetIds = new Set(targets.map((r) => r.enrollmentId));
+      this.rows.update((list) =>
+        list.map((r) =>
+          targetIds.has(r.enrollmentId)
+            ? { ...r, status, halfDaySession: status === AttendanceStatus.HALF_DAY ? HalfDaySession.MORNING : null }
+            : r
+        )
+      );
+      this.toast.success(`Set to ${label}`);
+    });
   }
 
   resetChanges() {
-    this.dialog
-      .open(ConfirmDialog, { data: 'Discard all unsaved changes?' })
-      .afterClosed()
-      .subscribe((confirmed) => {
-        if (confirmed) {
-          this.rows.set(structuredClone(this.originalRows()));
-          this.toast.info('Changes discarded');
-        }
-      });
+    this.dialog.open(ConfirmDialog, { data: 'Discard all unsaved changes?' }).afterClosed().subscribe((confirmed) => {
+      if (confirmed) {
+        this.rows.set(structuredClone(this.originalRows()));
+        this.toast.info('Changes discarded');
+      }
+    });
   }
 
   submit() {
+    if (!this.calendarStatus()?.canMarkAttendance) {
+      this.toast.warning('The attendance calendar must be marked for this date before you can save attendance');
+      return;
+    }
     if (!this.form.valid || !this.isValid()) {
       this.toast.warning('Please select a class-section, date, and ensure every student has a status');
       return;
@@ -297,16 +352,42 @@ export class AttendanceComponent {
     });
   }
 
-  initials(name: string): string {
-    return name
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((n) => n[0]?.toUpperCase())
-      .join('');
+  // ── Calendar dialog launcher ──────────────────────────────────────────
+  // Used both from the guard state (declare/override) and from the
+  // "change calendar" icon shown once attendance is markable.
+  openCalendarDialog(suggestedDayType?: 'WORKING_DAY' | 'HOLIDAY') {
+    const { classSectionId, date } = this.form.value;
+    if (!classSectionId || !date) return;
+    const formattedDate = this.datePipe.transform(date, 'yyyy-MM-dd')!;
+    const section = this.selectedSection();
+
+    const data: CalendarActionDialogData = {
+      date: formattedDate,
+      classSectionId,
+      classSectionLabel: section ? `${section.className} - ${section.sectionName}` : '',
+      currentStatus: this.calendarStatus(),
+      suggestedDayType,
+    };
+
+    this.dialog
+      .open(CalendarActionDialog, { width: '520px', maxWidth: '95vw', data })
+      .afterClosed()
+      .subscribe((result) => {
+        if (result?.success) this.checkCalendarAndLoad();
+      });
   }
 
-  statusClass(status: AttendanceStatusValue): string {
+  openGuardDialog() {
+    const s = this.calendarStatus();
+    if (!s) return;
+    this.openCalendarDialog(s.dayType === 'HOLIDAY' ? 'WORKING_DAY' : undefined);
+  }
+
+  initials(name: string): string {
+    return name.split(' ').filter(Boolean).slice(0, 2).map((n) => n[0]?.toUpperCase()).join('');
+  }
+
+  statusClass(status: AttendanceStatusValue | 'UNMARKED'): string {
     return 'status-' + status.toLowerCase().replace(/_/g, '-');
   }
 }

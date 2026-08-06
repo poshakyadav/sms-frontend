@@ -486,7 +486,9 @@
                 </div>
               </td>
               <td class="cell-muted td-align-center">{{ formatMonthShort(fee.feeMonth) }}</td>
-              <td class="amount-cell td-align-right">{{ fee.originalAmount | paise : 'compact' }}</td>
+              <td class="amount-cell td-align-right">
+                {{ fee.originalAmount | paise : 'compact' }}
+              </td>
               <td class="td-align-right">
                 @if (fee.concessionAmount > 0) {
                 <span class="sf-concession-text" [matTooltip]="fee.concessionReason || ''">
@@ -496,7 +498,9 @@
                 <span class="cell-muted">—</span>
                 }
               </td>
-              <td class="amount-cell td-align-right">{{ fee.effectiveAmount | paise : 'compact' }}</td>
+              <td class="amount-cell td-align-right">
+                {{ fee.effectiveAmount | paise : 'compact' }}
+              </td>
               <td class="amount-cell text-success td-align-right">
                 {{ fee.amountPaid | paise : 'compact' }}
               </td>
@@ -625,6 +629,14 @@
             <span class="sf-payment-row__date">{{ formatDate(p.paymentDate) }}</span>
             <span class="sf-payment-row__method">{{ p.paymentMethod }}</span>
           </div>
+          <button
+            mat-icon-button
+            class="sf-payment-row__view-btn"
+            matTooltip="View / download receipt"
+            (click)="openReceipt(p)"
+          >
+            <mat-icon>visibility</mat-icon>
+          </button>
         </div>
         }
       </div>

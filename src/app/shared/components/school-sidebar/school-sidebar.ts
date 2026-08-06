@@ -366,6 +366,13 @@ export const NAV_GROUPS: NavGroup[] = [
             permissions: ['attendance.report'],
             matchStrategy: 'prefix',
           },
+          {
+            label: 'Manage Calendar',
+            route: '/school/attendance/calendar',
+            icon: 'event_note',
+            permissions: ['attendance.report'],
+            matchStrategy: 'prefix',
+          },
         ],
       },
       {

@@ -811,6 +811,7 @@
                 <th>Row</th>
                 <th>Name</th>
                 <th>Email</th>
+                <th>Username</th>
                 <th>Status</th>
                 <th>Detail</th>
               </tr>
@@ -824,6 +825,7 @@
                 <td class="bsu-td-row">#{{ row.rowNumber }}</td>
                 <td class="bsu-td-name">{{ row.name || '—' }}</td>
                 <td class="bsu-td-email">{{ row.email || '—' }}</td>
+                <td class="bsu-td-email">{{ row.username || '—' }}</td>
                 <td>
                   <span
                     class="bsu-status-badge"
@@ -946,16 +948,26 @@
     </div>
 
     <div class="bsu-conflict-summary">
-      <div class="bsu-conflict-box bsu-conflict-box--school" *ngIf="inSchoolConflicts().length > 0">
-        <span class="bsu-cbox-count">{{ inSchoolConflicts().length }}</span>
+      <div
+        class="bsu-conflict-box bsu-conflict-box--school"
+        *ngIf="inSchoolEmailConflicts().length + inSchoolUsernameConflicts().length > 0"
+      >
+        <span class="bsu-cbox-count">{{
+          inSchoolEmailConflicts().length + inSchoolUsernameConflicts().length
+        }}</span>
         <span class="bsu-cbox-label">Already in<br />this school</span>
       </div>
-      <div class="bsu-conflict-box bsu-conflict-box--file" *ngIf="inFileConflicts().length > 0">
-        <span class="bsu-cbox-count">{{ inFileConflicts().length }}</span>
+      <div
+        class="bsu-conflict-box bsu-conflict-box--file"
+        *ngIf="inFileEmailConflicts().length + inFileUsernameConflicts().length > 0"
+      >
+        <span class="bsu-cbox-count">{{
+          inFileEmailConflicts().length + inFileUsernameConflicts().length
+        }}</span>
         <span class="bsu-cbox-label">Duplicate<br />in file</span>
       </div>
       <div class="bsu-conflict-box bsu-conflict-box--total">
-        <span class="bsu-cbox-count">{{ emailConflicts().length }}</span>
+        <span class="bsu-cbox-count">{{ totalConflicts() }}</span>
         <span class="bsu-cbox-label">Total<br />conflicts</span>
       </div>
     </div>
@@ -963,15 +975,19 @@
     <div class="bsu-conflict-guide">
       <strong>How to fix:</strong>
       <ol>
-        <li *ngIf="inSchoolConflicts().length > 0">
-          <strong>Already in school</strong> — These emails belong to existing accounts. Use
-          different email addresses, or enroll those students individually from the student list.
+        <li *ngIf="inSchoolEmailConflicts().length + inSchoolUsernameConflicts().length > 0">
+          <strong>Already in school</strong> — These emails or usernames belong to existing
+          accounts. Use different values, or enroll those students individually from the student
+          list.
         </li>
-        <li *ngIf="inFileConflicts().length > 0">
-          <strong>Duplicate in file</strong> — The same email appears more than once in your Excel
-          file. Each student must have a unique email.
+        <li *ngIf="inFileEmailConflicts().length + inFileUsernameConflicts().length > 0">
+          <strong>Duplicate in file</strong> — The same email or username appears more than once in
+          your Excel file. Each student must have a unique value for any field you fill in.
         </li>
-        <li>Update your file and <strong>re-upload</strong>.</li>
+        <li>
+          Update your file and <strong>re-upload</strong>. Tip: leave Username blank to let it
+          auto-generate instead of picking one yourself.
+        </li>
       </ol>
     </div>
 
@@ -981,23 +997,23 @@
         [class.bsu-cf-tab--active]="conflictFilter() === 'ALL'"
         (click)="conflictFilter.set('ALL')"
       >
-        All ({{ emailConflicts().length }})
+        All ({{ totalConflicts() }})
       </button>
       <button
         class="bsu-cf-tab bsu-cf-tab--school"
         [class.bsu-cf-tab--active]="conflictFilter() === 'ALREADY_IN_SCHOOL'"
         (click)="conflictFilter.set('ALREADY_IN_SCHOOL')"
-        *ngIf="inSchoolConflicts().length > 0"
+        *ngIf="inSchoolEmailConflicts().length + inSchoolUsernameConflicts().length > 0"
       >
-        In School ({{ inSchoolConflicts().length }})
+        In School ({{ inSchoolEmailConflicts().length + inSchoolUsernameConflicts().length }})
       </button>
       <button
         class="bsu-cf-tab bsu-cf-tab--file"
         [class.bsu-cf-tab--active]="conflictFilter() === 'DUPLICATE_IN_FILE'"
         (click)="conflictFilter.set('DUPLICATE_IN_FILE')"
-        *ngIf="inFileConflicts().length > 0"
+        *ngIf="inFileEmailConflicts().length + inFileUsernameConflicts().length > 0"
       >
-        In File ({{ inFileConflicts().length }})
+        In File ({{ inFileEmailConflicts().length + inFileUsernameConflicts().length }})
       </button>
     </div>
 
@@ -1006,16 +1022,35 @@
         <thead>
           <tr>
             <th>Row #</th>
+            <th>Field</th>
             <th>Name</th>
-            <th>Email</th>
+            <th>Value</th>
             <th>Issue</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let c of filteredConflicts()">
+          <tr *ngFor="let c of filteredEmailConflicts()">
             <td class="bsu-ct-row">#{{ c.rowNumber }}</td>
+            <td><span class="bsu-issue-badge">Email</span></td>
             <td class="bsu-ct-name">{{ c.name }}</td>
             <td class="bsu-ct-email">{{ c.email }}</td>
+            <td>
+              <span
+                class="bsu-issue-badge"
+                [class.bsu-issue-badge--school]="c.conflictType === 'ALREADY_IN_SCHOOL'"
+                [class.bsu-issue-badge--file]="c.conflictType === 'DUPLICATE_IN_FILE'"
+              >
+                {{
+                  c.conflictType === 'ALREADY_IN_SCHOOL' ? 'Already in school' : 'Duplicate in file'
+                }}
+              </span>
+            </td>
+          </tr>
+          <tr *ngFor="let c of filteredUsernameConflicts()">
+            <td class="bsu-ct-row">#{{ c.rowNumber }}</td>
+            <td><span class="bsu-issue-badge">Username</span></td>
+            <td class="bsu-ct-name">{{ c.name }}</td>
+            <td class="bsu-ct-email">{{ c.username }}</td>
             <td>
               <span
                 class="bsu-issue-badge"

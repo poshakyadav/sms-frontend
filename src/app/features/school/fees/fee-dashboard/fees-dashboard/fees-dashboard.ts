@@ -82,7 +82,7 @@ export class FeesDashboardComponent implements OnInit {
     private fees: FeesService,
     private academics: AcademicsService,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadDropdowns();
@@ -187,18 +187,27 @@ export class FeesDashboardComponent implements OnInit {
   }
 
   breakdownCollectionRate(row: ClassSectionBreakdown): number {
-    if (row.totalAssigned <= 0) return 100;
-    return Math.round((row.totalCollected / row.totalAssigned) * 100);
+    const assigned = this.combinedAssigned(row);
+    if (assigned <= 0) return 100;
+    return Math.round((this.combinedCollected(row) / assigned) * 100);
+  }
+
+  combinedAssigned(row: ClassSectionBreakdown): number {
+    return row.totalAssigned + row.totalCustomAssigned;
+  }
+
+  combinedCollected(row: ClassSectionBreakdown): number {
+    return row.totalCollected + row.totalCustomCollected;
+  }
+
+  combinedOutstanding(row: ClassSectionBreakdown): number {
+    return this.combinedAssigned(row) - this.combinedCollected(row);
   }
 
   navigateToReport(row: ClassSectionBreakdown): void {
-    const cs = this.classSections().find(
-      (c) => c.className === row.className && c.sectionName === row.sectionName
-    );
-    if (cs) {
-      this.router.navigate(['/school/fees/report'], {
-        queryParams: { classSectionId: cs.id },
-      });
-    }
+    this.router.navigate(['/school/fees/report'], {
+      queryParams: { classSectionId: row.classSectionId },
+    });
   }
+  
 }

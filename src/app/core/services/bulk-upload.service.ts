@@ -28,6 +28,7 @@ export interface BulkUploadRowResult {
   rowNumber: number;
   name: string;
   email: string;
+  username?: string;
   status: 'SUCCESS' | 'FAILED' | 'SKIPPED';
   error?: string;
   userId?: number;
@@ -43,6 +44,13 @@ export interface EmailConflict {
   rowNumber: number;
   name: string;
   email: string;
+  conflictType: 'DUPLICATE_IN_FILE' | 'ALREADY_IN_SCHOOL';
+}
+
+export interface UsernameConflict {
+  rowNumber: number;
+  name: string;
+  username: string;
   conflictType: 'DUPLICATE_IN_FILE' | 'ALREADY_IN_SCHOOL';
 }
 
@@ -66,6 +74,7 @@ export interface BulkUploadResult {
   };
   results: BulkUploadRowResult[];
   emailConflicts?: EmailConflict[];
+  usernameConflicts?: UsernameConflict[];
   capacityInfo?: BulkUploadCapacityInfo;
 }
 
@@ -135,15 +144,15 @@ const COLUMNS: ColDef[] = [
     example2: 'Priya Verma',
   },
   {
-    header: 'Email *',
+    header: 'Email',
     key: 'email',
     width: 32,
-    required: true,
+    required: false,
     isHelper: false,
     group: 'core',
     hint: 'Unique login email — must not exist in this school',
     example: 'rahul.sharma@example.com',
-    example2: 'priya.verma@example.com',
+    example2: '',
   },
   {
     header: 'Password *',
@@ -155,6 +164,18 @@ const COLUMNS: ColDef[] = [
     hint: 'Min 8 characters. Student uses this to first log in.',
     example: 'Welcome@123',
     example2: 'School@456',
+  },
+
+  {
+    header: 'Username',
+    key: 'username',
+    width: 22,
+    required: false,
+    isHelper: false,
+    group: 'core',
+    hint: 'Optional — lowercase letters/numbers, must start with a letter. Leave blank to auto-generate (e.g. name+class+section → "amit2a")',
+    example: 'amit2a',
+    example2: '', // second sample deliberately blank to show auto-generate in action
   },
 
   // ── Contact ────────────────────────────────────────────────────────────────
@@ -945,14 +966,16 @@ export class BulkUploadService {
       '1. Do NOT delete the sample rows (rows 3 & 4) — the parser skips them automatically. Use them as a reference while filling.',
       '2. Fill your data from Row 5 onwards. Do NOT change column names or their order.',
       '3. The S.No. column (Column A) auto-fills — never type in it manually; it is ignored on upload.',
-      '4. Every Email must be unique — both within the file AND across the entire school.',
-      '5. Passwords must be at least 8 characters. Students should change them on first login.',
-      '6. If ANY email conflict is found, ZERO students are added. Fix all conflicts and re-upload.',
-      '7. Roll numbers are NOT assigned here. Use the Roll Numbers feature in Academics → Class Sections after upload.',
-      '8. To link parents/guardians, use the Parents module after upload.',
-      '9. UDISE+ fields (PEN, APAAR, etc.) are optional but important for government reporting.',
-      '10. Date format must be YYYY-MM-DD (e.g., 2010-06-15). Other formats may fail.',
-      '11. The Guide sheet (this sheet) is completely ignored during upload.',
+      '4. Email is now OPTIONAL — leave it blank if a student has no email address.', // NEW
+      '5. Every Email must be unique — both within the file AND across the entire school (only checked when provided).', // CHANGED
+      '6. Username is OPTIONAL — leave blank to auto-generate one from the student\'s name + class + section. If you do fill it in, it must be unique, lowercase, and start with a letter.', // NEW
+      '7. Passwords must be at least 8 characters. Students should change them on first login.',
+      '8. If ANY email or username conflict is found, ZERO students are added. Fix all conflicts and re-upload.', // CHANGED
+      '9. Roll numbers are NOT assigned here. Use the Roll Numbers feature in Academics → Class Sections after upload.',
+      '10. To link parents/guardians, use the Parents module after upload.',
+      '11. UDISE+ fields (PEN, APAAR, etc.) are optional but important for government reporting.',
+      '12. Date format must be YYYY-MM-DD (e.g., 2010-06-15). Other formats may fail.',
+      '13. The Guide sheet (this sheet) is completely ignored during upload.',
     ];
     rules.forEach((rule) => {
       ws.mergeCells(r, 1, r, 5);

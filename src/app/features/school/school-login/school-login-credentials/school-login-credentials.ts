@@ -8,13 +8,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { lastValueFrom } from 'rxjs'; // ← FIX 1
+import { lastValueFrom } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { ThemeService } from '../../../../core/services/theme.service';
 import { ParentService, ParentChild } from '../../../../core/services/parent.service';
 import { ParentChildSelectorComponent } from '../../parents/parent-child-selector/parent-child-selector';
 import { AuthFooter } from '../../../../shared/components/auth-footer/auth-footer';
+import { VALIDATED_SCHOOL_KEY } from '../../../login/school-code-entry/school-code-entry';
 
 interface LoginErrorBody {
   requiresTermsAcceptance?: boolean;
@@ -30,6 +31,10 @@ interface SchoolInfo {
   logoUrl: string | null;
   tagline: string | null;
 }
+
+// Loose email sniff — just enough to route to the right request field.
+// Doesn't need to be a full RFC validator; the backend validates for real.
+const EMAIL_LIKE_PATTERN = /\S+@\S+\.\S+/;
 
 @Component({
   selector: 'app-school-login-credentials',
@@ -59,7 +64,10 @@ export class SchoolLoginCredentials implements OnInit {
 
   // ── UI state ──────────────────────────────────────────────────────────────
   schoolInfo = signal<SchoolInfo | null>(null);
-  email = signal('');
+
+  // Single combined field — can hold either an email or a username.
+  // Renamed from `email` since it's no longer email-only.
+  identifier = signal('');
   password = signal('');
   showPassword = signal(false);
   loading = signal(false);
@@ -95,8 +103,8 @@ export class SchoolLoginCredentials implements OnInit {
     this.showPassword.update((v) => !v);
   }
 
-  onEmailInput(event: Event): void {
-    this.email.set((event.target as HTMLInputElement).value);
+  onIdentifierInput(event: Event): void {
+    this.identifier.set((event.target as HTMLInputElement).value);
     if (this.error()) this.error.set('');
   }
 
@@ -110,14 +118,18 @@ export class SchoolLoginCredentials implements OnInit {
     if (this.error()) this.error.set('');
   }
 
+  private isEmailLike(value: string): boolean {
+    return EMAIL_LIKE_PATTERN.test(value);
+  }
+
   async onLogin(): Promise<void> {
     if (this.loading() || !this.schoolInfo()) return;
 
-    const emailVal = this.email().trim();
+    const identifierVal = this.identifier().trim();
     const passwordVal = this.password();
 
-    if (!emailVal || !passwordVal) {
-      this.error.set('Please enter both email and password.');
+    if (!identifierVal || !passwordVal) {
+      this.error.set('Please enter your email or username, and your password.');
       return;
     }
 
@@ -132,12 +144,14 @@ export class SchoolLoginCredentials implements OnInit {
     try {
       const termsPayload = this.showTermsCheckbox() ? this.termsAccepted() : undefined;
 
-      // FIX 1: Replace deprecated .toPromise() with lastValueFrom().
-      // .toPromise() resolves to `undefined` for empty Observables and has
-      // inconsistent error propagation. lastValueFrom() always throws on error,
-      // which is exactly what our catch block depends on.
+      // Route to the right backend field based on what was typed — the
+      // backend accepts either `email` or `username` alongside `password`.
+      const loginIdentifier = this.isEmailLike(identifierVal)
+        ? { email: identifierVal.toLowerCase() }
+        : { username: identifierVal.toLowerCase() };
+
       const res = await lastValueFrom(
-        this.auth.schoolLogin(this.schoolInfo()!.code, emailVal, passwordVal, termsPayload)
+        this.auth.schoolLogin(this.schoolInfo()!.code, loginIdentifier, passwordVal, termsPayload)
       );
 
       if (res?.success) {
@@ -159,45 +173,24 @@ export class SchoolLoginCredentials implements OnInit {
         this.router.navigate(['/school/dashboard']);
       }
     } catch (err: any) {
-      // FIX 2: Safely parse err.error regardless of whether Angular delivered
-      // it as a parsed object or a raw JSON string.
-      //
-      // Why this happens:
-      //   Angular's HttpClient auto-parses the response body as JSON only when
-      //   the server sends Content-Type: application/json.  Hono sets this by
-      //   default for c.json(), so in practice err.error is always an object —
-      //   but we parse defensively because:
-      //     a) a proxy or CDN could strip/alter Content-Type headers, and
-      //     b) network errors produce err.error as a ProgressEvent, not JSON.
       const body = this.parseErrorBody(err);
 
       if (body?.requiresTermsAcceptance === true) {
-        // Backend confirmed credentials are valid but T&C not yet accepted.
-        // Show the checkbox — credentials stay filled so the user just checks
-        // and re-submits without re-typing anything.
         this.showTermsCheckbox.set(true);
-        this.termsAccepted.set(false); // FIX 3: reset in case of retry
+        this.termsAccepted.set(false);
         this.error.set('Please accept the Terms & Conditions and Privacy Policy to continue.');
-        // No toast — inline error is sufficient for a one-time consent step.
         return;
       }
 
-      // All other errors (wrong password, deactivated account, network, etc.)
-      const msg = body?.error ?? 'Invalid email or password.';
+      // Backend already returns a method-aware message ("Invalid username or
+      // password" vs "Invalid email or password") — just surface it.
+      const msg = body?.error ?? 'Invalid email/username or password.';
       this.error.set(msg);
     } finally {
       this.loading.set(false);
     }
   }
 
-  /**
-   * Safely extract a plain object from an Angular HttpErrorResponse.
-   *
-   * err.error is:
-   *   - a parsed object  → when Content-Type is application/json (normal case)
-   *   - a string         → when Content-Type is missing / text/plain
-   *   - a ProgressEvent  → on network timeout / CORS failures
-   */
   private parseErrorBody(err: any): LoginErrorBody | null {
     const raw = err?.error;
     if (raw && typeof raw === 'object' && !(raw instanceof ProgressEvent)) {
@@ -222,6 +215,7 @@ export class SchoolLoginCredentials implements OnInit {
 
   changeSchool(): void {
     localStorage.removeItem('schoolCode');
+    localStorage.removeItem(VALIDATED_SCHOOL_KEY); // ← clears the validated cache
     this.themeService.clearTheme();
     this.router.navigate(['/login']);
   }
@@ -236,7 +230,7 @@ export class SchoolLoginCredentials implements OnInit {
   }
 
   get canSubmit(): boolean {
-    const baseValid = this.email().trim().length > 0 && this.password().length > 0;
+    const baseValid = this.identifier().trim().length > 0 && this.password().length > 0;
     if (this.showTermsCheckbox()) return baseValid && this.termsAccepted();
     return baseValid;
   }

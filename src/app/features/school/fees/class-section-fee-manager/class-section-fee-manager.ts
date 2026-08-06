@@ -88,7 +88,7 @@ export class ClassSectionFeeManager implements OnInit {
       (s) =>
         s.name.toLowerCase().includes(q) ||
         (s.rollNumber ?? '').toLowerCase().includes(q) ||
-        s.email.toLowerCase().includes(q)
+        (s.email ?? '').toLowerCase().includes(q)
     );
   });
 

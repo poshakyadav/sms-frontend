@@ -1,0 +1,60 @@
+<div class="missing-attendance">
+  <div class="filter-card">
+    <form [formGroup]="form" class="filter-form">
+      <mat-form-field appearance="outline">
+        <mat-label>From</mat-label>
+        <input matInput [matDatepicker]="from" formControlName="fromDate" />
+        <mat-datepicker-toggle matSuffix [for]="from"></mat-datepicker-toggle>
+        <mat-datepicker #from></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>To</mat-label>
+        <input matInput [matDatepicker]="to" formControlName="toDate" />
+        <mat-datepicker-toggle matSuffix [for]="to"></mat-datepicker-toggle>
+        <mat-datepicker #to></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Class — Section</mat-label>
+        <mat-select formControlName="classSectionId">
+          <mat-option [value]="null">All Sections</mat-option>
+          @for (cs of classSections(); track cs.id) {
+          <mat-option [value]="cs.id">{{ cs.className }} – {{ cs.sectionName }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" (click)="search()" [disabled]="loading()">
+        <mat-icon>search</mat-icon> Search
+      </button>
+    </form>
+  </div>
+
+  @if (loading()) {
+  <div class="state-container"><mat-spinner diameter="40"></mat-spinner></div>
+  } @else if (searched() && missing().length === 0) {
+  <div class="state-container all-good">
+    <mat-icon class="state-icon">verified</mat-icon>
+    <h2>All caught up</h2>
+    <p>No missing attendance found for the selected range.</p>
+  </div>
+  } @else if (missing().length > 0) {
+  <div class="missing-list">
+    @for (group of groupedByDate(); track group[0]) {
+    <div class="date-group">
+      <div class="date-heading">{{ group[0] }}</div>
+      @for (m of group[1]; track m.classSectionId) {
+      <div class="missing-row">
+        <mat-icon class="warn-icon">event_busy</mat-icon>
+        <span class="section-name">{{ m.className }}</span>
+        <button mat-stroked-button color="primary" (click)="goMark(m)">
+          <mat-icon>edit_calendar</mat-icon> Mark Attendance
+        </button>
+      </div>
+      }
+    </div>
+    }
+  </div>
+  }
+</div>

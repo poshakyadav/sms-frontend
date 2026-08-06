@@ -1,8 +1,9 @@
 // my-profile.ts — Universal profile for ALL roles
 // Edit Profile tab is READ-ONLY for users without `users.edit` permission.
-// Password & Email tabs remain self-service for every authenticated user.
+// Username, Password & Email tabs remain self-service for every authenticated user.
 
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -19,6 +20,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
+import { catchError, debounceTime, distinctUntilChanged, map, of, switchMap } from 'rxjs';
 import {
   ProfileService,
   UpdateProfilePayload,
@@ -26,6 +28,15 @@ import {
 } from '../../../../core/services/profile.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../core/services/toast.service';
+
+// Keep in sync with the backend's USERNAME_MIN_LENGTH / USERNAME_MAX_LENGTH
+// (src/utils/school/username.ts). The client pattern is deliberately
+// case-INSENSITIVE — the value is lowercased before it's sent, matching the
+// backend's normalizeUsername() — so typing "JohnDoe" isn't blocked client-side
+// only to be silently accepted by the server.
+const USERNAME_MIN_LENGTH = 3;
+const USERNAME_MAX_LENGTH = 20;
+const USERNAME_CLIENT_PATTERN = /^[a-zA-Z][a-zA-Z0-9]*$/;
 
 @Component({
   selector: 'app-my-profile',
@@ -50,6 +61,10 @@ export class MyProfile implements OnInit {
   private auth = inject(AuthService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
+  private destroyRef = inject(DestroyRef);
+
+  readonly usernameMinLength = USERNAME_MIN_LENGTH;
+  readonly usernameMaxLength = USERNAME_MAX_LENGTH;
 
   // ── State ─────────────────────────────────────────────────────────────────
   profile = signal<UserProfile | null>(null);
@@ -59,26 +74,32 @@ export class MyProfile implements OnInit {
   /**
    * Whether the current user may edit profile fields (name, address, etc.).
    * Set from the `canEditProfile` flag returned by GET /school/profile/me.
-   * The backend derives this from the caller's JWT permissions (`users.edit` or `*`).
-   *
    * Students, parents, and lower-staff get FALSE → read-only view.
-   * School owners and users with `users.edit` get TRUE → full edit form.
+   * Does NOT gate the Username / Password / Email tabs — those are
+   * self-service for every user regardless of this flag.
    */
   canEditProfile = signal(false);
 
   // Form saving states
   savingProfile = signal(false);
+  savingUsername = signal(false);
   savingPassword = signal(false);
   savingEmail = signal(false);
 
   // Password visibility
+  showUsernamePw = signal(false);
   showCurrentPw = signal(false);
   showNewPw = signal(false);
   showConfirmPw = signal(false);
   showEmailPw = signal(false);
 
+  // Live username availability
+  checkingUsername = signal(false);
+  usernameAvailable = signal<boolean | null>(null);
+
   // ── Forms ─────────────────────────────────────────────────────────────────
   profileForm!: FormGroup;
+  usernameForm!: FormGroup;
   passwordForm!: FormGroup;
   emailForm!: FormGroup;
 
@@ -87,6 +108,7 @@ export class MyProfile implements OnInit {
 
   ngOnInit(): void {
     this.initForms();
+    this.watchUsernameAvailability();
     this.loadProfile();
   }
 
@@ -104,6 +126,19 @@ export class MyProfile implements OnInit {
       city: ['', [Validators.maxLength(100)]],
       state: ['', [Validators.maxLength(100)]],
       postalCode: ['', [Validators.maxLength(20)]],
+    });
+
+    this.usernameForm = this.fb.group({
+      username: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(USERNAME_MIN_LENGTH),
+          Validators.maxLength(USERNAME_MAX_LENGTH),
+          Validators.pattern(USERNAME_CLIENT_PATTERN),
+        ],
+      ],
+      currentPassword: ['', [Validators.required]],
     });
 
     this.passwordForm = this.fb.group(
@@ -134,6 +169,42 @@ export class MyProfile implements OnInit {
     return null;
   }
 
+  /**
+   * Debounced "is this username taken" check. Skips the network call for
+   * empty/invalid input and for the user's own current username, so the
+   * unchanged value never flashes a false "taken" state.
+   */
+  private watchUsernameAvailability(): void {
+    this.usernameForm
+      .get('username')!
+      .valueChanges.pipe(
+        map((value: string) => (value || '').trim().toLowerCase()),
+        distinctUntilChanged(),
+        debounceTime(400),
+        switchMap((value) => {
+          this.usernameAvailable.set(null);
+          const control = this.usernameForm.get('username')!;
+
+          if (!value || control.invalid || value === this.profile()?.username) {
+            this.checkingUsername.set(false);
+            return of(null);
+          }
+
+          this.checkingUsername.set(true);
+          return this.profileService
+            .checkUsernameAvailability(value)
+            .pipe(catchError(() => of(null)));
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((res) => {
+        this.checkingUsername.set(false);
+        if (res) {
+          this.usernameAvailable.set(res.available);
+        }
+      });
+  }
+
   loadProfile(): void {
     this.loading.set(true);
     this.error.set(null);
@@ -143,6 +214,7 @@ export class MyProfile implements OnInit {
         this.profile.set(res.profile);
         this.canEditProfile.set(res.canEditProfile);
         this.patchProfileForm(res.profile);
+        this.usernameForm.patchValue({ username: res.profile.username }, { emitEvent: false });
 
         // Disable form controls for read-only users so that even programmatic
         // attempts to submit are blocked at the UI layer (belt + suspenders).
@@ -155,7 +227,7 @@ export class MyProfile implements OnInit {
         this.loading.set(false);
       },
       error: (err) => {
-        this.error.set(err?.message ?? 'Failed to load profile');
+        this.error.set(err?.error?.error ?? err?.message ?? 'Failed to load profile');
         this.toast.error(this.error()!);
         this.loading.set(false);
       },
@@ -207,8 +279,47 @@ export class MyProfile implements OnInit {
         this.loadProfile();
       },
       error: (err) => {
-        this.toast.error(err?.message ?? 'Failed to update profile');
+        this.toast.error(err?.error?.error ?? err?.message ?? 'Failed to update profile');
         this.savingProfile.set(false);
+      },
+    });
+  }
+
+  changeUsername(): void {
+    if (this.usernameForm.invalid) {
+      this.usernameForm.markAllAsTouched();
+      return;
+    }
+    if (this.usernameAvailable() === false) {
+      this.toast.error('This username is already taken. Please choose a different one.');
+      return;
+    }
+
+    this.savingUsername.set(true);
+    const username = (this.usernameForm.value.username || '').trim().toLowerCase();
+    const currentPassword = this.usernameForm.value.currentPassword;
+
+    this.profileService.changeUsername({ username, currentPassword }).subscribe({
+      next: (res) => {
+        this.toast.success(res.message ?? 'Username updated successfully');
+        this.savingUsername.set(false);
+        this.usernameForm.patchValue({ currentPassword: '' });
+        this.usernameAvailable.set(null);
+
+        // Username changes do NOT invalidate the current session (the JWT
+        // doesn't encode it) — just sync the displayed value everywhere.
+        const current = this.profile();
+        if (current) {
+          this.profile.set({ ...current, username: res.username });
+        }
+        const currentUser = this.auth.schoolUser();
+        if (currentUser) {
+          this.auth.schoolUser.set({ ...currentUser, username: res.username });
+        }
+      },
+      error: (err) => {
+        this.toast.error(err?.error?.error ?? err?.message ?? 'Failed to change username');
+        this.savingUsername.set(false);
       },
     });
   }
@@ -228,7 +339,7 @@ export class MyProfile implements OnInit {
         setTimeout(() => this.auth.logout(), 2000);
       },
       error: (err) => {
-        this.toast.error(err?.message ?? 'Failed to change password');
+        this.toast.error(err?.error?.error ?? err?.message ?? 'Failed to change password');
         this.savingPassword.set(false);
       },
     });
@@ -249,7 +360,7 @@ export class MyProfile implements OnInit {
         setTimeout(() => this.auth.logout(), 2000);
       },
       error: (err) => {
-        this.toast.error(err?.message ?? 'Failed to change email');
+        this.toast.error(err?.error?.error ?? err?.message ?? 'Failed to change email');
         this.savingEmail.set(false);
       },
     });
@@ -271,7 +382,6 @@ export class MyProfile implements OnInit {
       parent: 'Parent / Guardian',
       staff: 'Staff Member',
       unknown: 'School Member',
-      // Also handle raw primaryRole names (for fallback)
       STUDENT: 'Student',
       TEACHER: 'Teacher',
       STUDENT_PARENT: 'Parent / Guardian',

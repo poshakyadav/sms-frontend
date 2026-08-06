@@ -43,7 +43,8 @@
             <div class="student-option__avatar">{{ s.name.charAt(0).toUpperCase() }}</div>
             <div class="student-option__info">
               <span class="student-option__name">{{ s.name }}</span>
-              <span class="student-option__email">{{ s.email }}</span>
+              <!-- dropdown item -->
+              <span class="student-option__email">{{ s.email ?? '@' + s.username }}</span>
             </div>
           </button>
           }
@@ -123,7 +124,10 @@
       </div>
       <div class="student-summary-card__info">
         <h2 class="student-summary-card__name">{{ selectedStudent()!.name }}</h2>
-        <p class="student-summary-card__email">{{ selectedStudent()!.email }}</p>
+        <!-- student summary card -->
+        <p class="student-summary-card__email">
+          {{ selectedStudent()!.email ?? '@' + selectedStudent()!.username }}
+        </p>
       </div>
       <div class="student-summary-card__totals">
         @for (entry of ledger(); track entry.yearId) {

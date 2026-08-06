@@ -51,11 +51,17 @@ export class FeeLedger implements OnInit {
   academicYears = signal<any[]>([]);
 
   searchQuery = signal('');
+
   filteredStudents = computed(() => {
     const q = this.searchQuery().toLowerCase().trim();
     if (!q) return this.students().slice(0, 10);
     return this.students()
-      .filter((s) => s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q))
+      .filter(
+        (s) =>
+          s.name.toLowerCase().includes(q) ||
+          (s.email ?? '').toLowerCase().includes(q) ||
+          s.username.toLowerCase().includes(q)
+      )
       .slice(0, 20);
   });
 

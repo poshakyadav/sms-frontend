@@ -1,6 +1,7 @@
 // profile.service.ts
 
 import { Injectable } from '@angular/core';
+import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 
@@ -55,7 +56,10 @@ export type ProfileData =
 export interface UserProfile {
   id: number;
   name: string;
-  email: string;
+  /** Every school user has a username — used to log in alongside/instead of email. */
+  username: string;
+  /** Email is now OPTIONAL backend-side — a user may not have one on file. */
+  email: string | null;
   primaryRole: string;
   phone?: string;
   alternatePhone?: string;
@@ -102,17 +106,27 @@ export interface ChangeEmailPayload {
   currentPassword: string;
 }
 
+export interface ChangeUsernamePayload {
+  username: string;
+  currentPassword: string;
+}
+
+export interface UsernameAvailabilityResponse {
+  success: boolean;
+  available: boolean;
+  message: string;
+}
+
 // ── Service ───────────────────────────────────────────────────────────────────
 
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService) { }
 
   /**
    * Get the currently authenticated user's full profile.
-   * The response now also carries `canEditProfile` — a boolean the backend
+   * The response also carries `canEditProfile` — a boolean the backend
    * derives from the caller's JWT permissions (`users.edit` or `*`).
-   * The frontend uses this flag to decide whether to render edit controls.
    */
   getMyProfile(): Observable<{ profile: UserProfile; canEditProfile: boolean }> {
     return this.api.get<{ profile: UserProfile; canEditProfile: boolean }>('school/profile/me');
@@ -124,6 +138,30 @@ export class ProfileService {
    */
   updateMyProfile(data: UpdateProfilePayload): Observable<{ success: boolean; message: string }> {
     return this.api.put<{ success: boolean; message: string }>('school/profile/me', data);
+  }
+
+  /**
+   * Change the caller's own username. Self-service — available to every
+   * authenticated user regardless of `users.edit` permission. Requires
+   * current password confirmation.
+   */
+  changeUsername(
+    data: ChangeUsernamePayload
+  ): Observable<{ success: boolean; message: string; username: string }> {
+    return this.api.put<{ success: boolean; message: string; username: string }>(
+      'school/profile/me/change-username',
+      data
+    );
+  }
+
+  /**
+   * Live availability check used by the "Change Username" form while typing.
+   * Hits the self-service /school/profile/check-username endpoint (no
+   * permission gate) — distinct from the admin-facing /school/users/check-username.
+   */
+  checkUsernameAvailability(username: string): Observable<UsernameAvailabilityResponse> {
+    const params = new HttpParams().set('username', username);
+    return this.api.get<UsernameAvailabilityResponse>('school/profile/check-username', params);
   }
 
   /** Change password — requires current password verification. Available to ALL users. */

@@ -1052,3 +1052,116 @@
     grid-template-columns: 300px 1fr;
   }
 }
+
+// =====
+
+// ============================================================
+//  STATUS PALETTE — shared visual language with the student view.
+//  Covers all 9 markable statuses + the synthetic UNMARKED state.
+// ============================================================
+.status-present {
+  --status-fg: var(--color-success, #059669);
+  --status-bg: color-mix(in srgb, var(--color-success, #059669) 14%, var(--color-bg-surface));
+}
+.status-late {
+  --status-fg: var(--color-warning, #d97706);
+  --status-bg: color-mix(in srgb, var(--color-warning, #d97706) 14%, var(--color-bg-surface));
+}
+.status-half_day {
+  --status-fg: var(--color-secondary, #7c3aed);
+  --status-bg: color-mix(in srgb, var(--color-secondary, #7c3aed) 12%, var(--color-bg-surface));
+}
+.status-absent {
+  --status-fg: var(--color-error, #dc2626);
+  --status-bg: color-mix(in srgb, var(--color-error, #dc2626) 12%, var(--color-bg-surface));
+}
+.status-sick {
+  --status-fg: #db2777;
+  --status-bg: #fce7f3;
+}
+.status-suspended {
+  --status-fg: #991b1b;
+  --status-bg: #fecaca;
+}
+.status-excused {
+  --status-fg: #2563eb;
+  --status-bg: #dbeafe;
+}
+.status-holiday {
+  --status-fg: #0d9488;
+  --status-bg: #ccfbf1;
+}
+.status-on_duty {
+  --status-fg: #4f46e5;
+  --status-bg: #e0e7ff;
+}
+.status-unmarked {
+  --status-fg: #6b7280;
+  --status-bg: #f3f4f6;
+}
+
+.pa-legend-dot[class*='status-'] {
+  background: var(--status-fg);
+}
+
+.pa-stat-card[class*='status-'] {
+  border-color: color-mix(in srgb, var(--status-fg) 30%, transparent);
+  background: var(--status-bg);
+  .pa-stat-icon,
+  .pa-stat-value {
+    color: var(--status-fg);
+  }
+}
+
+.pa-cal-day[class*='status-'] {
+  background: var(--status-bg);
+  border-color: color-mix(in srgb, var(--status-fg) 35%, transparent);
+  .pa-cal-status-icon {
+    color: var(--status-fg);
+    font-size: 11px;
+  }
+}
+.pa-cal-day.status-unmarked {
+  border-style: dashed;
+}
+
+.pa-recent-badge[class*='status-'] {
+  background: var(--status-bg);
+  border-color: color-mix(in srgb, var(--status-fg) 30%, transparent);
+  color: var(--status-fg);
+  .material-symbols-outlined {
+    font-size: 15px;
+  }
+}
+
+// Header + toggle button used by the updated "Recent Activity" section
+.pa-recent-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.pa-toggle-btn {
+  background: transparent;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.3rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+}
+.pa-recent-empty {
+  text-align: center;
+  padding: 1.5rem 0;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+.pa-days-warn {
+  color: var(--color-warning);
+}

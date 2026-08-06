@@ -63,10 +63,24 @@
       </div>
       }
 
+      <!-- Username — always present -->
+      <p class="hero-username">
+        <mat-icon>alternate_email</mat-icon>
+        {{ profile()!.username }}
+      </p>
+
+      <!-- Email — now optional, may not exist -->
+      @if (profile()!.email) {
       <p class="hero-email">
         <mat-icon>email</mat-icon>
         {{ profile()!.email }}
       </p>
+      } @else {
+      <p class="hero-email muted">
+        <mat-icon>email</mat-icon>
+        No email on file
+      </p>
+      }
 
       <!-- Role badges -->
       @if (profile()!.roles && profile()!.roles.length > 0) {
@@ -191,7 +205,8 @@
             <p>
               To update your name, contact details, or address, please visit the school office. A
               staff member will make the changes on your behalf. You can still change your
-              <strong>password</strong> and <strong>email</strong> from the tabs above.
+              <strong>username</strong>, <strong>password</strong>, and <strong>email</strong>
+              from the tabs above.
             </p>
           </div>
         </div>
@@ -379,7 +394,125 @@
       </div>
     </mat-tab>
 
-    <!-- ════ TAB 2 — Change Password ════ -->
+    <!-- ════ TAB 2 — Change Username ════ -->
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">alternate_email</mat-icon>
+        Username
+      </ng-template>
+
+      <div class="tab-content">
+        <div class="alert-banner info">
+          <mat-icon>info_outline</mat-icon>
+          <div class="alert-content">
+            <strong>Used to log in</strong>
+            <p>
+              Your username is one of the ways you sign in. Changing it won't log you out right now,
+              but you'll need the new username the next time you log in.
+            </p>
+          </div>
+        </div>
+
+        <div class="current-email-banner current-username-banner">
+          <mat-icon>alternate_email</mat-icon>
+          <div>
+            <p class="current-email-label">Current Username</p>
+            <p class="current-email-value">{{ profile()!.username }}</p>
+          </div>
+        </div>
+
+        <form [formGroup]="usernameForm" class="security-form" (ngSubmit)="changeUsername()">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>New Username</mat-label>
+            <mat-icon matPrefix>alternate_email</mat-icon>
+            <input
+              matInput
+              formControlName="username"
+              placeholder="e.g. johndoe123"
+              autocomplete="off"
+            />
+            @if (checkingUsername()) {
+            <mat-icon matSuffix class="suffix-spin" matTooltip="Checking availability…"
+              >sync</mat-icon
+            >
+            } @else if (usernameForm.get('username')?.valid && usernameAvailable() === true) {
+            <mat-icon matSuffix class="suffix-ok" matTooltip="Available">check_circle</mat-icon>
+            } @else if (usernameForm.get('username')?.valid && usernameAvailable() === false) {
+            <mat-icon matSuffix class="suffix-error" matTooltip="Already taken">cancel</mat-icon>
+            }
+            <mat-hint
+              >{{ usernameMinLength }}–{{ usernameMaxLength }} characters, starts with a letter,
+              letters &amp; numbers only. Saved in lowercase.</mat-hint
+            >
+            @if (usernameForm.get('username')?.hasError('required') &&
+            usernameForm.get('username')?.touched) {
+            <mat-error>Username is required</mat-error>
+            } @else if (usernameForm.get('username')?.hasError('minlength')) {
+            <mat-error>At least {{ usernameMinLength }} characters</mat-error>
+            } @else if (usernameForm.get('username')?.hasError('maxlength')) {
+            <mat-error>At most {{ usernameMaxLength }} characters</mat-error>
+            } @else if (usernameForm.get('username')?.hasError('pattern')) {
+            <mat-error>Only letters and numbers, must start with a letter</mat-error>
+            } @else if (usernameAvailable() === false) {
+            <mat-error>This username is already taken</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Current Password (to confirm)</mat-label>
+            <mat-icon matPrefix>lock_outline</mat-icon>
+            <input
+              matInput
+              formControlName="currentPassword"
+              [type]="showUsernamePw() ? 'text' : 'password'"
+            />
+            <button
+              mat-icon-button
+              matSuffix
+              type="button"
+              (click)="showUsernamePw.set(!showUsernamePw())"
+            >
+              <mat-icon>{{ showUsernamePw() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            @if (usernameForm.get('currentPassword')?.hasError('required') &&
+            usernameForm.get('currentPassword')?.touched) {
+            <mat-error>Current password is required</mat-error>
+            }
+          </mat-form-field>
+
+          <div class="form-actions">
+            <button
+              mat-stroked-button
+              type="button"
+              (click)="usernameForm.reset({ username: profile()!.username, currentPassword: '' })"
+              [disabled]="savingUsername()"
+            >
+              Cancel
+            </button>
+            <button
+              mat-raised-button
+              color="primary"
+              type="submit"
+              [disabled]="
+                savingUsername() ||
+                checkingUsername() ||
+                usernameForm.invalid ||
+                usernameAvailable() === false
+              "
+            >
+              @if (savingUsername()) {
+              <mat-spinner
+                diameter="18"
+                style="display: inline-block; margin-right: 8px"
+              ></mat-spinner>
+              } Update Username
+            </button>
+          </div>
+        </form>
+      </div>
+    </mat-tab>
+
+    <!-- ════ TAB 3 — Change Password ════ -->
     <mat-tab>
       <ng-template mat-tab-label>
         <mat-icon class="tab-icon">lock</mat-icon>
@@ -486,11 +619,11 @@
       </div>
     </mat-tab>
 
-    <!-- ════ TAB 3 — Change Email ════ -->
+    <!-- ════ TAB 4 — Change Email ════ -->
     <mat-tab>
       <ng-template mat-tab-label>
         <mat-icon class="tab-icon">email</mat-icon>
-        Change Email
+        {{ profile()!.email ? 'Change Email' : 'Add Email' }}
       </ng-template>
 
       <div class="tab-content">
@@ -509,7 +642,7 @@
           <mat-icon>email</mat-icon>
           <div>
             <p class="current-email-label">Current Email</p>
-            <p class="current-email-value">{{ profile()!.email }}</p>
+            <p class="current-email-value">{{ profile()!.email || 'No email on file yet' }}</p>
           </div>
         </div>
 
@@ -574,7 +707,7 @@
                 diameter="18"
                 style="display: inline-block; margin-right: 8px"
               ></mat-spinner>
-              } Change Email
+              } {{ profile()!.email ? 'Change Email' : 'Add Email' }}
             </button>
           </div>
         </form>

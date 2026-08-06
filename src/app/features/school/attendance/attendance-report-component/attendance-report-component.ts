@@ -70,7 +70,7 @@ export class AttendanceReportComponent implements OnInit, OnDestroy {
     'rank',
     'rollNumber',
     'studentName',
-    'totalMarkedDays',
+    'markedDays',
     'present',
     'absent',
     'late',
@@ -240,8 +240,8 @@ export class AttendanceReportComponent implements OnInit, OnDestroy {
       switch (event.active) {
         case 'studentName':
           return compare(a.studentName, b.studentName, isAsc);
-        case 'totalMarkedDays':
-          return compare(a.totalMarkedDays, b.totalMarkedDays, isAsc);
+        case 'markedDays':
+          return compare(a.markedDays, b.markedDays, isAsc);
         case 'present':
           return compare(a.present, b.present, isAsc);
         case 'absent':
@@ -282,7 +282,7 @@ export class AttendanceReportComponent implements OnInit, OnDestroy {
       ...data.map((r, i) => [
         i + 1,
         `"${r.studentName}"`,
-        r.totalMarkedDays,
+        r.markedDays,
         r.present,
         r.absent,
         r.late,
@@ -333,7 +333,7 @@ export class AttendanceReportComponent implements OnInit, OnDestroy {
       body: data.map((r, i) => [
         i + 1,
         r.studentName,
-        r.totalMarkedDays,
+        r.markedDays,
         r.present,
         r.absent,
         r.late,

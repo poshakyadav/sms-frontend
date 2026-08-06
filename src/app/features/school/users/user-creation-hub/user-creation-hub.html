@@ -195,7 +195,7 @@
 
           <!-- Email -->
           <mat-form-field appearance="outline" class="col-full">
-            <mat-label>Email Address</mat-label>
+            <mat-label>Email Address <span class="optional-tag">(optional)</span></mat-label>
             <mat-icon matPrefix>email</mat-icon>
             <input
               matInput
@@ -254,6 +254,83 @@
             (emailCheckStatus() === 'taken') { <mat-icon>cancel</mat-icon> } @else {
             <mat-icon>warning</mat-icon> }
             <span>{{ emailCheckMessage() }}</span>
+          </div>
+          }
+
+          <!-- Username -->
+          <mat-form-field appearance="outline" class="col-full">
+            <mat-label
+              >Username <span class="optional-tag">(optional — auto-generated if blank)</span></mat-label
+            >
+            <mat-icon matPrefix>alternate_email</mat-icon>
+            <input
+              matInput
+              type="text"
+              formControlName="username"
+              placeholder="e.g. ravis2026"
+              (input)="onUsernameInput($event)"
+              autocomplete="off"
+              maxlength="30"
+            />
+            <div matSuffix class="email-check-suffix">
+              @if (usernameCheckStatus() === 'checking') {
+              <mat-spinner diameter="18" class="email-spinner"></mat-spinner>
+              } @else if (usernameCheckStatus() === 'available') {
+              <mat-icon class="email-icon email-icon--ok" matTooltip="Username is available"
+                >check_circle</mat-icon
+              >
+              } @else if (usernameCheckStatus() === 'taken') {
+              <mat-icon class="email-icon email-icon--err" matTooltip="Username already taken"
+                >cancel</mat-icon
+              >
+              } @else if (usernameCheckStatus() === 'invalid') {
+              <mat-icon class="email-icon email-icon--err" matTooltip="Invalid username format"
+                >error_outline</mat-icon
+              >
+              } @else if (usernameCheckStatus() === 'error') {
+              <mat-icon
+                class="email-icon email-icon--warn"
+                matTooltip="Verification failed — you may proceed"
+                >warning</mat-icon
+              >
+              } @else {
+              <button
+                type="button"
+                class="email-check-btn"
+                (click)="checkUsernameNow()"
+                matTooltip="Check username availability"
+                [disabled]="
+                  !accountForm.get('username')?.value || accountForm.get('username')?.invalid
+                "
+              >
+                Verify
+              </button>
+              }
+            </div>
+            <mat-hint>Lowercase letters &amp; numbers only, must start with a letter, 3-30 chars</mat-hint>
+          </mat-form-field>
+
+          @if (!accountForm.get('username')?.value) {
+          <div class="username-suggest-row col-full">
+            <button type="button" class="username-suggest-btn" (click)="suggestUsername()">
+              <mat-icon>auto_fix_high</mat-icon>
+              Suggest a username from the name
+            </button>
+          </div>
+          }
+
+          @if (usernameCheckMessage()) {
+          <div
+            class="email-status-msg col-full"
+            [class.msg--ok]="usernameCheckStatus() === 'available'"
+            [class.msg--err]="usernameCheckStatus() === 'taken' || usernameCheckStatus() === 'invalid'"
+            [class.msg--warn]="usernameCheckStatus() === 'error'"
+          >
+            @if (usernameCheckStatus() === 'available') { <mat-icon>check_circle</mat-icon> } @else if
+            (usernameCheckStatus() === 'taken' || usernameCheckStatus() === 'invalid') {
+            <mat-icon>cancel</mat-icon>
+            } @else { <mat-icon>warning</mat-icon> }
+            <span>{{ usernameCheckMessage() }}</span>
           </div>
           }
 

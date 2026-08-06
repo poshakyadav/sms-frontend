@@ -204,8 +204,12 @@ export class Roles implements OnInit {
     this.filterCategory.set(cat);
   }
 
+  // getVisiblePermissions(role: Role): string[] {
+  //   return role.permissions?.slice(0, 5).map((p) => p.slug) ?? [];
+  // }
+
   getVisiblePermissions(role: Role): string[] {
-    return role.permissions?.slice(0, 5).map((p) => p.slug) ?? [];
+    return role.permissions?.slice(0, 5).map((p) => p.name) ?? [];
   }
 
   getExtraPermissionCount(role: Role): number {

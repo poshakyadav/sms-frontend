@@ -125,6 +125,7 @@ export class SchoolOnboard implements OnInit, OnDestroy {
   step2 = {
     ownerName: '',
     ownerEmail: '',
+    ownerUsername: '', // NEW — optional, backend auto-generates from name if left blank
     password: '',
     confirmPassword: '',
     ownerPhone: '',
@@ -249,6 +250,7 @@ export class SchoolOnboard implements OnInit, OnDestroy {
     this.step1.website = details['schoolWebsite'] ?? '';
     this.step2.ownerName = details['ownerName'] ?? '';
     this.step2.ownerEmail = details['ownerEmail'] ?? '';
+    this.step2.ownerUsername = details['ownerUsername'] ?? ''; // NEW
     this.step2.ownerPhone = details['ownerPhone'] ?? '';
     this.schoolName.set(details['schoolName'] ?? '');
   }
@@ -274,16 +276,33 @@ export class SchoolOnboard implements OnInit, OnDestroy {
     this.signupError.set('');
   }
 
+  // CHANGED: ownerEmail and ownerUsername are optional now — only format-check
+  // them when the owner actually typed something.
   isStep2Valid(): boolean {
+    const email = this.step2.ownerEmail.trim();
+    const username = this.step2.ownerUsername.trim();
+
+    const emailValid = !email || this.isValidEmail(email);
+    const usernameValid = !username || this.isValidUsername(username);
+
     return !!(
       this.step2.ownerName.trim() &&
-      this.step2.ownerEmail.trim() &&
+      emailValid &&
+      usernameValid &&
       this.step2.password &&
       this.step2.confirmPassword &&
       this.step2.ownerPhone.trim() &&
       this.step2.termsAccepted &&
       this.step2.password === this.step2.confirmPassword
     );
+  }
+
+  private isValidEmail(value: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  }
+
+  private isValidUsername(value: string): boolean {
+    return /^[a-z][a-z0-9]*$/.test(value.toLowerCase()) && value.length >= 3 && value.length <= 30;
   }
 
   onPasswordChange(): void {
@@ -307,7 +326,10 @@ export class SchoolOnboard implements OnInit, OnDestroy {
     const payload = {
       inviteToken: this.token()!,
       ownerName: this.step2.ownerName.trim(),
-      ownerEmail: this.step2.ownerEmail.trim().toLowerCase(),
+      // CHANGED: optional now — send '' rather than forcing a value
+      ownerEmail: this.step2.ownerEmail.trim() ? this.step2.ownerEmail.trim().toLowerCase() : '',
+      ownerUsername: this.step2.ownerUsername.trim() ? this.step2.ownerUsername.trim().toLowerCase() : '',
+     
       ownerPassword: this.step2.password,
       ownerPhone: this.step2.ownerPhone.trim(),
       ownerAlternatePhone: this.step2.ownerAlternatePhone.trim(),

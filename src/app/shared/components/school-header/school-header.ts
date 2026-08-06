@@ -1,3 +1,5 @@
+// school-header.ts
+
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
   Component,

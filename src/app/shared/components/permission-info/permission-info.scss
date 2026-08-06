@@ -1,0 +1,86 @@
+// shared/components/permission-info/permission-info.scss
+.perm-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.perm-info__title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.perm-info__name {
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.perm-info__risk-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+
+  &.risk-medium {
+    background: rgba(217, 119, 6, 0.12);
+    color: #d97706;
+    border: 1px solid rgba(217, 119, 6, 0.25);
+  }
+
+  &.risk-high {
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+    border: 1px solid rgba(220, 38, 38, 0.25);
+  }
+
+  &.risk-critical {
+    background: rgba(153, 27, 27, 0.12);
+    color: #991b1b;
+    border: 1px solid rgba(153, 27, 27, 0.3);
+  }
+}
+
+.perm-info__desc {
+  font-size: 0.76rem;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.perm-info__used-in {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 1px;
+}
+
+.perm-info__used-in-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  background: var(--color-hover);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  font-size: 0.68rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.perm-info__slug {
+  font-size: 0.7rem;
+  font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}

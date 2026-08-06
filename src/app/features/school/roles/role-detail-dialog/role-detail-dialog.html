@@ -93,15 +93,16 @@
           <span class="rdd-module-name">{{ entry[0] }}</span>
           <span class="rdd-module-count">{{ entry[1].length }}</span>
         </div>
+
         <div class="rdd-perm-list">
           @for (perm of entry[1]; track perm.id) {
           <div class="rdd-perm-row">
             <mat-icon class="rdd-perm-check">check_circle</mat-icon>
             <div class="rdd-perm-info">
-              <span class="rdd-perm-name">{{ perm.name }}</span>
-              <span class="rdd-perm-slug">{{ perm.slug }}</span>
+              <app-permission-info [permission]="perm"></app-permission-info>
             </div>
           </div>
+
           }
         </div>
       </div>

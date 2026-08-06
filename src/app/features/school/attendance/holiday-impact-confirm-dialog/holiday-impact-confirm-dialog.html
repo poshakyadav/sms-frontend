@@ -1,0 +1,44 @@
+<h2 mat-dialog-title class="danger-title">
+  <mat-icon>warning</mat-icon>
+  Confirm Holiday Declaration
+</h2>
+
+<div mat-dialog-content>
+  <p>
+    You're about to mark <strong>{{ data.dayCount }}</strong> day(s) ({{ data.fromDate }}@if
+    (data.fromDate !== data.toDate) { → {{ data.toDate }} }) as <strong>Holiday</strong> for
+    <strong>{{ data.scopeLabel }}</strong
+    >.
+  </p>
+
+  @if (data.preview.count > 0) {
+  <div class="danger-box">
+    <mat-icon>report</mat-icon>
+    <div>
+      <strong>{{ data.preview.count }} day(s) already have attendance recorded.</strong>
+      <p>
+        Those records are kept for audit purposes but will no longer count toward working-day totals
+        or reports once this holiday is declared.
+      </p>
+      <ul class="affected-dates">
+        @for (d of data.preview.affectedDates.slice(0, 8); track d) {
+        <li>{{ d }}</li>
+        } @if (data.preview.affectedDates.length > 8) {
+        <li>and {{ data.preview.affectedDates.length - 8 }} more…</li>
+        }
+      </ul>
+    </div>
+  </div>
+  } @else {
+  <p class="safe-note">
+    <mat-icon>check_circle</mat-icon> No existing attendance will be affected.
+  </p>
+  }
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="warn" (click)="confirm()">
+    @if (data.preview.count > 0) { Proceed Anyway } @else { Confirm }
+  </button>
+</div>

@@ -62,7 +62,7 @@
           </div>
           <div class="sfd-dropdown-info">
             <span class="sfd-dropdown-name">{{ s.name }}</span>
-            <span class="sfd-dropdown-email">{{ s.email }}</span>
+            <span class="sfd-dropdown-email">{{ s.email ?? '@' + s.username }}</span>
           </div>
           <mat-icon class="sfd-dropdown-arrow">chevron_right</mat-icon>
         </button>
@@ -182,7 +182,10 @@
     </div>
     <div class="sfd-student-banner__info">
       <h2 class="sfd-student-banner__name">{{ selectedStudent()!.name }}</h2>
-      <p class="sfd-student-banner__email">{{ selectedStudent()!.email }}</p>
+      <!-- student banner -->
+      <p class="sfd-student-banner__email">
+        {{ selectedStudent()!.email ?? '@' + selectedStudent()!.username }}
+      </p>
     </div>
     <!-- Enrollment Year Pills -->
     <div class="sfd-enrollment-pills">

@@ -76,7 +76,15 @@ export interface RoleOption {
   category?: RoleCategory;
 }
 
-type EmailCheckStatus = 'idle' | 'checking' | 'available' | 'taken' | 'error';
+// Renamed from EmailCheckStatus — now shared by both the email and username
+// live-checks, which need an extra 'invalid' state for client-side format
+// failures (username has a strict pattern; email doesn't need this state
+// but reuses the same type harmlessly).
+type FieldCheckStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid' | 'error';
+
+const USERNAME_MIN_LENGTH = 3;
+const USERNAME_MAX_LENGTH = 30;
+const USERNAME_PATTERN = /^[a-z][a-z0-9]{2,29}$/;
 
 // ── Indian States (2026 — includes all 28 states + 8 UTs) ─────────────────────
 
@@ -363,9 +371,14 @@ export class UserCreationHub implements OnInit {
   availableRoles = signal<RoleOption[]>([]);
 
   // Email check
-  emailCheckStatus = signal<EmailCheckStatus>('idle');
+  emailCheckStatus = signal<FieldCheckStatus>('idle');
   emailCheckMessage = signal<string>('');
   private emailCheckSubject = new Subject<string>();
+
+  // Username check
+  usernameCheckStatus = signal<FieldCheckStatus>('idle');
+  usernameCheckMessage = signal<string>('');
+  private usernameCheckSubject = new Subject<string>();
 
   // ── State/Language search signals ─────────────────────────────────────────
   stateSearch = signal('');
@@ -476,7 +489,8 @@ export class UserCreationHub implements OnInit {
 
   accountForm = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-    email: ['', [Validators.required, Validators.email]],
+    email: ['', [Validators.email]], // no longer required
+    username: ['', [Validators.pattern(USERNAME_PATTERN)]], // optional — auto-generated if blank
     password: ['', [Validators.required, Validators.minLength(8)]],
   });
 
@@ -570,28 +584,54 @@ export class UserCreationHub implements OnInit {
             return of(null);
           }
           this.emailCheckStatus.set('checking');
-          const params = new HttpParams().set('email', email);
-          return this.api.get<{ success: boolean; available: boolean; message: string }>(
-            'school/users/check-email',
-            params
-          );
+          return this.usersService.checkEmailAvailable(email);
         }),
         takeUntilDestroyed()
       )
       .subscribe({
         next: (res) => {
           if (!res) return;
-          if (res.available) {
-            this.emailCheckStatus.set('available');
-            this.emailCheckMessage.set(res.message);
-          } else {
-            this.emailCheckStatus.set('taken');
-            this.emailCheckMessage.set(res.message);
-          }
+          this.emailCheckStatus.set(res.available ? 'available' : 'taken');
+          this.emailCheckMessage.set(res.message);
         },
         error: () => {
           this.emailCheckStatus.set('error');
           this.emailCheckMessage.set('Could not verify email. You may proceed.');
+        },
+      });
+
+    // NEW — username live-check
+    this.usernameCheckSubject
+      .pipe(
+        debounceTime(500),
+        distinctUntilChanged(),
+        switchMap((username) => {
+          if (!username) {
+            this.usernameCheckStatus.set('idle');
+            this.usernameCheckMessage.set('');
+            return of(null);
+          }
+          if (!USERNAME_PATTERN.test(username)) {
+            this.usernameCheckStatus.set('invalid');
+            this.usernameCheckMessage.set(
+              `Must be ${USERNAME_MIN_LENGTH}-${USERNAME_MAX_LENGTH} characters, start with a letter, and contain only lowercase letters and numbers.`
+            );
+            return of(null);
+          }
+          this.usernameCheckStatus.set('checking');
+          return this.usersService.checkUsernameAvailable(username);
+        }),
+        takeUntilDestroyed()
+      )
+      .subscribe({
+        next: (res) => {
+          if (!res) return;
+          this.usernameCheckStatus.set(res.available ? 'available' : 'taken');
+          this.usernameCheckMessage.set(res.message);
+        },
+        error: () => {
+          this.usernameCheckStatus.set('error');
+          this.usernameCheckMessage.set('Could not verify username. You may proceed.');
         },
       });
   }
@@ -682,6 +722,72 @@ export class UserCreationHub implements OnInit {
       });
   }
 
+  onUsernameInput(event: Event): void {
+    const raw = (event.target as HTMLInputElement).value;
+    // Strip anything that could never be valid as the person types, rather
+    // than rejecting the whole input — friendlier than a hard validation
+    // error on every keystroke. Leading-digit issues still surface via the
+    // pattern check (can't "fix" that without guessing intent).
+    const cleaned = raw.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (cleaned !== raw) {
+      (event.target as HTMLInputElement).value = cleaned;
+    }
+    this.accountForm.get('username')?.setValue(cleaned, { emitEvent: false });
+    this.usernameCheckStatus.set('idle');
+    this.usernameCheckMessage.set('');
+    this.usernameCheckSubject.next(cleaned);
+  }
+
+  checkUsernameNow(): void {
+    const username = this.accountForm.get('username')?.value?.trim().toLowerCase() ?? '';
+    if (!username) {
+      this.toast.error('Please enter a username first.');
+      return;
+    }
+    if (!USERNAME_PATTERN.test(username)) {
+      this.usernameCheckStatus.set('invalid');
+      this.usernameCheckMessage.set(
+        `Must be ${USERNAME_MIN_LENGTH}-${USERNAME_MAX_LENGTH} characters, start with a letter, and contain only lowercase letters and numbers.`
+      );
+      return;
+    }
+    this.usernameCheckStatus.set('checking');
+    this.usersService.checkUsernameAvailable(username).subscribe({
+      next: (res) => {
+        this.usernameCheckStatus.set(res.available ? 'available' : 'taken');
+        this.usernameCheckMessage.set(res.message);
+      },
+      error: () => {
+        this.usernameCheckStatus.set('error');
+        this.usernameCheckMessage.set('Could not verify username. You may proceed.');
+      },
+    });
+  }
+
+  /**
+   * Client-side convenience only — builds a candidate from the name plus a
+   * random suffix (same shape the backend would generate) and triggers a
+   * live check. Purely UX sugar: leaving the field blank works identically,
+   * since the backend auto-generates one anyway.
+   */
+  suggestUsername(): void {
+    const name = this.accountForm.get('name')?.value?.trim() ?? '';
+    let base = name
+      .toLowerCase()
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]/g, '')
+      .replace(/^[0-9]+/, '');
+    if (!base) base = 'user';
+    base = base.slice(0, 16);
+    const suffix = Math.random().toString(36).slice(2, 6);
+    const candidate = `${base}${suffix}`;
+    this.accountForm.get('username')?.setValue(candidate);
+    this.usernameCheckStatus.set('idle');
+    this.usernameCheckMessage.set('');
+    this.usernameCheckSubject.next(candidate);
+  }
+
   // ── State search ───────────────────────────────────────────────────────────
   onStateSearchInput(event: Event): void {
     this.stateSearch.set((event.target as HTMLInputElement).value);
@@ -763,6 +869,8 @@ export class UserCreationHub implements OnInit {
     this.emailCheckStatus.set('idle');
     this.emailCheckMessage.set('');
     this.pendingAvatarFile.set(null);
+    this.usernameCheckStatus.set('idle');
+    this.usernameCheckMessage.set('');
   }
 
   backToHub(): void {
@@ -800,8 +908,18 @@ export class UserCreationHub implements OnInit {
     if (stepId === 'account') {
       const form = this.accountForm;
       if (!form.valid) return false;
-      const status = this.emailCheckStatus();
-      return status === 'available' || status === 'error';
+
+      const emailVal = form.get('email')?.value?.trim();
+      const emailOk =
+        !emailVal || this.emailCheckStatus() === 'available' || this.emailCheckStatus() === 'error';
+
+      const usernameVal = form.get('username')?.value?.trim();
+      const usernameOk =
+        !usernameVal ||
+        this.usernameCheckStatus() === 'available' ||
+        this.usernameCheckStatus() === 'error';
+
+      return emailOk && usernameOk;
     }
 
     const form = this.getActiveForm();
@@ -824,14 +942,34 @@ export class UserCreationHub implements OnInit {
     }
 
     if (stepId === 'account') {
-      const status = this.emailCheckStatus();
-      if (status === 'taken') {
-        this.toast.error('Please use a different email address.');
-        return;
+      const emailVal = this.accountForm.get('email')?.value?.trim();
+      if (emailVal) {
+        const emailStatus = this.emailCheckStatus();
+        if (emailStatus === 'taken') {
+          this.toast.error('Please use a different email address.');
+          return;
+        }
+        if (emailStatus === 'idle' || emailStatus === 'checking') {
+          this.toast.error('Please wait for email verification to complete.');
+          return;
+        }
       }
-      if (status === 'idle' || status === 'checking') {
-        this.toast.error('Please wait for email verification to complete.');
-        return;
+
+      const usernameVal = this.accountForm.get('username')?.value?.trim();
+      if (usernameVal) {
+        const usernameStatus = this.usernameCheckStatus();
+        if (usernameStatus === 'taken') {
+          this.toast.error('That username is already taken. Please choose a different one.');
+          return;
+        }
+        if (usernameStatus === 'invalid') {
+          this.toast.error('Please fix the username format, or leave it blank to auto-generate one.');
+          return;
+        }
+        if (usernameStatus === 'idle' || usernameStatus === 'checking') {
+          this.toast.error('Please wait for username verification to complete.');
+          return;
+        }
       }
     }
 
@@ -936,7 +1074,8 @@ export class UserCreationHub implements OnInit {
     // ── Build payload ──────────────────────────────────────────────────────
     const payload: CreateUserPayload = {
       name: acc.name!.trim(),
-      email: acc.email!.trim().toLowerCase(),
+      email: acc.email?.trim() ? acc.email.trim().toLowerCase() : undefined,
+      username: acc.username?.trim() ? acc.username.trim().toLowerCase() : undefined,
       password: acc.password!,
       primaryRoleId,
       roleIds: [primaryRoleId],
@@ -1024,37 +1163,33 @@ export class UserCreationHub implements OnInit {
     this.usersService.createUser(payload).subscribe({
       next: (res) => {
         this.submitting.set(false);
-        const newUserId = (res as any).user?.id ?? null;
+        const createdUser = (res as any).user;
+        const newUserId = createdUser?.id ?? null;
+        const newUsername = createdUser?.username ?? null;
         this.createdUserId.set(newUserId);
 
-        // ── NEW: upload the staged avatar now that the user exists ──────────
+        const verb = persona.id === 'student' ? 'admitted' : 'created';
+        const successMsg = newUsername
+          ? `${acc.name} ${verb} successfully! Username: ${newUsername}`
+          : `${acc.name} ${verb} successfully!`;
+
         const photo = this.pendingAvatarFile();
         if (newUserId && photo) {
           this.avatarService.uploadAvatar(newUserId, photo).subscribe({
-            next: () => {
-              // Non-blocking — the user record itself already succeeded, so
-              // we don't want a photo-upload hiccup to look like the whole
-              // creation failed. Just inform and move on.
-              this.toast.success(`${acc.name} admitted successfully!`);
-            },
+            next: () => this.toast.success(successMsg),
             error: () => {
-              // Creation still succeeded; only the photo failed. Tell the
-              // admin so they can retry from the edit screen, but don't block
-              // navigation — the rest of the account is fully usable.
               this.toast.error(
-                `${acc.name} was created, but the profile photo failed to upload. You can add it from Edit User.`
+                `${acc.name} was ${verb}, but the profile photo failed to upload. You can add it from Edit User.`
               );
             },
           });
-        } else if (persona.id !== 'student') {
-          this.toast.success(`${acc.name} created successfully!`);
+        } else {
+          this.toast.success(successMsg);
         }
 
         if (persona.id === 'student') {
-          this.toast.success(`${acc.name} admitted successfully!`);
           this.currentStep.set(this.steps().length - 1);
         } else {
-          this.toast.success(`${acc.name} created successfully!`);
           this.router.navigate(['/school/users']);
         }
       },

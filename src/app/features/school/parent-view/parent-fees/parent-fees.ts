@@ -14,6 +14,8 @@ import {
 
 import { FeeStatusBadge } from '../../../../shared/components/fee-status-badge/fee-status-badge';
 import { PaisePipe } from '../../../../shared/pipes/paise-pipe';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { FeeReceiptDialogComponent } from '../../../../shared/components/fee-receipt-dialog/fee-receipt-dialog';
 
 @Component({
   selector: 'app-parent-fees',
@@ -24,6 +26,7 @@ import { PaisePipe } from '../../../../shared/pipes/paise-pipe';
     MatButtonModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
+    MatDialogModule,
     PaisePipe,
     FeeStatusBadge,
   ],
@@ -63,7 +66,7 @@ export class ParentFees implements OnInit {
 
   hasNoChildSelected = signal(false);
 
-  constructor(private fees: FeesService) {}
+  constructor(private fees: FeesService,  private dialog: MatDialog) {}
 
   ngOnInit(): void {
     this.load();
@@ -94,6 +97,21 @@ export class ParentFees implements OnInit {
       },
     });
   }
+
+  // ── Receipt dialog ─────────────────────────────────────────────────────────
+
+/**
+ * Opens the shared fee receipt dialog for a payment made toward the active
+ * child. Ownership is enforced server-side via fees.parent.view + the
+ * parent-child relationship check inside getFeeReceipt().
+ */
+openReceipt(payment: StudentPaymentItem): void {
+  this.dialog.open(FeeReceiptDialogComponent, {
+    width: '780px',
+    maxWidth: '95vw',
+    data: { paymentId: payment.id },
+  });
+}
 
   selectYear(index: number): void {
     this.activeYearIndex.set(index);

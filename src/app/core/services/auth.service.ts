@@ -16,7 +16,8 @@ export type UserType = 'school' | 'super';
 export interface SchoolUser {
   id: number;
   name: string;
-  email: string;
+  email: string | null; // now optional backend-side — a user may have no email
+  username: string; // every school user has one, unlike email
   schoolCode: string;
 }
 
@@ -227,11 +228,11 @@ export class AuthService {
   // ====== School login ======
   schoolLogin(
     schoolCode: string,
-    email: string,
+    identifier: { email?: string; username?: string },
     password: string,
     termsAccepted?: boolean
   ): Observable<any> {
-    const body: any = { schoolCode, email, password };
+    const body: any = { schoolCode, ...identifier, password };
     if (termsAccepted !== undefined) body.termsAccepted = termsAccepted;
 
     return this.api.post('school/auth/login', body).pipe(
@@ -246,10 +247,11 @@ export class AuthService {
         // FIX: Guard on the exact flag — never suppress toast for anything else.
         const isTermsGate = err?.error?.requiresTermsAcceptance === true;
         if (!isTermsGate) {
-          this.toast.error(err?.error?.error || 'Invalid email or password');
+          // Backend already returns a method-aware message ("Invalid username
+          // or password" vs "Invalid email or password") when it knows which
+          // field was used — this is just the network/unexpected-error fallback.
+          this.toast.error(err?.error?.error || 'Invalid email/username or password');
         }
-        // Re-throw the original HttpErrorResponse so the component's catch block
-        // receives err.error (the parsed body) intact.
         return throwError(() => err);
       })
     );
@@ -324,7 +326,7 @@ export class AuthService {
 
     if (refreshToken) {
       const endpoint = isSchool ? 'school/auth/logout' : 'auth/logout';
-      this.api.post(endpoint, { refresh_token: refreshToken }).subscribe({ error: () => {} });
+      this.api.post(endpoint, { refresh_token: refreshToken }).subscribe({ error: () => { } });
     }
 
     this.clearAuth();

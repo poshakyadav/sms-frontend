@@ -41,6 +41,9 @@ import {
   UsersService,
 } from '../../../../core/services/users.service';
 import { AvatarPicker } from '../../../../shared/components/avatar-picker/avatar-picker';
+import { debounceTime, distinctUntilChanged, forkJoin, Observable, of, Subject, switchMap } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { PermissionInfo } from '../../../../shared/components/permission-info/permission-info';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -91,6 +94,10 @@ function primaryRoleToCategory(primaryRole: string): RoleCategory {
   return derivePermissionCategory(primaryRole);
 }
 
+const USERNAME_MIN_LENGTH = 3;
+const USERNAME_MAX_LENGTH = 30;
+const USERNAME_PATTERN = /^[a-z][a-z0-9]{2,29}$/;
+
 // ── Pipe ───────────────────────────────────────────────────────────────────────
 
 @Pipe({ name: 'findById', standalone: true, pure: false })
@@ -120,6 +127,7 @@ export class FindByIdPipe implements PipeTransform {
     MatTooltipModule,
     FindByIdPipe,
     AvatarPicker,
+    PermissionInfo,
   ],
   providers: [DatePipe, ...INDIAN_DATE_PROVIDERS],
   templateUrl: './user-form.html',
@@ -188,6 +196,55 @@ export class UserForm implements OnInit {
   originalGrantIds = signal<Set<number>>(new Set());
   originalDenyIds = signal<Set<number>>(new Set());
 
+  usernameCheckStatus = signal<'idle' | 'checking' | 'available' | 'taken' | 'invalid' | 'error'>('idle');
+  usernameCheckMessage = signal<string>('');
+  private usernameCheckSubject = new Subject<string>();
+
+
+  constructor() {
+    this.usernameCheckSubject
+      .pipe(
+        debounceTime(500),
+        distinctUntilChanged(),
+        switchMap((username) => {
+          if (!username) {
+            this.usernameCheckStatus.set('idle');
+            this.usernameCheckMessage.set('');
+            return of(null);
+          }
+          if (!USERNAME_PATTERN.test(username)) {
+            this.usernameCheckStatus.set('invalid');
+            this.usernameCheckMessage.set(
+              `Must be ${USERNAME_MIN_LENGTH}-${USERNAME_MAX_LENGTH} characters, start with a letter, and contain only lowercase letters and numbers.`
+            );
+            return of(null);
+          }
+          // Skip the round trip if they've just typed back their own current
+          // username — that's a no-op server-side too.
+          if (username === (this.originalValues()['username'] ?? '')) {
+            this.usernameCheckStatus.set('idle');
+            this.usernameCheckMessage.set('This is the current username.');
+            return of(null);
+          }
+          this.usernameCheckStatus.set('checking');
+          return this.usersService.checkUsernameAvailable(username);
+        }),
+        takeUntilDestroyed()
+      )
+      .subscribe({
+        next: (res) => {
+          if (!res) return;
+          this.usernameCheckStatus.set(res.available ? 'available' : 'taken');
+          this.usernameCheckMessage.set(res.message);
+        },
+        error: () => {
+          this.usernameCheckStatus.set('error');
+          this.usernameCheckMessage.set('Could not verify username. You may proceed.');
+        },
+      });
+  }
+
+
   // ── Static options ────────────────────────────────────────────────────────
   readonly bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
   readonly genders = [
@@ -239,7 +296,11 @@ export class UserForm implements OnInit {
       .map((g) => ({
         ...g,
         permissions: g.permissions.filter(
-          (p) => p.slug.toLowerCase().includes(q) || p.name.toLowerCase().includes(q)
+          (p) =>
+            p.slug.toLowerCase().includes(q) ||
+            p.name.toLowerCase().includes(q) ||
+            (p.description ?? '').toLowerCase().includes(q) ||
+            (p.usedIn ?? []).some((u) => u.toLowerCase().includes(q))
         ),
         expanded: true,
       }))
@@ -321,6 +382,7 @@ export class UserForm implements OnInit {
   private readonly fieldLabels: Record<string, string> = {
     name: 'Full Name',
     email: 'Email Address',
+    username: 'Username',
     newPassword: 'New Password',
     roleIds: 'Assigned Roles',
     phone: 'Primary Phone',
@@ -391,7 +453,8 @@ export class UserForm implements OnInit {
   // ── Form ──────────────────────────────────────────────────────────────────
   form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-    email: ['', [Validators.required, Validators.email]],
+    email: ['', [Validators.email]], // no longer required
+    username: ['', [Validators.pattern(USERNAME_PATTERN)]], 
     password: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(100)]],
     primaryRoleId: [null as number | null],
     roleIds: [[] as number[], [Validators.required, this.minArrayLength(1)]],
@@ -576,6 +639,11 @@ export class UserForm implements OnInit {
       fields.add(fieldName);
       this.updateFieldDisabledState(fieldName, false);
     }
+    if (fieldName === 'username') {
+      this.usernameCheckStatus.set('idle');
+      this.usernameCheckMessage.set('');
+    }
+
     this.editableFields.set(fields);
   }
 
@@ -1024,7 +1092,8 @@ export class UserForm implements OnInit {
         const p = (user.profile?.data ?? {}) as any;
         const values: Record<string, any> = {
           name: user.name,
-          email: user.email,
+          email: user.email ?? '',
+          username: (user as any).username ?? '',
           roleIds: user.roles.map((r) => r.id),
           phone: user.phone ?? '',
           alternatePhone: user.alternatePhone ?? '',
@@ -1101,7 +1170,8 @@ export class UserForm implements OnInit {
 
     const payload: CreateUserPayload = {
       name: raw.name.trim(),
-      email: raw.email.trim().toLowerCase(),
+      email: raw.email?.trim() ? raw.email.trim().toLowerCase() : undefined,
+      username: raw.username?.trim() ? raw.username.trim().toLowerCase() : undefined,
       password: raw.password,
       primaryRoleId,
       roleIds,
@@ -1125,7 +1195,7 @@ export class UserForm implements OnInit {
     const payload: UpdateUserPayload = {};
 
     if (editableSet.has('name')) payload.name = raw.name?.trim();
-    if (editableSet.has('email')) payload.email = raw.email?.trim().toLowerCase();
+    if (editableSet.has('email')) payload.email = raw.email?.trim().toLowerCase() || undefined;
     if (editableSet.has('isActive')) payload.isActive = raw.isActive;
     if (editableSet.has('newPassword') && raw.newPassword?.trim())
       payload.newPassword = raw.newPassword.trim();
@@ -1187,6 +1257,7 @@ export class UserForm implements OnInit {
       }
     }
 
+    // 
     const rolesChanged = editableSet.has('roleIds');
     const originalRoleIds: number[] = this.originalValues()['roleIds'] ?? [];
     const newRoleIds: number[] = raw.roleIds ?? [];
@@ -1197,56 +1268,68 @@ export class UserForm implements OnInit {
       (originalRoleIds.length !== newRoleIds.length ||
         !originalRoleIds.every((id) => newRoleIds.includes(id)));
 
+    // ── Username — dedicated endpoint, deliberately kept out of `payload` ───
+    const originalUsername: string = this.originalValues()['username'] ?? '';
+    const newUsername: string = (raw.username ?? '').trim().toLowerCase();
+    const usernameChanged =
+      editableSet.has('username') && newUsername.length > 0 && newUsername !== originalUsername;
+
+    if (editableSet.has('username') && newUsername.length === 0) {
+      this.toast.error('Username cannot be empty. Lock the field to keep the current username.');
+      this.submitting.set(false);
+      return;
+    }
+    if (usernameChanged && this.usernameCheckStatus() === 'taken') {
+      this.toast.error('That username is already taken. Please choose a different one.');
+      this.submitting.set(false);
+      return;
+    }
+    if (usernameChanged && this.usernameCheckStatus() === 'invalid') {
+      this.toast.error('Please fix the username format before saving.');
+      this.submitting.set(false);
+      return;
+    }
+
     const hasUserUpdates = Object.keys(payload).length > 0;
     const doUserUpdate$ = hasUserUpdates ? this.usersService.updateUser(userId, payload) : null;
     const doRolesUpdate$ =
       rolesDiffer && newRoleIds.length > 0
         ? this.usersService.assignRoles(userId, newRoleIds)
         : null;
+    const doUsernameUpdate$ = usernameChanged
+      ? this.usersService.changeUsername(userId, newUsername)
+      : null;
 
-    if (!doUserUpdate$ && !doRolesUpdate$) {
+    if (!doUserUpdate$ && !doRolesUpdate$ && !doUsernameUpdate$) {
       this.toast.info('No changes to save.');
       this.submitting.set(false);
       return;
     }
 
-    const afterAll = () => {
-      this.toast.success('User updated successfully!');
-      this.router.navigate(['/school/users']);
-    };
+    // These three are independent — run them in parallel instead of
+    // chaining sequential round trips.
+    const calls: Record<string, Observable<any>> = {};
+    if (doUserUpdate$) calls['user'] = doUserUpdate$;
+    if (doRolesUpdate$) calls['roles'] = doRolesUpdate$;
+    if (doUsernameUpdate$) calls['username'] = doUsernameUpdate$;
 
-    if (doUserUpdate$ && doRolesUpdate$) {
-      doUserUpdate$.subscribe({
-        next: () =>
-          doRolesUpdate$.subscribe({
-            next: afterAll,
-            error: (err) => {
-              this.handleRolesError(err);
-              this.submitting.set(false);
-            },
-          }),
-        error: (err) => {
-          this.toast.error(err?.error?.error ?? err?.message ?? 'Failed to update user');
-          this.submitting.set(false);
-        },
-      });
-    } else if (doUserUpdate$) {
-      doUserUpdate$.subscribe({
-        next: afterAll,
-        error: (err) => {
-          this.toast.error(err?.error?.error ?? err?.message ?? 'Failed to update user');
-          this.submitting.set(false);
-        },
-      });
-    } else if (doRolesUpdate$) {
-      doRolesUpdate$.subscribe({
-        next: afterAll,
-        error: (err) => {
+    forkJoin(calls).subscribe({
+      next: () => {
+        this.toast.success('User updated successfully!');
+        this.router.navigate(['/school/users']);
+      },
+      error: (err) => {
+        const msg: string = err?.error?.error ?? err?.message ?? 'Failed to update user';
+        if (msg.toLowerCase().includes('username')) {
+          this.toast.error(msg);
+        } else if (msg.includes('primary role') || msg.includes('SCHOOL_OWNER')) {
           this.handleRolesError(err);
-          this.submitting.set(false);
-        },
-      });
-    }
+        } else {
+          this.toast.error(msg);
+        }
+        this.submitting.set(false);
+      },
+    });
   }
 
   private buildOptionalFields(raw: any) {
@@ -1348,6 +1431,18 @@ export class UserForm implements OnInit {
     } else {
       this.toast.error(serverError || 'Failed to update roles');
     }
+  }
+
+  onUsernameInput(event: Event): void {
+    const raw = (event.target as HTMLInputElement).value;
+    const cleaned = raw.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (cleaned !== raw) {
+      (event.target as HTMLInputElement).value = cleaned;
+    }
+    this.form.get('username')?.setValue(cleaned, { emitEvent: false });
+    this.usernameCheckStatus.set('idle');
+    this.usernameCheckMessage.set('');
+    this.usernameCheckSubject.next(cleaned);
   }
 
   onAvatarUploaded(newUrl: string): void {

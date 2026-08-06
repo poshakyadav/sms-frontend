@@ -429,7 +429,7 @@ const COLUMNS: ColDef[] = [
     required: false,
     isHelper: false,
     group: 'udise_demo',
-    hint: '1=General, 2=SC, 3=ST, 4=OBC, 5=OBC-NCL  (or type name)',
+    hint: '1=General, 2=SC, 3=ST, 4=OBC, 5=OBC-NCL, 6=Minority  (or type name)',
     example: '1',
     example2: '1',
   },

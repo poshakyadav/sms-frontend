@@ -543,9 +543,37 @@ export class BulkUploadService {
   }
 
   // ── Styled Excel template download (ExcelJS) ────────────────────────────────
+  // async downloadTemplate(): Promise<void> {
+  //   const ExcelJS = await import('exceljs');
+  //   const { saveAs } = await import('file-saver');
+
+  //   const workbook = new ExcelJS.Workbook();
+  //   workbook.creator = 'School Management System';
+  //   workbook.created = new Date();
+
+  //   await this._buildStudentSheet(workbook, ExcelJS);
+  //   await this._buildGuideSheet(workbook, ExcelJS);
+
+  //   const buffer = await workbook.xlsx.writeBuffer();
+  //   const blob = new Blob([buffer], {
+  //     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  //   });
+  //   saveAs(blob, 'bulk_student_upload_template_v4.xlsx');
+  // }
+
+  // ── Styled Excel template download (ExcelJS) ────────────────────────────────
   async downloadTemplate(): Promise<void> {
-    const ExcelJS = await import('exceljs');
-    const { saveAs } = await import('file-saver');
+    const ExcelJSModule: any = await import('exceljs');
+    // Production bundlers (esbuild/Cloudflare) sometimes nest the real CJS
+    // exports under `.default` instead of hoisting them to the namespace root.
+    // Resolve whichever shape actually has `Workbook` on it.
+    const ExcelJS: any = ExcelJSModule.Workbook
+      ? ExcelJSModule
+      : ExcelJSModule.default ?? ExcelJSModule;
+
+    const fileSaverModule: any = await import('file-saver');
+    const saveAs: (blob: Blob, filename: string) => void =
+      fileSaverModule.saveAs ?? fileSaverModule.default?.saveAs ?? fileSaverModule.default;
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'School Management System';

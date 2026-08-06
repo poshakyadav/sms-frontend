@@ -297,6 +297,48 @@ export class SchoolOnboard implements OnInit, OnDestroy {
     );
   }
 
+  // NEW: surfaces exactly which Step 2 requirements aren't met yet, so the
+  // UI can tell the user why the button is disabled instead of leaving them
+  // to guess (e.g. a one-character password/confirm mismatch is invisible
+  // when both fields just show dots).
+  step2MissingReasons(): string[] {
+    const reasons: string[] = [];
+    const email = this.step2.ownerEmail.trim();
+    const username = this.step2.ownerUsername.trim();
+
+    if (!this.step2.ownerName.trim()) reasons.push('Owner / Principal name is required.');
+    if (email && !this.isValidEmail(email)) reasons.push('Email address looks invalid.');
+    if (username && !this.isValidUsername(username)) {
+      reasons.push(
+        'Username must be lowercase letters/numbers, start with a letter, 3–30 characters.'
+      );
+    }
+    if (!this.step2.password) reasons.push('Password is required.');
+    if (!this.step2.confirmPassword) reasons.push('Please confirm your password.');
+    if (
+      this.step2.password &&
+      this.step2.confirmPassword &&
+      this.step2.password !== this.step2.confirmPassword
+    ) {
+      reasons.push('Passwords do not match.');
+    }
+    if (!this.step2.ownerPhone.trim()) reasons.push('Phone number is required.');
+    if (!this.step2.termsAccepted) reasons.push('You must accept the Terms & Privacy Policy.');
+
+    return reasons;
+  }
+
+  // Only show the checklist once the user has actually started filling the
+  // form — avoids nagging on a pristine, untouched Step 2.
+  step2Started(): boolean {
+    return !!(
+      this.step2.ownerName.trim() ||
+      this.step2.password ||
+      this.step2.confirmPassword ||
+      this.step2.ownerPhone.trim()
+    );
+  }
+
   private isValidEmail(value: string): boolean {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
   }

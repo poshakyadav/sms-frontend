@@ -222,8 +222,8 @@
               maxlength="30"
             />
             <mat-hint
-              >Lowercase letters and numbers only, must start with a letter. You'll use this to
-              log in — especially handy if you skip the email above.</mat-hint
+              >Lowercase letters and numbers only, must start with a letter. You'll use this to log
+              in — especially handy if you skip the email above.</mat-hint
             >
           </mat-form-field>
         </div>
@@ -309,6 +309,7 @@
               placeholder="Minimum 8 characters"
               required
               minlength="8"
+              autocomplete="new-password"
               (ngModelChange)="onPasswordChange()"
             />
             <button
@@ -329,6 +330,7 @@
               name="confirmPassword"
               placeholder="Re-enter password"
               required
+              autocomplete="new-password"
               (ngModelChange)="onPasswordChange()"
             />
             <button
@@ -358,6 +360,23 @@
         <div class="ob-alert ob-alert-error">
           <mat-icon>error_outline</mat-icon>
           <span>{{ signupError() }}</span>
+        </div>
+        }
+
+        <!-- NEW: replaces the silent disabled button with a visible checklist
+             of what's still missing, so mismatches like password/confirm
+             don't waste anyone's time again. -->
+        @if (!isStep2Valid() && step2Started()) {
+        <div class="ob-alert ob-alert-warning">
+          <mat-icon>info_outline</mat-icon>
+          <div>
+            <strong>A few things need attention:</strong>
+            <ul class="ob-missing-list">
+              @for (reason of step2MissingReasons(); track reason) {
+              <li>{{ reason }}</li>
+              }
+            </ul>
+          </div>
         </div>
         }
 

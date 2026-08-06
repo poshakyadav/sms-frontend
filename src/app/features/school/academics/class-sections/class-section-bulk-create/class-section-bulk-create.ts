@@ -62,7 +62,7 @@ function cartesianProduct(classes: Class[], sections: Section[]): BulkCSRow[] {
         className: cls.name,
         sectionId: sec.id,
         sectionName: sec.name,
-        capacity: 40,
+        capacity: 100,
         classTeacherId: null,
         roomNumber: '',
         isActive: true,
@@ -192,7 +192,7 @@ export class ClassSectionBulkCreate implements OnInit {
       classId: [data?.classId ?? null, Validators.required],
       sectionId: [data?.sectionId ?? null, Validators.required],
       capacity: [
-        data?.capacity ?? 40,
+        data?.capacity ?? 100,
         [Validators.required, Validators.min(1), Validators.max(MAX_CAPACITY)],
       ],
       classTeacherId: [data?.classTeacherId ?? null],

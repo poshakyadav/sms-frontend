@@ -64,7 +64,7 @@ export class ClassSectionForm implements OnInit {
       classId: [null, Validators.required],
       sectionId: [null, Validators.required],
       capacity: [
-        40,
+        100,
         [
           Validators.required,
           Validators.min(1),

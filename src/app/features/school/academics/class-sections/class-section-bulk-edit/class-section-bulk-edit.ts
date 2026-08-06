@@ -32,7 +32,7 @@ import { AcademicsService, ClassSection } from '../../../../../core/services/aca
 import { ToastService } from '../../../../../core/services/toast.service';
 import { TeacherSearchDropdownComponent } from '../teacher-search-dropdown/teacher-search-dropdown';
 
-const MAX_CAPACITY = 50;
+const MAX_CAPACITY = 100;
 
 @Component({
   selector: 'app-class-section-bulk-edit',

@@ -24,6 +24,7 @@ import {
   HolidayImpactConfirmDialog,
   HolidayImpactConfirmDialogData,
 } from '../holiday-impact-confirm-dialog/holiday-impact-confirm-dialog';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-manage-calendar',
@@ -57,6 +58,11 @@ export class ManageCalendarComponent {
     reason: ['', [Validators.required, Validators.maxLength(200)]],
   });
 
+  // NEW: makes declareForm's live value observable to signals/computed()
+  private declareFormValue = toSignal(this.declareForm.valueChanges, {
+    initialValue: this.declareForm.value,
+  });
+
   entries = signal<CalendarEntry[]>([]);
   loadingEntries = signal(false);
 
@@ -67,7 +73,7 @@ export class ManageCalendarComponent {
   });
 
   dayCount = computed(() => {
-    const { fromDate, toDate } = this.declareForm.value;
+    const { fromDate, toDate } = this.declareFormValue();   // now reactive
     if (!fromDate || !toDate) return 0;
     const from = new Date(fromDate);
     const to = new Date(toDate);

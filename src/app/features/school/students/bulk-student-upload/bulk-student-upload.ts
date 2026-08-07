@@ -23,6 +23,7 @@ import {
   ClassSectionCapacityInfo,
   EmailConflict,
   UsernameConflict,
+  AdmissionNumberConflict,
 } from '../../../../core/services/bulk-upload.service';
 import { BackButtonComponent } from '../../../../shared/components/back-button/back-button';
 
@@ -73,6 +74,9 @@ export class BulkStudentUploadComponent implements OnInit {
   // ── Guide panel ──────────────────────────────────────────────────────────────
   showGuide = signal(false);
 
+  // ── state ──
+  admissionNumberConflicts = signal<AdmissionNumberConflict[]>([]);
+
   // ─────────────────────────────────────────────────────────────────────────────
   // COMPUTED
   // ─────────────────────────────────────────────────────────────────────────────
@@ -89,7 +93,23 @@ export class BulkStudentUploadComponent implements OnInit {
   inFileUsernameConflicts = computed(() =>
     this.usernameConflicts().filter((c) => c.conflictType === 'DUPLICATE_IN_FILE')
   );
-  totalConflicts = computed(() => this.emailConflicts().length + this.usernameConflicts().length);
+
+  inSchoolAdmissionConflicts = computed(() =>
+    this.admissionNumberConflicts().filter((c) => c.conflictType === 'ALREADY_IN_SCHOOL')
+  );
+  inFileAdmissionConflicts = computed(() =>
+    this.admissionNumberConflicts().filter((c) => c.conflictType === 'DUPLICATE_IN_FILE')
+  );
+
+
+  totalConflicts = computed(() => this.emailConflicts().length + this.usernameConflicts().length + this.admissionNumberConflicts().length);
+
+  filteredAdmissionConflicts = computed(() => {
+    const f = this.conflictFilter();
+    const all = this.admissionNumberConflicts();
+    if (f === 'ALL') return all;
+    return all.filter((c) => c.conflictType === f);
+  });
 
   filteredEmailConflicts = computed(() => {
     const f = this.conflictFilter();
@@ -293,10 +313,12 @@ export class BulkStudentUploadComponent implements OnInit {
 
         const hasEmailConflicts = !!body?.emailConflicts?.length;
         const hasUsernameConflicts = !!body?.usernameConflicts?.length;
+        const hasAdmissionConflicts = !!body?.admissionNumberConflicts?.length; 
 
         if (err?.status === 409 && (hasEmailConflicts || hasUsernameConflicts)) {
           this.emailConflicts.set(body?.emailConflicts ?? []);
           this.usernameConflicts.set(body?.usernameConflicts ?? []); // NEW
+          this.admissionNumberConflicts.set(body?.admissionNumberConflicts ?? []);
           this.conflictFilter.set('ALL');
           this.showConflictPopup.set(true);
           this.currentStep.set('upload');
@@ -323,18 +345,27 @@ export class BulkStudentUploadComponent implements OnInit {
     const lines = ['Row #,Field,Name,Value,Issue'];
     this.emailConflicts().forEach((c) => {
       lines.push(
-        `${c.rowNumber},Email,"${c.name}","${c.email}","${
-          c.conflictType === 'ALREADY_IN_SCHOOL' ? 'Email already registered in school' : 'Duplicate email within file'
+        `${c.rowNumber},Email,"${c.name}","${c.email}","${c.conflictType === 'ALREADY_IN_SCHOOL' ? 'Email already registered in school' : 'Duplicate email within file'
         }"`
       );
     });
     this.usernameConflicts().forEach((c) => {
       lines.push(
-        `${c.rowNumber},Username,"${c.name}","${c.username}","${
-          c.conflictType === 'ALREADY_IN_SCHOOL' ? 'Username already taken in school' : 'Duplicate username within file'
+        `${c.rowNumber},Username,"${c.name}","${c.username}","${c.conflictType === 'ALREADY_IN_SCHOOL' ? 'Username already taken in school' : 'Duplicate username within file'
         }"`
       );
     });
+
+    this.admissionNumberConflicts().forEach((c) => {
+      lines.push(
+        `${c.rowNumber},Admission Number,"${c.name}","${c.admissionNumber}","${
+          c.conflictType === 'ALREADY_IN_SCHOOL'
+            ? 'Admission number already assigned in school'
+            : 'Duplicate admission number within file'
+        }"`
+      );
+    });
+
     const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -355,6 +386,7 @@ export class BulkStudentUploadComponent implements OnInit {
     this.resultFilter.set('ALL');
     this.emailConflicts.set([]);
     this.usernameConflicts.set([]);
+    this.admissionNumberConflicts.set([]);
     this.showConflictPopup.set(false);
     this.currentStep.set('upload');
   }
@@ -365,8 +397,7 @@ export class BulkStudentUploadComponent implements OnInit {
       'Row #,Name,Email,Username,Status,Detail',
       ...results.map(
         (r) =>
-          `${r.rowNumber},"${r.name}","${r.email || ''}","${r.username || ''}",${r.status},"${
-            r.status === 'SUCCESS' ? `User ID: ${r.userId}` : r.error ?? ''
+          `${r.rowNumber},"${r.name}","${r.email || ''}","${r.username || ''}",${r.status},"${r.status === 'SUCCESS' ? `User ID: ${r.userId}` : r.error ?? ''
           }"`
       ),
     ];

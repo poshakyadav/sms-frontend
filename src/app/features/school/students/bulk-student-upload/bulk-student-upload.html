@@ -950,22 +950,37 @@
     <div class="bsu-conflict-summary">
       <div
         class="bsu-conflict-box bsu-conflict-box--school"
-        *ngIf="inSchoolEmailConflicts().length + inSchoolUsernameConflicts().length > 0"
+        *ngIf="
+          inSchoolEmailConflicts().length +
+            inSchoolUsernameConflicts().length +
+            inSchoolAdmissionConflicts().length >
+          0
+        "
       >
         <span class="bsu-cbox-count">{{
-          inSchoolEmailConflicts().length + inSchoolUsernameConflicts().length
+          inSchoolEmailConflicts().length +
+            inSchoolUsernameConflicts().length +
+            inSchoolAdmissionConflicts().length
         }}</span>
         <span class="bsu-cbox-label">Already in<br />this school</span>
       </div>
       <div
         class="bsu-conflict-box bsu-conflict-box--file"
-        *ngIf="inFileEmailConflicts().length + inFileUsernameConflicts().length > 0"
+        *ngIf="
+          inFileEmailConflicts().length +
+            inFileUsernameConflicts().length +
+            inFileAdmissionConflicts().length >
+          0
+        "
       >
         <span class="bsu-cbox-count">{{
-          inFileEmailConflicts().length + inFileUsernameConflicts().length
+          inFileEmailConflicts().length +
+            inFileUsernameConflicts().length +
+            inFileAdmissionConflicts().length
         }}</span>
         <span class="bsu-cbox-label">Duplicate<br />in file</span>
       </div>
+
       <div class="bsu-conflict-box bsu-conflict-box--total">
         <span class="bsu-cbox-count">{{ totalConflicts() }}</span>
         <span class="bsu-cbox-label">Total<br />conflicts</span>
@@ -976,7 +991,7 @@
       <strong>How to fix:</strong>
       <ol>
         <li *ngIf="inSchoolEmailConflicts().length + inSchoolUsernameConflicts().length > 0">
-          <strong>Already in school</strong> — These emails or usernames belong to existing
+          <strong>Already in school</strong> — These emails or usernames, or admission numbers belong to existing
           accounts. Use different values, or enroll those students individually from the student
           list.
         </li>
@@ -999,21 +1014,40 @@
       >
         All ({{ totalConflicts() }})
       </button>
+
       <button
         class="bsu-cf-tab bsu-cf-tab--school"
         [class.bsu-cf-tab--active]="conflictFilter() === 'ALREADY_IN_SCHOOL'"
         (click)="conflictFilter.set('ALREADY_IN_SCHOOL')"
-        *ngIf="inSchoolEmailConflicts().length + inSchoolUsernameConflicts().length > 0"
+        *ngIf="
+          inSchoolEmailConflicts().length +
+            inSchoolUsernameConflicts().length +
+            inSchoolAdmissionConflicts().length >
+          0
+        "
       >
-        In School ({{ inSchoolEmailConflicts().length + inSchoolUsernameConflicts().length }})
+        In School ({{
+          inSchoolEmailConflicts().length +
+            inSchoolUsernameConflicts().length +
+            inSchoolAdmissionConflicts().length
+        }})
       </button>
       <button
         class="bsu-cf-tab bsu-cf-tab--file"
         [class.bsu-cf-tab--active]="conflictFilter() === 'DUPLICATE_IN_FILE'"
         (click)="conflictFilter.set('DUPLICATE_IN_FILE')"
-        *ngIf="inFileEmailConflicts().length + inFileUsernameConflicts().length > 0"
+        *ngIf="
+          inFileEmailConflicts().length +
+            inFileUsernameConflicts().length +
+            inFileAdmissionConflicts().length >
+          0
+        "
       >
-        In File ({{ inFileEmailConflicts().length + inFileUsernameConflicts().length }})
+        In File ({{
+          inFileEmailConflicts().length +
+            inFileUsernameConflicts().length +
+            inFileAdmissionConflicts().length
+        }})
       </button>
     </div>
 
@@ -1051,6 +1085,23 @@
             <td><span class="bsu-issue-badge">Username</span></td>
             <td class="bsu-ct-name">{{ c.name }}</td>
             <td class="bsu-ct-email">{{ c.username }}</td>
+            <td>
+              <span
+                class="bsu-issue-badge"
+                [class.bsu-issue-badge--school]="c.conflictType === 'ALREADY_IN_SCHOOL'"
+                [class.bsu-issue-badge--file]="c.conflictType === 'DUPLICATE_IN_FILE'"
+              >
+                {{
+                  c.conflictType === 'ALREADY_IN_SCHOOL' ? 'Already in school' : 'Duplicate in file'
+                }}
+              </span>
+            </td>
+          </tr>
+          <tr *ngFor="let c of filteredAdmissionConflicts()">
+            <td class="bsu-ct-row">#{{ c.rowNumber }}</td>
+            <td><span class="bsu-issue-badge">Admission #</span></td>
+            <td class="bsu-ct-name">{{ c.name }}</td>
+            <td class="bsu-ct-email">{{ c.admissionNumber }}</td>
             <td>
               <span
                 class="bsu-issue-badge"

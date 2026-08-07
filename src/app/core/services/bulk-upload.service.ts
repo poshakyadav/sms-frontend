@@ -62,6 +62,13 @@ export interface BulkUploadCapacityInfo {
   remaining: number;
 }
 
+export interface AdmissionNumberConflict {
+  rowNumber: number;
+  name: string;
+  admissionNumber: string;
+  conflictType: 'DUPLICATE_IN_FILE' | 'ALREADY_IN_SCHOOL';
+}
+
 export interface BulkUploadResult {
   success: boolean;
   message: string;
@@ -75,6 +82,7 @@ export interface BulkUploadResult {
   results: BulkUploadRowResult[];
   emailConflicts?: EmailConflict[];
   usernameConflicts?: UsernameConflict[];
+  admissionNumberConflicts?: AdmissionNumberConflict[];
   capacityInfo?: BulkUploadCapacityInfo;
 }
 
@@ -348,7 +356,7 @@ const COLUMNS: ColDef[] = [
     required: false,
     isHelper: false,
     group: 'school',
-    hint: "School's own admission / registration number",
+    hint: "School's own admission / registration number — if filled in, must be unique across the entire school",
     example: 'ADM-2025-001',
     example2: 'ADM-2025-002',
   },
@@ -999,6 +1007,7 @@ export class BulkUploadService {
       '6. Username is OPTIONAL — leave blank to auto-generate one from the student\'s name + class + section. If you do fill it in, it must be unique, lowercase, and start with a letter.', // NEW
       '7. Passwords must be at least 8 characters. Students should change them on first login.',
       '8. If ANY email or username conflict is found, ZERO students are added. Fix all conflicts and re-upload.', // CHANGED
+      '8b. Admission Number, if filled in, must be unique across the entire school (same rule as Email and Username).',
       '9. Roll numbers are NOT assigned here. Use the Roll Numbers feature in Academics → Class Sections after upload.',
       '10. To link parents/guardians, use the Parents module after upload.',
       '11. UDISE+ fields (PEN, APAAR, etc.) are optional but important for government reporting.',

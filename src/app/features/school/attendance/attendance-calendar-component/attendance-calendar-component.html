@@ -1,7 +1,12 @@
+<!-- attendance-calendar-component.html -->
 <div class="calendar-page">
   <h1>Attendance Calendar</h1>
 
-  <mat-tab-group animationDuration="150ms" [(selectedIndex)]="selectedIndex">
+  <mat-tab-group
+    animationDuration="150ms"
+    [selectedIndex]="selectedIndex()"
+    (selectedIndexChange)="onIndexChange($event)"
+  >
     @if (canManage()) {
     <mat-tab label="Manage Calendar"><app-manage-calendar /></mat-tab>
     }

@@ -25,6 +25,7 @@ import {
   HolidayImpactConfirmDialogData,
 } from '../holiday-impact-confirm-dialog/holiday-impact-confirm-dialog';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { INDIAN_DATE_PROVIDERS } from '../../../../core/adapters/indian-date-adapter';
 
 @Component({
   selector: 'app-manage-calendar',
@@ -34,7 +35,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
     MatFormFieldModule, MatIconModule, MatInputModule, MatRadioModule, MatSelectModule,
     MatProgressSpinnerModule, MatTooltipModule,
   ],
-  providers: [DatePipe],
+  providers: [DatePipe, ...INDIAN_DATE_PROVIDERS],
   templateUrl: './manage-calendar-component.html',
   styleUrl: './manage-calendar-component.scss',
 })

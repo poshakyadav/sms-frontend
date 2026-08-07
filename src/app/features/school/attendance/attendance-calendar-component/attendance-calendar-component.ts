@@ -1,10 +1,13 @@
+// attendance-calendar-component.ts
 import { CommonModule } from '@angular/common';
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { MatTabsModule } from '@angular/material/tabs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ManageCalendarComponent } from '../manage-calendar-component/manage-calendar-component';
 import { MissingAttendanceComponent } from '../missing-attendance-component/missing-attendance-component';
 import { AttendanceSettingsComponent } from '../attendance-settings-component/attendance-settings-component';
+
+type CalendarTabId = 'manage' | 'missing' | 'settings';
 
 @Component({
   selector: 'app-attendance-calendar',
@@ -17,17 +20,26 @@ export class AttendanceCalendarComponent {
   private auth = inject(AuthService);
   canManage = computed(() => this.auth.hasPermission('attendance.calendar.manage'));
 
-  // Owns the tab index ourselves so it can't end up pointing at a tab
-  // that no longer exists at that position when canManage() flips
-  // (e.g. permissions finish loading after first render).
-  selectedIndex = signal(0);
+  // Order here must match the @if blocks in the template below.
+  private tabIds = computed<CalendarTabId[]>(() => {
+    const ids: CalendarTabId[] = [];
+    if (this.canManage()) ids.push('manage');
+    ids.push('missing');
+    if (this.canManage()) ids.push('settings');
+    return ids;
+  });
 
-  constructor() {
-    effect(() => {
-      this.canManage(); // track it
-      this.selectedIndex.set(0); // snap back whenever the tab list changes
-    });
+  // Selection lives on a stable id — never a raw index — so it can't
+  // desync when canManage() flips and the tab list shifts.
+  private selectedId = signal<CalendarTabId>('manage');
+
+  selectedIndex = computed(() => {
+    const idx = this.tabIds().indexOf(this.selectedId());
+    return idx === -1 ? 0 : idx;
+  });
+
+  onIndexChange(index: number) {
+    const id = this.tabIds()[index];
+    if (id) this.selectedId.set(id);
   }
 }
-
-// shell with tabs

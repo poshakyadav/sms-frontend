@@ -1,3 +1,5 @@
+// manage-calendar-component.ts
+
 import { CommonModule, DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -24,7 +26,7 @@ import {
   HolidayImpactConfirmDialog,
   HolidayImpactConfirmDialogData,
 } from '../holiday-impact-confirm-dialog/holiday-impact-confirm-dialog';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { INDIAN_DATE_PROVIDERS } from '../../../../core/adapters/indian-date-adapter';
 
 @Component({
@@ -83,12 +85,21 @@ export class ManageCalendarComponent {
   });
 
   constructor() {
-    this.academics.getClassSections().subscribe((res) => this.classSections.set(res.classSections));
+    this.academics.getClassSections()
+      .pipe(takeUntilDestroyed())
+      .subscribe((res) => this.classSections.set(res.classSections));
+
     this.loadEntries();
-    this.filterForm.valueChanges.subscribe(() => this.loadEntries());
-    this.declareForm.get('scope')!.valueChanges.subscribe((scope) => {
-      if (scope === 'SCHOOL') this.declareForm.patchValue({ classSectionId: null });
-    });
+
+    this.filterForm.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.loadEntries());
+
+    this.declareForm.get('scope')!.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((scope) => {
+        if (scope === 'SCHOOL') this.declareForm.patchValue({ classSectionId: null });
+      });
   }
 
   private firstOfMonth(): Date { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); }

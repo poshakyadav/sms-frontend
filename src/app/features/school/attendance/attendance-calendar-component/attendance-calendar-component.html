@@ -1,18 +1,23 @@
-<!-- attendance-calendar-component.html -->
-<div class="calendar-page">
-  <h1>Attendance Calendar</h1>
+<mat-tab-group
+  class="attendance-calendar-tabs"
+  [selectedIndex]="initialTabIndex"
+  animationDuration="150ms"
+>
+  <mat-tab label="Manage Calendar" [disabled]="!canManage()">
+    <ng-template matTabContent>
+      <app-manage-calendar />
+    </ng-template>
+  </mat-tab>
 
-  <mat-tab-group
-    animationDuration="150ms"
-    [selectedIndex]="selectedIndex()"
-    (selectedIndexChange)="onIndexChange($event)"
-  >
-    @if (canManage()) {
-    <mat-tab label="Manage Calendar"><app-manage-calendar /></mat-tab>
-    }
-    <mat-tab label="Missing Attendance"><app-missing-attendance /></mat-tab>
-    @if (canManage()) {
-    <mat-tab label="Settings"><app-attendance-settings /></mat-tab>
-    }
-  </mat-tab-group>
-</div>
+  <mat-tab label="Missing Attendance">
+    <ng-template matTabContent>
+      <app-missing-attendance />
+    </ng-template>
+  </mat-tab>
+
+  <mat-tab label="Settings" [disabled]="!canManage()">
+    <ng-template matTabContent>
+      <app-attendance-settings />
+    </ng-template>
+  </mat-tab>
+</mat-tab-group>

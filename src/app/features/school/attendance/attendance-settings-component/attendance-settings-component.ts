@@ -1,3 +1,5 @@
+// attendance-settings-component.ts
+
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
@@ -5,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AttendanceService } from '../../../../core/services/attendance.service';
 import { ToastService } from '../../../../core/services/toast.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 const DAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -27,11 +30,13 @@ export class AttendanceSettingsComponent {
   saving = signal(false);
 
   constructor() {
-    this.attendance.getWeeklyOffDays().subscribe({
-      next: (res) => this.selectedDays.set(new Set(res.weeklyOffDays)),
-      error: () => this.toast.error('Failed to load weekly off settings'),
-      complete: () => this.loading.set(false),
-    });
+    this.attendance.getWeeklyOffDays()
+      .pipe(takeUntilDestroyed())
+      .subscribe({
+        next: (res) => this.selectedDays.set(new Set(res.weeklyOffDays)),
+        error: () => this.toast.error('Failed to load weekly off settings'),
+        complete: () => this.loading.set(false),
+      });
   }
 
   toggle(day: number) {

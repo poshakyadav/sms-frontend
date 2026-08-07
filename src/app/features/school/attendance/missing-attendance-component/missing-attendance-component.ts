@@ -1,3 +1,5 @@
+// missing-attendance-component.ts
+
 import { CommonModule, DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -12,15 +14,18 @@ import { Router } from '@angular/router';
 import { AcademicsService, ClassSection } from '../../../../core/services/academics.service';
 import { AttendanceService, MissingAttendanceDate } from '../../../../core/services/attendance.service';
 import { ToastService } from '../../../../core/services/toast.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { INDIAN_DATE_PROVIDERS } from '../../../../core/adapters/indian-date-adapter';
+import { MatInputModule } from '@angular/material/input';
 
 @Component({
   selector: 'app-missing-attendance',
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, MatButtonModule, MatDatepickerModule, MatNativeDateModule,
-    MatFormFieldModule, MatIconModule, MatSelectModule, MatProgressSpinnerModule,
+    MatFormFieldModule, MatIconModule, MatInputModule, MatSelectModule, MatProgressSpinnerModule,
   ],
-  providers: [DatePipe],
+  providers: [DatePipe, ...INDIAN_DATE_PROVIDERS], 
   templateUrl: './missing-attendance-component.html',
   styleUrl: './missing-attendance-component.scss',
 })
@@ -54,7 +59,9 @@ export class MissingAttendanceComponent {
   });
 
   constructor() {
-    this.academics.getClassSections().subscribe((res) => this.classSections.set(res.classSections));
+    this.academics.getClassSections()
+      .pipe(takeUntilDestroyed())
+      .subscribe((res) => this.classSections.set(res.classSections));
     this.search();
   }
 
@@ -71,6 +78,17 @@ export class MissingAttendanceComponent {
       error: (err) => this.toast.error(err?.error?.error || 'Failed to load missing attendance report'),
       complete: () => this.loading.set(false),
     });
+  }
+
+  // same pattern as ManageCalendarComponent.sectionLabel(),
+  // builds "Class – Section" from the classSections list instead of
+  // trusting whatever partial string the backend sent for className.
+  sectionLabel(m: MissingAttendanceDate): string {
+    const cs = this.classSections().find((c) => c.id === m.classSectionId);
+    if (cs) return `${cs.className} – ${cs.sectionName}`;
+    // fall back to whatever the backend gave us, and only as a last
+    // resort show the raw id so a row is never rendered blank
+    return m.className?.trim() || `Section #${m.classSectionId}`;
   }
 
   goMark(m: MissingAttendanceDate) {

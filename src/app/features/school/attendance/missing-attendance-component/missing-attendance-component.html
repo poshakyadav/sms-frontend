@@ -1,3 +1,5 @@
+<!-- missing-attendance-component.html -->
+
 <div class="missing-attendance">
   <div class="filter-card">
     <form [formGroup]="form" class="filter-form">
@@ -45,13 +47,13 @@
     <div class="date-group">
       <div class="date-heading">{{ group[0] }}</div>
       @for (m of group[1]; track m.classSectionId) {
-      <div class="missing-row">
-        <mat-icon class="warn-icon">event_busy</mat-icon>
-        <span class="section-name">{{ m.className }}</span>
-        <button mat-stroked-button color="primary" (click)="goMark(m)">
-          <mat-icon>edit_calendar</mat-icon> Mark Attendance
-        </button>
-      </div>
+        <div class="missing-row">
+          <mat-icon class="warn-icon">event_busy</mat-icon>
+          <span class="section-name">{{ sectionLabel(m) }}</span>
+          <button mat-stroked-button color="primary" (click)="goMark(m)">
+            <mat-icon>edit_calendar</mat-icon> Mark Attendance
+          </button>
+        </div>
       }
     </div>
     }

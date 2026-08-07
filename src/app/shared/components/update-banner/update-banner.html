@@ -1,0 +1,7 @@
+<!-- update-banner.html -->
+@if (updateAvailable()) {
+<div class="update-banner" role="status">
+  <span>A new version of Eduxo is available.</span>
+  <button type="button" (click)="refresh()">Refresh now</button>
+</div>
+}

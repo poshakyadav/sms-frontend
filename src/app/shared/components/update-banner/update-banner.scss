@@ -1,0 +1,30 @@
+// update-banner.scss
+.update-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: #1a56db;
+  color: #fff;
+  font-size: 14px;
+  text-align: center;
+
+  :host-context([data-theme='dark']) & {
+    background: #2563eb;
+  }
+
+  button {
+    background: #fff;
+    color: #1a56db;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+}

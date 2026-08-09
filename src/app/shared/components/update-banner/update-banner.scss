@@ -1,30 +1,121 @@
-// update-banner.scss
-.update-banner {
+.update-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 10px 16px;
-  background: #1a56db;
-  color: #fff;
-  font-size: 14px;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(2px);
+  animation: update-fade-in 0.15s ease-out;
+}
+
+.update-modal {
+  width: 100%;
+  max-width: 380px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 28px 24px 24px;
   text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  animation: update-scale-in 0.18s ease-out;
 
   :host-context([data-theme='dark']) & {
-    background: #2563eb;
+    background: #1e293b;
+    color: #f1f5f9;
   }
 
-  button {
-    background: #fff;
+  &__icon {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #e0e7ff;
     color: #1a56db;
+
+    :host-context([data-theme='dark']) & {
+      background: rgba(37, 99, 235, 0.2);
+      color: #60a5fa;
+    }
+  }
+
+  &__title {
+    margin: 0 0 8px;
+    font-size: 17px;
+    font-weight: 700;
+  }
+
+  &__message {
+    margin: 0 0 22px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #64748b;
+
+    :host-context([data-theme='dark']) & {
+      color: #94a3b8;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  &__btn {
+    flex: 1;
     border: none;
-    border-radius: 6px;
-    padding: 6px 14px;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
+    transition: opacity 0.15s ease;
 
     &:hover {
       opacity: 0.9;
     }
+
+    &--primary {
+      background: #1a56db;
+      color: #fff;
+
+      :host-context([data-theme='dark']) & {
+        background: #2563eb;
+      }
+    }
+
+    &--secondary {
+      background: #f1f5f9;
+      color: #334155;
+
+      :host-context([data-theme='dark']) & {
+        background: #334155;
+        color: #e2e8f0;
+      }
+    }
+  }
+}
+
+@keyframes update-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes update-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }

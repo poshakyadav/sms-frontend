@@ -11,6 +11,7 @@ import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth-interceptor';
 import { provideServiceWorker } from '@angular/service-worker';
 import { isChunkLoadError, reloadForChunkError } from './core/utils/chunk-reload.util';
+import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -27,12 +28,12 @@ export const appConfig: ApplicationConfig = {
       }),
     ),
 
-    // provideClientHydration(withEventReplay()),
+    provideClientHydration(withEventReplay()),
 
     provideHttpClient(withInterceptors([authInterceptor]), withFetch()),
     provideNativeDateAdapter(), provideServiceWorker('ngsw-worker.js', {
             enabled: !isDevMode(),
             registrationStrategy: 'registerWhenStable:30000'
-          }),
+          }), provideClientHydration(withEventReplay()),
   ],
 };

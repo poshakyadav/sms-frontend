@@ -13,7 +13,12 @@ export const routes: Routes = [
     canActivate: [authReadyGuard],
     children: [
       // ── Root redirect ──────────────────────────────────────────────────────
-      { path: '', redirectTo: '/login', pathMatch: 'full' },
+      // { path: '', redirectTo: '/login', pathMatch: 'full' },
+
+      {
+        path: '',
+        loadComponent: () => import('./features/public/home/home').then((m) => m.Home),
+      },
 
       // ══════════════════════════════════════════════════════════════════════
       // AUTH — School login flow

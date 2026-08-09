@@ -26,9 +26,10 @@
                 "input": "public"
               }
             ],
-            "styles": ["src/styles.scss"],
-
-            "outputMode": "static",
+            "styles": [
+              "src/styles.scss"
+            ],
+            "outputMode": "server",
             "allowedCommonJsDependencies": [
               "html2canvas",
               "canvg",
@@ -48,7 +49,14 @@
               "core-js/modules/es.string.includes.js",
               "core-js/modules/es.array.reverse.js",
               "core-js/modules/es.regexp.to-string.js"
-            ]
+            ],
+            "server": "src/main.server.ts",
+            "security": {
+              "allowedHosts": []
+            },
+            "ssr": {
+              "entry": "src/server.ts"
+            }
           },
           "configurations": {
             "production": {

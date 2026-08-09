@@ -1,4 +1,4 @@
-@if (updateAvailable() && !dismissed()) {
+@if (updateAvailable()) {
 <div
   class="update-modal-overlay"
   role="dialog"
@@ -24,13 +24,6 @@
       We've made some improvements. Reload to get the latest version.
     </p>
     <div class="update-modal__actions">
-      <button
-        type="button"
-        class="update-modal__btn update-modal__btn--secondary"
-        (click)="dismiss()"
-      >
-        Not now
-      </button>
       <button
         type="button"
         class="update-modal__btn update-modal__btn--primary"

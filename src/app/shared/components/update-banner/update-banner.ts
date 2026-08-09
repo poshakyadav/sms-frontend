@@ -1,4 +1,4 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
 import { UpdateService } from '../../../core/services/update.service';
 
 @Component({
@@ -10,18 +10,12 @@ import { UpdateService } from '../../../core/services/update.service';
 export class UpdateBanner {
   private updateService = inject(UpdateService);
   updateAvailable = this.updateService.updateAvailable;
-  dismissed = signal(false);
 
   constructor() {
     // lock background scroll while the modal is open
     effect(() => {
-      const open = this.updateAvailable() && !this.dismissed();
-      document.body.classList.toggle('update-modal-open', open);
+      document.body.classList.toggle('update-modal-open', this.updateAvailable());
     });
-  }
-
-  dismiss(): void {
-    this.dismissed.set(true);
   }
 
   refresh(): void {

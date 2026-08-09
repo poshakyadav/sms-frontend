@@ -16,8 +16,21 @@ export class UpdateService {
     this.swUpdate.versionUpdates.subscribe((evt) => {
       if (evt.type === 'VERSION_READY') {
         const ready = evt as VersionReadyEvent;
-        console.log(`[UpdateService] New version ready: ${ready.latestVersion.hash}`);
-        this._updateAvailable.set(true);
+        console.log(`[UpdateService] New version ready: ${ready.latestVersion.hash} — activating in background`);
+
+        // Activate right away, in the background. This swaps which SW is
+        // "active" so the next document/asset request is served the new
+        // version — it does NOT reload the current page. Doing this here
+        // (instead of waiting for the button click) means that even if the
+        // user manually refreshes before clicking anything, the SW is
+        // already fully switched over and internally consistent.
+        this.swUpdate
+          .activateUpdate()
+          .then(() => {
+            console.log(`[UpdateService] New version ${ready.latestVersion.hash} activated — prompting reload`);
+            this._updateAvailable.set(true);
+          })
+          .catch((err) => console.error('[UpdateService] activateUpdate failed:', err));
       }
       if (evt.type === 'VERSION_INSTALLATION_FAILED') {
         console.error(`[UpdateService] Install failed for ${evt.version.hash}: ${evt.error}`);
@@ -39,7 +52,12 @@ export class UpdateService {
     });
   }
 
-  /** Bound to the banner's "Refresh" button. */
+  /**
+   * Bound to the popup's "Reload now" button. By the time this is called,
+   * the new SW version has already been activated in the background (see
+   * VERSION_READY above) — this just performs the actual page reload so
+   * the tab picks up the already-active version.
+   */
   activateUpdate(): void {
     location.reload();
   }

@@ -1,22 +1,29 @@
 <div class="attendance-page">
   <!-- ── Header ─────────────────────────────────────────────────────── -->
-  <div class="page-header">
+  <header class="page-header">
     <div class="header-left">
       <h1>Mark Attendance</h1>
       @if (dateDisplay()) {
       <p class="date-subtitle">{{ dateDisplay() }}</p>
       }
     </div>
-    <button mat-icon-button (click)="checkCalendarAndLoad()" matTooltip="Refresh">
+    <button
+      mat-icon-button
+      class="refresh-btn"
+      (click)="checkCalendarAndLoad()"
+      matTooltip="Refresh"
+      aria-label="Refresh"
+    >
       <mat-icon>refresh</mat-icon>
     </button>
-  </div>
+  </header>
 
   <!-- ── Controls card ──────────────────────────────────────────────── -->
-  <div class="controls-card">
+  <section class="controls-card">
     <form [formGroup]="form" class="controls-grid">
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="outline" class="control-field">
         <mat-label>Class — Section</mat-label>
+        <mat-icon matPrefix>class</mat-icon>
         <mat-select formControlName="classSectionId">
           @for (cs of classSections(); track cs.id) {
           <mat-option [value]="cs.id">
@@ -25,43 +32,44 @@
           </mat-option>
           }
         </mat-select>
-        <mat-icon matPrefix>class</mat-icon>
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="outline" class="control-field">
         <mat-label>Date</mat-label>
+        <mat-icon matPrefix>calendar_today</mat-icon>
         <input matInput [matDatepicker]="picker" formControlName="date" />
         <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
         <mat-datepicker #picker></mat-datepicker>
-        <mat-icon matPrefix>calendar_today</mat-icon>
       </mat-form-field>
     </form>
-  </div>
+  </section>
 
   @if (loading()) {
   <div class="state-container">
-    <mat-spinner diameter="44"></mat-spinner>
+    <mat-spinner diameter="40"></mat-spinner>
     <p>{{ checkingCalendar() ? 'Checking attendance calendar…' : 'Loading students…' }}</p>
   </div>
   } @else if (!form.value.classSectionId) {
   <div class="state-container">
-    <mat-icon class="state-icon">school</mat-icon>
+    <div class="state-icon-wrap"><mat-icon>school</mat-icon></div>
     <h2>Select a Class-Section</h2>
-    <p>Choose a class-section and date to begin marking attendance.</p>
+    <p>Choose a class-section and date above to begin marking attendance.</p>
   </div>
   }
 
   <!-- ── CALENDAR GUARD — blocks marking until the date is resolved ──── -->
   @else if (calendarStatus() && !calendarStatus()!.canMarkAttendance) {
   <div class="guard-card" [class.is-holiday]="calendarStatus()!.dayType === 'HOLIDAY'">
-    <mat-icon class="guard-icon">
-      {{ calendarStatus()!.dayType === 'HOLIDAY' ? 'beach_access' : 'event_busy' }}
-    </mat-icon>
+    <div class="guard-icon-wrap">
+      <mat-icon>{{
+        calendarStatus()!.dayType === 'HOLIDAY' ? 'beach_access' : 'event_busy'
+      }}</mat-icon>
+    </div>
     <h2>{{ guardTitle() }}</h2>
     <p>{{ guardDescription() }}</p>
 
     @if (canManageCalendar()) {
-    <button mat-raised-button color="primary" (click)="openGuardDialog()">
+    <button mat-raised-button color="primary" class="guard-action-btn" (click)="openGuardDialog()">
       <mat-icon>edit_calendar</mat-icon>
       {{ guardActionLabel() }}
     </button>
@@ -74,48 +82,48 @@
   </div>
   } @else if (rows().length === 0) {
   <div class="state-container">
-    <mat-icon class="state-icon">group_off</mat-icon>
+    <div class="state-icon-wrap"><mat-icon>group_off</mat-icon></div>
     <h2>No Students Found</h2>
     <p>No active enrollments found for the selected class-section.</p>
   </div>
   } @else {
 
-  <!-- Calendar status chip -->
-  @if (calendarStatus(); as cal) {
-  <div class="calendar-chip">
-    <mat-icon>event_available</mat-icon>
-    <span>{{ calendarSourceLabel() }}</span>
-    @if (canManageCalendar()) {
-    <button
-      mat-icon-button
-      class="calendar-edit-btn"
-      matTooltip="Change calendar for this date"
-      (click)="openCalendarDialog()"
-    >
-      <mat-icon>edit</mat-icon>
-    </button>
-    }
-  </div>
-  }
-
-  <!-- Session status banner -->
-  @if (sessionMeta(); as meta) {
-  <div class="session-banner" [class.is-full]="meta.isMarked" [class.is-empty]="!meta.isMarked">
-    <mat-icon>{{ meta.isMarked ? 'check_circle' : 'edit_note' }}</mat-icon>
-    <div class="banner-text">
-      <strong>
-        @if (meta.isMarked) { Attendance marked — {{ meta.exceptionCount }} exception(s) of
-        {{ meta.totalCount }} } @else { Not marked yet }
-      </strong>
-      @if (meta.lastEditedBy || meta.markedBy) {
-      <span
-        >Last updated by {{ (meta.lastEditedBy ?? meta.markedBy)?.name }} at
-        {{ lastUpdatedDisplay() }}</span
+  <!-- Calendar chip + session banner -->
+  <div class="status-row">
+    @if (calendarStatus(); as cal) {
+    <div class="calendar-chip">
+      <mat-icon>event_available</mat-icon>
+      <span>{{ calendarSourceLabel() }}</span>
+      @if (canManageCalendar()) {
+      <button
+        mat-icon-button
+        class="calendar-edit-btn"
+        matTooltip="Change calendar for this date"
+        aria-label="Edit calendar"
+        (click)="openCalendarDialog()"
       >
+        <mat-icon>edit</mat-icon>
+      </button>
       }
     </div>
+    } @if (sessionMeta(); as meta) {
+    <div class="session-banner" [class.is-full]="meta.isMarked" [class.is-empty]="!meta.isMarked">
+      <mat-icon>{{ meta.isMarked ? 'check_circle' : 'edit_note' }}</mat-icon>
+      <div class="banner-text">
+        <strong>
+          @if (meta.isMarked) { Attendance marked — {{ meta.exceptionCount }} exception(s) of
+          {{ meta.totalCount }} } @else { Not marked yet }
+        </strong>
+        @if (meta.lastEditedBy || meta.markedBy) {
+        <span
+          >Last updated by {{ (meta.lastEditedBy ?? meta.markedBy)?.name }} at
+          {{ lastUpdatedDisplay() }}</span
+        >
+        }
+      </div>
+    </div>
+    }
   </div>
-  }
 
   <!-- Summary strip -->
   <div class="summary-grid">
@@ -124,15 +132,15 @@
       <div class="stat-value">{{ rows().length }}</div>
     </div>
     <div class="stat-card present">
-      <div class="stat-label">Present-equivalent</div>
+      <div class="stat-label">Present-equiv.</div>
       <div class="stat-value">{{ presentCount() }}</div>
     </div>
     <div class="stat-card absent">
-      <div class="stat-label">Absent-equivalent</div>
+      <div class="stat-label">Absent-equiv.</div>
       <div class="stat-value">{{ absentCount() }}</div>
     </div>
     <div class="stat-card neutral">
-      <div class="stat-label">Neutral / Special</div>
+      <div class="stat-label">Neutral</div>
       <div class="stat-value">{{ neutralCount() }}</div>
     </div>
   </div>
@@ -211,13 +219,14 @@
           <span class="roll-no">Roll {{ row.rollNumber || '—' }}</span>
         </div>
         @if (row.isMarked) {
-        <mat-icon class="marked-dot" [matTooltip]="'Marked by ' + row.markedByName"
-          >fiber_manual_record</mat-icon
-        >
+        <span class="marked-badge" [matTooltip]="'Marked by ' + row.markedByName">
+          <mat-icon>fiber_manual_record</mat-icon>
+        </span>
         }
       </div>
 
       <div class="status-cell">
+        <span class="field-label">Status</span>
         <mat-form-field
           appearance="outline"
           class="status-select"
@@ -238,6 +247,7 @@
       </div>
 
       <div class="session-cell">
+        <span class="field-label">Session</span>
         @if (row.status === 'HALF_DAY') {
         <mat-button-toggle-group
           [value]="row.halfDaySession"
@@ -252,6 +262,7 @@
       </div>
 
       <div class="notes-cell">
+        <span class="field-label">Notes</span>
         <mat-form-field appearance="outline" class="notes-field">
           <input
             matInput
@@ -280,6 +291,7 @@
     <button
       mat-raised-button
       color="primary"
+      class="save-btn"
       [disabled]="!isValid() || submitting()"
       (click)="submit()"
     >

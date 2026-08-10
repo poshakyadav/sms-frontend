@@ -17,6 +17,8 @@ export function isChunkLoadError(err: unknown): boolean {
 }
 
 export function reloadForChunkError(targetUrl?: string): void {
+    if (typeof sessionStorage === 'undefined') return;
+
     const last = Number(sessionStorage.getItem(LAST_RELOAD_KEY) ?? 0);
     const now = Date.now();
 
@@ -34,6 +36,8 @@ export function reloadForChunkError(targetUrl?: string): void {
 
 /** Call once, on app init, to finish the navigation the user originally wanted. */
 export function consumePendingChunkRedirect(): string | null {
+    if (typeof sessionStorage === 'undefined') return null; // SSR — nothing pending yet
+    
     const redirect = sessionStorage.getItem(REDIRECT_KEY);
     if (redirect) sessionStorage.removeItem(REDIRECT_KEY);
     return redirect;

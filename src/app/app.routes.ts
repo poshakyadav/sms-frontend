@@ -1,7 +1,7 @@
 // app.routes.ts
 import { Routes } from '@angular/router';
 import { authReadyGuard } from './core/guards/auth-ready-guard';
-import { loginGuard, permissionGuard, schoolAuthGuard } from './core/guards/permission-guard';
+import { homeRedirectGuard, loginGuard, permissionGuard, schoolAuthGuard } from './core/guards/permission-guard';
 import { setupPageGuard } from './core/guards/super-setup-guard';
 import { PageNotFound } from './shared/components/page-not-found/page-not-found';
 import { Unauthorized } from './shared/components/unauthorized/unauthorized';
@@ -17,6 +17,7 @@ export const routes: Routes = [
 
       {
         path: '',
+        canActivate: [homeRedirectGuard],
         loadComponent: () => import('./features/public/home/home').then((m) => m.Home),
       },
 

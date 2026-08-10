@@ -1,3 +1,5 @@
+<!-- home.html -->
+
 <div class="home">
   <!-- ============================== NAV ============================== -->
   <header class="home-nav" [class.is-open]="mobileMenuOpen()">
@@ -25,6 +27,8 @@
         <a routerLink="/public/register" class="home-btn home-btn--primary">Get started</a>
       </div>
 
+      <a routerLink="/login" class="home-nav__login-mobile" (click)="closeMobileMenu()">Log in</a>
+
       <button
         type="button"
         class="home-nav__toggle"
@@ -42,7 +46,6 @@
       <a href="#how-it-works" (click)="closeMobileMenu()">How it works</a>
       <a routerLink="/public/pricing" (click)="closeMobileMenu()">Pricing</a>
       <a routerLink="/public/about" (click)="closeMobileMenu()">About</a>
-      <a routerLink="/login" (click)="closeMobileMenu()">Log in</a>
       <a
         routerLink="/public/register"
         class="home-btn home-btn--primary"
@@ -51,6 +54,7 @@
         Get started
       </a>
     </div>
+    
   </header>
 
   <main>

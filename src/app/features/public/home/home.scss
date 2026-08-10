@@ -214,6 +214,15 @@ a {
     }
   }
 
+  &__login-mobile {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+
   &__mobile {
     display: none;
     flex-direction: column;
@@ -258,7 +267,8 @@ a {
     }
 
     &__toggle,
-    &__mobile {
+    &__mobile,
+    &__login-mobile {
       display: none !important;
     }
   }

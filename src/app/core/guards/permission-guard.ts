@@ -1,3 +1,5 @@
+// .../src/app/core/guards/permission-guard.ts
+
 import { inject } from '@angular/core';
 import {
   ActivatedRouteSnapshot,
@@ -168,6 +170,10 @@ export const schoolAuthGuard: CanActivateFn = (
   return true;
 };
 
+function getPostLoginDestination(auth: AuthService): string {
+  return getUserTypeSafe(auth) === 'super' ? '/super/dashboard' : '/school/dashboard';
+}
+
 // ── Login guard ───────────────────────────────────────────────────────────────
 
 // Now: if already authenticated, redirect to returnUrl (the URL they were on)
@@ -190,8 +196,22 @@ export const loginGuard: CanActivateFn = (
     return false;
   }
 
-  const dest = getUserTypeSafe(auth) === 'super' ? '/super/dashboard' : '/school/dashboard';
-  router.navigate([dest]);
+  router.navigate([getPostLoginDestination(auth)]);
+  return false;
+};
+
+// ── Home guard ────────────────────────────────────────────────────────────────
+// Applied to the public marketing homepage ('' route). A visitor who's already
+// logged in and lands on '/' almost certainly wants their dashboard, not the
+// marketing page again — send them straight there. Logged-out visitors fall
+// through to the Home component as normal.
+export const homeRedirectGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  if (!isAuthenticatedSafe(auth)) return true;
+
+  router.navigate([getPostLoginDestination(auth)]);
   return false;
 };
 

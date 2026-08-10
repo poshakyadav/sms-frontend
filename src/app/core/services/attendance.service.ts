@@ -115,7 +115,7 @@ export interface DeclareCalendarPayload {
   fromDate: string;
   toDate: string;
   classSectionId?: number; // omit = school-wide
-  reason: string;
+  reason?: string;
 }
 
 export interface DeclareHolidayResult {

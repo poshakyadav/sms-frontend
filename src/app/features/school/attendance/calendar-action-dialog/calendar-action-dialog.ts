@@ -1,3 +1,5 @@
+// calendar-action-dialog.ts
+
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -27,6 +29,8 @@ export interface CalendarActionDialogResult {
   success: boolean;
 }
 
+type DayType = 'WORKING_DAY' | 'HOLIDAY';
+
 @Component({
   selector: 'app-calendar-action-dialog',
   standalone: true,
@@ -49,17 +53,53 @@ export class CalendarActionDialog {
   checkingImpact = signal(false);
   riskAcknowledged = signal(false);
 
+  private initialDayType: DayType =
+    this.data.suggestedDayType ?? this.data.currentStatus?.dayType ?? 'WORKING_DAY';
+
+  // Signal mirror of the dayType control — form.value is a plain snapshot,
+  // not a signal, so a computed() reading it directly would never
+  // recompute on radio-button changes. This is what the template reacts to.
+  dayType = signal<DayType>(this.initialDayType);
+  isHolidaySelected = computed(() => this.dayType() === 'HOLIDAY');
+
   form = this.fb.group({
-    dayType: [this.data.suggestedDayType ?? this.data.currentStatus?.dayType ?? 'WORKING_DAY', Validators.required],
+    dayType: [this.initialDayType, Validators.required],
     scope: ['SECTION' as 'SECTION' | 'SCHOOL', Validators.required],
-    reason: ['', [Validators.required, Validators.maxLength(200)]],
+    reason: ['', [Validators.maxLength(200)]],
   });
 
-  isHolidaySelected = computed(() => this.form.value.dayType === 'HOLIDAY');
+  // form = this.fb.group({
+  //   dayType: [this.data.suggestedDayType ?? this.data.currentStatus?.dayType ?? 'WORKING_DAY', Validators.required],
+  //   scope: ['SECTION' as 'SECTION' | 'SCHOOL', Validators.required],
+  //   reason: ['', [Validators.required, Validators.maxLength(200)]],
+  // });
 
+  // isHolidaySelected = computed(() => this.form.value.dayType === 'HOLIDAY');
+
+  // constr
+  
   constructor() {
-    this.form.valueChanges.subscribe(() => this.refreshImpactPreview());
+    this.updateReasonValidator(this.initialDayType);
+
+    this.form.get('dayType')!.valueChanges.subscribe((value) => {
+      const dt = (value ?? 'WORKING_DAY') as DayType;
+      this.dayType.set(dt);
+      this.updateReasonValidator(dt);
+      this.refreshImpactPreview();
+    });
+
+    // Scope also affects the impact preview (school-wide vs section), reason text doesn't.
+    this.form.get('scope')!.valueChanges.subscribe(() => this.refreshImpactPreview());
+
     this.refreshImpactPreview();
+  }
+
+  private updateReasonValidator(dayType: DayType) {
+    const reasonControl = this.form.get('reason')!;
+    reasonControl.setValidators(
+      dayType === 'HOLIDAY' ? [Validators.required, Validators.maxLength(200)] : [Validators.maxLength(200)]
+    );
+    reasonControl.updateValueAndValidity({ emitEvent: false });
   }
 
   private refreshImpactPreview() {
@@ -100,7 +140,18 @@ export class CalendarActionDialog {
     if (!this.canSubmit()) return;
     const { dayType, scope, reason } = this.form.value;
     const classSectionId = scope === 'SECTION' ? this.data.classSectionId : undefined;
-    const payload = { fromDate: this.data.date, toDate: this.data.date, classSectionId, reason: reason!.trim() };
+    const trimmedReason = (reason ?? '').trim();
+
+    const payload = {
+      fromDate: this.data.date,
+      toDate: this.data.date,
+      classSectionId,
+      // Omit the key entirely when empty — Angular's HttpClient drops
+      // `undefined` values on JSON.stringify, so Working Day saves send
+      // no reason field at all instead of an empty string that used to
+      // fail the old required-reason schema.
+      reason: trimmedReason || undefined,
+    };
 
     this.submitting.set(true);
     const req$ = dayType === 'HOLIDAY' ? this.attendance.declareHoliday(payload) : this.attendance.setWorkingDayOverride(payload);
@@ -113,10 +164,18 @@ export class CalendarActionDialog {
       },
       error: (err) => {
         this.submitting.set(false);
-        this.toast.error(err?.error?.error || 'Failed to update attendance calendar');
+        this.toast.error(this.extractErrorMessage(err));
       },
     });
   }
+
+  // Defense in depth: even after standardizing the backend's validation-error
+// shape, don't assume every failure path (network errors, a proxy 502,
+// a future endpoint someone forgets to update) returns a clean string.
+private extractErrorMessage(err: any): string {
+  const raw = err?.error?.error ?? err?.error?.message ?? err?.message;
+  return typeof raw === 'string' && raw.trim() ? raw : 'Failed to update attendance calendar';
+}
 
   cancel() {
     this.ref.close({ success: false });

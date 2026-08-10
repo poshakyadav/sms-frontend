@@ -1,3 +1,5 @@
+// attendance-component.ts
+
 import { CommonModule, DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -30,6 +32,7 @@ import {
 import { ToastService } from '../../../../core/services/toast.service';
 import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import { CalendarActionDialog, CalendarActionDialogData } from '../calendar-action-dialog/calendar-action-dialog';
+import { INDIAN_DATE_PROVIDERS } from '../../../../core/adapters/indian-date-adapter';
 
 interface AttendanceRow {
   enrollmentId: number;
@@ -52,7 +55,7 @@ interface AttendanceRow {
     MatSelectModule, MatButtonToggleModule, MatDatepickerModule, MatNativeDateModule,
     MatButtonModule, MatIconModule, MatProgressSpinnerModule, MatTooltipModule,
   ],
-  providers: [DatePipe],
+  providers: [DatePipe, ...INDIAN_DATE_PROVIDERS],
   templateUrl: './attendance-component.html',
   styleUrl: './attendance-component.scss',
 })
@@ -72,12 +75,39 @@ export class AttendanceComponent {
     { value: HalfDaySession.AFTERNOON, label: 'Afternoon' },
   ];
 
+  // Attendance can't be marked for a date that hasn't happened yet.
+  // GETTER, not a field — re-evaluated every change-detection pass instead
+  // of being frozen at whatever moment this component was constructed.
+  // A field initializer (`readonly maxDate = new Date()`) goes stale if the
+  // component instance survives across midnight (route-reuse, cached tabs).
+  get maxDate(): Date {
+    return new Date();
+  }
+
+  // Belt-and-braces: don't rely solely on the [max]/matDatepickerMax
+  // directive. This is a real sync validator on the FormControl, so a
+  // future date is rejected no matter how it got into the control —
+  // calendar click, typed text, or programmatic patchValue (e.g. the
+  // queryParam prefill in the constructor).
+  private futureDateValidator = (control: any) => {
+    const value = control.value as Date | null;
+    if (!value) return null;
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+    return value.getTime() > endOfToday.getTime() ? { matDatepickerMax: true } : null;
+  };
+
   classSections = signal<ClassSection[]>([]);
   rows = signal<AttendanceRow[]>([]);
   originalRows = signal<AttendanceRow[]>([]);
   sessionMeta = signal<ClassAttendanceSessionMeta | null>(null);
   calendarStatus = signal<CalendarCheckResult | null>(null);
   searchTerm = signal('');
+  // True while the date control is invalid specifically because it's in
+  // the future. Driven off the form (not a computed signal) because form
+  // control validity isn't itself a signal — we set this explicitly on
+  // every valueChanges tick instead.
+  dateInFuture = signal(false);
 
   loading = signal(true);
   checkingCalendar = signal(false);
@@ -85,7 +115,7 @@ export class AttendanceComponent {
 
   form = inject(FormBuilder).group({
     classSectionId: [null as number | null, Validators.required],
-    date: [new Date(), Validators.required],
+    date: [new Date(), [Validators.required, this.futureDateValidator]],
   });
 
   canManageCalendar = computed(() => this.auth.hasPermission('attendance.calendar.manage'));
@@ -189,7 +219,22 @@ export class AttendanceComponent {
     this.loadClassSections();
 
     this.form.valueChanges.subscribe(() => {
-      if (this.form.valid) this.checkCalendarAndLoad();
+      const isFuture = this.form.controls.date.hasError('matDatepickerMax');
+      this.dateInFuture.set(isFuture);
+
+      if (this.form.valid) {
+        this.checkCalendarAndLoad();
+      } else if (isFuture) {
+        // Don't leave a previously-loaded roster on screen under an
+        // invalid future date — clear it so the guard message below is
+        // the only thing shown, not stale student rows.
+        this.rows.set([]);
+        this.originalRows.set([]);
+        this.sessionMeta.set(null);
+        this.calendarStatus.set(null);
+        this.loading.set(false);
+        this.checkingCalendar.set(false);
+      }
     });
 
     // ── Prefill from "Mark Attendance" links in the Missing Attendance report ──
@@ -197,9 +242,17 @@ export class AttendanceComponent {
     const qClassSectionId = qp.get('classSectionId');
     const qDate = qp.get('date');
     if (qClassSectionId || qDate) {
+      let prefillDate = this.form.value.date;
+      if (qDate) {
+        const parsed = new Date(qDate + 'T00:00:00');
+        const endOfToday = new Date();
+        endOfToday.setHours(23, 59, 59, 999);
+        prefillDate = parsed.getTime() > endOfToday.getTime() ? new Date() : parsed;
+      }
+
       this.form.patchValue({
         classSectionId: qClassSectionId ? Number(qClassSectionId) : this.form.value.classSectionId,
-        date: qDate ? new Date(qDate + 'T00:00:00') : this.form.value.date,
+        date: prefillDate,
       });
     }
   }

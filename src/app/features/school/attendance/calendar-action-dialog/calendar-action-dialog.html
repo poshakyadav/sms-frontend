@@ -1,3 +1,5 @@
+<!-- calendar-action-dialog.html -->
+
 <h2 mat-dialog-title class="dialog-title">
   <mat-icon>edit_calendar</mat-icon>
   Mark Attendance Calendar
@@ -46,16 +48,18 @@
       </mat-radio-group>
     </div>
 
-    <mat-form-field appearance="outline" class="reason-field">
-      <mat-label>Reason</mat-label>
-      <input
-        matInput
-        formControlName="reason"
-        maxlength="200"
-        placeholder="e.g. Summer vacation, Republic Day, Remedial camp…"
-      />
-      <mat-hint align="end">{{ form.value.reason?.length || 0 }}/200</mat-hint>
-    </mat-form-field>
+    @if (isHolidaySelected()) {
+      <mat-form-field appearance="outline" class="reason-field">
+        <mat-label>Reason</mat-label>
+        <input
+          matInput
+          formControlName="reason"
+          maxlength="200"
+          placeholder="e.g. Summer vacation, Republic Day, Remedial camp…"
+        />
+        <mat-hint align="end">{{ form.value.reason?.length || 0 }}/200</mat-hint>
+      </mat-form-field>
+      }
 
     @if (isHolidaySelected()) { @if (checkingImpact()) {
     <div class="checking-row">

@@ -1,3 +1,5 @@
+// attendance-component.scss
+
 // Uses global design tokens from styles.scss (--color-*, --shadow-*, --radius-*).
 // Status colours grouped into 3 families matching the backend's
 // PRESENT_EQUIVALENT / ABSENT_EQUIVALENT / NEUTRAL_STATUSES categories:
@@ -42,6 +44,12 @@
   @media (min-width: 900px) {
     padding: 24px;
     gap: 20px;
+  }
+  // Reserve space for the fixed footer on mobile so it never covers
+  // the last student card. ~96px covers button + padding + safe area
+  // with some margin; adjust if you change the button/padding sizes.
+  @media (max-width: 599px) {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
   }
 }
 
@@ -183,6 +191,17 @@
     background: color-mix(in srgb, var(--color-warning) 14%, transparent);
     mat-icon {
       color: var(--color-warning);
+    }
+
+    &.is-future-date {
+      background: color-mix(in srgb, var(--color-info) 6%, var(--color-bg-card));
+      border-color: color-mix(in srgb, var(--color-info) 28%, transparent);
+      .guard-icon-wrap {
+        background: color-mix(in srgb, var(--color-info) 14%, transparent);
+        mat-icon {
+          color: var(--color-info);
+        }
+      }
     }
   }
 
@@ -718,6 +737,19 @@
     padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
   }
 
+  // ── Mobile override: true fixed bar ─────────────────────────────────
+  // `sticky` depends on the nested .school-main-content scroll container
+  // behaving consistently, which mobile browsers don't guarantee. `fixed`
+  // pins to the real viewport instead, so the button is reachable without
+  // scrolling to the end of the roster. Full-bleed edge-to-edge is fine
+  // here because the sidebar is off-canvas below 600px.
+  @media (max-width: 599px) {
+    position: fixed;
+    left: 0;
+    right: 0;
+    border-radius: 0;
+  }
+
   .unsaved-hint {
     display: flex;
     align-items: center;
@@ -732,6 +764,8 @@
     }
   }
 
+  // FIXED: was `save-btn` (no dot) — a type selector matching nothing,
+  // so width/min-height/spinner-margin were silently never applied.
   .save-btn {
     width: 100%;
     min-height: 44px;
@@ -739,8 +773,15 @@
     @media (min-width: 600px) {
       width: auto;
     }
+
+    ::ng-deep .save-spinner {
+      display: inline-block;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
   }
 }
+
 
 // ── Shared category colour classes (chips + bulk buttons) ──────────────
 .chip.status-present,

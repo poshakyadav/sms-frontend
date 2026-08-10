@@ -1,3 +1,5 @@
+<!-- attendance-component.html -->
+
 <div class="attendance-page">
   <!-- ── Header ─────────────────────────────────────────────────────── -->
   <header class="page-header">
@@ -37,10 +39,14 @@
       <mat-form-field appearance="outline" class="control-field">
         <mat-label>Date</mat-label>
         <mat-icon matPrefix>calendar_today</mat-icon>
-        <input matInput [matDatepicker]="picker" formControlName="date" />
+        <input matInput [matDatepicker]="picker" formControlName="date" [max]="maxDate" />
         <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
         <mat-datepicker #picker></mat-datepicker>
+        @if (form.controls.date.hasError('matDatepickerMax')) {
+        <mat-error>Attendance can't be marked for a future date</mat-error>
+        }
       </mat-form-field>
+      
     </form>
   </section>
 
@@ -49,7 +55,15 @@
     <mat-spinner diameter="40"></mat-spinner>
     <p>{{ checkingCalendar() ? 'Checking attendance calendar…' : 'Loading students…' }}</p>
   </div>
-  } @else if (!form.value.classSectionId) {
+  } @else if (dateInFuture()) {
+    <div class="guard-card is-future-date">
+      <div class="guard-icon-wrap">
+        <mat-icon>event_busy</mat-icon>
+      </div>
+      <h2>You've picked a future date</h2>
+      <p>Attendance can only be marked for today or an earlier date. Please pick today's date or an earlier one to continue.</p>
+    </div>
+    } @else if (!form.value.classSectionId) {
   <div class="state-container">
     <div class="state-icon-wrap"><mat-icon>school</mat-icon></div>
     <h2>Select a Class-Section</h2>
@@ -296,8 +310,11 @@
       (click)="submit()"
     >
       @if (submitting()) {
-      <mat-spinner diameter="18" style="display: inline-block; margin-right: 8px"></mat-spinner>
-      Saving… } @else { <mat-icon>save</mat-icon> Save Attendance }
+      <mat-spinner diameter="18" class="save-spinner"></mat-spinner>
+      } @else {
+      <mat-icon>save</mat-icon>
+      }
+      <span>{{ submitting() ? 'Saving…' : 'Save Attendance' }}</span>
     </button>
   </div>
   }

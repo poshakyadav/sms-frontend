@@ -1,4 +1,4 @@
-// features/super/turso-dbs/turso-dbs-component.ts
+// features/super/turso-dbs-component/turso-dbs-component.ts
 
 import {
   Component,
@@ -14,6 +14,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { CommonModule, DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -26,10 +27,12 @@ import { ToastService } from '../../../core/services/toast.service';
 export interface TursoDB {
   id: number;
   url: string;
+  authTokenPreview: string;
   createdByEmail: string;
   lastMigrationAt: string | null;
   isAssigned: boolean;
   createdAt: string;
+  updatedAt: string;
 }
 
 @Component({
@@ -40,6 +43,7 @@ export interface TursoDB {
     FormsModule,
     ReactiveFormsModule,
     DatePipe,
+    RouterLink,
     MatTableModule,
     MatButtonModule,
     MatIconModule,
@@ -51,17 +55,14 @@ export interface TursoDB {
   styleUrl: './turso-dbs-component.scss',
 })
 export class TursoDbsComponent {
-  // ── DI via inject() ───────────────────────────────────────────────────────
   private readonly api = inject(ApiService);
   private readonly fb = inject(FormBuilder);
   private readonly toast = inject(ToastService);
 
-  // ── State ─────────────────────────────────────────────────────────────────
   readonly dbs = signal<TursoDB[]>([]);
   readonly loading = signal(false);
   readonly saving = signal(false);
 
-  // ── Derived counts (computed signals — no manual sync needed) ─────────────
   readonly availableCount = computed(
     () => this.dbs().filter((d) => !d.isAssigned).length
   );
@@ -75,14 +76,11 @@ export class TursoDbsComponent {
     'createdByEmail',
     'lastMigrationAt',
     'isAssigned',
+    'actions',
   ] as const;
 
-  // ── Form ──────────────────────────────────────────────────────────────────
   readonly form = this.fb.group({
-    url: [
-      '',
-      [Validators.required, Validators.pattern(/^libsql:\/\/.+/)],
-    ],
+    url: ['', [Validators.required, Validators.pattern(/^libsql:\/\/.+/)]],
     authToken: ['', Validators.required],
     createdByEmail: ['', [Validators.required, Validators.email]],
   });
@@ -91,7 +89,6 @@ export class TursoDbsComponent {
     afterNextRender(() => this.fetchDbs());
   }
 
-  // ── Data ──────────────────────────────────────────────────────────────────
   fetchDbs(): void {
     this.loading.set(true);
     this.api.get<TursoDB[]>('turso-dbs').subscribe({

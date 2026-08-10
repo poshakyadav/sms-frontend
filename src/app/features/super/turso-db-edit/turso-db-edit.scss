@@ -1,0 +1,163 @@
+// features/super/turso-db-edit/turso-db-edit.scss
+
+.tde-root {
+  padding: 2rem 2.5rem;
+  max-width: 720px;
+  margin: 0 auto;
+
+  @media (max-width: 640px) {
+    padding: 1.25rem 1rem;
+  }
+}
+
+.tde-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+
+  &__title {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+    letter-spacing: -0.02em;
+  }
+
+  &__sub {
+    margin: 0.2rem 0 0;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+  }
+}
+
+.tde-back {
+  color: var(--color-text-secondary);
+}
+
+.tde-loading,
+.tde-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 4rem 2rem;
+  color: var(--color-text-muted);
+
+  p {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+}
+
+.tde-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-sm);
+
+  @media (max-width: 640px) {
+    padding: 1.25rem;
+  }
+}
+
+.tde-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--color-divider);
+
+  &__item {
+    font-size: 0.82rem;
+    color: var(--color-text-secondary);
+  }
+}
+
+.tde-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 0.72rem;
+  font-weight: 700;
+
+  &__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+  }
+
+  &--assigned {
+    background: color-mix(in srgb, var(--color-info) 12%, transparent);
+    color: var(--color-info);
+    border: 1px solid color-mix(in srgb, var(--color-info) 28%, transparent);
+    .tde-badge__dot {
+      background: var(--color-info);
+    }
+  }
+
+  &--free {
+    background: color-mix(in srgb, var(--color-success) 12%, transparent);
+    color: color-mix(in srgb, var(--color-success) 70%, #000);
+    border: 1px solid color-mix(in srgb, var(--color-success) 28%, transparent);
+    .tde-badge__dot {
+      background: var(--color-success);
+    }
+  }
+}
+
+.tde-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tde-field {
+  width: 100%;
+}
+
+.tde-warning {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-warning, orange) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-warning, orange) 30%, transparent);
+  margin: 0.5rem 0 1rem;
+
+  mat-icon {
+    color: var(--color-warning, orange);
+    flex-shrink: 0;
+  }
+
+  &__title {
+    margin: 0 0 0.25rem;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--color-text-primary);
+  }
+
+  &__text {
+    margin: 0 0 0.5rem;
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+  }
+}
+
+.tde-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}

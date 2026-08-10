@@ -58,11 +58,22 @@ export const SUPER_ROUTES: Routes = [
       },
 
       // ── Turso DBs ──────────────────────────────────────────────────────────
+      // ── Turso DBs ──────────────────────────────────────────────────────────
       {
         path: 'turso-dbs',
-        loadComponent: () =>
-          import('./turso-dbs-component/turso-dbs-component').then((m) => m.TursoDbsComponent),
         canActivate: [superPermissionGuard('turso.manage')],
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./turso-dbs-component/turso-dbs-component').then((m) => m.TursoDbsComponent),
+          },
+          {
+            path: 'edit/:id',
+            loadComponent: () =>
+              import('./turso-db-edit/turso-db-edit').then((m) => m.TursoDbEdit),
+          },
+        ],
       },
 
       // ── Invitations ────────────────────────────────────────────────────────

@@ -1,0 +1,105 @@
+<!-- features/super/turso-db-edit/turso-db-edit.html -->
+
+<div class="tde-root">
+  <header class="tde-header">
+    <button mat-icon-button class="tde-back" (click)="cancel()" matTooltip="Back to list">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div>
+      <h1 class="tde-header__title">Edit Turso Database</h1>
+      <p class="tde-header__sub">Update the connection URL or rotate the auth token</p>
+    </div>
+  </header>
+
+  @if (loading()) {
+  <div class="tde-loading">
+    <mat-spinner diameter="32"></mat-spinner>
+    <p>Loading database…</p>
+  </div>
+  } @else if (notFound()) {
+  <div class="tde-empty">
+    <mat-icon>error_outline</mat-icon>
+    <p>This database could not be found.</p>
+    <button mat-stroked-button (click)="cancel()">Back to list</button>
+  </div>
+  } @else if (record(); as rec) {
+  <section class="tde-card">
+    <div class="tde-meta">
+      <span
+        class="tde-badge"
+        [class.tde-badge--assigned]="rec.isAssigned"
+        [class.tde-badge--free]="!rec.isAssigned"
+      >
+        <span class="tde-badge__dot"></span>
+        {{ rec.isAssigned ? 'Assigned to a school' : 'Available' }}
+      </span>
+      <span class="tde-meta__item">Created by {{ rec.createdByEmail }}</span>
+      <span class="tde-meta__item">Current token {{ rec.authTokenPreview }}</span>
+    </div>
+
+    <form [formGroup]="form" class="tde-form" (ngSubmit)="save()">
+      <mat-form-field appearance="outline" class="tde-field">
+        <mat-label>Database URL</mat-label>
+        <input
+          matInput
+          formControlName="url"
+          placeholder="libsql://your-db.turso.io"
+          autocomplete="off"
+        />
+        <mat-icon matPrefix>link</mat-icon>
+        @if (form.get('url')?.touched && form.get('url')?.hasError('required')) {
+        <mat-error>URL is required</mat-error>
+        } @if (form.get('url')?.touched && form.get('url')?.hasError('pattern')) {
+        <mat-error>Must start with libsql://</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="tde-field">
+        <mat-label>New auth token</mat-label>
+        <input
+          matInput
+          type="password"
+          formControlName="authToken"
+          placeholder="Leave blank to keep the current token"
+          autocomplete="off"
+        />
+        <mat-icon matPrefix>key</mat-icon>
+        <mat-hint>Only fill this in if you're rotating the token</mat-hint>
+      </mat-form-field>
+
+      @if (requiresConfirmation()) {
+      <div class="tde-warning">
+        <mat-icon>warning</mat-icon>
+        <div>
+          <p class="tde-warning__title">This database is assigned to a school</p>
+          <p class="tde-warning__text">
+            Changing the URL will point that school's live connection at a different database. Only
+            continue if you're intentionally repointing it.
+          </p>
+          <mat-checkbox formControlName="confirmReassign">
+            I understand the impact and want to proceed
+          </mat-checkbox>
+        </div>
+      </div>
+      }
+
+      <div class="tde-actions">
+        <button mat-stroked-button type="button" (click)="cancel()" [disabled]="saving()">
+          Cancel
+        </button>
+        <button
+          mat-flat-button
+          color="primary"
+          type="submit"
+          [disabled]="
+            form.invalid || saving() || (requiresConfirmation() && !form.value.confirmReassign)
+          "
+        >
+          <mat-icon>{{ saving() ? 'hourglass_empty' : 'save' }}</mat-icon>
+          {{ saving() ? 'Saving…' : 'Save changes' }}
+        </button>
+      </div>
+    </form>
+  </section>
+  }
+</div>
